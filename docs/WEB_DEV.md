@@ -21,7 +21,7 @@ pnpm build      # 输出 dist/renderer
 pnpm test       # 全量单元/浏览器测试，按需使用
 ```
 
-本仓库自带 `pnpm-workspace.yaml`，不会让 pnpm 沿父目录进入原库 workspace。Core 重新 build 后如 UI 仍使用旧副本，执行 `pnpm install --force` 刷新 `file:` 依赖。
+本仓库自带 `pnpm-workspace.yaml`，不会让 pnpm 沿父目录进入原库 workspace。Core 重新 build 后如 UI 仍使用旧副本，执行 `pnpm install --no-frozen-lockfile` 刷新 `file:` 依赖。
 
 聚焦测试示例：
 
@@ -46,7 +46,7 @@ pnpm build
 pnpm serve -- --host 127.0.0.1 --port 5173 --workspace /absolute/path/to/project
 ```
 
-`scripts/serve.mjs` 使用 `@forge/core/web/server` 的 `createWebHost({ service, workspace, host, port, rendererRoot })` 服务本仓库 `dist/renderer`。Core 提供静态资源压缩、缓存、安全头和同源 CSP 放宽；UI 仓库不复制这些实现。可用 `--renderer` 指向其他已构建目录。
+`scripts/serve.mjs` 只补充本仓库 `dist/renderer` 和默认工作区参数，然后执行 `@forge/core/web/serve`。Core 持有完整宿主启动/关闭、静态压缩、缓存、安全头、同源 CSP 和可选 Unix socket；UI 仓不复制这些实现。可用 `--renderer` 指向其他已构建目录，也可传 `--socket /private/core.sock` 使用已有 attach 传输。
 
 ## 浏览器烟测
 
@@ -55,9 +55,9 @@ pnpm build
 pnpm test:browser
 ```
 
-`tests/web-smoke-browser.test.ts` 使用临时 `stateDir` 和未配置模型状态，验证生产构建的渲染、CSP、Web bridge 会话读取以及设置页往返；不读取真实 `FORGE_HOME`、密钥或 provider。需要本机 Playwright Chromium 或通过 `FORGE_BROWSER_EXECUTABLE` 指定 Chrome/Chromium。
+`tests/web-smoke-browser.test.ts` 通过真实 `scripts/serve.mjs` 启动子进程，传入临时 `HOME`/`FORGE_HOME`；验证生产构建渲染、CSP、Web bridge 会话读取、设置页往返及 `--socket` 创建。它不读取真实配置、密钥或 provider。需要本机 Playwright Chromium 或通过 `FORGE_BROWSER_EXECUTABLE` 指定 Chrome/Chromium。
 
-本轮验证了 `pnpm build`、103 项聚焦测试（含 2 项真实 Chromium 浏览器测试）。`pnpm typecheck` / `pnpm lint` 仍包含从原库提取的既有严格类型与格式问题，不代表本次拆分引入的回归。
+本轮验证了 `pnpm build`、103 项聚焦测试（含 2 项真实 Chromium 浏览器测试）。`pnpm typecheck` / `pnpm lint` 仍未通过；严格类型与格式问题未在本轮逐条修复或完成全量回归归因，不能将构建成功等同于全部验证通过。
 
 ## 安全边界
 

@@ -30,7 +30,7 @@ pnpm install
 pnpm build
 ```
 
-本仓库自带 `pnpm-workspace.yaml`，pnpm 不会继续向上发现父仓库的 workspace 并改写父锁文件。Core 重新构建后，如 UI 仍解析到 `file:` 依赖的旧副本，执行 `pnpm install --force` 刷新 `@forge/core`。
+本仓库自带 `pnpm-workspace.yaml`，pnpm 不会继续向上发现父仓库的 workspace 并改写父锁文件。Core 重新构建后，如 UI 仍解析到 `file:` 依赖的旧副本，执行 `pnpm install --no-frozen-lockfile` 刷新 `@forge/core`。
 
 `pnpm build` 使用独立 Vite 配置输出到 `dist/renderer`。源 `src/renderer/index.html` 的 CSP 保持原样（`connect-src 'none'`，面向 file-origin 桌面语义）；生产 Web host 由 Core 只放宽同源 HTTP/WS 的 `connect-src`，其余指令不变。
 
@@ -48,7 +48,11 @@ pnpm serve -- --host 127.0.0.1 --port 5173 --workspace /absolute/path/to/project
 pnpm dev -- --host 127.0.0.1 --port 5173 --workspace /absolute/path/to/project
 ```
 
-默认监听 `127.0.0.1:5173`，工作区为当前目录。两个入口都只创建 `createHarness()`、`createWebHost(...)` 并转发请求；服务实现不在本仓库。`pnpm serve` 默认服务本仓库的 `dist/renderer`，也可用 `--renderer` 指向其他构建输出。
+默认监听 `127.0.0.1:5173`，工作区为当前目录。开发入口只把 Vite middleware 挂到 Core host。
+生产入口只补充 UI 资源路径并调用 `@forge/core/web/serve`，启动、请求、关闭及可选
+`--socket /private/core.sock` attach 接口均由 Core 持有，避免复制宿主生命周期。
+`pnpm serve` 默认服务本仓库的 `dist/renderer`，也可用 `--renderer` 指向其他构建输出。
+这些入口仍会创建各自的核心进程状态，并不意味着本轮已经统一为单实例 daemon。
 
 HTTP 不提供传输加密；不要把这个个人局域网入口无保护地暴露到公网。
 
@@ -64,7 +68,8 @@ pnpm test:browser
 
 浏览器测试使用临时状态目录、fixture/未配置模型状态，不读取真实 `FORGE_HOME`、密钥或外部 provider。现有 Playwright 可用时无需重新安装浏览器；可用 `FORGE_BROWSER_EXECUTABLE` 指定本机 Chromium/Chrome。
 
-本轮验证范围：`pnpm build`、103 项聚焦单元/渲染/浏览器测试（含 `tests/web-socket-browser.test.ts`、`tests/web-smoke-browser.test.ts` 两项真实 Chromium 测试）。`pnpm typecheck` / `pnpm lint` 仍会报告从原库提取的既有严格类型与格式问题，不是本次拆分新引入；不要把构建通过当作全量验证。
+本轮验证范围：`pnpm build`、103 项聚焦单元/渲染/浏览器测试（含 `tests/web-socket-browser.test.ts`、`tests/web-smoke-browser.test.ts` 两项真实 Chromium 测试）。生产烟测通过真实 `scripts/serve.mjs` 入口启动，检查页面、CSP、RPC、设置页往返以及 `--socket` 创建。
+`pnpm typecheck` / `pnpm lint` 仍未通过，涉及提取代码中的严格类型与格式问题；本轮未完成逐条修复和全量回归归因，不把构建通过当作全量验证。
 
 ## 历史
 

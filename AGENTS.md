@@ -1,5 +1,7 @@
 # 本仓库的代理工作约定
 
+- 子代理固定使用 `cn:deepseek-v4.1-flash`，除非用户明确指定其他模型；失败不自动切换模型或重放任务。
+
 ## 范围
 
 - 本仓库是独立的 Forge Web UI 仓库，只负责 `src/renderer` 的 React 界面、renderer 测试，以及 `scripts/dev.mjs` / `scripts/serve.mjs` 的薄启动装配。
@@ -8,7 +10,7 @@
 
 ## 依赖与导入
 
-- `@forge/core` 使用相邻的 `file:../forge-core`；改完 Core 后先 `pnpm build`，再构建/运行本仓库。本仓库自带 `pnpm-workspace.yaml`，避免 pnpm 向上进入父仓库 workspace；Core 重建后如仍解析旧副本，执行 `pnpm install --force`。
+- `@forge/core` 使用相邻的 `file:../forge-core`；改完 Core 后先 `pnpm build`，再构建/运行本仓库。本仓库自带 `pnpm-workspace.yaml`，避免 pnpm 向上进入父仓库 workspace；Core 重建后如仍解析旧副本，执行 `pnpm install --no-frozen-lockfile`。
 - renderer、测试、动态 import、`import type` 和内嵌 esbuild 字符串里，跨目录引用一律使用 `@forge/core/...` 子路径；不要恢复 `src/shared`、`src/core`、`src/web` 等相对源码引用，也不要用 Vite/TS alias 隐藏未解耦引用。
 - 新增依赖必须写进本仓库 `package.json`，不要依赖父仓库或 Core 的 `node_modules` 传递依赖。
 - 生产构建保持 `src/renderer/index.html` 的原 CSP；同源 `connect-src` 放宽由 Core 静态宿主完成。不要为了本地 HMR 修改生产 HTML 的 CSP。
@@ -19,7 +21,6 @@
 cd ../forge-core && pnpm build
 cd ../forge-web-ui
 pnpm install
-pnpm typecheck
 pnpm build
 pnpm dev -- --host 127.0.0.1 --port 5173 --workspace /absolute/path
 pnpm serve -- --host 127.0.0.1 --port 5173 --workspace /absolute/path
@@ -31,7 +32,7 @@ pnpm serve -- --host 127.0.0.1 --port 5173 --workspace /absolute/path
 ## 测试
 
 - 优先跑与改动相关的聚焦测试；不要默认跑全量 UI 套件。
-- `pnpm typecheck` / `pnpm lint` 仍会报告从原库提取的既有严格类型与格式问题；本轮以 `pnpm build` + 聚焦测试 + 浏览器烟测为验证门槛，不要把全量 typecheck/lint 失败误报成本次拆分回归。
+- 全量 `pnpm typecheck` / `pnpm lint` 尚未通过，不是默认前置门槛。本轮以构建、聚焦测试和真实浏览器烟测验证；后续发现失败时要对照基线区分既有问题与拆分回归，不得未经比较就一概声称“不是本轮导致”。
 - 浏览器测试使用临时目录/临时状态，不读取真实 `FORGE_HOME`、密钥或外部 provider；可以模型未配置状态验证渲染与导航。
 - 现有 Playwright 可用时不要重新安装浏览器；需要时用 `FORGE_BROWSER_EXECUTABLE` 指定本机浏览器。
 - 真实浏览器烟测前先 `pnpm build`；没有构建产物时浏览器入口不能声称已验证。
