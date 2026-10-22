@@ -73,4 +73,9 @@ pnpm test:browser
 
 ## 历史
 
-本仓库从原库 `e089acbcf1c3fe10a71a9ce0fce5f9309305db3b` 提取，保留 `src/renderer`、`tests/renderer`、Web/browser 测试、fixtures 和必要配置的路径历史。`origin` 已移除，本仓库独立提交。
+本仓库从原库 `e089acbcf1c3fe10a71a9ce0fce5f9309305db3b` 提取，保留 `src/renderer`、`tests/renderer`、Web/browser 测试、fixtures 和必要配置的路径历史。
+
+公开仓库为 `Ling0925/forge-web-ui`，`origin` 指向该仓库。既可单独克隆，也作为
+主仓 `Ling0925/forge` 的 `repos/forge-web-ui` 子模块使用；同级仍需有 `forge-core`。
+代码变更独立提交在本仓。同步主仓版本时，先提交并推送本仓，再由主仓维护者
+提交子模块指针；各仓历史不会因子模块关联而合并。
