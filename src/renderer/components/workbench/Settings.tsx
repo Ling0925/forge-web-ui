@@ -18,7 +18,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { defaultPublicSettings } from "../../../shared/schemas";
+import { defaultPublicSettings } from "@forge/core/shared/schemas";
 import { isMobileAppHost } from "../../state/mobile-connection";
 import { permissionLabels } from "../../state/permission-labels";
 import { buildSettingsUpdate, createSettingsDraft, type SettingsDraft } from "../../state/settings-draft";

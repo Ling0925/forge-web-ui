@@ -10,8 +10,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import { sessionUsage } from "../../state/session-usage";
 import { useWorkbench } from "../../state/workbench-context";
-import type { Message, SessionSnapshot, TaskPlan } from "../../../shared/schemas";
-import { sessionPlans } from "../../../shared/plans";
+import type { Message, SessionSnapshot, TaskPlan } from "@forge/core/shared/schemas";
+import { sessionPlans } from "@forge/core/shared/plans";
 import { Button } from "../primitives/Button";
 import { StatusBadge } from "../primitives/StatusBadge";
 import {

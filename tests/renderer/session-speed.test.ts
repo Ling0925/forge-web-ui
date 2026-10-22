@@ -1,9 +1,9 @@
 import { expect, it } from "vitest";
 import { appendSessionEvent, sessionUsage } from "../../src/renderer/state/session-usage";
 import { initialWorkbenchState, workbenchReducer } from "../../src/renderer/state/workbench-reducer";
-import { agentEventSchema, parseSessionId, sessionSnapshotSchema } from "../../src/shared/schemas";
-import type { AgentEvent } from "../../src/shared/schemas";
-import { runIdSchema } from "../../src/shared/ipc";
+import { agentEventSchema, parseSessionId, sessionSnapshotSchema } from "@forge/core/shared/schemas";
+import type { AgentEvent } from "@forge/core/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
 import type { WorkbenchState } from "../../src/renderer/state/workbench-reducer";
 
 type AttemptEvent = Extract<AgentEvent, { type: "provider_attempt" }>;

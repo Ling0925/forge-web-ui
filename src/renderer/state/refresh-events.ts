@@ -1,4 +1,4 @@
-import type { AgentEvent } from "../../shared/schemas";
+import type { AgentEvent } from "@forge/core/shared/schemas";
 
 /**
  * Event types whose arrival means the persisted transcript has advanced, so the

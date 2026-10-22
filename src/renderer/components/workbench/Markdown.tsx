@@ -1,8 +1,8 @@
 import { Component, type ReactNode, memo, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { isHtmlLanguage } from "../../../shared/html-preview";
-import { externalUrlSchema } from "../../../shared/ipc";
+import { isHtmlLanguage } from "@forge/core/shared/html-preview";
+import { externalUrlSchema } from "@forge/core/shared/ipc";
 import { CodeBlock } from "../primitives/CodeBlock";
 
 // Bound parsing work, not displayed content. Large messages remain complete,

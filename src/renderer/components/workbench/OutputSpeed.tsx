@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AgentEvent } from "../../../shared/schemas";
+import type { AgentEvent } from "@forge/core/shared/schemas";
 import { sessionUsage } from "../../state/session-usage";
 import type { ActiveRunState } from "../../state/workbench-reducer";
 

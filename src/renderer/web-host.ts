@@ -1,15 +1,15 @@
 import { z } from "zod";
-import { createTransportBridge } from "../shared/bridge";
-import { htmlPreviewResponseSchema } from "../shared/html-preview";
-import { lanStatusSchema, type ForgeLanBridge } from "../shared/lan";
+import { createTransportBridge } from "@forge/core/shared/bridge";
+import { htmlPreviewResponseSchema } from "@forge/core/shared/html-preview";
+import { lanStatusSchema, type ForgeLanBridge } from "@forge/core/shared/lan";
 import {
   externalUrlSchema,
   rpcResponseSchema,
   runEventSchema,
-} from "../shared/ipc";
-import type { SessionSnapshot } from "../shared/schemas";
-import { workspaceBrowseRequestSchema, workspaceDirectoryPageSchema } from "../shared/workspaces";
-import { applySessionDelta, sessionDeltaSchema } from "../shared/session-delta";
+} from "@forge/core/shared/ipc";
+import type { SessionSnapshot } from "@forge/core/shared/schemas";
+import { workspaceBrowseRequestSchema, workspaceDirectoryPageSchema } from "@forge/core/shared/workspaces";
+import { applySessionDelta, sessionDeltaSchema } from "@forge/core/shared/session-delta";
 
 const handshakeSchema = z.object({
   workspace: z.string(),

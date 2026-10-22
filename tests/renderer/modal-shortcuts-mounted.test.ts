@@ -20,7 +20,7 @@ it("mounted global modal shortcuts never stack dialogs and keep toggle, handoff 
       contents: `
       import React, {useReducer, useState} from 'react';
       import {createRoot} from 'react-dom/client';
-      import {defaultPublicSettings} from './src/shared/schemas';
+      import {defaultPublicSettings} from '@forge/core/shared/schemas';
       import {initialWorkbenchState, workbenchReducer} from './src/renderer/state/workbench-reducer';
       import {useGlobalModalShortcuts} from './src/renderer/state/modal-shortcuts';
       import {CommandPalette} from './src/renderer/components/workbench/CommandPalette';

@@ -10,7 +10,7 @@ import {
   ToolPreviews,
 } from "../../src/renderer/components/workbench/Transcript";
 import type { TimelineItem } from "../../src/renderer/state/timeline";
-import { sessionSnapshotSchema } from "../../src/shared/schemas";
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 
 const toolCall = {
   id: "call-1",

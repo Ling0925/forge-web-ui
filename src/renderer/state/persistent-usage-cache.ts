@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { contextUsageSchema, usageSchema } from "../../shared/schemas";
+import { contextUsageSchema, usageSchema } from "@forge/core/shared/schemas";
 import type { SessionSnapshot, SessionSummary } from "../shared-types";
 import { seedSessionUsage, sessionUsage } from "./session-usage";
 

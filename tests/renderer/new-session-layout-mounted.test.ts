@@ -11,7 +11,7 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
       contents: `
       import { createRoot } from 'react-dom/client';
       import { App } from './src/renderer/components/workbench/App';
-      import { defaultPublicSettings } from './src/shared/schemas';
+      import { defaultPublicSettings } from '@forge/core/shared/schemas';
       import './src/renderer/styles/global.css';
       import './src/renderer/styles/workspace-theme.css';
       import './src/renderer/styles/settings-models.css';

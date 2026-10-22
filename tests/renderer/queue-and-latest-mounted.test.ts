@@ -14,7 +14,7 @@ it("renders floating jump-to-latest button and interactive queue list with cance
         import { Composer } from "./src/renderer/components/workbench/Composer";
         import { Transcript } from "./src/renderer/components/workbench/Transcript";
         import { WorkbenchProvider, useWorkbench } from "./src/renderer/state/workbench-context";
-        import { defaultPublicSettings } from "./src/shared/schemas";
+        import { defaultPublicSettings } from "@forge/core/shared/schemas";
         import "./src/renderer/styles/global.css";
         import "./src/renderer/components/workbench/app.css";
         import "./src/renderer/styles/workspace-theme.css";

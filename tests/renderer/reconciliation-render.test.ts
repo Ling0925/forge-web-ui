@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, it } from "vitest";
 import { StoredTranscript } from "../../src/renderer/components/workbench/Transcript";
-import { sessionSnapshotSchema } from "../../src/shared/schemas";
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 
 it("collapses only tagged internal messages while preserving identical human text", () => {
   const content = '子代理汇总：{"result":"real persisted evidence"}';

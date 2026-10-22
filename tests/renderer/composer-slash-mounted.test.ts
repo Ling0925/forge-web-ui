@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { SLASH_COMMANDS } from "../../src/cli/commands";
+import { SLASH_COMMANDS } from "@forge/core/shared/slash-commands";
 
 it("desktop uses the CLI catalog and executes arguments without sending prompts", async () => {
   const bundle = await build({
@@ -19,7 +19,7 @@ it("desktop uses the CLI catalog and executes arguments without sending prompts"
     define: { "process.env.NODE_ENV": '"development"' },
     plugins: [{ name: "mock", setup(api) {
       api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({ loader: "tsx", resolveDir: resolve("."), contents: `
-        import {defaultPublicSettings} from './src/shared/schemas';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
         export const useWorkbench=()=>({
           state:{activeSessionId:'a',activeSnapshot:{model:'test/model',workspace:'/tmp'},sessions:[],
             settings:{...defaultPublicSettings,isConfigured:false},activeRuns:{}},

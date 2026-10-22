@@ -6,7 +6,7 @@ import {
   appendSessionEvent,
   sessionUsage,
 } from "../../src/renderer/state/session-usage";
-import { agentEventSchema } from "../../src/shared/schemas";
+import { agentEventSchema } from "@forge/core/shared/schemas";
 
 const base = {
   sessionId: "00000000-0000-4000-8000-000000000001",

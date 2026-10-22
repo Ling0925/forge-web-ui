@@ -1,4 +1,4 @@
-import { toolResultSchema } from "../../shared/schemas";
+import { toolResultSchema } from "@forge/core/shared/schemas";
 import type { SessionSnapshot, ToolResult } from "../shared-types";
 
 function decodeStoredResult(content: string): ToolResult | undefined {

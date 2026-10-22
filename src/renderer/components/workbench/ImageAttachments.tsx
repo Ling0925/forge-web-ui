@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "@phosphor-icons/react";
 import { Button } from "../primitives/Button";
 import { Dialog } from "./Dialog";
-import type { ImageAttachment } from "../../../shared/images";
+import type { ImageAttachment } from "@forge/core/shared/images";
 import {
   MAX_IMAGE_BYTES,
   MAX_IMAGES,
   imageAttachmentSchema,
-} from "../../../shared/images";
+} from "@forge/core/shared/images";
 import "./image-attachments.css";
 
 const EMPTY_IMAGES: readonly ImageAttachment[] = [];

@@ -14,12 +14,12 @@ import {
   agentEventSchema,
   parseSessionId,
   sessionSnapshotSchema,
-} from "../../src/shared/schemas";
-import type { SessionPageInfo } from "../../src/shared/session-page";
+} from "@forge/core/shared/schemas";
+import type { SessionPageInfo } from "@forge/core/shared/session-page";
 import {
   sessionUsageStateSchema,
   summarizeUsageState,
-} from "../../src/shared/session-usage";
+} from "@forge/core/shared/session-usage";
 
 type AttemptEvent = Extract<AgentEvent, { type: "provider_attempt" }>;
 const id = parseSessionId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");

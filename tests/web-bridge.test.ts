@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
-import { createTransportBridge, requestId } from "../src/shared/bridge";
-import { sessionIdSchema } from "../src/shared/schemas";
-import { ForgeError } from "../src/shared/errors";
-import type { RpcRequest } from "../src/shared/ipc";
+import { createTransportBridge, requestId } from "@forge/core/shared/bridge";
+import { sessionIdSchema } from "@forge/core/shared/schemas";
+import { ForgeError } from "@forge/core/shared/errors";
+import type { RpcRequest } from "@forge/core/shared/ipc";
 
 describe("shared desktop/Web bridge", () => {
   it("retains recovery events until the UI subscribes", async () => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { modelCatalogSchema, type ModelCatalog } from "../../shared/model-catalog";
+import { modelCatalogSchema, type ModelCatalog } from "@forge/core/shared/model-catalog";
 
 const modelsSchema = modelCatalogSchema;
 // Keep all 20 supported provider sources, with room for legacy/changed endpoints.

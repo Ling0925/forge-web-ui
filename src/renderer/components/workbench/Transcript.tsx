@@ -1,9 +1,9 @@
 import { ArrowDown, CaretDown, CaretRight, Check, Copy, WarningCircle } from "@phosphor-icons/react";
 import { Fragment, memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Collapsible } from "../primitives/Collapsible";
-import { commandActivity, toolActivity } from "../../../shared/tool-activity";
-import { executionLabel, executionTurns } from "../../../shared/execution";
-import { webSearchStatus } from "../../../shared/web-search-display";
+import { commandActivity, toolActivity } from "@forge/core/shared/tool-activity";
+import { executionLabel, executionTurns } from "@forge/core/shared/execution";
+import { webSearchStatus } from "@forge/core/shared/web-search-display";
 import type {
   ApprovalRequest,
   SessionId,

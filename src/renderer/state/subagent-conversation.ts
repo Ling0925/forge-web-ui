@@ -1,5 +1,5 @@
 import type { AgentEvent, SessionSnapshot, SessionStatus } from "../shared-types";
-import { executionTurns } from "../../shared/execution";
+import { executionTurns } from "@forge/core/shared/execution";
 import { reduceTimeline, type TimelineItem } from "./timeline";
 import { outputSaved } from "./transcript-sync";
 

@@ -6,5 +6,5 @@ export {
   seedSessionUsage,
   sessionUsage,
   summarizeUsageState,
-} from "../../shared/session-usage";
-export type { SessionUsageState } from "../../shared/session-usage";
+} from "@forge/core/shared/session-usage";
+export type { SessionUsageState } from "@forge/core/shared/session-usage";

@@ -12,12 +12,12 @@ import {
   useRef,
   useState,
 } from "react";
-import type { PublicProviderPreset } from "../../../shared/model-access";
-import type { ModelCatalog } from "../../../shared/model-catalog";
+import type { PublicProviderPreset } from "@forge/core/shared/model-access";
+import type { ModelCatalog } from "@forge/core/shared/model-catalog";
 import {
   type PublicProviderSource,
   configureInputSchema,
-} from "../../../shared/schemas";
+} from "@forge/core/shared/schemas";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { parseSessionId, sessionSnapshotSchema } from "../src/shared/schemas";
+import { parseSessionId, sessionSnapshotSchema } from "@forge/core/shared/schemas";
 import { reduceTimeline } from "../src/renderer/state/timeline";
 
 const file = { id: randomUUID(), name: "报告.md", size: 12, sha256: "a".repeat(64), mimeType: "text/plain", previewKind: "text", createdAt: "2026-01-01T00:00:00Z", description: "报告快照" };

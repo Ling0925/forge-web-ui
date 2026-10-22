@@ -9,7 +9,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import type { WorkspaceDirectoryPage } from "../../../shared/workspaces";
+import type { WorkspaceDirectoryPage } from "@forge/core/shared/workspaces";
 import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
 import { Input } from "../primitives/Input";

@@ -16,7 +16,7 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
     define: { "process.env.NODE_ENV": '"development"' }, plugins: [{ name: "settings-test-host", setup(api) {
       api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({ loader: "tsx", resolveDir: resolve("."), contents: `
       import {createContext,useContext,useState} from 'react';
-      import {defaultPublicSettings} from './src/shared/schemas';
+      import {defaultPublicSettings} from '@forge/core/shared/schemas';
       const C=createContext(null); export const useWorkbench=()=>useContext(C);
       export function TestProvider({children}) {
         const [settings,setSettings]=useState({...defaultPublicSettings,hasApiKey:true});

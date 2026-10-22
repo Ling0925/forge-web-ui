@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import { createModelCatalogCache, modelCatalogKey } from "../../src/renderer/state/model-catalog-cache";
-import type { ModelCatalog } from "../../src/shared/model-catalog";
+import type { ModelCatalog } from "@forge/core/shared/model-catalog";
 
 const catalog = (id: string): ModelCatalog => [{
   id, contextWindowTokens: 256000, maxOutputTokens: 16384,

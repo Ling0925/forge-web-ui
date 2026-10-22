@@ -6,7 +6,7 @@ import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 import { StoredTranscript } from "../../src/renderer/components/workbench/Transcript";
 import { completedTurnExecutions } from "../../src/renderer/state/turn-execution";
-import { sessionSnapshotSchema, type AgentEvent } from "../../src/shared/schemas";
+import { sessionSnapshotSchema, type AgentEvent } from "@forge/core/shared/schemas";
 
 const id = "11111111-1111-4111-8111-111111111111";
 const call = { id: "tool", type: "function" as const,

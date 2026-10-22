@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, it } from "vitest";
-import { runIdSchema } from "../../src/shared/ipc";
-import { sessionIdSchema, sessionSnapshotSchema } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { sessionIdSchema, sessionSnapshotSchema } from "@forge/core/shared/schemas";
 import { childConversation, childFinalReport, type AgentProgress } from "../../src/renderer/state/subagent-conversation";
 import { shouldRefreshTranscript } from "../../src/renderer/state/refresh-events";
 import { initialWorkbenchState, workbenchReducer } from "../../src/renderer/state/workbench-reducer";

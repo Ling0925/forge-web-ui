@@ -1,7 +1,7 @@
 import { CopySimple, QrCode, WarningCircle } from "@phosphor-icons/react";
 import * as QRCode from "qrcode";
 import { useEffect, useId, useRef, useState } from "react";
-import { type LanStatus, lanRequestSchema } from "../../../shared/lan";
+import { type LanStatus, lanRequestSchema } from "@forge/core/shared/lan";
 import { OperationScope } from "../../state/operation-scope";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";

@@ -9,7 +9,7 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     import {createRoot} from 'react-dom/client';
     import {Composer} from './src/renderer/components/workbench/Composer';
     import {WorkbenchProvider,useWorkbench} from './src/renderer/state/workbench-context';
-    import {defaultPublicSettings} from './src/shared/schemas';
+    import {defaultPublicSettings} from '@forge/core/shared/schemas';
     import './src/renderer/styles/global.css';
     import './src/renderer/components/workbench/app.css';
     import './src/renderer/styles/workspace-theme.css';

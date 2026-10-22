@@ -5,8 +5,8 @@ import { join, resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { createHarness } from "../src/core/harness";
-import { createWebHost } from "../src/web/server";
+import { createHarness } from "@forge/core/core/harness";
+import { createWebHost } from "@forge/core/web/server";
 
 it("selects a workspace by browsing server folders, preserves cancellation and uses the native picker on desktop", async () => {
   const reservation = createServer();

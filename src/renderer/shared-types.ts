@@ -13,15 +13,15 @@ export type {
   SessionSummary,
   ToolCall,
   ToolResult,
-} from "../shared/schemas";
+} from "@forge/core/shared/schemas";
 
 // View-only paging metadata never enters the persisted session schema.
-export type { TranscriptSnapshot as SessionSnapshot } from "../shared/session-page";
+export type { TranscriptSnapshot as SessionSnapshot } from "@forge/core/shared/session-page";
 
 export type {
   PublishedFile,
   PublishedFileResponse,
-} from "../shared/published-files";
+} from "@forge/core/shared/published-files";
 
 export type {
   ForgeBridge,
@@ -36,4 +36,4 @@ export type {
   ModelUsageStat,
   DailyUsageStat,
   SessionUsageStat,
-} from "../shared/ipc";
+} from "@forge/core/shared/ipc";

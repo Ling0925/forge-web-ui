@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { SLASH_COMMANDS as cliCommands } from "../../src/cli/commands";
-import { SLASH_COMMANDS, parseSlashCommand } from "../../src/shared/slash-commands";
+import { SLASH_COMMANDS, parseSlashCommand } from "@forge/core/shared/slash-commands";
 import { executeDesktopSlash, desktopSlashLimitation, type DesktopSlashHost } from "../../src/renderer/components/workbench/desktop-slash";
-import type { ForgeBridge } from "../../src/shared/ipc";
-import { parseSessionId } from "../../src/shared/schemas";
+import type { ForgeBridge } from "@forge/core/shared/ipc";
+import { parseSessionId } from "@forge/core/shared/schemas";
 import { reviewSession } from "../fixtures/review-session";
 const id = parseSessionId("11111111-1111-4111-8111-111111111111");
 function fixture() {
@@ -31,8 +30,7 @@ function fixture() {
   return {host,bridge};
 }
 describe('shared slash semantics', () => {
-  it('has exactly one catalog and CLI whitespace argument parsing', () => {
-    expect(cliCommands).toBe(SLASH_COMMANDS);
+  it('has one shared catalog and CLI-style whitespace argument parsing', () => {
     expect(parseSlashCommand('/rename  a   b')).toEqual({command:'/rename',words:['a','b'],value:'a b'});
     expect(SLASH_COMMANDS.some(c => ['/settings','/stop'].includes(c.name))).toBe(false);
   });

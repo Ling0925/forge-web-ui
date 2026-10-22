@@ -1,7 +1,7 @@
-import { fileChangeSchema } from "../../shared/schemas";
-import { executionTurns } from "../../shared/execution";
-import type { ImageAttachment } from "../../shared/images";
-import { publishedFilesSchema } from "../../shared/published-files";
+import { fileChangeSchema } from "@forge/core/shared/schemas";
+import { executionTurns } from "@forge/core/shared/execution";
+import type { ImageAttachment } from "@forge/core/shared/images";
+import { publishedFilesSchema } from "@forge/core/shared/published-files";
 import type { ErrorInfo, FileChange, PublishedFile, SessionSnapshot, ToolCall } from "../shared-types";
 import { retainedOutputs, type PendingOutput } from "./transcript-sync";
 import { draftPosition, mergeTranscriptDrafts } from "./timeline-drafts";

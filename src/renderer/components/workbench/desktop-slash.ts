@@ -1,8 +1,8 @@
-import { createSlashActions } from "../../../shared/slash-actions";
-import { parseSlashCommand, SLASH_COMMANDS } from "../../../shared/slash-commands";
-import { parseSessionId, permissionSchema, settingsFields, type SessionId, type SessionSnapshot } from "../../../shared/schemas";
-import type { ForgeBridge } from "../../../shared/ipc";
-import type { SessionReviewInput } from "../../../shared/session-review";
+import { createSlashActions } from "@forge/core/shared/slash-actions";
+import { parseSlashCommand, SLASH_COMMANDS } from "@forge/core/shared/slash-commands";
+import { parseSessionId, permissionSchema, settingsFields, type SessionId, type SessionSnapshot } from "@forge/core/shared/schemas";
+import type { ForgeBridge } from "@forge/core/shared/ipc";
+import type { SessionReviewInput } from "@forge/core/shared/session-review";
 import { pageSnapshot } from "../../state/session-pages";
 
 // Limitations of the current desktop bridge, not a second command catalog.

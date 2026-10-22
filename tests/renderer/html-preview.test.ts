@@ -4,12 +4,12 @@ import { describe, expect, it } from "vitest";
 import { CodeBlock } from "../../src/renderer/components/primitives/CodeBlock";
 import { DiffViewer } from "../../src/renderer/components/primitives/DiffViewer";
 import { Markdown } from "../../src/renderer/components/workbench/Markdown";
-import { createDiffPatch } from "../../src/shared/diff";
+import { createDiffPatch } from "@forge/core/shared/diff";
 import {
   HTML_PREVIEW_CSP,
   isHtmlLanguage,
   isHtmlPath,
-} from "../../src/shared/html-preview";
+} from "@forge/core/shared/html-preview";
 
 // Server rendering has no window.forge: the preview action must disappear
 // rather than emit a dead control, which is also the desktop-host behaviour.

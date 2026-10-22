@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { composerEffortUpdate, composerModelMetadata, composerReasoningEffort, configuredModelIds, selectableModelIds } from "../../src/renderer/state/composer-model";
-import { configureInputSchema, publicProviderSourceSchema } from "../../src/shared/schemas";
+import { configureInputSchema, publicProviderSourceSchema } from "@forge/core/shared/schemas";
 
 const source = publicProviderSourceSchema.parse({
   id: "a", label: "Source A", baseUrl: "https://a.test/v1", model: "alias", revision: 3, hasApiKey: true,

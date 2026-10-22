@@ -1,8 +1,7 @@
 import { expect, it } from "vitest";
-import { advanceContextDisplay, emptyContextDisplay, replayContextDisplay } from "../../src/shared/context-display";
-import { agentEventSchema, type AgentEvent } from "../../src/shared/schemas";
+import { advanceContextDisplay, emptyContextDisplay, replayContextDisplay } from "@forge/core/shared/context-display";
+import { agentEventSchema, type AgentEvent } from "@forge/core/shared/schemas";
 import { appendSessionEvent, sessionUsage } from "../../src/renderer/state/session-usage";
-import { contextFooter } from "../../src/cli/terminal/context-footer";
 
 const base = { sessionId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", timestamp: "2026-01-01T00:00:00Z" };
 const projection = (tokens: number, windowTokens = 300000) => agentEventSchema.parse({ ...base, type: "context_usage", usage: {
@@ -32,12 +31,6 @@ it("holds 200K input reports across 120K estimates without counting output or ch
   expect(replayContextDisplay(events)).toEqual(state);
   expect(sessionUsage(events).total).toEqual({ promptTokens: 401000, completionTokens: 20000, totalTokens: 421000 });
   expect(sessionUsage(events).latestCache).toBe(0.5);
-  const footer = contextFooter({ model: "model", usage: state.context! }, 100)[0]!.map(s => s.text).join("");
-  expect(footer).toContain("实报输入 67.0%");
-  expect(footer).not.toContain("≈67.0%");
-  const wide = contextFooter({ model: "model", usage: state.context!, projectedTokens: 122000 }, 140)[0]!.map(s => s.text).join("");
-  expect(wide).toContain("本地≈122k");
-  expect(wide).toContain("实报输入 67.0%");
 });
 
 it("shows real compaction immediately and resumes reports afterwards without resetting totals", () => {
@@ -49,7 +42,6 @@ it("shows real compaction immediately and resumes reports afterwards without res
   expect(sessionUsage(after)).toMatchObject({ compacted: true, context: { usedTokens: 30000, estimated: true } });
   expect(sessionUsage(after).total).toEqual(before.total);
   expect(before.context?.usedTokens).toBe(200000);
-  expect(contextFooter({ model: "model", usage: sessionUsage(after).context!, compacted: true }, 100)[0]!.map(s => s.text).join("")).toContain("压缩后预估");
   const measured = appendSessionEvent(after, report(45000));
   expect(sessionUsage(measured)).toMatchObject({ compacted: false, context: { usedTokens: 45000, estimated: false } });
 });

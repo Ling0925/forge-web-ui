@@ -42,7 +42,7 @@ it("composer grows to six lines and requires explicit submission for multiline d
             loader: "tsx",
             contents: `
         import {createContext,useContext,useState,useRef} from 'react';
-        import {defaultPublicSettings} from './src/shared/schemas';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
         const Context=createContext(null);export const useWorkbench=()=>useContext(Context);
         export function TestProvider({children}){
           const [id,setId]=useState('a');const [calls,setCalls]=useState(0);

@@ -5,11 +5,11 @@ import {
   initialWorkbenchState,
   workbenchReducer,
 } from "../../src/renderer/state/workbench-reducer";
-import { runIdSchema } from "../../src/shared/ipc";
+import { runIdSchema } from "@forge/core/shared/ipc";
 import {
   agentEventSchema,
   sessionSnapshotSchema,
-} from "../../src/shared/schemas";
+} from "@forge/core/shared/schemas";
 
 const id = "11111111-1111-4111-8111-111111111111";
 const runId = runIdSchema.parse("22222222-2222-4222-8222-222222222222");

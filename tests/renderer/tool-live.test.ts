@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runIdSchema } from "../../src/shared/ipc";
-import { sessionIdSchema } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { sessionIdSchema } from "@forge/core/shared/schemas";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
 import {
   initialWorkbenchState,

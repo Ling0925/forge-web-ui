@@ -1,8 +1,8 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { mcpRegisterDtoSchema } from "../../src/shared/ipc";
-import { sessionIdSchema, type SessionSnapshot } from "../../src/shared/schemas";
+import { mcpRegisterDtoSchema } from "@forge/core/shared/ipc";
+import { sessionIdSchema, type SessionSnapshot } from "@forge/core/shared/schemas";
 import { reduceTimeline } from "../../src/renderer/state/timeline";
 import { shouldRefreshTranscript } from "../../src/renderer/state/refresh-events";
 import { ToolDisclosure } from "../../src/renderer/components/primitives/ToolDisclosure";

@@ -13,9 +13,9 @@ import type {
   SessionSummary,
 } from "../shared-types";
 import { appendSessionEvent } from "./session-usage";
-import { estimateTokens } from "../../shared/context-usage";
-import { recordPlan } from "../../shared/plans";
-import type { SessionPage } from "../../shared/session-page";
+import { estimateTokens } from "@forge/core/shared/context-usage";
+import { recordPlan } from "@forge/core/shared/plans";
+import type { SessionPage } from "@forge/core/shared/session-page";
 import { prependSessionPage } from "./session-pages";
 import {
   type PendingOutput,
@@ -46,7 +46,7 @@ export interface ActiveRunState {
    * `activeSnapshot.events` (high-frequency display state only).
    */
   readonly toolPreviews?: readonly ToolPreviewEntry[];
-  readonly webSearch?: import("../../shared/web-search").WebSearchProgress | undefined;
+  readonly webSearch?: import("@forge/core/shared/web-search").WebSearchProgress | undefined;
   readonly providerRetry?: number | undefined;
   readonly generationId?: string | undefined;
   readonly generationFinished?: boolean;

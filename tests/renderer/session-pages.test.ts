@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
-import { paginateSession } from "../../src/shared/session-page";
-import { parseSessionId, sessionSnapshotSchema } from "../../src/shared/schemas";
-import { executionTurns } from "../../src/shared/execution";
+import { paginateSession } from "@forge/core/shared/session-page";
+import { parseSessionId, sessionSnapshotSchema } from "@forge/core/shared/schemas";
+import { executionTurns } from "@forge/core/shared/execution";
 import { pageSnapshot, prependSessionPage } from "../../src/renderer/state/session-pages";
 import { mergeTranscript, outputSaved, reasoningSaved } from "../../src/renderer/state/transcript-sync";
 import { reduceTimeline } from "../../src/renderer/state/timeline";

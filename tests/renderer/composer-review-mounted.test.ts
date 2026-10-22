@@ -23,7 +23,7 @@ it("renders /review and submits the chosen model/source or route without changin
     plugins: [{ name: "fixture", setup(api) {
       api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({ loader: "tsx", resolveDir: resolve("."), contents: `
         import {createContext,useContext,useState} from 'react';
-        import {defaultPublicSettings} from './src/shared/schemas';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
         const Context=createContext(null);
         export const useWorkbench=()=>useContext(Context);
         export function FixtureProvider({children}) {

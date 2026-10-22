@@ -9,7 +9,7 @@ it("new conversation is inline, preserves drafts and retries in the same session
       import React from 'react';
       import {createRoot} from 'react-dom/client';
       import {App} from './src/renderer/components/workbench/App';
-      import {defaultPublicSettings} from './src/shared/schemas';
+      import {defaultPublicSettings} from '@forge/core/shared/schemas';
       const oldId = '11111111-1111-4111-8111-111111111111';
       const newId = '22222222-2222-4222-8222-222222222222';
       const runId = '33333333-3333-4333-8333-333333333333';

@@ -9,7 +9,7 @@ it("styles the model picker before Settings loads and preserves configured effor
       import {createRoot} from 'react-dom/client';
       import {useState} from 'react';
       import {ModelPicker} from './src/renderer/components/workbench/ModelPicker';
-      import {settingsFields} from './src/shared/schemas';
+      import {settingsFields} from '@forge/core/shared/schemas';
       import './src/renderer/styles/global.css';
       import './src/renderer/components/workbench/app.css';
       import './src/renderer/styles/workspace-theme.css';

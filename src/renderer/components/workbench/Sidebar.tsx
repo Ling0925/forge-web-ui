@@ -12,7 +12,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isPrimarySession } from "../../../shared/sessions";
+import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
 import { useWorkbench } from "../../state/workbench-context";
 import { SessionListItem } from "./SessionListItem";

@@ -1,5 +1,5 @@
-import type { ModelCatalog, ModelCatalogEntry } from "../../shared/model-catalog";
-import type { ConfigureInput, PublicProviderSource, PublicSettings } from "../../shared/schemas";
+import type { ModelCatalog, ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ConfigureInput, PublicProviderSource, PublicSettings } from "@forge/core/shared/schemas";
 
 type ConfiguredModelSource = Pick<PublicProviderSource, "model" | "modelSelection">;
 

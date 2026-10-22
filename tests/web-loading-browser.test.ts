@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromium, type Page } from "playwright";
 import { expect, it } from "vitest";
-import { createHarness } from "../src/core/harness";
-import { createRuntimeHub } from "../src/desktop/runtime";
-import { startLanServer } from "../src/web/lan";
+import { createHarness } from "@forge/core/core/harness";
+import { createRuntimeHub } from "@forge/core/host/runtime";
+import { startLanServer } from "@forge/core/web/lan";
 
 async function loadingMetrics(page: Page) {
   await page.locator(".composer-textarea").waitFor();

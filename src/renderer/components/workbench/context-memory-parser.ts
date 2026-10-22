@@ -1,4 +1,4 @@
-import type { Message } from "../../../shared/schemas";
+import type { Message } from "@forge/core/shared/schemas";
 
 export interface MemoryRefItem {
   readonly text: string;

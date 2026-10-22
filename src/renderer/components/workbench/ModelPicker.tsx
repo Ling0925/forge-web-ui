@@ -1,6 +1,6 @@
 import { CaretDown, CaretLeft, CaretRight, Cpu } from "@phosphor-icons/react";
 import { useEffect, useId, useRef, useState } from "react";
-import { reasoningEffortSchema } from "../../../shared/model-access";
+import { reasoningEffortSchema } from "@forge/core/shared/model-access";
 import { ModelCatalog, type ModelCatalogGroup } from "./ModelCatalog";
 // The composer needs these styles before the lazy-loaded Settings page opens.
 import "../../styles/settings-models.css";

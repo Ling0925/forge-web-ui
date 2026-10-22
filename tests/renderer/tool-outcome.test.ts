@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
 import { toolOutcome } from "../../src/renderer/state/tool-outcome";
-import { sessionIdSchema } from "../../src/shared/schemas";
+import { sessionIdSchema } from "@forge/core/shared/schemas";
 const snapshot: SessionSnapshot = {
   version: 1,
   id: sessionIdSchema.parse("11111111-1111-4111-8111-111111111111"),

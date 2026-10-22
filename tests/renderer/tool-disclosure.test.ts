@@ -6,7 +6,7 @@ import {
   ToolDisclosure,
   type ToolDisclosureProps,
 } from "../../src/renderer/components/primitives/ToolDisclosure";
-import { createDiffPatch } from "../../src/shared/diff";
+import { createDiffPatch } from "@forge/core/shared/diff";
 
 const render = (props: ToolDisclosureProps) =>
   renderToStaticMarkup(createElement(ToolDisclosure, props));

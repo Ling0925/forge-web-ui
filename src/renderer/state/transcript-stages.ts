@@ -1,4 +1,4 @@
-import { taskPlanSchema } from "../../shared/schemas";
+import { taskPlanSchema } from "@forge/core/shared/schemas";
 import type { TimelineItem } from "./timeline";
 
 export interface TranscriptStage {

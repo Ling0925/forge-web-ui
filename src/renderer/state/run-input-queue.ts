@@ -1,6 +1,6 @@
-import { ForgeError } from "../../shared/errors";
+import { ForgeError } from "@forge/core/shared/errors";
 import { z } from "zod";
-import { type RunInput, type SessionId, runInputSchema } from "../../shared/schemas";
+import { type RunInput, type SessionId, runInputSchema } from "@forge/core/shared/schemas";
 
 export class RunInputQueue {
   private readonly sessions = new Map<SessionId, { items: RunInput[]; paused: boolean }>();

@@ -17,12 +17,12 @@ import type {
   PublicProviderPreset,
   RouteGroup,
   RouteMember,
-} from "../../../shared/model-access";
+} from "@forge/core/shared/model-access";
 import type {
   ModelCatalog,
   ModelCatalogEntry,
-} from "../../../shared/model-catalog";
-import type { PublicProviderSource } from "../../../shared/schemas";
+} from "@forge/core/shared/model-catalog";
+import type { PublicProviderSource } from "@forge/core/shared/schemas";
 import { useWorkbench } from "../../state/workbench-context";
 import { configuredModelIds } from "../../state/composer-model";
 import { Button } from "../primitives/Button";

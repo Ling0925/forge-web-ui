@@ -4,7 +4,7 @@ import {
   phaseMarkers,
 } from "../../src/renderer/components/workbench/Transcript";
 import type { TimelineItem } from "../../src/renderer/state/timeline";
-import type { ToolCall } from "../../src/shared-types";
+import type { ToolCall } from "../../src/renderer/shared-types";
 
 const call: ToolCall = {
   id: "t",

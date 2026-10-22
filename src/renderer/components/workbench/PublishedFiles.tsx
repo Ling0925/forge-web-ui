@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   PUBLISHED_PREVIEW_MAX_BYTES, publishedFileResponseSchema,
   type PublishedFile,
-} from "../../../shared/published-files";
+} from "@forge/core/shared/published-files";
 import type { SessionId } from "../../shared-types";
 import { Button } from "../primitives/Button";
 import { HtmlPreview } from "../primitives/HtmlPreview";

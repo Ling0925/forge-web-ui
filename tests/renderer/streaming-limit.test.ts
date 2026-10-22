@@ -4,8 +4,8 @@ import {
   initialWorkbenchState,
   workbenchReducer,
 } from "../../src/renderer/state/workbench-reducer";
-import { runIdSchema } from "../../src/shared/ipc";
-import { sessionSnapshotSchema } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 const snapshot = sessionSnapshotSchema.parse({
   version: 1,
   id: "11111111-1111-4111-8111-111111111111",

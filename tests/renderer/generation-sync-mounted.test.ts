@@ -28,7 +28,7 @@ it("renders generation-ordered reasoning through both snapshot races, failure an
       import {useReducer} from 'react';
       import {createRoot} from 'react-dom/client';
       import {Transcript} from './src/renderer/components/workbench/Transcript';
-      import {agentEventSchema,sessionSnapshotSchema} from './src/shared/schemas';
+      import {agentEventSchema,sessionSnapshotSchema} from '@forge/core/shared/schemas';
       import {initialWorkbenchState,workbenchReducer} from './src/renderer/state/workbench-reducer';
       import './src/renderer/styles/global.css';
       import './src/renderer/components/workbench/app.css';

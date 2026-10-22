@@ -8,17 +8,17 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { type ReactElement, useCallback, useEffect, useMemo, useState } from "react";
-import { isHtmlPath } from "../../../shared/html-preview";
+import { isHtmlPath } from "@forge/core/shared/html-preview";
 import type {
   WorkspaceDirectoryListingDto,
   WorkspaceFileEntryDto,
   WorkspaceFilePreviewDto,
-} from "../../../shared/ipc";
+} from "@forge/core/shared/ipc";
 import type {
   AgentEvent,
   FileChange,
   SessionSnapshot,
-} from "../../../shared/schemas";
+} from "@forge/core/shared/schemas";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { ErrorState } from "../primitives/ErrorState";

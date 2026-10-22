@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject, type KeyboardEvent } from "react";
-import { matchSlashCommands } from "../../../shared/slash-commands";
+import { matchSlashCommands } from "@forge/core/shared/slash-commands";
 import { desktopSlashLimitation, executeDesktopSlash, type DesktopSlashHost, type DesktopSlashResult } from "./desktop-slash";
 import "./slash-menu.css";
 

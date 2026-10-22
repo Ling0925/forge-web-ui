@@ -5,8 +5,8 @@ import { StoredTranscript } from "../../src/renderer/components/workbench/Transc
 import { reduceTimeline } from "../../src/renderer/state/timeline";
 import { outputSaved, type PendingOutput } from "../../src/renderer/state/transcript-sync";
 import { initialWorkbenchState, workbenchReducer, type WorkbenchState } from "../../src/renderer/state/workbench-reducer";
-import { runIdSchema } from "../../src/shared/ipc";
-import { agentEventSchema, sessionSnapshotSchema } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { agentEventSchema, sessionSnapshotSchema } from "@forge/core/shared/schemas";
 
 const id = "11111111-1111-4111-8111-111111111111";
 const base = { sessionId: id, timestamp: "2026-01-01T00:00:00.000Z" };

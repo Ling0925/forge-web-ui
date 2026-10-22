@@ -7,9 +7,9 @@ import react from "@vitejs/plugin-react";
 import { chromium } from "playwright";
 import { createServer as createViteServer } from "vite";
 import { expect, it } from "vitest";
-import { createHarness } from "../src/core/harness";
-import { type RunEvent, runEventSchema } from "../src/shared/ipc";
-import { createWebHost } from "../src/web/server";
+import { createHarness } from "@forge/core/core/harness";
+import { type RunEvent, runEventSchema } from "@forge/core/shared/ipc";
+import { createWebHost } from "@forge/core/web/server";
 
 it("pushes progress to the browser alongside Vite HMR without HTTP polling", async () => {
   const reservation = createServer();
@@ -201,11 +201,11 @@ it("pushes progress to the browser alongside Vite HMR without HTTP polling", asy
     expect(events.some((event) => event.runId === running.runId && event.event.type === "run_started")).toBe(true);
     expect(events.some((event) => event.event.type === "run_finished")).toBe(false);
     await page.goto(`${web.origin}/workbench`);
-    await page.locator(".welcome-task").filter({ hasText: "New session" }).first().click();
+    await page.locator(".welcome-task").first().click();
     await page.getByRole("button", { name: "取消", exact: true }).waitFor();
     await page.getByText("progress 0", { exact: true }).waitFor();
     await page.reload();
-    await page.locator(".welcome-task").filter({ hasText: "New session" }).first().click();
+    await page.locator(".welcome-task").first().click();
     await page.getByRole("button", { name: "取消", exact: true }).waitFor();
     await page.getByText("progress 0", { exact: true }).waitFor();
     release();

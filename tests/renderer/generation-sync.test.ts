@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import { runIdSchema } from "../../src/shared/ipc";
-import { agentEventSchema, sessionSnapshotSchema, type Message } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { agentEventSchema, sessionSnapshotSchema, type Message } from "@forge/core/shared/schemas";
 import { initialWorkbenchState, streamedOutput, workbenchReducer, type WorkbenchState } from "../../src/renderer/state/workbench-reducer";
 import { reduceTimeline } from "../../src/renderer/state/timeline";
 import { reasoningSaved } from "../../src/renderer/state/transcript-sync";

@@ -18,7 +18,7 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
         import {useState} from 'react';
         import {createRoot} from 'react-dom/client';
         import {ToolDisclosure} from './src/renderer/components/primitives/ToolDisclosure';
-        import {createDiffPatch} from './src/shared/diff';
+        import {createDiffPatch} from '@forge/core/shared/diff';
         import './src/renderer/styles/global.css';
         import './src/renderer/styles/workspace-theme.css';
         import './src/renderer/components/primitives/tool-disclosure.css';

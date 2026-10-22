@@ -14,14 +14,14 @@ import {
 } from "@phosphor-icons/react";
 import { type DragEvent as ReactDragEvent, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { permissionSchema, type RunInput, settingsFields } from "../../../shared/schemas";
+import { permissionSchema, type RunInput, settingsFields } from "@forge/core/shared/schemas";
 import type { SessionId } from "../../shared-types";
 import {
   type ImageAttachment,
   imageAttachmentsSchema,
-} from "../../../shared/images";
+} from "@forge/core/shared/images";
 import { parseDrafts } from "../../state/drafts";
-import type { ModelCatalog } from "../../../shared/model-catalog";
+import type { ModelCatalog } from "@forge/core/shared/model-catalog";
 import { modelCatalogCache, modelCatalogKey } from "../../state/model-catalog-cache";
 import { composerEffortUpdate, composerModelMetadata, composerReasoningEffort, selectableModelIds } from "../../state/composer-model";
 import { useWorkbench } from "../../state/workbench-context";

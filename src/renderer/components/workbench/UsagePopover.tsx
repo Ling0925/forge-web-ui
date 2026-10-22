@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { contextDisplayLabel } from "../../../shared/context-display";
-import { budgetUsage, resolveContextBudget, resolveContextWindow } from "../../../shared/context-usage";
-import type { ModelCatalogEntry } from "../../../shared/model-catalog";
+import { contextDisplayLabel } from "@forge/core/shared/context-display";
+import { budgetUsage, resolveContextBudget, resolveContextWindow } from "@forge/core/shared/context-usage";
+import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
 import type { AgentEvent, SessionSnapshot } from "../../shared-types";
 import { composerModelMetadata } from "../../state/composer-model";
 import { useWorkbench } from "../../state/workbench-context";

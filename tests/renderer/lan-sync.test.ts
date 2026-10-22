@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { expect, it } from "vitest";
 import { initialWorkbenchState, workbenchReducer } from "../../src/renderer/state/workbench-reducer";
-import { runIdSchema } from "../../src/shared/ipc";
-import { sessionIdSchema } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { sessionIdSchema } from "@forge/core/shared/schemas";
 
 const sessionId = sessionIdSchema.parse(randomUUID());
 const runId = runIdSchema.parse(randomUUID());

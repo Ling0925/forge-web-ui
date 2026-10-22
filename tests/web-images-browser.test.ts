@@ -5,9 +5,9 @@ import { createServer } from "node:net";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { createHarness } from "../src/core/harness";
-import type { Message } from "../src/shared/schemas";
-import { createWebHost } from "../src/web/server";
+import { createHarness } from "@forge/core/core/harness";
+import type { Message } from "@forge/core/shared/schemas";
+import { createWebHost } from "@forge/core/web/server";
 import { image } from "./fixtures/image";
 
 it("sends selected and pasted images through the real Web bridge, preserves drafts and renders saved images", async () => {

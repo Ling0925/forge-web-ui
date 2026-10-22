@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "@phosphor-icons/react";
-import { isPrimarySession } from "../../../shared/sessions";
+import { isPrimarySession } from "@forge/core/shared/sessions";
 import { useWorkbench } from "../../state/workbench-context";
 
 export function Welcome() {

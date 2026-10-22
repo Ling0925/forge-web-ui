@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   listWorkspaceDirectory,
   readWorkspaceFilePreview,
-} from "../../src/core/workspace-files";
+} from "@forge/core/core/workspace-files";
 import { parseContextMemory } from "../../src/renderer/components/workbench/context-memory-parser";
 import {
   ContextMemoryView,
@@ -18,8 +18,8 @@ import {
 import { ToolDisclosure } from "../../src/renderer/components/primitives/ToolDisclosure";
 import { mergeTranscript } from "../../src/renderer/state/transcript-sync";
 import { initialWorkbenchState, workbenchReducer, type WorkbenchState } from "../../src/renderer/state/workbench-reducer";
-import { runIdSchema } from "../../src/shared/ipc";
-import { sessionSnapshotSchema, type TaskPlan } from "../../src/shared/schemas";
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { sessionSnapshotSchema, type TaskPlan } from "@forge/core/shared/schemas";
 
 const first: TaskPlan = { id: "plan-a", title: "First task", explanation: "Task A only",
   steps: [{ step: "A verified", status: "completed" }] };

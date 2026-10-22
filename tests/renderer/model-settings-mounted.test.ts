@@ -45,7 +45,7 @@ it("model search requires selection and settings retain drafts and save once", a
             loader: "tsx",
             contents: `
         import {createContext,useContext,useState} from 'react';
-        import {defaultPublicSettings} from './src/shared/schemas';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
         const Context=createContext(null);
         export const useWorkbench=()=>useContext(Context);
         export function TestProvider({children}) {

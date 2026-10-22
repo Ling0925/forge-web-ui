@@ -14,7 +14,7 @@ it("selecting unrestricted permits immediate sending; plan and configuration che
       contents: `
       import React, {useReducer, useState} from 'react';
       import {createRoot} from 'react-dom/client';
-      import {defaultPublicSettings} from './src/shared/schemas';
+      import {defaultPublicSettings} from '@forge/core/shared/schemas';
       import {initialWorkbenchState, workbenchReducer} from './src/renderer/state/workbench-reducer';
       import {Composer} from './src/renderer/components/workbench/Composer';
       window.forge = {chooseWorkspace: async () => '/tmp/workspace'};

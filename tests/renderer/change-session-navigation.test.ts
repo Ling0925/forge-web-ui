@@ -7,7 +7,7 @@ import {
   initialWorkbenchState,
   workbenchReducer,
 } from "../../src/renderer/state/workbench-reducer";
-import { sessionIdSchema } from "../../src/shared/schemas";
+import { sessionIdSchema } from "@forge/core/shared/schemas";
 
 const parentId = sessionIdSchema.parse("11111111-1111-4111-8111-111111111111");
 const childId = sessionIdSchema.parse("22222222-2222-4222-8222-222222222222");

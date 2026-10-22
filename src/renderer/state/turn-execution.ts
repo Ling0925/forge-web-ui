@@ -1,5 +1,5 @@
 import type { SessionSnapshot } from "../shared-types";
-import { executionTurns } from "../../shared/execution";
+import { executionTurns } from "@forge/core/shared/execution";
 import { sessionUsage } from "./session-usage";
 
 export interface CompletedTurnExecution {

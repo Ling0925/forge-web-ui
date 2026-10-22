@@ -12,7 +12,7 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
       contents: `
         import {createRoot} from 'react-dom/client';
         import {ProviderSources} from './src/renderer/components/workbench/ProviderSources';
-        import {providerPresets} from './src/provider/presets';
+        import {providerPresets} from '@forge/core/provider/presets';
         import {TestProvider} from './src/renderer/state/workbench-context';
         import './src/renderer/styles/global.css';
         import './src/renderer/components/workbench/model-access.css';
@@ -71,7 +71,7 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
             resolveDir: resolve("."),
             contents: `
               import {createContext,useContext,useState} from 'react';
-              import {defaultPublicSettings} from './src/shared/schemas';
+              import {defaultPublicSettings} from '@forge/core/shared/schemas';
               const C=createContext(null);export const useWorkbench=()=>useContext(C);
               export function TestProvider({children}){
                 const [settings,setSettings]=useState({...defaultPublicSettings,isConfigured:true,baseUrl:'https://a.test/v1',model:'a/one',activeSourceId:'a',

@@ -1,6 +1,6 @@
 import { CaretRight, FileCode } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isHtmlPath } from "../../../shared/html-preview";
+import { isHtmlPath } from "@forge/core/shared/html-preview";
 import type { FileChange } from "../../shared-types";
 import { HtmlPreview } from "./HtmlPreview";
 import "./code-diff.css";

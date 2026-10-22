@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { parseSessionId } from "../../src/shared/schemas";
+import { parseSessionId } from "@forge/core/shared/schemas";
 import { RunInputQueue } from "../../src/renderer/state/run-input-queue";
 
 const a = parseSessionId("11111111-1111-4111-8111-111111111111");

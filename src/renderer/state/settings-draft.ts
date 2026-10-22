@@ -1,4 +1,4 @@
-import { configureInputSchema, type ConfigureInput, type PublicSettings } from "../../shared/schemas";
+import { configureInputSchema, type ConfigureInput, type PublicSettings } from "@forge/core/shared/schemas";
 
 /**
  * Fields the settings form actually edits. Endpoint, model and protocol now

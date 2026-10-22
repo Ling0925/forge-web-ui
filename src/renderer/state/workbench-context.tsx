@@ -14,7 +14,7 @@ import {
   createSessionInputSchema,
   runInputSchema,
   type RunInput,
-} from "../../shared/schemas";
+} from "@forge/core/shared/schemas";
 import type {
   ConfigureInput,
   CreateSessionInput,
@@ -23,11 +23,11 @@ import type {
   SessionId,
   SessionSnapshot,
 } from "../shared-types";
-import { ForgeError } from "../../shared/errors";
+import { ForgeError } from "@forge/core/shared/errors";
 import { shouldRefreshTranscript } from "./refresh-events";
 import { RunInputQueue } from "./run-input-queue";
 import { pageSnapshot } from "./session-pages";
-import type { ImageAttachment } from "../../shared/images";
+import type { ImageAttachment } from "@forge/core/shared/images";
 import {
   type WorkbenchAction,
   initialWorkbenchState,

@@ -18,7 +18,7 @@ it("keeps a picked model paired with the source it came from", async () => {
         import {createRoot} from 'react-dom/client';
         import {Composer} from './src/renderer/components/workbench/Composer';
         import {WorkbenchProvider} from './src/renderer/state/workbench-context';
-        import {defaultPublicSettings} from './src/shared/schemas';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
         window.starts=[]; window.refreshes=[]; window.creates=[];
         window.forge={listModels:async(id,refresh)=>{if(refresh)window.refreshes.push(id);return [id+'/one',id+'/two',id+'/unconfigured'];},listSessions:async()=>[],
           getSettings:async()=>({...defaultPublicSettings,isConfigured:true,baseUrl:'https://a.test/v1',model:'a/one',activeSourceId:'a',

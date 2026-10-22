@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowSquareOut, CaretDown, CaretUp } from "@phosphor-icons/react";
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SessionId, SessionSnapshot, SessionSummary } from "../../shared-types";
-import { toolActivity } from "../../../shared/tool-activity";
+import { toolActivity } from "@forge/core/shared/tool-activity";
 import { mergeTranscript } from "../../state/transcript-sync";
 import { TranscriptScrollState } from "../../state/transcript-scroll";
 import type { TimelineItem } from "../../state/timeline";

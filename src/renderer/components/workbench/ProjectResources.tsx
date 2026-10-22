@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ProjectContextDto } from "../../../shared/ipc";
+import type { ProjectContextDto } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";

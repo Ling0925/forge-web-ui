@@ -13,7 +13,7 @@ it("renders eight live child cards with isolated streams, folded tools, stable s
       import {createRoot} from 'react-dom/client';
       import {WorkbenchProvider, useWorkbench} from './src/renderer/state/workbench-context';
       import {SubAgentsPanel} from './src/renderer/components/workbench/RuntimePanels';
-      import {defaultPublicSettings} from './src/shared/schemas';
+      import {defaultPublicSettings} from '@forge/core/shared/schemas';
       import './src/renderer/styles/global.css';
       import './src/renderer/components/workbench/app.css';
       import './src/renderer/components/workbench/inspector.css';

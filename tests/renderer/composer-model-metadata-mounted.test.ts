@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { defaultPublicSettings } from "../../src/shared/schemas";
+import { defaultPublicSettings } from "@forge/core/shared/schemas";
 
 /**
  * Browser regression coverage for the composer's model metadata pipeline.
@@ -173,7 +173,7 @@ const harness = (config: TestConfig): string => `
   import {useEffect, useRef} from 'react';
   import {Composer} from './src/renderer/components/workbench/Composer';
   import {WorkbenchProvider, useWorkbench} from './src/renderer/state/workbench-context';
-  import {defaultPublicSettings} from './src/shared/schemas';
+  import {defaultPublicSettings} from '@forge/core/shared/schemas';
 
   const config = ${JSON.stringify(config)};
   const clone = value => value === undefined ? undefined : structuredClone(value);

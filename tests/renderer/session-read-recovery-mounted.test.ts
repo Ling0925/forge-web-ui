@@ -20,9 +20,9 @@ beforeAll(async () => {
         import {StrictMode} from 'react';
         import {createRoot} from 'react-dom/client';
         import {WorkbenchProvider,useWorkbench} from './src/renderer/state/workbench-context';
-        import {createTransportBridge} from './src/shared/bridge';
-        import {defaultPublicSettings} from './src/shared/schemas';
-        import {paginateSession} from './src/shared/session-page';
+        import {createTransportBridge} from '@forge/core/shared/bridge';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
+        import {paginateSession} from '@forge/core/shared/session-page';
         import {ErrorState} from './src/renderer/components/primitives/ErrorState';
         import {Button} from './src/renderer/components/primitives/Button';
         import './src/renderer/styles/global.css';

@@ -4,7 +4,7 @@ import { expect, it } from "vitest";
 import { ToolDisclosure } from "../../src/renderer/components/primitives/ToolDisclosure";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
 import { reduceTimeline } from "../../src/renderer/state/timeline";
-import { sessionSnapshotSchema } from "../../src/shared/schemas";
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 
 const id = sessionSnapshotSchema.parse({
   version: 1,

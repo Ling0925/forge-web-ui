@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { defaultPublicSettings as base } from "../../src/shared/schemas";
+import { defaultPublicSettings as base } from "@forge/core/shared/schemas";
 import { buildSettingsUpdate, createSettingsDraft } from "../../src/renderer/state/settings-draft";
 it("sends only edited fields and allows appearance before provider setup", () => {
   const draft = createSettingsDraft(base);

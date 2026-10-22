@@ -13,7 +13,7 @@ it("switches only the focused composer, announces next-run scope and preserves n
     import {createRoot} from 'react-dom/client';
     import {Composer} from './src/renderer/components/workbench/Composer';
     import {initialWorkbenchState} from './src/renderer/state/workbench-reducer';
-    import {defaultPublicSettings} from './src/shared/schemas';
+    import {defaultPublicSettings} from '@forge/core/shared/schemas';
     const id = '11111111-1111-4111-8111-111111111111';
     window.testController = { state: {...initialWorkbenchState, activeSessionId:id,
       activeSnapshot:{id, workspace:'/tmp', model:'test', messages:[], events:[], changes:[]},

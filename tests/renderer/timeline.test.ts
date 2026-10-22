@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
 import { reduceTimeline } from "../../src/renderer/state/timeline";
-import { createDiffPatch } from "../../src/shared/diff";
+import { createDiffPatch } from "@forge/core/shared/diff";
 import {
   sessionIdSchema,
   sessionSnapshotSchema,
-} from "../../src/shared/schemas";
+} from "@forge/core/shared/schemas";
 const id = sessionIdSchema.parse("11111111-1111-4111-8111-111111111111");
 it("reuses timeline for the same immutable snapshot and rebuilds replacements", () => {
   const first = reduceTimeline(base);

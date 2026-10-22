@@ -36,7 +36,7 @@ it("Android settings expose explicit connection editing and protect unsaved draf
     plugins: [{ name: "connection-fixture", setup(api) {
       api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({ loader: "tsx", resolveDir: resolve("."), contents: `
         import {createContext,useContext,useState} from 'react';
-        import {defaultPublicSettings} from './src/shared/schemas';
+        import {defaultPublicSettings} from '@forge/core/shared/schemas';
         const C=createContext(null);export const useWorkbench=()=>useContext(C);
         export function TestProvider({children}){
           const [isSettingsOpen,openSettings]=useState(true);

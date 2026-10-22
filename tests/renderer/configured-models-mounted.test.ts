@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium, type Page } from "playwright";
 import { expect, it } from "vitest";
-import { defaultPublicSettings } from "../../src/shared/schemas";
+import { defaultPublicSettings } from "@forge/core/shared/schemas";
 
 /**
  * Browser regressions for the configured-model picker and the per-model
@@ -122,7 +122,7 @@ const harness = (config: TestConfig): string => `
   import {Composer} from './src/renderer/components/workbench/Composer';
   import {ProviderSources} from './src/renderer/components/workbench/ProviderSources';
   import {WorkbenchProvider, useWorkbench} from './src/renderer/state/workbench-context';
-  import {configureInputSchema} from './src/shared/schemas';
+  import {configureInputSchema} from '@forge/core/shared/schemas';
   import './src/renderer/styles/global.css';
 
   const config = ${JSON.stringify(config)};

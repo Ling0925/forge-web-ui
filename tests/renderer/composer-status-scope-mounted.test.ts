@@ -52,7 +52,7 @@ beforeAll(async () => {
       api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({
         resolveDir: resolve("."), loader: "tsx", contents: `
           import {createContext,useContext,useState,useLayoutEffect} from 'react';
-          import {defaultPublicSettings} from './src/shared/schemas';
+          import {defaultPublicSettings} from '@forge/core/shared/schemas';
           const Context=createContext(null);export const useWorkbench=()=>useContext(Context);
           const snapshot=id=>({id,model:'test/model',workspace:'/tmp',events:[
           {type:'provider_attempt',sessionId:id,timestamp:'2026-10-20T10:00:00.000Z',selection:{
