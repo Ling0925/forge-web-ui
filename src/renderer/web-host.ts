@@ -241,8 +241,10 @@ export async function installWebHost(): Promise<void> {
       value: Object.freeze({
         canControl: false,
         status: async () => {
-          const pairing = z.object({ url: z.string().url(), workspace: z.string() }).parse(await post("/api/pairing", {}));
-          return lanStatusSchema.parse({ url: pairing.url, addresses: [] });
+          z.object({ url: z.string().url(), workspace: z.string() }).parse(await post("/api/pairing", {}));
+          // The API may be behind a separate Web gateway. Share the browser's
+          // public address, never Core's private loopback endpoint.
+          return lanStatusSchema.parse({ url: location.origin, addresses: [] });
         },
         start: async () => { throw new Error("请在桌面端或服务器启动局域网服务。"); },
         stop: async () => { throw new Error("请在桌面端或服务器停止局域网服务。"); },
