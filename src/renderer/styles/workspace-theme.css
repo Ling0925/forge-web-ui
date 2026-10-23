@@ -131,9 +131,18 @@
   align-items: center;
   gap: var(--space-3);
 }
+.forge-mark {
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
 .welcome-mark {
-  color: var(--accent);
-  font: italic 500 var(--welcome-title-size) Georgia, serif;
+  width: var(--space-10);
+  height: var(--space-10);
+}
+.sidebar-mark {
+  width: var(--space-8);
+  height: var(--space-8);
 }
 .wb-new-session-intro h2 {
   margin: 0;

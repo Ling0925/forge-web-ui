@@ -15,6 +15,7 @@ import { useState } from "react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
 import { useWorkbench } from "../../state/workbench-context";
+import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
 
 /** Folder label for a workspace path; the full path stays available as a tooltip. */
@@ -143,6 +144,7 @@ export function Sidebar() {
       <div className="sidebar-header">
         <div className="sidebar-brand-row">
           <div className="sidebar-logo">
+            <ForgeMark className="sidebar-mark" />
             <span className="sidebar-title">Forge</span>
             <span className="sidebar-badge">Agent</span>
           </div>

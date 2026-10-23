@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
@@ -70,12 +70,16 @@ it("unifies navigation and opens recent tasks without loading their histories up
     page.setDefaultTimeout(5000);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.route("http://forge.test/**", (route) =>
-      route.fulfill({
+    const brandAsset = await readFile("src/renderer/public/forge-mark-v3.png");
+    await page.route("http://forge.test/**", (route) => {
+      if (new URL(route.request().url()).pathname === "/forge-mark-v3.png") {
+        return route.fulfill({ body: brandAsset, contentType: "image/png" });
+      }
+      return route.fulfill({
         body: '<html lang="zh-CN"><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div id="root"></div></body></html>',
         contentType: "text/html",
-      }),
-    );
+      });
+    });
     await page.goto("http://forge.test");
     await page.addStyleTag({ content: css });
     await page.addScriptTag({ content: js });
@@ -91,6 +95,21 @@ it("unifies navigation and opens recent tasks without loading their histories up
     const readCount = await page.evaluate(
       () => Reflect.get(window, "fixture").reads.length,
     );
+    const marks = await page.evaluate(async () => {
+      const images = document.querySelectorAll<HTMLImageElement>(
+        ".welcome-heading img, .sidebar-logo img",
+      );
+      await Promise.all([...images].map((image) => image.decode()));
+      return [...images].map((image) => ({
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        alt: image.alt,
+      }));
+    });
+    expect(marks).toEqual([
+      { width: 256, height: 256, alt: "" },
+      { width: 256, height: 256, alt: "" },
+    ]);
     const header = page.locator(".workbench-task-header");
     const details = page.locator(".wb-details-toggle");
     for (const width of [1440, 834, 390, 320]) {
@@ -140,6 +159,7 @@ it("unifies navigation and opens recent tasks without loading their histories up
         }
         await page.screenshot({
           path: `${evidence}/home-${width}-${theme}.png`,
+          animations: "disabled",
         });
       }
     }
@@ -173,6 +193,14 @@ it("unifies navigation and opens recent tasks without loading their histories up
     expect(await header.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     await page.getByRole("button", { name: "打开会话列表" }).click();
     expect(await page.locator(".wb-session-actions").first().isVisible()).toBe(true);
+    expect(await page.locator(".sidebar-logo img").isVisible()).toBe(true);
+    await expect
+      .poll(async () => (await page.locator(".sidebar-logo").boundingBox())?.x)
+      .toBeGreaterThanOrEqual(0);
+    await page.screenshot({
+      path: `${evidence}/sidebar-320-dark.png`,
+      animations: "disabled",
+    });
     await page.getByRole("button", { name: "关闭侧边栏" }).click();
     await page.locator(".composer-textarea").fill("保留尚未发送的草稿");
     await details.click();

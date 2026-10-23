@@ -1,6 +1,14 @@
-# @forge/web-ui
+<p align="center">
+  <img src="src/renderer/public/forge-mark-v3.png" width="112" height="112" alt="Forge 锻造图标" />
+</p>
 
-Forge 工作台的独立 Web UI 仓库：只包含 React renderer、renderer 测试，以及把已构建界面挂到 Core Web host 的薄启动装配。
+# Forge Web
+
+Forge 的浏览器工作台：管理工作区与会话、与模型协作完成本地任务，并查看执行过程和文件改动。Web 与 Core 独立运行，更新界面不打断 Core 中的任务。
+
+本仓库的包名为 `@forge/web-ui`，包含 React renderer、renderer 测试及连接独立 Core 的开发 / 生产启动入口。
+
+首页和侧栏共用 [锻造图标](src/renderer/public/forge-mark-v3.png)，由 `ForgeMark` 组件呈现；浏览器标签使用独立的 [64px favicon](src/renderer/public/forge-favicon-v3.png)。
 
 ## 边界
 

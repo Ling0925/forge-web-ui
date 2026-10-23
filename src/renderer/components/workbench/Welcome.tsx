@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
 import { useWorkbench } from "../../state/workbench-context";
+import { ForgeMark } from "../primitives/ForgeMark";
 
 export function Welcome() {
   const { state, selectSession } = useWorkbench();
@@ -13,9 +14,7 @@ export function Welcome() {
     <div className="wb-new-session-scroll" role="region" aria-label="欢迎与最近任务">
       <section className="wb-new-session-intro" aria-labelledby="welcome-title">
         <div className="welcome-heading">
-          <span className="welcome-mark" aria-hidden="true">
-            f.
-          </span>
+          <ForgeMark className="welcome-mark" />
           <h2 id="welcome-title">今天，想做点什么？</h2>
         </div>
         <p>继续之前的工作，或开始一项新任务。</p>
