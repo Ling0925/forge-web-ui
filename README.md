@@ -4,110 +4,133 @@
 
 # Forge Web
 
-Forge 的浏览器工作台：管理工作区与会话、与模型协作完成本地任务，并查看执行过程和文件改动。Web 与 Core 独立运行，更新界面不打断 Core 中的任务。
+Forge 的浏览器工作台。在一个界面中管理工作区与会话、与模型协作、审批工具操作，并检查文件和任务进度。
 
-本仓库的包名为 `@forge/web-ui`，包含 React renderer、renderer 测试及连接独立 Core 的开发 / 生产启动入口。
+Web 与 Core 独立运行：**更新界面不打断 Core 中已接受的任务**。本仓负责 React 界面、开发服务器与静态页面入口；模型、凭据、会话和工具执行都由 Core 管理。
 
-首页和侧栏共用 [锻造图标](src/renderer/public/forge-mark-v3.png)，由 `ForgeMark` 组件呈现；浏览器标签使用独立的 [64px favicon](src/renderer/public/forge-favicon-v3.png)。
+[Forge 主仓](https://github.com/Ling0925/forge) · [Core](https://github.com/Ling0925/forge-core) · [CLI](https://github.com/Ling0925/forge-cli) · [Android](https://github.com/Ling0925/forge-android)
 
-## 边界
+## 工作台能做什么
 
-- **Core owns** 所有 HTTP/WebSocket 服务、RPC、会话存储、provider 和工具运行时实现。
-- 本仓库只依赖 `@forge/core` 的公开子路径，不复制 Core 源码：
-  - 浏览器安全契约：`@forge/core/shared/*`
-  - 生产 Node 适配：`@forge/core/web/gateway`（静态 UI + HTTP/WebSocket 代理，不持有运行时）
-  - 开发装配：Vite 提供 HMR，并通过自带代理连接独立 Core；不创建 harness
-  - 仅离线测试 fixture 使用 `@forge/core/core/harness`、`@forge/core/web/server`
-- 开发和生产 Web 均与 Core 独立，重启 Web 不终止 Core 对话；不做 Rust、全局单实例或 UI 设计重写。
-- 不包含桌面端、Electron 打包、Android 客户端或 CLI；这些仍由各自入口维护。
-- 原库中未提交的 `ModelPicker.tsx` / `settings-models.css` 修改没有进入本仓库，也不应在迁移中覆盖它们。
+- 按工作区组织会话，搜索、恢复、重命名与归档任务。
+- 流式对话、图片输入、思考与工具折叠，运行中排队或插话。
+- 审批操作、查看计划与子任务，浏览文件、差异和检查点。
+- 管理模型来源、路由、MCP 等设置，查看用量与诊断。
+- 在桌面和手机布局间自适应，支持浅色、深色主题。
 
-## 先构建 Core
+## 快速开始
 
-`@forge/core` 通过 `file:../forge-core` 作为本地包依赖；Core 的 `dist` 必须先存在：
+需要 **Node.js `>=22.23.1 <23`** 和 **pnpm `11.18.0`**。浏览器构建目标为 **Chrome 132**；建议使用对应版本或更新的 Chrome/Chromium，其他浏览器需自行验证。
+
+### 1. 构建 Core 和界面
+
+两个仓库必须位于同一级，本仓通过 `file:../forge-core` 依赖 Core：
 
 ```sh
-cd ../forge-core
-pnpm install
+git clone https://github.com/Ling0925/forge-core.git
+git clone https://github.com/Ling0925/forge-web-ui.git
+
+cd forge-core
+pnpm install --frozen-lockfile
 pnpm build
-```
 
-## 安装与构建
-
-```sh
 cd ../forge-web-ui
 pnpm install
 pnpm build
 ```
 
-本仓库自带 `pnpm-workspace.yaml`，pnpm 不会继续向上发现父仓库的 workspace 并改写父锁文件。Core 重新构建后，如 UI 仍解析到 `file:` 依赖的旧副本，执行 `pnpm install --no-frozen-lockfile` 刷新 `@forge/core`。
+Web 构建输出到 `dist/renderer`。以下命令均从 `forge-web-ui` 根目录执行。
 
-`pnpm build` 使用独立 Vite 配置输出到 `dist/renderer`。源 `src/renderer/index.html` 的 CSP 保持原样（`connect-src 'none'`，面向 file-origin 桌面语义）；生产 Web host 由 Core 只放宽同源 HTTP/WS 的 `connect-src`，其余指令不变。
+### 2. 启动独立 Core
 
-## 启动
-
-生产（先构建 Core、刷新本仓 `@forge/core` 依赖并 `pnpm build`）：
+将工作区替换成实际存在的绝对路径，在第一个终端启动：
 
 ```sh
-# 独立终端/服务 A：Core 持有所有任务，--multi-workspace 为可选
-node ../forge-core/dist/web/serve.js --host 127.0.0.1 --port 5175 --workspace /absolute/path/to/project --multi-workspace
-# 独立终端/服务 B：本仓 Web 网关，只暴露页面和同源转发
-pnpm serve -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
+node ../forge-core/dist/web/serve.js \
+  --host 127.0.0.1 --port 5175 \
+  --workspace /absolute/path/to/project --multi-workspace
 ```
 
-`--core-url` 必填（本机具体 IPv4 的 HTTP 地址），不提供时立即报错，不会隐式创建 Core。
-工作区、数据目录 `FORGE_HOME` 和可选 `--socket` 只在 Core 进程配置；Web 无运行时状态。
-重启/终止 Web 只让浏览器短暂断线，Core 继续执行，页面自动重连并补齐事件。
-不要把两者放进同一个会被整体停止的 supervisor 单元，也不要在只更新 UI 时重启 Core。
+去掉 `--multi-workspace` 可将客户端限制在启动工作区。`FORGE_HOME`、工作区和可选 `--socket` 都配置在 **Core 进程**，不传给 Web。
 
-开发（保留上面的独立 Core，将 Web 入口换成 Vite，无需先构建 UI）：
+### 3. 启动 Web 并打开页面
+
+在第二个终端启动：
 
 ```sh
-pnpm dev -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
+pnpm serve -- --host 127.0.0.1 --port 5173 \
+  --core-url http://127.0.0.1:5175
 ```
 
-修改 **本仓库的 `src/renderer`** 后 React/CSS 自动热更新，无需编译或重启服务；
-原 desktop-harness 根目录的 `src/renderer` 不属于这个 Vite 入口。
-开发 Web 只使用 Vite 的 HTTP/WebSocket 代理，不加载 harness、不读写 Core 状态。
-开发代理只接受显式的 loopback IPv4 Core 地址，在转发前检查客户端 Host/Origin，
-再改写上游 Host/Origin；Core 自己继续校验 RPC、会话和连接身份。
-`/__forge_hmr` 用于 Vite HMR，`/api/events` 用于 Core 对话事件，二者互不占用。
+打开 `http://127.0.0.1:5173`，首次使用在设置中配置模型来源、凭据和模型，再开始会话。实际发送消息会调用所选模型，可能产生费用。
 
-默认监听 `127.0.0.1:5173`。`pnpm serve` 默认服务本仓库的 `dist/renderer`，
-也可用 `--renderer` 指向其他构建输出。分享/二维码使用浏览器访问的 Web 地址，而非内部 Core 地址。
-只改 React/CSS 不会整页刷新；不支持 Fast Refresh 的模块变更可能触发整页刷新。
-修改 `scripts/dev.mjs` 时需要重启 Web：Vite 客户端会自动重新加载页面，Core 对话仍继续。
-这不等于 CLI、桌面和 Web 已统一到全局单实例 daemon。
+`--core-url` 必填且必须是另一个本机回环 IPv4 HTTP origin，带显式端口，不带路径、查询或凭据。缺少 Core 时 Web 不会自行创建运行时。
 
-HTTP 不提供传输加密；不要把这个个人局域网入口无保护地暴露到公网。
+## 开发界面：使用 HMR
 
-## 测试
+保留上面的 Core，把第二个终端换成开发入口，无需先构建 UI：
 
 ```sh
-# 聚焦单元测试
+pnpm dev -- --host 127.0.0.1 --port 5173 \
+  --core-url http://127.0.0.1:5175
+```
+
+修改 `src/renderer` 中的 React/CSS 后由 Vite 热更新。无法 Fast Refresh 的模块变更可能整页刷新；修改 `scripts/dev.mjs` 需重启 Web。两种情况都不需要重启 Core。
+
+Core 代码变化时，先在 Core 仓重新构建，再在本仓执行 `pnpm install --no-frozen-lockfile` 刷新文件包。是否需要重启 Core 取决于后端改动；正在执行的任务不会自动迁移到新进程。
+
+## 局域网与运行生命周期
+
+要让手机访问，将 **Web 的 `--host`** 换成服务器实际局域网 IPv4，例如 `192.168.1.10`，然后访问 `http://192.168.1.10:5173`。Core 仍可保持 `127.0.0.1:5175`；分享与二维码应使用 Web 地址，不是内部 Core 地址。
+
+- Web 的监听地址必须是具体 IPv4，不支持 `0.0.0.0`；端口范围为 `1024–65535`。默认是 `127.0.0.1:5173`。
+- 当前入口是可信个人网络直连，**可访问该地址的人就能使用工作台**。HTTP 不加密，公网接入必须另外提供 HTTPS 与访问控制。
+- 浏览器 Host / Origin 会被检查；反向代理需正确处理外部地址和 WebSocket，不能仅替换访问域名。
+- Web 停止只关闭页面连接，Core 继续执行任务。重连后恢复事件；超出保留窗口时重新读取持久化状态。
+- 停止 Core 会停止它持有的任务。进程管理器应让两者独立，不配置会因 Web 重启而停止 Core 的联动关系。
+
+## 常见问题
+
+**打开 Core 端口是 404**：API-only Core 不提供页面。浏览器应打开 Web 端口，本例为 `5173`。
+
+**提示缺少 `--core-url`**：先独立启动 Core，再把它的回环地址传给 `pnpm serve` / `pnpm dev`；Web 不接受旧的 `--workspace` 启动方式。
+
+**提示找不到 renderer 或 Core 模块**：先构建 Core，再安装 Web 依赖。静态入口还需要 `pnpm build`；也可通过 `--renderer /absolute/path/to/build` 指向另一份构建输出。
+
+**改界面后没有更新**：开发时修改本仓的 `src/renderer`；静态部署需要重新构建。Forge 主仓根目录没有另一份有效的 renderer 源码。
+
+## 开发检查
+
+```sh
+# 聚焦单元与渲染测试
 pnpm exec vitest run tests/web-bridge.test.ts tests/renderer/session-pages.test.ts
 
-# 真实浏览器烟测（需要先 pnpm build，且本机有 Playwright Chromium）
+# 静态构建及开发/生产入口的浏览器烟测
+pnpm build
 pnpm test:browser
 ```
 
-浏览器测试使用临时状态目录、fixture/未配置模型状态，不读取真实 `FORGE_HOME`、密钥或外部 provider。现有 Playwright 可用时无需重新安装浏览器；可用 `FORGE_BROWSER_EXECUTABLE` 指定本机 Chromium/Chrome。
+浏览器测试需要 Playwright Chromium，或通过 `FORGE_BROWSER_EXECUTABLE` 指定本机 Chrome/Chromium。测试用临时状态和离线 fixture，不读取真实 `FORGE_HOME`、密钥或调用外部 Provider。
 
-`tests/web-smoke-browser.test.ts` 通过真实 `scripts/serve.mjs` 网关入口和独立 Core fixture 进程，
-检查页面/CSP/RPC/分享地址/设置页往返，以及流式对话中 SIGKILL Web → Core 离线继续执行 →
-启动 Web → 原页面自动补发事件并完成，断言 Core PID/hostId 不变、对话推理只执行一次。
-同一浏览器检查还通过真实 `publish_file` 发布 50 MiB 文件，经 Core RPC/网关下载并核对字节数和 SHA-256。
-`tests/web-dev-browser.test.ts` 对 Vite 入口检查真实 React/CSS HMR（组件计数与草稿保留）、
-重启 Web 自动重载后恢复同一 Core 对话，以及同样的 50 MiB 下载。
-`tests/web-dev-proxy.test.ts` 检查转发前拒绝错误 Host/Origin 和非法 WebSocket 升级。
-最初仓库拆分时曾验证 103 项聚焦单元/渲染/浏览器测试；那是历史记录，不是每轮全量验收。
-`pnpm typecheck` / `pnpm lint` 仍未通过，涉及提取代码中的严格类型与格式问题；本轮未完成逐条修复和全量回归归因，不把构建通过当作全量验证。
+烟测覆盖页面、RPC、设置、HMR，以及 Web 中断后 Core 继续运行、页面恢复同一对话；也检查 50 MiB 文件经 Core 和网关下载。修改代理边界可单独运行 `pnpm exec vitest run tests/web-dev-proxy.test.ts`。
 
-## 历史
+`pnpm test`、`pnpm typecheck`、`pnpm lint` 是更大范围的检查入口，可按改动范围选用。
 
-本仓库从原库 `e089acbcf1c3fe10a71a9ce0fce5f9309305db3b` 提取，保留 `src/renderer`、`tests/renderer`、Web/browser 测试、fixtures 和必要配置的路径历史。
+## 代码与设计
 
-公开仓库为 `Ling0925/forge-web-ui`，`origin` 指向该仓库。既可单独克隆，也作为
-主仓 `Ling0925/forge` 的 `repos/forge-web-ui` 子模块使用；同级仍需有 `forge-core`。
-代码变更独立提交在本仓。同步主仓版本时，先提交并推送本仓，再由主仓维护者
-提交子模块指针；各仓历史不会因子模块关联而合并。
+```text
+src/renderer/           React 工作台、样式与浏览器 bridge
+src/renderer/public/    品牌图标等静态资源
+scripts/dev.mjs        Vite HMR + 独立 Core 代理
+scripts/serve.mjs      静态页面 + 独立 Core 网关入口
+tests/renderer/        组件与交互回归
+tests/web-*.test.ts     Web 传输、代理和浏览器检查
+```
+
+浏览器只导入 `@forge/core/shared/*` 安全契约；生产入口使用 `@forge/core/web/gateway`。Web 不维护运行时或存储副本，只有离线测试 fixture 会创建模拟运行环境。
+
+源 HTML 保持 `connect-src 'none'`；Web 服务按入口开放同源 HTTP/WebSocket，开发入口额外支持 HMR，不应为连通后端而随意放宽源文件 CSP。
+
+首页和侧栏使用 [256px 锻造图标](src/renderer/public/forge-mark-v3.png)，由 `ForgeMark` 组件呈现；标签页使用 [64px favicon](src/renderer/public/forge-favicon-v3.png)。布局、主题与组件约定见 [Web UI 设计规范](docs/WEB_UI_LAYOUT_SPEC.md)，启动细节见 [Web 开发说明](docs/WEB_DEV.md)。
+
+本仓包名为 `@forge/web-ui`，在 Forge 主仓中位于 `repos/forge-web-ui` 子模块，独立维护提交历史。作者与历史来源见 [作者说明](docs/AUTHORSHIP.md)。

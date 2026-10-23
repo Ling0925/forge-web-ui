@@ -1,64 +1,81 @@
-# Web 开发与启动装配
+# Web 开发与启动
 
-本仓库只包含 Web UI（`src/renderer`）和薄启动装配。所有 HTTP/WebSocket、RPC、会话存储与 provider 逻辑来自 `@forge/core`，不属于本仓库。
+日常启动步骤见 [README](../README.md#快速开始)。本文说明 Web 与 Core 的进程边界，以及修改不同部分后如何加载新版本。
 
-## 前置：先构建 Core
+## 两个进程，各自持有自己的生命周期
+
+- **Core** 持有 Harness、任务、审批、会话和事件恢复记录，通过 HTTP/WebSocket 提供能力。
+- **Web** 提供 React 页面并转发请求，不创建 Harness、不读写 Core 会话。开发入口使用 Vite，静态入口使用 `@forge/core/web/gateway`。
+
+Web 断开或重启不取消 Core 已接受的任务；Core 停止会停止它持有的任务。不要将两者配置成 Web 重启时会一起停止的服务单元。
+
+## 准备本地依赖
+
+两个仓库放在同一级。先构建 Core，再安装 Web 的 `file:../forge-core` 依赖：
 
 ```sh
 cd ../forge-core
 pnpm install
 pnpm build
-```
-
-Core 的 `dist` 是 `@forge/core` 子路径导出的运行时来源；UI 的 `src` 只通过 `@forge/core/...` 引用共享契约，不依赖原库的相对源码路径。
-
-## UI 安装、构建、测试
-
-```sh
 cd ../forge-web-ui
 pnpm install
-pnpm build      # 输出 dist/renderer
-pnpm test       # 全量单元/浏览器测试，按需使用
 ```
 
-本仓库自带 `pnpm-workspace.yaml`，不会让 pnpm 沿父目录进入原库 workspace。Core 重新 build 后如 UI 仍使用旧副本，执行 `pnpm install --no-frozen-lockfile` 刷新 `file:` 依赖。
-
-聚焦测试示例：
-
-```sh
-pnpm exec vitest run tests/web-bridge.test.ts tests/renderer/session-pages.test.ts
-```
+本仓独立的 `pnpm-workspace.yaml` 阻止 pnpm 向上发现其他 workspace。Core 重建后，用 `pnpm install --no-frozen-lockfile` 刷新本仓的文件包；浏览器代码仍只通过 `@forge/core/shared/*` 导入安全契约。
 
 ## 开发入口
 
+以下命令均在 Web 仓根目录执行，两个终端分别运行：
+
 ```sh
-pnpm dev -- --host 127.0.0.1 --port 5173 --workspace /absolute/path/to/project
+# 终端 A
+node ../forge-core/dist/web/serve.js --host 127.0.0.1 --port 5175 \
+  --workspace /absolute/path/to/project --multi-workspace
 ```
 
-`scripts/dev.mjs` 创建 Core Harness 和 `createWebHost(...)`，再把 Vite middleware 挂到同一个 HTTP server 上。Vite 只负责 renderer 的模块转换与 HMR；后端仍是 Core。开发插件只为本入口放宽 `script-src`/`connect-src` 以支持 HMR，生产 HTML 的 CSP 不变。
+```sh
+# 终端 B
+pnpm dev -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
+```
 
-默认 `127.0.0.1:5173`，工作区为当前目录；只接受具体 IPv4（不接受 `0.0.0.0`）和 1024–65535 端口。
+打开 `http://127.0.0.1:5173`。`scripts/dev.mjs` 为本仓 `src/renderer` 提供 React Fast Refresh 和 CSS HMR，并用 Vite HTTP/WebSocket 代理连接独立 Core。
 
-## 生产入口
+- `--core-url` 必填，只接受不同于 Web origin 的回环 IPv4 HTTP 地址，需带显式端口且无路径、查询或凭据。
+- `--workspace`、`--multi-workspace`、`--socket` 和 `FORGE_HOME` 属于 Core，不传给 Web。
+- `--host` 为具体 IPv4，不接受 `0.0.0.0`；端口范围为 `1024–65535`。
+- `/__forge_hmr` 用于 HMR，`/api/events` 用于对话事件。
+
+修改 React/CSS 通常无需重启；不能 Fast Refresh 的模块可能整页刷新。修改开发启动脚本需要重启 Web，Vite 客户端恢复连接后会重载页面。后端任务仍由原 Core 持有。
+
+## 静态入口
+
+保留同一个 Core，停止开发 Web 后使用静态入口：
 
 ```sh
 pnpm build
-pnpm serve -- --host 127.0.0.1 --port 5173 --workspace /absolute/path/to/project
+pnpm serve -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
 ```
 
-`scripts/serve.mjs` 只补充本仓库 `dist/renderer` 和默认工作区参数，然后执行 `@forge/core/web/serve`。Core 持有完整宿主启动/关闭、静态压缩、缓存、安全头、同源 CSP 和可选 Unix socket；UI 仓不复制这些实现。可用 `--renderer` 指向其他已构建目录，也可传 `--socket /private/core.sock` 使用已有 attach 传输。
+默认输出和服务目录为 `dist/renderer`；可用 `--renderer /absolute/path/to/build` 指定另一份构建。静态入口不支持 HMR，修改界面后需要重新构建。
 
-## 浏览器烟测
+源 HTML 保留 `connect-src 'none'`，静态服务将其调整为同源 HTTP/WS。开发入口另外允许 React Refresh 与 HMR 所需的脚本/worker；这些开发放宽不写回生产 HTML。
+
+## 验证入口
 
 ```sh
+pnpm exec vitest run tests/web-bridge.test.ts tests/renderer/session-pages.test.ts
+pnpm exec vitest run tests/web-dev-proxy.test.ts
 pnpm build
 pnpm test:browser
 ```
 
-`tests/web-smoke-browser.test.ts` 通过真实 `scripts/serve.mjs` 启动子进程，传入临时 `HOME`/`FORGE_HOME`；验证生产构建渲染、CSP、Web bridge 会话读取、设置页往返及 `--socket` 创建。它不读取真实配置、密钥或 provider。需要本机 Playwright Chromium 或通过 `FORGE_BROWSER_EXECUTABLE` 指定 Chrome/Chromium。
+浏览器测试需要 Playwright Chromium，或 `FORGE_BROWSER_EXECUTABLE` 指定的 Chrome/Chromium。fixture 使用临时状态、离线模型，不读取真实配置。
 
-本轮验证了 `pnpm build`、103 项聚焦测试（含 2 项真实 Chromium 浏览器测试）。`pnpm typecheck` / `pnpm lint` 仍未通过；严格类型与格式问题未在本轮逐条修复或完成全量回归归因，不能将构建成功等同于全部验证通过。
+- `tests/web-smoke-browser.test.ts`：静态网关、CSP/RPC、设置和分享地址，以及 Web 中断后同一 Core 继续执行、页面恢复事件。
+- `tests/web-dev-browser.test.ts`：React/CSS HMR、草稿保留、Web 重启后恢复同一 Core 对话。
+- 两个浏览器入口均检查 50 MiB 发布文件经网关下载。
+- `tests/web-dev-proxy.test.ts`：拒绝不符合约定的 Host、Origin 与 WebSocket 升级。
 
-## 安全边界
+## 网络边界
 
-这是个人局域网直接访问入口，不是公网部署方案，也不是多租户服务。HTTP 不提供保密性；远程访问必须另行提供可信的身份验证、HTTPS 和访问控制。
+网关先校验外部 Host / Origin，再改写为内部 Core 地址；它不是通用代理。局域网分享使用浏览器访问的 Web 地址，不使用内部 Core 地址。当前直连入口信任可达客户端、HTTP 不加密，公网部署需另行配置 HTTPS 与访问控制。
