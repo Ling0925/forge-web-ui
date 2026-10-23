@@ -11,7 +11,9 @@ Web 断开或重启不取消 Core 已接受的任务；Core 停止会停止它�
 
 ## 准备本地依赖
 
-两个仓库放在同一级。先构建 Core，再安装 Web 的 `file:../forge-core` 依赖：
+在 Forge 装配主仓中，首次执行主仓 `pnpm run setup`；Core 构建后用主仓 `pnpm build:web` 构建页面并链接本地 Core。日常 React/CSS 开发直接用 `pnpm dev:web`，不重复安装。
+
+独立克隆时把两个仓库放在同一级。先构建 Core，再安装 Web 的 `file:../forge-core` 依赖：
 
 ```sh
 cd ../forge-core
@@ -21,7 +23,7 @@ cd ../forge-web-ui
 pnpm install
 ```
 
-本仓独立的 `pnpm-workspace.yaml` 阻止 pnpm 向上发现其他 workspace。Core 重建后，用 `pnpm install --no-frozen-lockfile` 刷新本仓的文件包；浏览器代码仍只通过 `@forge/core/shared/*` 导入安全契约。
+本仓独立的 `pnpm-workspace.yaml` 阻止 pnpm 向上发现其他 workspace。独立克隆的 Core 重建后，用 `pnpm install --no-frozen-lockfile` 刷新本仓文件包并审阅锁文件；主仓装配的本地链接不需要这一步。浏览器代码仍只通过 `@forge/core/shared/*` 导入安全契约。
 
 ## 开发入口
 

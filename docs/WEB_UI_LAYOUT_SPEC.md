@@ -1,89 +1,41 @@
-# Forge Web UI 布局优化规格契约 (Web UI Layout Spec)
+# Web 工作台界面约定
 
-> 本文档规范 Forge 桌面与 Web 工作台（`src/renderer/**`）的布局重构与自适应体系，解决三栏挤压、断点跳跃、输入舱跳跃（Layout Shift）及 CSS 冗余覆盖问题，严格对标 [DESIGN.md](../DESIGN.md) 契约。
+本文件描述独立 Web 仓库的设计来源和修改约束。启动步骤见 [WEB_DEV.md](WEB_DEV.md)；旧单体的布局迁移清单不再作为待执行任务。
 
----
+## 设计来源与层级
 
-## 1. 目标与设计原则
+生产入口是 [main.tsx](../src/renderer/main.tsx)，工作台由 [App.tsx](../src/renderer/components/workbench/App.tsx) 装配。
 
-1. **统一容器架构，消除冗余骨架**：
-   - 梳理并废弃 `src/renderer/components/layout/` 中未投入生产的旧骨架（`PanelSplit.tsx`、`Shell.tsx`、`layout.css`），或将其重构为受控的核心布局组件，统一全站唯一的页面外壳标准。
-2. **中等视口（1024px ~ 1440px）自适应与呼吸感**：
-   - 当前主流 13~15 寸笔记本（1280px ~ 1440px）在展开右侧 Inspector（380px）时，中央主阅读区严重受挤压。
-   - 优化自适应弹性，在中等屏幕下 Inspector 支持 Overlay 浮层抽屉模式或弹性窄化（如 320px），保证中央任务流始终保有 ≥ 700px 的舒适阅读宽度。
-3. **消除新任务（Welcome）到执行流（Transcript）的位置跳跃（Layout Shift）**：
-   - 统一外层滚动归属，避免 `workbench-main` 与 `workbench-conversation-scroll` 之间的滚动条闪烁与容器转移。
-   - 平滑 Composer 在欢迎态（居中）与执行态（吸底）之间的过渡。
-4. **Header 空间治理与信息分层**：
-   - 解决 Header 中会话标题被 CommandPalette 与多重操作按钮挤压的问题。
-   - 拆分全局控制项（搜索、设置）与会话上下文操作（重命名、删除、导出）。
-5. **规范响应式断点阶梯**：
-   - `> 1440px`：宽屏全功能展开（侧栏 264px + 主阅读流 780px 居中 + 检查区 380px）。
-   - `1024px ~ 1440px`：桌面自适应（侧栏 232px 紧凑，展开检查区时不挤压主视窗）。
-   - `768px ~ 1024px`：平板/中视口模式（侧栏可收拢为 Icon Rail，检查区抽屉化）。
-   - `< 768px`：紧凑移动端模式（顶通 Tab 导航：会话 / 任务 / 详情 / 设置）。
+- [tokens.css](../src/renderer/styles/tokens.css) 定义字体、字号、间距、圆角和基础尺寸。
+- [workspace-theme.css](../src/renderer/styles/workspace-theme.css) 提供工作台的暖白 / 石墨黑 / 赤陶色，以及更紧凑的尺寸覆盖。
+- [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 负责侧栏密度；[app.css](../src/renderer/components/workbench/app.css) 负责主布局和响应式行为。
 
----
+判断样式以实际加载顺序、选择器和计算值为准，不把基础 token 当成最终颜色。复用现有 token 和组件，不为单个页面叠加另一套主题或壳。
 
-### 品牌标识
+桌面工作台主题使用 44px 标题栏、760px 阅读列、264px 侧栏；基础详情栏 380px，紧凑详情栏 320px。窄屏和触控覆盖以对应 CSS 为准，不通过缩小正文来容纳更多控件。
 
-首页欢迎区与侧栏品牌行共用 `ForgeMark` 和透明的 `public/forge-mark-v3.png`：铁砧轮廓、负形 F、橙红锻痕与火星，不另加底板或滤镜。首页取 `--space-10`（40px），侧栏取 `--space-8`（32px），保持原有标题、品牌文字与操作入口。图片设置固有宽高、禁止收缩；与文字并列时使用空 `alt`，避免屏幕阅读器重复播报。桌面、窄屏侧栏与深浅主题使用同一素材。浏览器 favicon 继续使用单独的 64px 导出文件。
+## 布局与对齐
 
-## 2. 详细执行任务清单
+- 标题、对话和输入区维持清晰的阅读轴；长会话名、路径和模型名可收缩/省略，完整信息仍可查看。
+- 宽屏详情栏可收起；收起后不接收指针和焦点。1001–1366px 下展开详情时使用 232px 侧栏和 320px 详情栏；中间区域允许收缩，不承诺固定最小阅读宽度。
+- 1000px 及以下转为纵向工作台，通过导航切换任务与详情，侧栏使用抽屉；768px 及以下另有输入工具栏换行和触控尺寸覆盖。
+- 欢迎态、对话态、错误提示和队列出现时，避免输入区抖动及内外双重滚动。保留当前阅读位置，不能用滚动到底掩盖布局问题。
+- 工具卡标题保持紧凑，图标、状态、文件名与展开按钮对齐。文件读取摘要只显示文件名，完整路径放详情；编辑卡同时检查变更预览、展开与失败状态。
+- 模型来源新增/编辑使用独立弹窗；外层保留模型浏览入口和已有来源，不把多个来源压成一个全局配置表单。
+- 键盘焦点、Escape 关闭后的焦点恢复、触控目标及 reduced-motion 行为都属于交互契约。
 
-### 任务 1：废弃旧版无效布局组件与清理 CSS 冲突
-- **文件**：
-  - `src/renderer/components/layout/Shell.tsx`
-  - `src/renderer/components/layout/PanelSplit.tsx`
-  - `src/renderer/components/layout/layout.css`
-  - `src/renderer/showcase/PrimitiveShowcase.tsx`
-  - `src/renderer/default/BootstrapScreen.tsx`
-- **要求**：
-  - 将 `PrimitiveShowcase` 和 `BootstrapScreen` 对 `Shell`/`PanelSplit` 的依赖改造成直接使用统一的工作台或轻量结构，消除项目中孤立并与生产环境冲突的旧 layout 体系。
-  - 清理 `app.css` 中由于重复声明而被迫使用的 `!important`，规范 `.workbench-main` 与 `.wb-app` 的盒模型。
+## 品牌资源
 
-### 任务 2：主界面三栏网格弹性度量（Grid / Flex Refactor）
-- **文件**：
-  - `src/renderer/components/workbench/app.css`
-  - `src/renderer/styles/tokens.css`
-  - `src/renderer/styles/workspace-theme.css`
-  - `src/renderer/components/workbench/App.tsx`
-- **要求**：
-  - 在 `tokens.css` 中引入自适应尺寸变量：
-    ```css
-    --rail-width-compact: 232px;
-    --inspector-width-compact: 320px;
-    ```
-  - 当屏幕处于 `1024px ~ 1366px` 且 Inspector 展开时，Inspector 采用 `var(--inspector-width-compact)`，并确保中间 `.conversation-inner` 不会被压缩到小于 `640px`。
-  - 侧边栏与检查器收起动画平滑，关闭时严格置 `pointer-events: none` 与 `visibility: hidden`。
+首页和侧栏共用 `ForgeMark` 与透明 [forge-mark-v3.png](../src/renderer/public/forge-mark-v3.png)：铁砧、负形 F、橙红锻痕与火星，不另加底板或滤镜。首页使用 40px，侧栏 32px；设置固有宽高并禁止收缩。与品牌文字并列时图片使用空 `alt`，避免重复播报。标签页使用独立的 [64px favicon](../src/renderer/public/forge-favicon-v3.png)。
 
-### 任务 3：Header 布局重构与标题保护
-- **文件**：
-  - `src/renderer/components/workbench/App.tsx`
-  - `src/renderer/components/workbench/app.css`
-- **要求**：
-  - 将 Header 划分为三大网格/弹性区：
-    1. **Start**：`CommandPalette` 紧凑搜索入口；
-    2. **Center**：会话标题（居中对齐或自然延伸，带 Tooltip，最小宽度保障，平滑省略）；
-    3. **End**：待审批气泡（若有）、详情切换开关、会话操作组（`SessionActions`）、设置按钮。
-  - 当宽度受限（≤ 900px）时，`SessionActions` 折叠收敛，确保标题至少保留 160px 可视宽度。
+## 修改后的检查
 
-### 任务 4：统一页面滚动归属与平滑欢迎态
-- **文件**：
-  - `src/renderer/components/workbench/Welcome.tsx`
-  - `src/renderer/components/workbench/Transcript.tsx`
-  - `src/renderer/components/workbench/new-session.css`
-  - `src/renderer/components/workbench/app.css`
-- **要求**：
-  - 新建任务 Welcome 页与 Transcript 统一置于同一个主阅读流滚动区域，或者使两者使用同构的父级视口边界。
-  - 杜绝 `@media (max-height: 700px)` 时外层与内层双重滚动的问题。
+按受影响界面选用聚焦测试，例如：
 
----
+```sh
+pnpm exec vitest run tests/renderer/inspector-layout-mounted.test.ts \
+  tests/renderer/new-session-mounted.test.ts tests/renderer/new-session-layout-mounted.test.ts
+pnpm build
+```
 
-## 3. 验收与质量门禁
-
-1. **测试用例全绿**：`pnpm test` 必须通过，包含 `inspector-layout-mounted.test.ts`、`new-session-mounted.test.ts` 等。
-2. **样式无回归**：
-   - 亮暗双色主题无对比度破坏；
-   - 移动端（390px）、平板（768px/1024px）、笔记本（1440px）、宽屏（1920px）各视口无水平横向溢出滚动条。
-3. **编译检查**：运行 `node scripts/build-core.mjs` 确保构建成功。
+布局或交互改动还需查看真实浏览器：明暗主题、390px 手机、768/1024px 中屏、1440px 桌面；三栏改动补看 1920px。检查水平溢出、正文可读性、弹窗边缘、键盘操作，以及欢迎/发送/运行/失败状态。记录实际覆盖范围；构建通过不代替视觉验收。纯文档修改无需重建 UI。
