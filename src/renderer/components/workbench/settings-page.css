@@ -310,6 +310,10 @@
   margin-bottom: 0;
 }
 
+.settings-section.settings-section-mcp {
+  max-width: 1040px;
+}
+
 /* Card System */
 .settings-card {
   border: 1px solid var(--border-subtle);
@@ -496,8 +500,12 @@
   background: #d0d7de;
 }
 
-.preview-line.sm { width: 75%; }
-.preview-line.xs { width: 50%; }
+.preview-line.sm {
+  width: 75%;
+}
+.preview-line.xs {
+  width: 50%;
+}
 
 .preview-main {
   flex: 1;

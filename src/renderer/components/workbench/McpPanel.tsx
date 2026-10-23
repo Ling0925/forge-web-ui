@@ -1,4 +1,8 @@
 import {
+  type McpRecordDto,
+  mcpRegisterDtoSchema,
+} from "@forge/core/shared/ipc";
+import {
   Broadcast,
   Code,
   Cpu,
@@ -14,7 +18,6 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type McpRecordDto, mcpRegisterDtoSchema } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
@@ -68,7 +71,7 @@ function resolveMcpCardVisuals(server: McpRecordDto, isRemote: boolean) {
   return { Icon, description };
 }
 
-export function McpPanel() {
+export function McpPanel({ showHeader = true }: { showHeader?: boolean } = {}) {
   const [servers, setServers] = useState<readonly McpRecordDto[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -147,12 +150,14 @@ export function McpPanel() {
         </p>
       )}
       <section className="mcp-panel wb-stack">
-        <div className="mcp-panel-header">
-          <div className="mcp-panel-title-group">
-            <h3>MCP 服务器</h3>
-            <span className="mcp-panel-count">{servers.length}</span>
+        {showHeader && (
+          <div className="mcp-panel-header">
+            <div className="mcp-panel-title-group">
+              <h3>MCP 服务器</h3>
+              <span className="mcp-panel-count">{servers.length}</span>
+            </div>
           </div>
-        </div>
+        )}
         <div className="mcp-card-grid">
           {servers.map((server) => {
             const isRemote =
@@ -215,7 +220,8 @@ export function McpPanel() {
                       <LockKey size={13} aria-hidden="true" />
                       <span>
                         已配置私密认证凭据
-                        {server.hasPrivateHeaders && server.headerCount !== undefined
+                        {server.hasPrivateHeaders &&
+                        server.headerCount !== undefined
                           ? `（共 ${server.headerCount} 项）`
                           : ""}
                       </span>
@@ -345,8 +351,13 @@ export function McpPanel() {
             const trimmedUrl = url.trim();
             const trimmedAuth = authorization.trim();
             const trimmedEnvName = envName.trim();
-            if (transport === "stdio" && Boolean(trimmedEnvName) !== Boolean(envValue)) {
-              setFieldErrors({ env: "请同时填写环境变量名称和 API key，或同时留空。" });
+            if (
+              transport === "stdio" &&
+              Boolean(trimmedEnvName) !== Boolean(envValue)
+            ) {
+              setFieldErrors({
+                env: "请同时填写环境变量名称和 API key，或同时留空。",
+              });
               return;
             }
 
@@ -357,7 +368,9 @@ export function McpPanel() {
                     label: trimmedLabel,
                     command: command.trim(),
                     args: parsedArgs,
-                    ...(envValue ? { env: { [trimmedEnvName]: envValue } } : {}),
+                    ...(envValue
+                      ? { env: { [trimmedEnvName]: envValue } }
+                      : {}),
                     enabled: false,
                   }
                 : {
@@ -366,7 +379,13 @@ export function McpPanel() {
                     transport,
                     url: trimmedUrl,
                     ...(trimmedAuth
-                      ? { headers: { [authType === "api-key" ? headerName.trim() : "Authorization"]: trimmedAuth } }
+                      ? {
+                          headers: {
+                            [authType === "api-key"
+                              ? headerName.trim()
+                              : "Authorization"]: trimmedAuth,
+                          },
+                        }
                       : {}),
                     enabled: false,
                   };
@@ -526,7 +545,11 @@ export function McpPanel() {
                   autoComplete="off"
                   isMono
                   isError={Boolean(fieldErrors.env)}
-                  aria-describedby={fieldErrors.env ? "mcp-server-env-name-error" : "mcp-server-env-name-helper"}
+                  aria-describedby={
+                    fieldErrors.env
+                      ? "mcp-server-env-name-error"
+                      : "mcp-server-env-name-helper"
+                  }
                   placeholder="EXA_API_KEY"
                   value={envName}
                   onChange={(e) => setEnvName(e.target.value)}
@@ -540,7 +563,9 @@ export function McpPanel() {
                   autoComplete="off"
                   spellCheck={false}
                   isError={Boolean(fieldErrors.env)}
-                  aria-describedby={fieldErrors.env ? "mcp-server-env-name-error" : undefined}
+                  aria-describedby={
+                    fieldErrors.env ? "mcp-server-env-name-error" : undefined
+                  }
                   value={envValue}
                   onChange={(e) => setEnvValue(e.target.value)}
                 />
@@ -577,7 +602,10 @@ export function McpPanel() {
                   name="authType"
                   options={[
                     { value: "api-key", label: "API key（私密请求头）" },
-                    { value: "authorization", label: "Authorization（完整值）" },
+                    {
+                      value: "authorization",
+                      label: "Authorization（完整值）",
+                    },
                   ]}
                   value={authType}
                   onChange={(e) => {
@@ -588,7 +616,11 @@ export function McpPanel() {
                 />
               </Field>
               {authType === "api-key" && (
-                <Field id="mcp-server-header-name" label="请求头名称" helper="Exa 使用 x-api-key；其他服务按其文档填写。">
+                <Field
+                  id="mcp-server-header-name"
+                  label="请求头名称"
+                  helper="Exa 使用 x-api-key；其他服务按其文档填写。"
+                >
                   <Input
                     id="mcp-server-header-name"
                     name="headerName"
@@ -603,9 +635,15 @@ export function McpPanel() {
               )}
               <Field
                 id="mcp-server-auth"
-                label={authType === "api-key" ? "API key" : "私密 Authorization 凭据"}
+                label={
+                  authType === "api-key" ? "API key" : "私密 Authorization 凭据"
+                }
                 optional
-                helper={authType === "api-key" ? "直接粘贴 API key，无需 Bearer 前缀；留空则不发送凭据。" : "例如 Bearer token；留空则不发送 Authorization。"}
+                helper={
+                  authType === "api-key"
+                    ? "直接粘贴 API key，无需 Bearer 前缀；留空则不发送凭据。"
+                    : "例如 Bearer token；留空则不发送 Authorization。"
+                }
                 error={fieldErrors.headers}
               >
                 <Input
@@ -621,7 +659,11 @@ export function McpPanel() {
                       ? "mcp-server-auth-error"
                       : "mcp-server-auth-helper"
                   }
-                  placeholder={authType === "api-key" ? "粘贴 API key" : "例如 Bearer eyJhbGciOi..."}
+                  placeholder={
+                    authType === "api-key"
+                      ? "粘贴 API key"
+                      : "例如 Bearer eyJhbGciOi..."
+                  }
                   value={authorization}
                   onChange={(e) => setAuthorization(e.target.value)}
                 />

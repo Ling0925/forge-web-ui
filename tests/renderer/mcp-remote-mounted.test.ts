@@ -80,7 +80,7 @@ describe("McpPanel mounted browser integration", () => {
           };
 
           const root = createRoot(document.getElementById('root')!);
-          root.render(<McpPanel />);
+          root.render(<McpPanel showHeader={false} />);
         `,
       },
       bundle: true,
@@ -156,6 +156,7 @@ describe("McpPanel mounted browser integration", () => {
         };
       });
       expect(cardLayout.gridDisplay).toBe("grid");
+      expect(await page.locator(".mcp-panel-header").count()).toBe(0);
       expect(cardLayout.serverCardCount).toBe(2);
       expect(cardLayout.allServerCardsHaveIconNameDesc).toBe(true);
       expect(cardLayout.addCardHasIcon).toBe(true);
@@ -288,14 +289,20 @@ describe("McpPanel mounted browser integration", () => {
       await page.locator("#mcp-server-id").fill("exa-remote");
       await page.locator("#mcp-server-name").fill("Exa Search");
       await page.locator("#mcp-server-url").fill("https://mcp.exa.ai/mcp");
-      expect(await page.locator("#mcp-server-header-name").inputValue()).toBe("x-api-key");
-      expect(await page.locator("#mcp-server-auth").getAttribute("type")).toBe("password");
+      expect(await page.locator("#mcp-server-header-name").inputValue()).toBe(
+        "x-api-key",
+      );
+      expect(await page.locator("#mcp-server-auth").getAttribute("type")).toBe(
+        "password",
+      );
       const exaKey = "exa-fixture-key-123";
       await page.locator("#mcp-server-auth").fill(exaKey);
       await page.locator("#mcp-server-header-name").fill("Host");
       await page.getByRole("button", { name: "注册（默认禁用）" }).click();
       await page.locator("#mcp-server-auth-error").waitFor();
-      expect(await page.evaluate(() => Reflect.get(window, "registered").length)).toBe(2);
+      expect(
+        await page.evaluate(() => Reflect.get(window, "registered").length),
+      ).toBe(2);
       await page.locator("#mcp-server-header-name").fill("x-api-key");
       await page.locator("#mcp-server-auth-type").selectOption("authorization");
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
@@ -304,9 +311,15 @@ describe("McpPanel mounted browser integration", () => {
 
       await page.getByRole("button", { name: "注册（默认禁用）" }).click();
       await page.getByText("Exa Search · HTTP · 已禁用").waitFor();
-      expect(await page.evaluate(() => Reflect.get(window, "registered")[2])).toEqual({
-        id: "exa-remote", label: "Exa Search", transport: "http",
-        url: "https://mcp.exa.ai/mcp", headers: { "x-api-key": exaKey }, enabled: false,
+      expect(
+        await page.evaluate(() => Reflect.get(window, "registered")[2]),
+      ).toEqual({
+        id: "exa-remote",
+        label: "Exa Search",
+        transport: "http",
+        url: "https://mcp.exa.ai/mcp",
+        headers: { "x-api-key": exaKey },
+        enabled: false,
       });
       expect(await page.content()).not.toContain(exaKey);
 
@@ -316,21 +329,41 @@ describe("McpPanel mounted browser integration", () => {
       await page.locator("#mcp-server-command").fill("npx");
       await page.locator("#mcp-server-args").fill('["-y", "exa-mcp-server"]');
       await page.locator("#mcp-server-env-value").fill(exaKey);
-      expect(await page.locator("#mcp-server-env-value").getAttribute("type")).toBe("password");
+      expect(
+        await page.locator("#mcp-server-env-value").getAttribute("type"),
+      ).toBe("password");
       await page.getByRole("button", { name: "注册（默认禁用）" }).click();
-      await page.getByText("请同时填写环境变量名称和 API key，或同时留空。").waitFor();
-      expect(await page.evaluate(() => Reflect.get(window, "registered").length)).toBe(3);
+      await page
+        .getByText("请同时填写环境变量名称和 API key，或同时留空。")
+        .waitFor();
+      expect(
+        await page.evaluate(() => Reflect.get(window, "registered").length),
+      ).toBe(3);
       await page.locator("#mcp-server-env-name").fill("EXA_API_KEY");
       await page.getByRole("button", { name: "注册（默认禁用）" }).click();
-      const localCard = page.locator(".mcp-card.agent-card").filter({ hasText: "Local Exa" });
-      await localCard.getByText("已配置私密认证凭据", { exact: true }).waitFor();
-      expect(await page.evaluate(() => Reflect.get(window, "registered")[3])).toEqual({
-        id: "exa-local", label: "Local Exa", command: "npx", args: ["-y", "exa-mcp-server"],
-        env: { EXA_API_KEY: exaKey }, enabled: false,
+      const localCard = page
+        .locator(".mcp-card.agent-card")
+        .filter({ hasText: "Local Exa" });
+      await localCard
+        .getByText("已配置私密认证凭据", { exact: true })
+        .waitFor();
+      expect(
+        await page.evaluate(() => Reflect.get(window, "registered")[3]),
+      ).toEqual({
+        id: "exa-local",
+        label: "Local Exa",
+        command: "npx",
+        args: ["-y", "exa-mcp-server"],
+        env: { EXA_API_KEY: exaKey },
+        enabled: false,
       });
       expect(await page.content()).not.toContain(exaKey);
-      expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain(exaKey);
-      expect(await page.evaluate(() => JSON.stringify(sessionStorage))).not.toContain(exaKey);
+      expect(
+        await page.evaluate(() => JSON.stringify(localStorage)),
+      ).not.toContain(exaKey);
+      expect(
+        await page.evaluate(() => JSON.stringify(sessionStorage)),
+      ).not.toContain(exaKey);
 
       await page.getByRole("button", { name: "注册服务器" }).click();
       expect(await page.locator("#mcp-server-env-value").inputValue()).toBe("");

@@ -605,16 +605,8 @@ export function Settings() {
           </form>
 
           {visible("mcp") && (
-            <section className="settings-section" aria-label="MCP 配置">
-              <div className="settings-card">
-                <div className="settings-card-header">
-                  <h3>工具扩展</h3>
-                  <p>MCP 操作独立保存并立即生效。连接测试会启动本地服务器或连接远程服务。</p>
-                </div>
-                <div className="settings-card-body">
-                  <McpPanel />
-                </div>
-              </div>
+            <section className="settings-section settings-section-mcp" aria-label="MCP 配置">
+              <McpPanel showHeader={false} />
             </section>
           )}
 
