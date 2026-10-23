@@ -14,7 +14,7 @@ import {
   Trash,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type McpRecordDto, mcpRegisterDtoSchema } from "../../../shared/ipc";
+import { type McpRecordDto, mcpRegisterDtoSchema } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
