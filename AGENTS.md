@@ -22,12 +22,16 @@ cd ../forge-core && pnpm build
 cd ../forge-web-ui
 pnpm install
 pnpm build
-pnpm dev -- --host 127.0.0.1 --port 5173 --workspace /absolute/path
-pnpm serve -- --host 127.0.0.1 --port 5173 --workspace /absolute/path
+# 独立终端启动 Core（已有 Core 时不要重复启动或重启）
+node ../forge-core/dist/web/serve.js --host 127.0.0.1 --port 5175 --workspace /absolute/path --multi-workspace
+# 开发 / 生产二选一，均不持有运行时
+pnpm dev -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
+pnpm serve -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
 ```
 
 - 只改文档时不需要重新构建 Core 或 UI。
-- 本机更新默认走“改代码 → Core build → UI build → 重开服务”，不要默认执行桌面打包、Electron 安装、Android 构建或完整发布验收。
+- 本机持续开发用 Vite：修改本仓 `src/renderer` 由 HMR 生效，不用编译 UI 或重启服务；修改 `scripts/dev.mjs` 只重启 Web，不重启独立 Core。不要恢复内嵌 harness 的单进程开发入口。
+- 仅 Core 代码变动才重新构建 Core/刷新包依赖；生产静态 Web 仍需 UI build。不要默认执行桌面打包、Electron 安装、Android 构建或完整发布验收。
 
 ## 测试
 

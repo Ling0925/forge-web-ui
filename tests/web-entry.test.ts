@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, it } from "vitest";
 
-it("requires an explicit independent Core and never creates state for old embedded-runtime arguments", async () => {
+it.each(["serve", "dev"])("%s requires an explicit independent Core and never creates state for old embedded-runtime arguments", async entry => {
   const directory = await mkdtemp(join(tmpdir(), "forge-web-entry-"));
   try {
-    const invoke = (args: string[]) => spawnSync(process.execPath, [resolve("scripts/serve.mjs"), ...args], {
+    const invoke = (args: string[]) => spawnSync(process.execPath, [resolve(`scripts/${entry}.mjs`), ...args], {
       cwd: directory, encoding: "utf8", timeout: 5000,
       env: { PATH: process.env.PATH, HOME: directory, FORGE_HOME: join(directory, "state") },
     });

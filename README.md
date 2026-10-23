@@ -8,8 +8,9 @@ Forge 工作台的独立 Web UI 仓库：只包含 React renderer、renderer 测
 - 本仓库只依赖 `@forge/core` 的公开子路径，不复制 Core 源码：
   - 浏览器安全契约：`@forge/core/shared/*`
   - 生产 Node 适配：`@forge/core/web/gateway`（静态 UI + HTTP/WebSocket 代理，不持有运行时）
-  - 开发/测试适配：`@forge/core/core/harness`、`@forge/core/web/server`
-- 生产 Web 与 Core 是独立进程，重启 Web 不终止 Core 对话；不做 Rust、全局单实例或 UI 设计重写。
+  - 开发装配：Vite 提供 HMR，并通过自带代理连接独立 Core；不创建 harness
+  - 仅离线测试 fixture 使用 `@forge/core/core/harness`、`@forge/core/web/server`
+- 开发和生产 Web 均与 Core 独立，重启 Web 不终止 Core 对话；不做 Rust、全局单实例或 UI 设计重写。
 - 不包含桌面端、Electron 打包、Android 客户端或 CLI；这些仍由各自入口维护。
 - 原库中未提交的 `ModelPicker.tsx` / `settings-models.css` 修改没有进入本仓库，也不应在迁移中覆盖它们。
 
@@ -51,16 +52,23 @@ pnpm serve -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
 重启/终止 Web 只让浏览器短暂断线，Core 继续执行，页面自动重连并补齐事件。
 不要把两者放进同一个会被整体停止的 supervisor 单元，也不要在只更新 UI 时重启 Core。
 
-开发（Vite middleware 挂到 Core host，保留 HMR）：
+开发（保留上面的独立 Core，将 Web 入口换成 Vite，无需先构建 UI）：
 
 ```sh
-pnpm dev -- --host 127.0.0.1 --port 5173 --workspace /absolute/path/to/project
+pnpm dev -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
 ```
+
+修改 **本仓库的 `src/renderer`** 后 React/CSS 自动热更新，无需编译或重启服务；
+原 desktop-harness 根目录的 `src/renderer` 不属于这个 Vite 入口。
+开发 Web 只使用 Vite 的 HTTP/WebSocket 代理，不加载 harness、不读写 Core 状态。
+开发代理只接受显式的 loopback IPv4 Core 地址，在转发前检查客户端 Host/Origin，
+再改写上游 Host/Origin；Core 自己继续校验 RPC、会话和连接身份。
+`/__forge_hmr` 用于 Vite HMR，`/api/events` 用于 Core 对话事件，二者互不占用。
 
 默认监听 `127.0.0.1:5173`。`pnpm serve` 默认服务本仓库的 `dist/renderer`，
 也可用 `--renderer` 指向其他构建输出。分享/二维码使用浏览器访问的 Web 地址，而非内部 Core 地址。
-开发入口仍把 Vite middleware 挂到 Core host（工作区默认当前目录），属于单进程开发模式，
-**不能**用于需要“重启 Web 不停任务”的常驻服务；常驻服务请用上面的独立生产入口。
+只改 React/CSS 不会整页刷新；不支持 Fast Refresh 的模块变更可能触发整页刷新。
+修改 `scripts/dev.mjs` 时需要重启 Web：Vite 客户端会自动重新加载页面，Core 对话仍继续。
 这不等于 CLI、桌面和 Web 已统一到全局单实例 daemon。
 
 HTTP 不提供传输加密；不要把这个个人局域网入口无保护地暴露到公网。
@@ -81,6 +89,9 @@ pnpm test:browser
 检查页面/CSP/RPC/分享地址/设置页往返，以及流式对话中 SIGKILL Web → Core 离线继续执行 →
 启动 Web → 原页面自动补发事件并完成，断言 Core PID/hostId 不变、对话推理只执行一次。
 同一浏览器检查还通过真实 `publish_file` 发布 50 MiB 文件，经 Core RPC/网关下载并核对字节数和 SHA-256。
+`tests/web-dev-browser.test.ts` 对 Vite 入口检查真实 React/CSS HMR（组件计数与草稿保留）、
+重启 Web 自动重载后恢复同一 Core 对话，以及同样的 50 MiB 下载。
+`tests/web-dev-proxy.test.ts` 检查转发前拒绝错误 Host/Origin 和非法 WebSocket 升级。
 最初仓库拆分时曾验证 103 项聚焦单元/渲染/浏览器测试；那是历史记录，不是每轮全量验收。
 `pnpm typecheck` / `pnpm lint` 仍未通过，涉及提取代码中的严格类型与格式问题；本轮未完成逐条修复和全量回归归因，不把构建通过当作全量验证。
 

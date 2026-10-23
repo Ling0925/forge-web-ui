@@ -16,7 +16,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "test": "vitest run",
-    "test:browser": "vitest run tests/web-smoke-browser.test.ts"
+    "test:browser": "vitest run tests/web-smoke-browser.test.ts tests/web-dev-browser.test.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
