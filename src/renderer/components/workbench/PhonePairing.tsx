@@ -1,7 +1,7 @@
-import { CopySimple, QrCode, WarningCircle } from "@phosphor-icons/react";
+import { type LanStatus, lanRequestSchema } from "@forge/core/shared/lan";
+import { CopySimple, WarningCircle } from "@phosphor-icons/react";
 import * as QRCode from "qrcode";
 import { useEffect, useId, useRef, useState } from "react";
-import { type LanStatus, lanRequestSchema } from "@forge/core/shared/lan";
 import { OperationScope } from "../../state/operation-scope";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
@@ -104,14 +104,17 @@ export function PhonePairing() {
         if (!cancelled) setQr(value);
       })
       .catch(() => {
-        if (!cancelled) setQrError("二维码生成失败；可以改用下方地址手动配对。");
+        if (!cancelled)
+          setQrError("二维码生成失败；可以改用下方地址手动配对。");
       });
     return () => {
       cancelled = true;
     };
   }, [status?.url]);
 
-  const run = async (operation: (current: NonNullable<typeof bridge>) => Promise<LanStatus>) => {
+  const run = async (
+    operation: (current: NonNullable<typeof bridge>) => Promise<LanStatus>,
+  ) => {
     const current = window.forgeLan;
     if (!current) {
       setError("当前环境不支持局域网配对控制。");
@@ -130,7 +133,9 @@ export function PhonePairing() {
     } catch (err) {
       if (!valid() || !alive.current) return;
       // Never replay an uncertain LAN effect: the user must re-read status.
-      setError(`${message(err, "局域网操作失败。")} 请刷新状态确认后再决定是否重试。`);
+      setError(
+        `${message(err, "局域网操作失败。")} 请刷新状态确认后再决定是否重试。`,
+      );
     } finally {
       busyRef.current = false;
       if (alive.current) setBusy(false);
@@ -157,11 +162,13 @@ export function PhonePairing() {
     }
     const request = parsed.data;
     if (request.action !== "start") return;
-    void run((current) => current.start({
-      host: request.host,
-      port: request.port,
-      workspace: request.workspace,
-    }));
+    void run((current) =>
+      current.start({
+        host: request.host,
+        port: request.port,
+        workspace: request.workspace,
+      }),
+    );
   };
 
   const pickWorkspace = async () => {
@@ -185,7 +192,8 @@ export function PhonePairing() {
     if (!url) return;
     setNotice("");
     try {
-      const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard;
+      const clipboard =
+        typeof navigator === "undefined" ? undefined : navigator.clipboard;
       if (!clipboard?.writeText) throw new Error("clipboard unavailable");
       await clipboard.writeText(url);
       if (alive.current) setNotice("配对地址已复制。");
@@ -203,11 +211,9 @@ export function PhonePairing() {
     <div className="phone-pairing">
       <div className="phone-pairing-head">
         <div className="phone-pairing-head-text">
-          <h3 id={headingId}>
-            <QrCode size={16} weight="bold" aria-hidden="true" /> Android 局域网连接
-          </h3>
-          <p>
-            在局域网内公开当前核心的 HTTP 地址，让 Android 应用扫码连接同一个核心与任务。
+          <p id={headingId}>
+            在局域网内公开当前核心的 HTTP 地址，让 Android
+            应用扫码连接同一个核心与任务。配对操作立即生效，独立于底部“保存设置”。
           </p>
         </div>
         <span className={`phone-pairing-badge ${url ? "is-live" : "is-idle"}`}>
@@ -216,11 +222,17 @@ export function PhonePairing() {
       </div>
 
       <ul className="phone-pairing-notes">
-        <li>二维码包含连接地址，扫码或输入地址即可连接；HTTP 不提供传输保密性。</li>
-        <li>个人局域网直接接入，无需邀请码、设备授权或回到电脑前确认；网络可达范围由你管理。</li>
-        <li>{canControl
-          ? "手机连接的是同一核心与同一份任务列表；关闭桌面应用会终止正在运行的任务。"
-          : "手机连接当前服务器的核心与任务；停止该核心服务会终止正在运行的任务。"}</li>
+        <li>
+          二维码包含连接地址，扫码或输入地址即可连接；HTTP 不提供传输保密性。
+        </li>
+        <li>
+          个人局域网直接接入，无需邀请码、设备授权或回到电脑前确认；网络可达范围由你管理。
+        </li>
+        <li>
+          {canControl
+            ? "手机连接的是同一核心与同一份任务列表；关闭桌面应用会终止正在运行的任务。"
+            : "手机连接当前服务器的核心与任务；停止该核心服务会终止正在运行的任务。"}
+        </li>
         <li>停止公开只会断开远程连接，不会取消已经在运行的任务。</li>
       </ul>
 
@@ -262,7 +274,11 @@ export function PhonePairing() {
               disabled={busy || !addresses.length}
             />
           </Field>
-          <Field id="pairing-port" label="端口" helper="1024–65535，且未被其它程序占用。">
+          <Field
+            id="pairing-port"
+            label="端口"
+            helper="1024–65535，且未被其它程序占用。"
+          >
             <Input
               id="pairing-port"
               inputMode="numeric"
@@ -288,7 +304,12 @@ export function PhonePairing() {
             />
           </Field>
           <div className="phone-pairing-actions">
-            <Button size="sm" variant="secondary" onClick={() => void pickWorkspace()} disabled={busy}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => void pickWorkspace()}
+              disabled={busy}
+            >
               选择工作区…
             </Button>
             <Button
@@ -310,7 +331,8 @@ export function PhonePairing() {
             </Button>
           </div>
           <p className="phone-pairing-hint">
-            点击“开始公开”才会开启 Forge 局域网入口；公开后可在局域网内直接访问该地址。
+            点击“开始公开”才会开启 Forge
+            局域网入口；公开后可在局域网内直接访问该地址。
           </p>
         </div>
       )}
@@ -325,9 +347,16 @@ export function PhonePairing() {
         <div className="phone-pairing-live">
           <div className="phone-pairing-qr-wrap">
             {qr ? (
-              <img className="phone-pairing-qr" src={qr} alt={`Android 扫码配对二维码：${url}`} />
+              <img
+                className="phone-pairing-qr"
+                src={qr}
+                alt={`Android 扫码配对二维码：${url}`}
+              />
             ) : (
-              <div className="phone-pairing-qr is-placeholder" aria-hidden="true" />
+              <div
+                className="phone-pairing-qr is-placeholder"
+                aria-hidden="true"
+              />
             )}
           </div>
           <div className="phone-pairing-url">
@@ -342,7 +371,12 @@ export function PhonePairing() {
               onFocus={(event) => event.currentTarget.select()}
             />
             <div className="phone-pairing-actions">
-              <Button size="sm" variant="secondary" icon={<CopySimple size={14} />} onClick={() => void copy()}>
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<CopySimple size={14} />}
+                onClick={() => void copy()}
+              >
                 复制地址
               </Button>
               {canControl && (

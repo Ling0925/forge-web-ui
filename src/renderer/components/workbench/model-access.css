@@ -763,18 +763,17 @@
 }
 
 .provider-source-card {
-  gap: 14px;
-  padding: 16px 18px;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-left: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  box-shadow: var(--shadow-sm);
+  gap: 16px;
+  padding: 4px 0 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .provider-source-card.is-current {
-  background: var(--surface-elevated);
-  border-left-color: var(--border-subtle);
+  background: transparent;
+  border-color: transparent;
 }
 
 .provider-source-summary-bar {
@@ -1024,7 +1023,8 @@
   flex-direction: column;
   border-radius: 11px;
   border: 1px solid var(--border-subtle);
-  background: var(--canvas-bg);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   min-width: 0;
   transition: border-color 120ms ease;
