@@ -6,8 +6,9 @@ import {
   ArrowClockwise,
   ArrowsLeftRight,
   Camera,
+  CheckCircle,
   CursorClick,
-  Hand,
+  Globe,
   Info,
   Keyboard,
   Lock,
@@ -309,70 +310,51 @@ export function BrowserPanel({
 
   return (
     <section className="browser-panel" aria-label="浏览器预览与接管">
-      <div className="browser-panel-head">
-        <div className="browser-title">
-          <Hand size={15} weight="duotone" aria-hidden="true" />
-          <span>浏览器</span>
-          <span
-            className={`browser-state ${takeover ? "is-takeover" : unavailable ? "is-idle" : "is-available"}`}
+      <div className="browser-overview-card">
+        <div className="browser-panel-head">
+          <div className="browser-title">
+            <span className="browser-title-icon" aria-hidden="true">
+              <Globe size={15} weight="duotone" />
+            </span>
+            <div className="browser-title-main">
+              <span className="browser-title-text">会话浏览器</span>
+              <span
+                className={`browser-state ${takeover ? "is-takeover" : unavailable ? "is-idle" : "is-available"}`}
+              >
+                <span className="browser-state-dot" aria-hidden="true" />
+                {takeover
+                  ? "人工接管中"
+                  : unavailable
+                    ? "未可用"
+                    : "会话浏览器可用"}
+              </span>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<ArrowClockwise size={13} />}
+            loading={probing}
+            disabled={busy || !sessionId}
+            onClick={() => void probeStatus(true)}
+            title="只读查询本会话的浏览器元数据，不会启动浏览器"
           >
-            {takeover
-              ? "人工接管中"
-              : unavailable
-                ? "未可用"
-                : "会话浏览器可用"}
-          </span>
+            查询状态
+          </Button>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          icon={<ArrowClockwise size={13} />}
-          loading={probing}
-          disabled={busy || !sessionId}
-          onClick={() => void probeStatus(true)}
-          title="只读查询本会话的浏览器元数据，不会启动浏览器"
-        >
-          查询状态
-        </Button>
-      </div>
 
-      <p className="browser-lifecycle">
-        浏览器属于当前 Forge 会话的一次运行：Agent
-        首次调用浏览器工具后才可用，运行结束或取消时关闭。这里不会替你启动、安装或重启浏览器，也不代表页面正在实时更新。
-      </p>
-      <p className="browser-permission">
-        <Lock size={13} weight="bold" aria-hidden="true" />
-        <span>{browserPermissionNotice(permission)}</span>
-      </p>
-
-      {error && (
-        <p className="form-error" role="alert">
-          <WarningCircle size={14} weight="bold" aria-hidden="true" />
-          <span>{error}</span>
-        </p>
-      )}
-      {notice && <output className="browser-status-line">{notice}</output>}
-      {!probing && unavailable && (
-        <output className="browser-gate">
-          <Info size={14} weight="bold" aria-hidden="true" />
-          <span>
-            本会话当前没有活动浏览器。只有 Agent
-            在运行中首次使用浏览器后才会出现；运行结束后它会被关闭。
-          </span>
-        </output>
-      )}
-
-      {!unavailable && (
-        <>
-          <div className="browser-takeover-row">
-            <div>
+        {!unavailable && (
+          <div
+            className={`browser-takeover-row${takeover ? " is-takeover" : ""}`}
+          >
+            <div className="browser-takeover-copy">
               <strong>
                 {takeover ? "你正在操作页面" : "Agent 持有控制权"}
               </strong>
               <p className="browser-hint">
                 {takeover
-                  ? "接管期间 Agent 的页面动作会等待，或在权限下降时被拒绝并要求重新获取 snapshot。"
-                  : "接管是显式操作。截图预览不需要接管；导航、快照、点击、填入、按键与滚动需要。"}
+                  ? "接管期间 Agent 页面动作会等待；归还后 Agent 需重新读取 snapshot。"
+                  : "截图预览无需接管；人工导航、快照、点击、填入、按键与滚动需先显式接管。"}
               </p>
             </div>
             <Button
@@ -385,10 +367,47 @@ export function BrowserPanel({
               {takeover ? "归还控制权" : "显式接管"}
             </Button>
           </div>
+        )}
 
+        <p className="browser-permission">
+          <Lock size={13} weight="bold" aria-hidden="true" />
+          <span>{browserPermissionNotice(permission)}</span>
+        </p>
+      </div>
+
+      {error && (
+        <p className="form-error" role="alert">
+          <WarningCircle size={14} weight="bold" aria-hidden="true" />
+          <span>{error}</span>
+        </p>
+      )}
+      {notice && (
+        <output className="browser-status-line">
+          <CheckCircle size={14} weight="bold" aria-hidden="true" />
+          <span>{notice}</span>
+        </output>
+      )}
+      {!probing && unavailable && (
+        <output className="browser-gate">
+          <Info size={14} weight="bold" aria-hidden="true" />
+          <div>
+            <strong>本会话当前没有活动浏览器</strong>
+            <span>
+              只有 Agent 在当前运行中首次调用浏览器工具后才会开启，运行结束或取消时自动关闭；此面板不会替你启动或安装浏览器。
+            </span>
+          </div>
+        </output>
+      )}
+
+      {!unavailable && (
+        <>
           <div className="browser-preview">
             <div className="browser-preview-head">
-              <span>截图预览（首版）</span>
+              <div className="browser-card-title">
+                <Camera size={14} weight="bold" aria-hidden="true" />
+                <span>画面快照预览</span>
+                <span className="browser-card-badge">单帧快照</span>
+              </div>
               <Button
                 size="sm"
                 variant="secondary"
@@ -399,40 +418,43 @@ export function BrowserPanel({
                 刷新截图
               </Button>
             </div>
-            <p className="browser-hint">
-              只有点击刷新时才执行一次 screenshot 命令；图像以临时 data/mimeType
-              显示，不写入日志、会话历史或浏览器存储。它是单帧快照，不是实时视频，也不暴露裸
-              CDP 或上游 WebSocket。
-            </p>
             {sessionImage ? (
               <figure className="browser-shot">
-                <img
-                  src={sessionImage.dataUrl}
-                  alt="当前浏览器页面截图"
-                  data-mime-type={sessionImage.mimeType}
-                />
+                <div className="browser-shot-stage">
+                  <img
+                    src={sessionImage.dataUrl}
+                    alt="当前浏览器页面截图"
+                    data-mime-type={sessionImage.mimeType}
+                  />
+                </div>
                 <figcaption>
-                  截图时间点画面 · {sessionImage.mimeType} · 不随页面自动更新
+                  <span>截图时间点画面</span>
+                  <code>{sessionImage.mimeType}</code>
+                  <span>点击刷新时单帧抓取，不随页面实时更新</span>
                 </figcaption>
               </figure>
             ) : (
               <output className="browser-shot-empty">
-                尚未刷新截图。Agent 的 browser_screenshot
-                会发布为对话附件，可在消息流中查看。
+                尚未刷新截图。点击右上角「刷新截图」获取当前单帧画面，或在消息流中查看
+                Agent 的 browser_screenshot 附件。
               </output>
             )}
           </div>
 
           <div className="browser-manual">
             <div className="browser-preview-head">
-              <span>人工操作</span>
-              <span className="browser-hint">
-                {takeover ? "已接管，动作会串行执行" : "需要先显式接管"}
+              <div className="browser-card-title">
+                <CursorClick size={14} weight="bold" aria-hidden="true" />
+                <span>人工操作</span>
+              </div>
+              <span
+                className={`browser-card-badge${takeover ? " is-active" : ""}`}
+              >
+                {takeover ? "已接管 · 串行执行" : "需要先显式接管"}
               </span>
             </div>
             <p className="browser-hint">
-              仅使用 Core 契约内的 navigate / snapshot / click / fill / press /
-              scroll；不注入任意插件 JS，不渲染页面 HTML，快照文本按纯文本显示。
+              通过 Core 契约串行执行动作；不注入插件脚本，快照按纯文本展示。
             </p>
             <fieldset className="browser-action-tabs" aria-label="人工动作">
               {(
@@ -451,8 +473,8 @@ export function BrowserPanel({
                   aria-pressed={action === id}
                   onClick={() => setAction(id)}
                 >
-                  <Icon size={13} aria-hidden="true" />
-                  {label}
+                  <Icon size={12} weight="bold" aria-hidden="true" />
+                  <span>{label}</span>
                 </button>
               ))}
             </fieldset>
@@ -509,22 +531,33 @@ export function BrowserPanel({
               )}
               {action === "scroll" && (
                 <Field id="browser-scroll-direction" label="方向">
-                  <select
+                  <div
                     id="browser-scroll-direction"
-                    className="form-select"
-                    value={direction}
-                    disabled={!takeover || busy}
-                    onChange={(event) =>
-                      setDirection(
-                        event.target.value as "up" | "down" | "left" | "right",
-                      )
-                    }
+                    className="browser-direction-group"
+                    role="radiogroup"
+                    aria-label="方向"
                   >
-                    <option value="down">向下</option>
-                    <option value="up">向上</option>
-                    <option value="left">向左</option>
-                    <option value="right">向右</option>
-                  </select>
+                    {(
+                      [
+                        ["down", "向下"],
+                        ["up", "向上"],
+                        ["left", "向左"],
+                        ["right", "向右"],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={direction === value}
+                        className={`browser-direction-pill${direction === value ? " is-active" : ""}`}
+                        disabled={!takeover || busy}
+                        onClick={() => setDirection(value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </Field>
               )}
               <div className="browser-action-buttons">
@@ -554,16 +587,20 @@ export function BrowserPanel({
           {view?.kind === "snapshot" && (
             <div className="browser-snapshot">
               <div className="browser-preview-head">
-                <span>页面快照（纯文本）</span>
-                <span className="browser-hint">
+                <div className="browser-card-title">
+                  <span>页面快照（纯文本）</span>
+                </div>
+                <span
+                  className={`browser-card-badge${view.fresh ? " is-ready" : ""}`}
+                >
                   {view.fresh
                     ? "最新快照"
                     : "页面已变化：请重新读取快照，避免使用旧 ref"}
                 </span>
               </div>
               {view.refs.length > 0 && (
-                <p className="browser-refs">
-                  可用 refs：
+                <div className="browser-refs">
+                  <span className="browser-refs-label">可用 refs：</span>
                   {view.refs.map((ref) => (
                     <button
                       key={ref}
@@ -578,7 +615,7 @@ export function BrowserPanel({
                       {ref}
                     </button>
                   ))}
-                </p>
+                </div>
               )}
               <pre className="browser-snapshot-text">
                 {view.text || "快照为空。"}
