@@ -32,18 +32,84 @@ import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
 import { McpPanel } from "./McpPanel";
+import { EffortBars } from "./ModelAccessPanels";
 import { PhonePairing } from "./PhonePairing";
 import { ProviderSources } from "./ProviderSources";
 import { ServerConnection } from "./ServerConnection";
 import "./settings-page.css";
 import "../../styles/settings-models.css";
 
+const GLOBAL_REASONING_EFFORT_OPTIONS: readonly {
+  readonly value: SettingsDraft["reasoningEffort"];
+  readonly label: string;
+  readonly shortLabel: string;
+  readonly desc: string;
+  readonly bars: number;
+}[] = [
+  {
+    value: "default",
+    label: "模型默认",
+    shortLabel: "默认",
+    desc: "不额外指定推理强度参数，沿用模型或服务端原生默认设定。",
+    bars: 0,
+  },
+  {
+    value: "none",
+    label: "关闭 (none)",
+    shortLabel: "关闭",
+    desc: "显式关闭深度思考，追求最快首字响应与最低 Token 消耗。",
+    bars: 0,
+  },
+  {
+    value: "minimal",
+    label: "极低 (minimal)",
+    shortLabel: "minimal",
+    desc: "仅保留极轻量内部校验，适合简单问答、格式转换与快速补全。",
+    bars: 1,
+  },
+  {
+    value: "low",
+    label: "低 (low)",
+    shortLabel: "low",
+    desc: "轻量级思考预算，适合常规代码修改、检索总结与日常指令。",
+    bars: 2,
+  },
+  {
+    value: "medium",
+    label: "中 (medium)",
+    shortLabel: "medium",
+    desc: "均衡速度与推理深度，适合大多数多步编码与问题排查任务。",
+    bars: 3,
+  },
+  {
+    value: "high",
+    label: "高 (high)",
+    shortLabel: "high",
+    desc: "投入充足思考预算，适合复杂架构设计、棘手 Bug 诊断与重构。",
+    bars: 4,
+  },
+  {
+    value: "xhigh",
+    label: "超高 (xhigh)",
+    shortLabel: "xhigh",
+    desc: "深度多步推演与自检，适合高难度算法、严密逻辑与长链路规划。",
+    bars: 5,
+  },
+  {
+    value: "max",
+    label: "MAX",
+    shortLabel: "MAX",
+    desc: "解锁模型允许的最大推理深度预算，耗时与 Token 消耗最高。",
+    bars: 5,
+  },
+];
+
 const sections = [
   {
     id: "connection",
     title: "模型连接",
     description: "连接你的模型服务，选择协议与默认模型。",
-    keywords: "API 端点 密钥 model reasoning 思考强度",
+    keywords: "API 端点 密钥 model reasoning 思考强度 默认思考等级 路由组 导入来源",
     icon: Plugs,
   },
   {
@@ -412,33 +478,82 @@ export function Settings() {
               {visible("connection") && (
                 <section className="settings-section" aria-label="推理设置">
                   <div className="provider-inference">
-                    <div>
-                      <h3>通用推理偏好</h3>
-                      <p>适用于支持思考参数的模型，通过底部保存设置。</p>
+                    <div className="provider-inference-head">
+                      <div className="provider-inference-info">
+                        <div className="provider-inference-title-row">
+                          <h3>默认思考等级</h3>
+                          <span className="provider-tag">通用推理偏好</span>
+                        </div>
+                        <p>
+                          适用于支持思考参数的模型；未单独定制思考等级的模型将跟随此设定，修改后通过底部保存设置。
+                        </p>
+                      </div>
+                      <div className="provider-inference-select-wrap">
+                        {select(
+                          "reasoningEffort",
+                          "默认思考强度",
+                          GLOBAL_REASONING_EFFORT_OPTIONS.map((item) => ({
+                            value: item.value,
+                            label: item.label,
+                          })),
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      {select(
-                        "reasoningEffort",
-                        "默认思考强度",
-                        [
-                          "default",
-                          "none",
-                          "minimal",
-                          "low",
-                          "medium",
-                          "high",
-                          "xhigh",
-                          "max",
-                        ].map((value) => ({
-                          value,
-                          label:
-                            value === "default"
-                              ? "模型默认"
-                              : value === "max"
-                                ? "MAX"
-                                : value,
-                        })),
-                      )}
+
+                    <div className="provider-inference-card">
+                      <fieldset
+                        className="provider-inference-grid"
+                        aria-label="全局默认思考等级快捷选择"
+                      >
+                        {GLOBAL_REASONING_EFFORT_OPTIONS.map((item) => {
+                          const active = draft.reasoningEffort === item.value;
+                          return (
+                            <button
+                              key={item.value}
+                              type="button"
+                              aria-pressed={active}
+                              className={`provider-inference-option${active ? " is-active" : ""}`}
+                              onClick={() =>
+                                change("reasoningEffort", item.value)
+                              }
+                            >
+                              <div className="provider-inference-option-top">
+                                <span className="provider-inference-option-name">
+                                  {item.shortLabel}
+                                </span>
+                                {item.bars > 0 ? (
+                                  <EffortBars bars={item.bars} />
+                                ) : (
+                                  <span className="provider-inference-option-tag">
+                                    {item.value === "default" ? "自动" : "0"}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="provider-inference-option-label">
+                                {item.label}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </fieldset>
+                      {(() => {
+                        const activeOption =
+                          GLOBAL_REASONING_EFFORT_OPTIONS.find(
+                            (item) => item.value === draft.reasoningEffort,
+                          ) ?? GLOBAL_REASONING_EFFORT_OPTIONS[0];
+                        return (
+                          <div className="provider-inference-summary">
+                            <span className="provider-inference-summary-desc">
+                              当前设定：
+                              <strong>{activeOption.label}</strong> ·{" "}
+                              {activeOption.desc}
+                            </span>
+                            <span className="provider-inference-summary-rule">
+                              优先级：单模型覆盖 ＞ 全局默认 ＞ 模型默认
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </section>

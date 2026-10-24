@@ -618,7 +618,7 @@ export function ModelMetadata({
   );
 }
 
-function EffortBars({ bars }: { readonly bars: number }) {
+export function EffortBars({ bars }: { readonly bars: number }) {
   return (
     <span className="model-effort-bars" aria-hidden="true">
       {[1, 2, 3, 4, 5].map((index) => (
@@ -767,8 +767,10 @@ export function ModelParameterEditor({
             <span className="model-param-label">默认思考等级</span>
             <span className="model-param-sub">
               {override?.reasoningEffort !== undefined
-                ? `已固定为 ${override.reasoningEffort}`
-                : "跟随全局或模型默认"}
+                ? `已固定为 ${override.reasoningEffort === "default" ? "模型默认" : override.reasoningEffort}`
+                : upstreamEffort
+                  ? `上游默认 ${upstreamEffort} · 跟随全局`
+                  : "跟随全局或模型默认"}
             </span>
           </div>
           <div className="model-param-row-control">
@@ -778,13 +780,23 @@ export function ModelParameterEditor({
             >
               {REASONING_EFFORT_OPTIONS.map((option) => {
                 const active = currentEffort === option.value;
+                const outOfRange =
+                  currentEfforts.length > 0 &&
+                  option.value !== "" &&
+                  option.value !== "default" &&
+                  !currentEfforts.includes(option.value);
                 return (
                   <button
                     key={option.value || "global"}
                     type="button"
                     aria-pressed={active}
                     disabled={disabled}
-                    className={`model-param-seg-btn${active ? " is-active" : ""}`}
+                    title={
+                      outOfRange
+                        ? `${option.label}（不在当前声明的支持档位中，仍可强制指定）`
+                        : option.label
+                    }
+                    className={`model-param-seg-btn${active ? " is-active" : ""}${outOfRange ? " is-out-of-range" : ""}`}
                     onClick={() =>
                       onChange({
                         reasoningEffort:
@@ -2706,16 +2718,48 @@ export function ImportPanel({
   };
   return (
     <details className="model-access-fold model-access-import">
-      <summary>导入来源</summary>
-      <div className="model-access-section-body">
-        <Field id="model-access-import-text" label="文本或链接">
+      <summary className="model-access-import-summary">
+        <div className="model-access-import-summary-main">
+          <span className="model-access-import-icon" aria-hidden="true">
+            <Plugs size={15} />
+          </span>
+          <div className="model-access-import-summary-text">
+            <span className="model-access-import-title">导入来源</span>
+            <span className="model-access-import-subtitle">
+              支持粘贴 JSON 配置或导入链接，先预览校验再按需勾选合并
+            </span>
+          </div>
+        </div>
+        <div className="model-access-import-summary-meta">
+          {preview ? (
+            <span className="model-access-tag is-highlight">
+              待导入 {selected.size}/{preview.sources.length}
+            </span>
+          ) : message ? (
+            <span className="model-access-tag is-success">{message}</span>
+          ) : (
+            <span className="model-access-tag">JSON / 链接</span>
+          )}
+          <CaretDown
+            size={14}
+            className="model-access-fold-caret"
+            aria-hidden="true"
+          />
+        </div>
+      </summary>
+      <div className="model-access-section-body model-access-import-body">
+        <Field
+          id="model-access-import-text"
+          label="文本或链接"
+          helper="粘贴导出的来源 JSON 片段（包含 sources 数组或来源对象）或 http(s):// 导入地址"
+        >
           <textarea
             id="model-access-import-text"
             className="model-access-json"
             rows={4}
             value={text}
             spellCheck={false}
-            placeholder="JSON 或导入链接"
+            placeholder='例如：{"sources": [{"id": "openai", ...}]} 或 https://example.com/sources.json'
             onChange={(event) => {
               setText(event.target.value);
               setPreview(null);
@@ -2723,56 +2767,86 @@ export function ImportPanel({
             }}
           />
         </Field>
-        <div className="model-access-actions">
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={busy || !text.trim()}
-            loading={busy && !preview}
-            onClick={() => void doPreview()}
-          >
-            预览
-          </Button>
-          {preview && (
+        <div className="model-access-import-toolbar">
+          <div className="model-access-actions">
             <Button
               size="sm"
-              disabled={busy || selected.size === 0}
-              loading={busy}
-              onClick={() => void apply()}
+              variant="secondary"
+              disabled={busy || !text.trim()}
+              loading={busy && !preview}
+              onClick={() => void doPreview()}
             >
-              应用导入
+              预览
             </Button>
-          )}
+            {preview && (
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={busy || selected.size === 0}
+                loading={busy}
+                onClick={() => void apply()}
+              >
+                应用导入
+              </Button>
+            )}
+            {(text.trim().length > 0 || preview !== null) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() => {
+                  setText("");
+                  setPreview(null);
+                  setError("");
+                  setMessage("");
+                }}
+              >
+                清空
+              </Button>
+            )}
+          </div>
+          <div className="model-access-import-feedback">
+            {message && (
+              <span className="model-access-status is-success">{message}</span>
+            )}
+            {error && (
+              <span className="model-access-status is-error" role="alert">
+                {error}
+              </span>
+            )}
+          </div>
         </div>
         {preview && (
           <div className="model-access-preview">
-            <div className="model-access-preview-list">
-              {preview.sources.map((source) => (
-                <label className="model-access-preview-row" key={source.id}>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(source.id)}
-                    onChange={(event) => {
-                      const next = new Set(selected);
-                      if (event.target.checked) next.add(source.id);
-                      else next.delete(source.id);
-                      setSelected(next);
-                    }}
-                  />
-                  <span>{source.label}</span>
-                  <code>{source.id}</code>
-                  <span>{source.model}</span>
-                  <span>{source.credentialCount} 凭据</span>
-                  {source.warnings.map((warning) => (
-                    <span
-                      className="model-access-status is-error"
-                      key={warning}
-                    >
-                      {warning}
-                    </span>
-                  ))}
-                </label>
-              ))}
+            <div className="model-access-preview-head">
+              <span className="model-access-preview-summary">
+                识别到 <strong>{preview.sources.length}</strong> 个来源 · 已选{" "}
+                <strong>{selected.size}</strong> 项
+              </span>
+              {preview.sources.length > 1 && (
+                <div className="model-param-quick-links">
+                  <button
+                    type="button"
+                    className="model-param-link-btn"
+                    disabled={busy || selected.size === preview.sources.length}
+                    onClick={() =>
+                      setSelected(
+                        new Set(preview.sources.map((item) => item.id)),
+                      )
+                    }
+                  >
+                    全选
+                  </button>
+                  <button
+                    type="button"
+                    className="model-param-link-btn is-muted"
+                    disabled={busy || selected.size === 0}
+                    onClick={() => setSelected(new Set())}
+                  >
+                    取消全选
+                  </button>
+                </div>
+              )}
             </div>
             {preview.warnings.length > 0 && (
               <ul className="model-access-warnings">
@@ -2781,18 +2855,95 @@ export function ImportPanel({
                 ))}
               </ul>
             )}
+            <div className="model-access-preview-list">
+              {preview.sources.map((source) => {
+                const isChecked = selected.has(source.id);
+                const hasWarning = source.warnings.length > 0;
+                return (
+                  <label
+                    className={`model-access-preview-row${isChecked ? " is-selected" : ""}${hasWarning ? " has-warning" : ""}`}
+                    key={source.id}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={(event) => {
+                        const next = new Set(selected);
+                        if (event.target.checked) next.add(source.id);
+                        else next.delete(source.id);
+                        setSelected(next);
+                      }}
+                    />
+                    <div className="model-access-preview-main">
+                      <span className="model-access-preview-label">
+                        {source.label}
+                      </span>
+                      <code>{source.id}</code>
+                      {source.baseUrl && (
+                        <span className="model-access-preview-url">
+                          {source.baseUrl}
+                        </span>
+                      )}
+                    </div>
+                    <div className="model-access-preview-badges">
+                      <span className="model-access-tag">
+                        {source.model || "未指定模型"}
+                      </span>
+                      <span className="model-access-tag">
+                        {source.credentialCount} 凭据
+                      </span>
+                      {source.warnings.map((warning) => (
+                        <span
+                          className="model-access-status is-error model-access-preview-warning"
+                          key={warning}
+                        >
+                          {warning}
+                        </span>
+                      ))}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
           </div>
-        )}
-        {message && <span className="model-access-status">{message}</span>}
-        {error && (
-          <span className="model-access-status is-error" role="alert">
-            {error}
-          </span>
         )}
       </div>
     </details>
   );
 }
+
+const ROUTE_STRATEGY_META: Readonly<
+  Record<
+    RouteGroup["strategy"],
+    { readonly label: string; readonly badge: string; readonly desc: string }
+  >
+> = {
+  order: {
+    label: "顺序优先 (order)",
+    badge: "顺序调度",
+    desc: "按成员排列顺序依次调用，前序节点不可用时自动故障转移至下一节点。",
+  },
+  rotate: {
+    label: "轮换均衡 (rotate)",
+    badge: "轮换均衡",
+    desc: "在已启用成员间依次轮询分发请求，均衡多来源并发与配额消耗。",
+  },
+  usage: {
+    label: "用量优先 (usage)",
+    badge: "用量优先",
+    desc: "优先路由至剩余额度更充裕或近期消耗较低的成员节点。",
+  },
+  smart: {
+    label: "智能择优 (smart)",
+    badge: "智能择优",
+    desc: "综合近期响应延迟、成功率与可用状态动态选择最优节点。",
+  },
+  pace: {
+    label: "节流控制 (pace)",
+    badge: "节流控制",
+    desc: "平滑控制各节点请求节奏，避免单来源突发流量触发限流。",
+  },
+};
 
 const emptyRoute = (): RouteGroup => ({
   id: randomId("route"),
@@ -2883,10 +3034,26 @@ export function RouteGroupsPanel({
       ),
     });
   };
+  const moveMember = (from: number, to: number) => {
+    if (!draft || to < 0 || to >= draft.members.length) return;
+    const next = [...draft.members];
+    const [picked] = next.splice(from, 1);
+    if (!picked) return;
+    next.splice(to, 0, picked);
+    setDraft({ ...draft, members: next });
+  };
   return (
     <section className="model-access-routes" aria-label="路由组">
       <div className="model-access-heading">
-        <h4>路由组</h4>
+        <div className="model-access-heading-info">
+          <div className="model-access-heading-title-row">
+            <h4>路由组</h4>
+            <span className="provider-configured-count">{groups.length}</span>
+          </div>
+          <p className="model-access-heading-sub">
+            将多个来源与模型组合为虚拟路由池，按顺序容灾、轮询均衡或智能策略自动调度。
+          </p>
+        </div>
         <Button
           size="sm"
           variant="secondary"
@@ -2898,74 +3065,110 @@ export function RouteGroupsPanel({
         </Button>
       </div>
       {groups.length === 0 ? (
-        <p className="model-access-status">无路由组。</p>
+        <div className="model-access-route-empty">
+          <p className="model-access-status">无路由组。</p>
+          <span className="model-access-route-empty-hint">
+            添加路由组后，可在工作台模型选择器中直接选用虚拟路由池，实现跨来源自动故障转移与分流。
+          </span>
+        </div>
       ) : (
         <ul className="model-access-route-list">
-          {groups.map((group) => (
-            <li className="model-access-route-card" key={group.id}>
-              <div className="model-access-route-main">
-                <strong>{group.label}</strong>
-                <span className="model-access-tag">{group.strategy}</span>
-                <span className="model-access-status">
-                  {group.members.length} 个成员
-                </span>
-                {group.sticky && <span className="model-access-tag">黏性</span>}
-              </div>
-              <div className="model-access-route-members">
-                {group.members.map((member, index) => {
-                  const source = sources.find(
-                    (item) => item.id === member.sourceId,
-                  );
-                  const credential =
-                    source?.credentials?.find(
-                      (item) => item.id === member.credentialId,
-                    ) ?? source?.credentials?.[0];
-                  return (
-                    <span key={`${member.sourceId}:${member.model}:${index}`}>
-                      {source?.label ?? member.sourceId} / {member.model}
-                      {credential ? ` / ${credential.label}` : ""}
+          {groups.map((group) => {
+            const strategyMeta =
+              ROUTE_STRATEGY_META[group.strategy] ?? ROUTE_STRATEGY_META.order;
+            return (
+              <li className="model-access-route-card" key={group.id}>
+                <div className="model-access-route-head">
+                  <div className="model-access-route-main">
+                    <span
+                      className="provider-model-dot is-custom"
+                      aria-hidden="true"
+                    />
+                    <strong>{group.label}</strong>
+                    <span
+                      className="model-access-tag is-strategy"
+                      title={strategyMeta.desc}
+                    >
+                      {strategyMeta.badge} · {group.strategy}
                     </span>
-                  );
-                })}
-              </div>
-              <div className="model-access-actions">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => edit(group)}
-                >
-                  编辑路由组
-                </Button>
-                {confirming === group.id ? (
-                  <>
+                    {group.sticky && (
+                      <span className="model-access-tag is-sticky">黏性</span>
+                    )}
+                    <span className="model-access-status">
+                      {group.members.length} 个成员
+                    </span>
+                  </div>
+                  <div className="model-access-actions">
                     <Button
                       size="sm"
-                      variant="danger"
-                      loading={busy}
-                      onClick={() => void remove(group.id)}
+                      variant="secondary"
+                      onClick={() => edit(group)}
                     >
-                      确认删除路由组
+                      编辑路由组
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setConfirming("")}
-                    >
-                      取消
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setConfirming(group.id)}
-                  >
-                    删除路由组
-                  </Button>
-                )}
-              </div>
-            </li>
-          ))}
+                    {confirming === group.id ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          loading={busy}
+                          onClick={() => void remove(group.id)}
+                        >
+                          确认删除路由组
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setConfirming("")}
+                        >
+                          取消
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setConfirming(group.id)}
+                      >
+                        删除路由组
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="model-access-route-members">
+                  {group.members.map((member, index) => {
+                    const source = sources.find(
+                      (item) => item.id === member.sourceId,
+                    );
+                    const credential =
+                      source?.credentials?.find(
+                        (item) => item.id === member.credentialId,
+                      ) ?? source?.credentials?.[0];
+                    const isDisabled = member.enabled === false;
+                    return (
+                      <span
+                        className={`model-access-route-hop${isDisabled ? " is-disabled" : ""}`}
+                        key={`${member.sourceId}:${member.model}:${index}`}
+                      >
+                        <em className="model-access-route-hop-index">
+                          #{index + 1}
+                        </em>
+                        <span className="model-access-route-hop-target">
+                          {source?.label ?? member.sourceId} / {member.model}
+                          {credential ? ` / ${credential.label}` : ""}
+                        </span>
+                        {isDisabled && (
+                          <small className="model-access-route-hop-badge">
+                            已停用
+                          </small>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
       {error && !draft && (
@@ -2983,27 +3186,28 @@ export function RouteGroupsPanel({
           onClose={() => !busy && setDraft(null)}
           dismissible={!busy}
         >
-          <div className="provider-editor model-access-route-editor">
-            <Field id="model-access-route-label" label="名称">
-              <Input
-                id="model-access-route-label"
-                value={draft.label}
-                onChange={(event) =>
-                  setDraft({ ...draft, label: event.target.value })
-                }
-              />
-            </Field>
-            <div className="model-access-form-grid">
+          <div className="provider-editor modal-content model-access-route-editor">
+            <div className="model-access-route-basic-grid">
+              <Field id="model-access-route-label" label="名称">
+                <Input
+                  id="model-access-route-label"
+                  value={draft.label}
+                  placeholder="例如：主力编程路由 / 高可用容灾池"
+                  onChange={(event) =>
+                    setDraft({ ...draft, label: event.target.value })
+                  }
+                />
+              </Field>
               <Field id="model-access-route-strategy" label="策略">
                 <Select
                   id="model-access-route-strategy"
                   value={draft.strategy}
                   options={[
-                    { value: "order", label: "顺序" },
-                    { value: "rotate", label: "轮换" },
-                    { value: "usage", label: "用量" },
-                    { value: "smart", label: "智能" },
-                    { value: "pace", label: "节流" },
+                    { value: "order", label: "顺序优先 (order)" },
+                    { value: "rotate", label: "轮换均衡 (rotate)" },
+                    { value: "usage", label: "用量优先 (usage)" },
+                    { value: "smart", label: "智能择优 (smart)" },
+                    { value: "pace", label: "节流控制 (pace)" },
                   ]}
                   onChange={(event) =>
                     setDraft({
@@ -3013,6 +3217,16 @@ export function RouteGroupsPanel({
                   }
                 />
               </Field>
+            </div>
+            <div className="model-access-route-strategy-bar">
+              <span className="model-access-route-strategy-desc">
+                {
+                  (
+                    ROUTE_STRATEGY_META[draft.strategy] ??
+                    ROUTE_STRATEGY_META.order
+                  ).desc
+                }
+              </span>
               <label className="model-access-check model-access-route-sticky">
                 <input
                   type="checkbox"
@@ -3021,10 +3235,31 @@ export function RouteGroupsPanel({
                     setDraft({ ...draft, sticky: event.target.checked })
                   }
                 />
-                黏性
+                <span>黏性会话（优先沿用上次成功节点）</span>
               </label>
             </div>
-            <div className="model-access-rows">
+            <div className="model-access-rows model-access-route-members-editor">
+              <div className="model-access-route-members-head">
+                <span className="model-access-route-members-title">
+                  路由成员节点（共 {draft.members.length} 个）
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  icon={<Plus size={14} />}
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      members: [
+                        ...draft.members,
+                        { sourceId: "", model: "", enabled: true },
+                      ],
+                    })
+                  }
+                >
+                  添加成员
+                </Button>
+              </div>
               {draft.members.map((member, index) => {
                 const source = sources.find(
                   (item) => item.id === member.sourceId,
@@ -3033,113 +3268,130 @@ export function RouteGroupsPanel({
                 const listId = `route-models-${draft.id}-${index}`;
                 return (
                   <div
-                    className="model-access-route-member"
+                    className={`model-access-route-member${member.enabled === false ? " is-disabled" : ""}`}
                     key={`${member.sourceId}-${index}`}
                   >
-                    <Field id={`route-source-${index}`} label="来源">
-                      <Select
-                        id={`route-source-${index}`}
-                        aria-label="路由成员来源"
-                        value={member.sourceId}
-                        options={[
-                          { value: "", label: "选择来源" },
-                          ...sources.map((item) => ({
-                            value: item.id,
-                            label: item.label,
-                          })),
-                        ]}
-                        onChange={(event) =>
-                          patchMember(index, {
-                            sourceId: event.target.value,
-                            model: "",
-                            credentialId: undefined,
-                          })
-                        }
-                      />
-                    </Field>
-                    <Field id={`route-model-${index}`} label="模型">
-                      <Input
-                        id={`route-model-${index}`}
-                        aria-label="路由成员模型"
-                        list={listId}
-                        value={member.model}
-                        placeholder="模型 ID"
-                        onChange={(event) =>
-                          patchMember(index, { model: event.target.value })
-                        }
-                      />
-                      <datalist id={listId}>
-                        {models.map((entry) => (
-                          <option key={entry.id} value={entry.id} />
-                        ))}
-                        {source?.model && <option value={source.model} />}
-                      </datalist>
-                    </Field>
-                    <Field id={`route-credential-${index}`} label="凭据">
-                      <Select
-                        id={`route-credential-${index}`}
-                        aria-label="路由成员凭据"
-                        value={member.credentialId ?? ""}
-                        options={[
-                          { value: "", label: "默认凭据" },
-                          ...(source?.credentials ?? []).map((credential) => ({
-                            value: credential.id,
-                            label: credential.label,
-                          })),
-                        ]}
-                        onChange={(event) =>
-                          patchMember(index, {
-                            credentialId: event.target.value || undefined,
-                          })
-                        }
-                      />
-                    </Field>
-                    <label className="model-access-check">
-                      <input
-                        type="checkbox"
-                        checked={member.enabled !== false}
-                        aria-label="启用路由成员"
-                        onChange={(event) =>
-                          patchMember(index, { enabled: event.target.checked })
-                        }
-                      />
-                      启用
-                    </label>
-                    <button
-                      type="button"
-                      className="model-access-icon-button"
-                      aria-label="删除路由成员"
-                      disabled={draft.members.length <= 1}
-                      onClick={() =>
-                        setDraft({
-                          ...draft,
-                          members: draft.members.filter(
-                            (_, at) => at !== index,
-                          ),
-                        })
-                      }
-                    >
-                      <Trash size={14} aria-hidden="true" />
-                    </button>
+                    <div className="model-access-route-member-head">
+                      <span className="model-access-route-member-index">
+                        节点 #{index + 1}
+                      </span>
+                      <div className="model-access-route-member-tools">
+                        {draft.members.length > 1 && (
+                          <div className="model-param-quick-links">
+                            <button
+                              type="button"
+                              className="model-param-link-btn"
+                              disabled={index === 0}
+                              onClick={() => moveMember(index, index - 1)}
+                            >
+                              上移
+                            </button>
+                            <button
+                              type="button"
+                              className="model-param-link-btn"
+                              disabled={index === draft.members.length - 1}
+                              onClick={() => moveMember(index, index + 1)}
+                            >
+                              下移
+                            </button>
+                          </div>
+                        )}
+                        <label className="model-access-check">
+                          <input
+                            type="checkbox"
+                            checked={member.enabled !== false}
+                            aria-label="启用路由成员"
+                            onChange={(event) =>
+                              patchMember(index, {
+                                enabled: event.target.checked,
+                              })
+                            }
+                          />
+                          启用
+                        </label>
+                        <button
+                          type="button"
+                          className="model-access-icon-button"
+                          aria-label="删除路由成员"
+                          disabled={draft.members.length <= 1}
+                          onClick={() =>
+                            setDraft({
+                              ...draft,
+                              members: draft.members.filter(
+                                (_, at) => at !== index,
+                              ),
+                            })
+                          }
+                        >
+                          <Trash size={14} aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="model-access-route-member-fields">
+                      <Field id={`route-source-${index}`} label="来源">
+                        <Select
+                          id={`route-source-${index}`}
+                          aria-label="路由成员来源"
+                          value={member.sourceId}
+                          options={[
+                            { value: "", label: "选择来源" },
+                            ...sources.map((item) => ({
+                              value: item.id,
+                              label: item.label,
+                            })),
+                          ]}
+                          onChange={(event) =>
+                            patchMember(index, {
+                              sourceId: event.target.value,
+                              model: "",
+                              credentialId: undefined,
+                            })
+                          }
+                        />
+                      </Field>
+                      <Field id={`route-model-${index}`} label="模型">
+                        <Input
+                          id={`route-model-${index}`}
+                          aria-label="路由成员模型"
+                          list={listId}
+                          value={member.model}
+                          placeholder="模型 ID"
+                          onChange={(event) =>
+                            patchMember(index, { model: event.target.value })
+                          }
+                        />
+                        <datalist id={listId}>
+                          {models.map((entry) => (
+                            <option key={entry.id} value={entry.id} />
+                          ))}
+                          {source?.model && <option value={source.model} />}
+                        </datalist>
+                      </Field>
+                      <Field id={`route-credential-${index}`} label="凭据">
+                        <Select
+                          id={`route-credential-${index}`}
+                          aria-label="路由成员凭据"
+                          value={member.credentialId ?? ""}
+                          options={[
+                            { value: "", label: "默认凭据" },
+                            ...(source?.credentials ?? []).map(
+                              (credential) => ({
+                                value: credential.id,
+                                label: credential.label,
+                              }),
+                            ),
+                          ]}
+                          onChange={(event) =>
+                            patchMember(index, {
+                              credentialId: event.target.value || undefined,
+                            })
+                          }
+                        />
+                      </Field>
+                    </div>
                   </div>
                 );
               })}
-              <Button
-                size="sm"
-                variant="secondary"
-                icon={<Plus size={14} />}
-                onClick={() =>
-                  setDraft({
-                    ...draft,
-                    members: [
-                      ...draft.members,
-                      { sourceId: "", model: "", enabled: true },
-                    ],
-                  })
-                }
-              >
-                添加成员
-              </Button>
             </div>
             {error && (
               <span className="model-access-status is-error" role="alert">

@@ -46,6 +46,11 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
     await nav('模型连接').click();
     expect(await page.getByRole('button', { name: '从 /models 拉取' }).count()).toBe(0);
     expect(await page.evaluate(() => Reflect.get(window, 'reads'))).toBe(0);
+    await page
+      .getByRole('group', { name: '全局默认思考等级快捷选择' })
+      .getByRole('button', { name: /medium/ })
+      .click();
+    expect(await page.getByLabel('默认思考强度').inputValue()).toBe('medium');
     await page.getByLabel('默认思考强度').selectOption('high');
     await nav('上下文与记忆').click();
     await page.getByLabel('上下文 token 上限').fill('32000');
@@ -89,6 +94,6 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
     await page.getByRole('button', { name: '重开设置' }).click();
     await nav('模型连接').click();
     await page.getByRole('button', { name: '添加来源' }).click();
-    expect(await page.getByLabel('来源 API 密钥', { exact: true }).inputValue()).toBe('');
+    expect(await page.getByRole('textbox', { name: '凭据密钥 默认', exact: true }).inputValue()).toBe('');
   } finally { await browser.close(); }
 }, 30000);
