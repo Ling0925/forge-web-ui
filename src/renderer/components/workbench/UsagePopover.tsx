@@ -28,7 +28,18 @@ const percent = (value: number | undefined) =>
 
 const formatDuration = (ms: number | undefined) => {
   if (ms === undefined || !Number.isFinite(ms) || ms <= 0) return undefined;
-  return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  const roundedSeconds = Math.round(totalSeconds);
+  const minutes = Math.floor(roundedSeconds / 60);
+  const seconds = roundedSeconds % 60;
+  if (minutes < 60) {
+    return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remMinutes = minutes % 60;
+  return remMinutes > 0 ? `${hours}h ${remMinutes}m` : `${hours}h`;
 };
 
 const shortModelLabel = (model: string | undefined) => {
@@ -231,9 +242,13 @@ export function UsagePopover({
   const displayModel = shortModelLabel(
     model ?? snapshot?.model ?? costMetrics.modelsUsed.at(-1),
   );
+  const cacheBaselineTokens =
+    usage.cacheInputTokens && usage.cacheInputTokens > 0
+      ? usage.cacheInputTokens
+      : usage.total?.promptTokens;
   const uncachedInputTokens =
-    usage.total && usage.cacheRead !== undefined
-      ? Math.max(0, usage.total.promptTokens - usage.cacheRead)
+    cacheBaselineTokens !== undefined && usage.cacheRead !== undefined
+      ? Math.max(0, cacheBaselineTokens - usage.cacheRead)
       : undefined;
 
   const costDetailSub = useMemo(() => {
@@ -492,10 +507,7 @@ export function UsagePopover({
               <dt>费用估算</dt>
               <dd>
                 {costMetrics.estimatedCostUsd !== undefined ? (
-                  <span className="usage-dd-inline">
-                    {costDetailSub && (
-                      <span className="usage-dd-sub">{costDetailSub}</span>
-                    )}
+                  <span className="usage-dd-stack">
                     <span className="usage-primary-value">
                       {costMetrics.incomplete &&
                       costMetrics.estimatedCostUsd > 0
@@ -507,6 +519,9 @@ export function UsagePopover({
                         ? "（部分）"
                         : ""}
                     </span>
+                    {costDetailSub && (
+                      <span className="usage-dd-sub">{costDetailSub}</span>
+                    )}
                   </span>
                 ) : (
                   "未提供价格"
@@ -521,10 +536,7 @@ export function UsagePopover({
               <dd>{rateSummary ?? "未提供价格"}</dd>
               <dt>输出速度 (TPS)</dt>
               <dd>
-                <span className="usage-dd-inline">
-                  {speedDetailSub && (
-                    <span className="usage-dd-sub">{speedDetailSub}</span>
-                  )}
+                <span className="usage-dd-stack">
                   <span
                     className={
                       speedMetrics.avgTps !== undefined
@@ -534,6 +546,9 @@ export function UsagePopover({
                   >
                     {formatTps(speedMetrics.avgTps, speedMetrics.estimated)}
                   </span>
+                  {speedDetailSub && (
+                    <span className="usage-dd-sub">{speedDetailSub}</span>
+                  )}
                 </span>
               </dd>
               <dt>最近缓存命中（CH）</dt>

@@ -85,7 +85,7 @@ it("separates context from session totals, replaces live usage on completion and
   expect(sessionUsage([first]).total?.totalTokens).toBe(1100);
   expect(sessionUsage([first, finished]).total?.totalTokens).toBe(1100);
   expect(sessionUsage([finished]).cacheRead).toBe(900);
-  expect(sessionUsage([finished]).latestCache).toBeUndefined();
+  expect(sessionUsage([finished]).latestCache).toBe(0.9);
   const result = sessionUsage([first, finished, context(2000)]);
   expect(result.total).toEqual({
     promptTokens: 3000,
@@ -397,8 +397,94 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     expect(await richPanel.innerText()).toContain("输出速度 (TPS)");
     expect(await richPanel.innerText()).toContain("50.0 tok/s");
     expect(await richPanel.innerText()).toContain("峰值 60.0 · 耗时 4.0s");
-    expect(await richPanel.innerText()).toContain("未缓存 11.8K");
+    expect(await richPanel.innerText()).toContain("未缓存 23.5K");
+    const dtBoxes = await richPanel
+      .locator("dt")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const rect = node.getBoundingClientRect();
+          return {
+            text: (node.textContent ?? "").trim(),
+            width: rect.width,
+            height: rect.height,
+          };
+        }),
+      );
+    for (const box of dtBoxes) {
+      expect(box.height).toBeLessThanOrEqual(24);
+      expect(box.width).toBeGreaterThanOrEqual(24);
+    }
     await page.screenshot({ path: "/tmp/forge-usage-priced-tps.png" });
+
+    // Verify large multi-hour / high-cost values in light theme never crush <dt> labels.
+    const longStart = new Date(Date.now() - 11_032_700).toISOString();
+    const longEnd = new Date(Date.now() - 3000).toISOString();
+    await page.evaluate(
+      ([ls, le]) => {
+        document.documentElement.dataset.theme = "light";
+        const append = Reflect.get(window, "appendUsage");
+        append(ls);
+        append(le);
+      },
+      [
+        {
+          ...base,
+          type: "provider_attempt",
+          turn: 2,
+          step: 1,
+          timestamp: longStart,
+          selection: {
+            model: "model",
+            sourceId: "src",
+            apiMode: "responses",
+            attempt: 1,
+            reason: "direct",
+            outcome: "started",
+            timestamp: longStart,
+          },
+        },
+        {
+          ...base,
+          type: "provider_attempt",
+          turn: 2,
+          step: 1,
+          timestamp: longEnd,
+          selection: {
+            model: "model",
+            sourceId: "src",
+            apiMode: "responses",
+            attempt: 1,
+            reason: "direct",
+            outcome: "succeeded",
+            timestamp: longEnd,
+            usage: {
+              promptTokens: 32_000_000,
+              completionTokens: 217_000,
+              cachedPromptTokens: 30_000_000,
+              totalTokens: 32_217_000,
+            },
+          },
+        },
+      ],
+    );
+    await expect.poll(() => richPanel.innerText()).toContain("耗时 3h 3m");
+    const lightDtBoxes = await richPanel
+      .locator("dt")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const rect = node.getBoundingClientRect();
+          return {
+            text: (node.textContent ?? "").trim(),
+            width: rect.width,
+            height: rect.height,
+          };
+        }),
+      );
+    for (const box of lightDtBoxes) {
+      expect(box.height).toBeLessThanOrEqual(24);
+      expect(box.width).toBeGreaterThanOrEqual(24);
+    }
+    await page.screenshot({ path: "/tmp/forge-usage-large-light.png" });
   } finally {
     await browser.close();
   }
