@@ -81,6 +81,18 @@ describe("plugin configuration state", () => {
     ).toBe(true);
   });
 
+  it("round-trips an explicit all-host wildcard while keeping empty configuration empty", () => {
+    const { draft, error } = browserConfigDraft({ allowedDomains: ["*"] });
+    expect(error).toBe("");
+    expect(draft.allowedDomains).toBe("*");
+    const saved = browserConfigFromDraft({ ...draft, allowedDomains: " *\n* " });
+    expect(saved.error).toBe("");
+    expect(saved.config.allowedDomains).toEqual(["*"]);
+    expect(configDraftDirty(draft, saved.config)).toBe(false);
+    expect(browserConfigFromDraft({ ...draft, allowedDomains: "" }).config.allowedDomains).toEqual([]);
+    expect(browserConfigFromDraft({ ...draft, allowedDomains: "**" }).error).toContain("allowedDomains");
+  });
+
   it("surfaces Core schema rejections instead of silently replacing a draft", () => {
     const invalid = browserConfigFromDraft({
       executablePath: "  ",

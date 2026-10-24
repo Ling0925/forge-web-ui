@@ -10,7 +10,10 @@ import { expect, it } from "vitest";
  * enable/disable go through Core, and that a failed render cannot occur for an
  * unparsable config.
  */
-it("manages the built-in browser plugin from settings without implicit checks", async () => {
+it.each([
+  { domains: ["example.com", "*.trusted.example"] },
+  { domains: ["*"] },
+])("manages the browser plugin with $domains without implicit checks", async ({ domains }) => {
   const bundle = await build({
     stdin: {
       resolveDir: resolve("."),
@@ -142,7 +145,7 @@ it("manages the built-in browser plugin from settings without implicit checks", 
       .fill("/opt/bin/agent-browser");
     await card
       .getByLabel("允许访问的主机名")
-      .fill("example.com\n*.trusted.example");
+      .fill(domains.join("\n"));
     await card.getByRole("button", { name: "保存配置", exact: true }).click();
     await expect.poll(async () => (await calls()).configure).toBe(1);
     expect((await calls()).inputs[0]).toEqual({
@@ -150,7 +153,7 @@ it("manages the built-in browser plugin from settings without implicit checks", 
       config: {
         executablePath: "/opt/bin/agent-browser",
         browserExecutablePath: "",
-        allowedDomains: ["example.com", "*.trusted.example"],
+        allowedDomains: domains,
       },
     });
     await page
@@ -158,6 +161,9 @@ it("manages the built-in browser plugin from settings without implicit checks", 
       .waitFor();
     // Saving config is not a health check and still must not look ready.
     expect((await calls()).check).toBe(0);
+    await card.getByText(/填写 \* 允许全部网站/).waitFor();
+    if (domains.includes("*"))
+      await card.getByText("全部网站（*）", { exact: true }).waitFor();
 
     await card.getByRole("button", { name: "启用插件", exact: true }).click();
     await expect.poll(async () => (await calls()).configure).toBe(2);

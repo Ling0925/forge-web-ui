@@ -116,7 +116,7 @@ function BrowserConfigEditor({
       <Field
         id="plugin-browser-domains"
         label="允许访问的主机名"
-        helper="每行一个主机名，可写 *.example.com 子域通配；不是 origin，不接受协议、路径或凭据。空列表不能启用。"
+        helper="每行一个主机名，可写 *.example.com；填写 * 允许全部网站（含本机和局域网）。不含协议、路径或凭据；空列表不能启用。先保存配置，再启用插件。"
       >
         <textarea
           id="plugin-browser-domains"
@@ -429,7 +429,7 @@ export function PluginPanel() {
                         record.config as { allowedDomains: string[] }
                       ).allowedDomains.map((domain) => (
                         <li key={domain}>
-                          <code>{domain}</code>
+                          <code>{domain === "*" ? "全部网站（*）" : domain}</code>
                         </li>
                       ))}
                     </ul>
@@ -439,8 +439,8 @@ export function PluginPanel() {
                     </p>
                   )}
                   <p className="plugin-hint">
-                    仅允许 HTTP(S) 主机名，不含协议与路径；不接受凭据
-                    URL。浏览器使用运行级隔离会话，不导入个人浏览器配置或持久登录态。
+                    具体主机名限制访问范围；填写 * 关闭域名限制。导航仍只接受不含凭据的
+                    HTTP(S) URL。浏览器使用运行级隔离会话，不导入个人浏览器配置或持久登录态。
                   </p>
                 </div>
                 <BrowserConfigEditor

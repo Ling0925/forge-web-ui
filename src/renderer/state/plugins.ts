@@ -160,7 +160,7 @@ export function pluginCapabilityLabel(capability: string): {
     case "network":
       return {
         label: "网络",
-        description: "访问网络；导航仍受 allowedDomains 主机名限制。",
+        description: "访问网络；按 allowedDomains 限制主机，显式填写 * 则允许全部网站。",
       };
     case "process":
       return {
