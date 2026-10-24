@@ -19,7 +19,7 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
       import {defaultPublicSettings} from '@forge/core/shared/schemas';
       const C=createContext(null); export const useWorkbench=()=>useContext(C);
       export function TestProvider({children}) {
-        const [settings,setSettings]=useState({...defaultPublicSettings,hasApiKey:true});
+        const [settings,setSettings]=useState({...defaultPublicSettings,hasApiKey:true,browserAllowedOrigins:['http://localhost:3000'],browserExecutablePath:'/usr/bin/chromium'});
         const [isSettingsOpen,openSettings]=useState(true);
         const updateSettings=async input=>{window.calls.push(input); await new Promise(r=>setTimeout(r,50));if(window.fail)return {ok:false,error:'保存失败，草稿已保留。请检查连接或稍后重试。'};
           let next;
@@ -37,6 +37,18 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
     await page.addScriptTag({ content: bundle.outputFiles.find(f => f.path.endsWith('.js'))!.text });
     const nav = (name: string) => page.getByRole('navigation', { name: '设置分类' }).getByRole('button', { name, exact: true });
     const save = page.getByRole('button', { name: '保存设置', exact: true });
+    // The legacy global browser section is gone: browser access is configured
+    // only through the browser plugin, so there is no standalone category or field.
+    expect(await nav('浏览器').count()).toBe(0);
+    expect(await nav('插件').count()).toBe(1);
+    await page.getByLabel('搜索设置').fill('浏览器');
+    await page.getByText('找到 1 个相关分区').waitFor();
+    expect(await page.getByRole('region', { name: '插件配置' }).count()).toBe(1);
+    expect(await page.getByRole('region', { name: '浏览器配置' }).count()).toBe(0);
+    expect(await page.locator('#setting-origins').count()).toBe(0);
+    expect(await page.locator('#setting-browserAllowedOrigins').count()).toBe(0);
+    expect(await page.locator('#setting-browserExecutablePath').count()).toBe(0);
+    await page.getByLabel('搜索设置').fill('');
     // Appearance can be configured before any provider, and only edited keys are sent.
     await nav('外观').click();
     await page.getByRole('button', { name: '深色', exact: true }).click();
@@ -100,6 +112,13 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
     expect(last.apiKey).toBeUndefined();
     expect(last.settings).toMatchObject({ contextBudgetTokens: 32000, modelContextWindows: { 'fixture/model': 128000 }, reasoningEffort: 'high', lspServers: [{ id: 'ts', args: ['--stdio'], extensions: ['.ts', '.tsx'] }] });
     expect(last.settings.theme).toBeUndefined();
+    // Regular settings saves never carry the removed global browser fields.
+    expect(last.settings).not.toHaveProperty('browserAllowedOrigins');
+    expect(last.settings).not.toHaveProperty('browserExecutablePath');
+    expect(
+      await page.evaluate(() => (Reflect.get(window, 'calls') as { settings?: Record<string, unknown> }[])
+        .every(input => !('browserAllowedOrigins' in (input.settings ?? {})) && !('browserExecutablePath' in (input.settings ?? {})))),
+    ).toBe(true);
     await page.getByLabel('搜索设置').fill('token');
     expect(await page.getByLabel('上下文 token 上限').inputValue()).toBe('32000');
     await page.getByLabel('搜索设置').fill('no-match');
@@ -107,7 +126,7 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
     for (const width of [1440, 390]) for (const theme of ['light', 'dark']) {
       await page.setViewportSize({ width, height: 900 });
       await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-      for (const name of ['模型连接', '外观', '执行与权限', '上下文与记忆', '浏览器', '语言服务', 'MCP 扩展']) {
+      for (const name of ['模型连接', '外观', '执行与权限', '上下文与记忆', '语言服务', 'MCP 扩展']) {
         await nav(name).click();
         const rect = await page.locator('.settings-page').boundingBox();
         expect(rect!.width).toBeLessThanOrEqual(width);

@@ -10,8 +10,9 @@
 
 ## 插件管理（设置 → 插件）
 
+- 浏览器只有一个产品入口：设置中的“插件”分区。旧版设置里的独立“浏览器”分区（`browserAllowedOrigins`、全局 `browserExecutablePath`）已移除，普通设置的保存不会携带这两个字段；浏览器访问范围、agent-browser 可执行路径和可选 Chrome/Chromium 路径都只写进插件配置。
 - 内置浏览器插件的 manifest id 固定为 `browser`；`agent-browser` 只是默认的 `executablePath` 与可选依赖名。不要按 `agent-browser` 查找插件记录。
-- 首版只提供浏览器插件的专用编辑器，字段为 Core schema 返回的 `executablePath`、`browserExecutablePath`、`allowedDomains`；没有任意插件 JS 注入，也没有任意插件的通用配置表单。
+- 首版只提供浏览器插件的专用编辑器，字段为 Core schema 返回的 `executablePath`、`browserExecutablePath`、`allowedDomains`；其中 `browserExecutablePath` 属于插件 `config`，不是全局设置。没有任意插件 JS 注入，也没有任意插件的通用配置表单。
 - 保存配置与启用/禁用是分开的显式操作。保存只写配置，不探测依赖。
 - `status: "configured"` 仅表示配置已持久化，界面写作“已配置 · 未检查”；它**不是** `ready`。只有用户点击检查并通过时才显示“依赖检查通过”，且提示检查只覆盖 agent-browser 工具协议，不代表 Chrome 能启动或站点可访问。
 - 权限能力、`allowedDomains` 主机名限制（HTTP(S) 主机名，可含 `*.` 子域，不接受协议/路径/凭据）、运行级隔离会话与临时登录态都在面板中明示。启用能力不授予权限，也不绕过运行权限与审批。
@@ -31,14 +32,18 @@
 
 ```sh
 pnpm exec vitest run \
+  tests/renderer/settings-draft.test.ts \
+  tests/renderer/settings-page-mounted.test.ts \
   tests/renderer/plugin-browser-state.test.ts \
   tests/renderer/plugin-panel-mounted.test.ts \
   tests/renderer/browser-panel-mounted.test.ts \
-  tests/published-files-ui.test.tsx
+  tests/published-files-ui.test.tsx \
+  tests/web-plugins-browser.test.ts
 pnpm build
 ```
 
 - 状态测试覆盖配置 draft/schema 映射、`configured ≠ ready`、截图图像校验、refs 解析与接管/变更判定。
+- `settings-draft` 与 `settings-page-mounted` 覆盖移除后的设置入口：设置分类和搜索里只剩“插件”入口，普通设置保存不带 `browserAllowedOrigins` / `browserExecutablePath`，即使界面内存中还留有旧字段也不会重新提交；`web-plugins-browser` 在生产构建入口上重复确认旧分类不存在。
 - 两个 mounted 测试用 esbuild 打包真实组件，在 Chromium 中验证：加载不触发检查或截图、保存/启停走 Core、显式检查、接管门控、截图仅点击刷新、快照纯文本、只读下降后归还，以及无控制台错误。截图使用真实可解码 PNG，断言 `naturalWidth/naturalHeight`；切换会话后上一会话的截图与快照不再出现。
 - `published-files-ui` 覆盖 `browser_screenshot` 成功附件在历史与实时事件中的回放，并确认失败或非宿主工具的同形 payload 不会变成附件。
 - 真实浏览器烟测前先执行 `pnpm build`。Core 更新后先构建 Core，再刷新 Web 依赖。

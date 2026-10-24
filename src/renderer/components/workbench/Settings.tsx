@@ -8,7 +8,6 @@ import {
   Cpu,
   DeviceMobile,
   Gear,
-  Globe,
   Lock,
   MagnifyingGlass,
   Palette,
@@ -292,13 +291,6 @@ const sections = [
     description: "控制输入预算与模型窗口，平衡连续性和成本。",
     keywords: "token 压缩 compact 字符预算 模型窗口",
     icon: Cpu,
-  },
-  {
-    id: "browser",
-    title: "浏览器",
-    description: "明确授权浏览器工具可以访问的网络来源与内核。",
-    keywords: "origin Chromium 可执行路径 网络",
-    icon: Globe,
   },
   {
     id: "language",
@@ -1400,40 +1392,6 @@ export function Settings() {
                         )}
                       </div>
                     </details>
-                  </div>
-                </section>
-              )}
-
-              {visible("browser") && (
-                <section className="settings-section" aria-label="浏览器配置">
-                  <div className="settings-flat-group">
-                    <p className="settings-section-hint">
-                      空列表不启用旧版浏览器工具。这里的配置用于主机浏览器，不是当前设置页面的连接。内置
-                      browser 插件请在上方“插件”分区配置主机名允许列表与可执行路径。
-                    </p>
-                    <Field
-                      id="setting-origins"
-                      label="浏览器允许来源"
-                      helper="每行一个精确 origin，例如 http://localhost:3000。不能含路径、通配符或凭据。"
-                    >
-                      <textarea
-                        id="setting-origins"
-                        className="form-textarea form-input-mono"
-                        rows={5}
-                        placeholder="http://localhost:3000&#10;http://127.0.0.1:8080"
-                        value={draft.browserAllowedOrigins}
-                        onChange={(e) =>
-                          change("browserAllowedOrigins", e.target.value)
-                        }
-                      />
-                    </Field>
-                    {text(
-                      "browserExecutablePath",
-                      "Chromium 可执行路径",
-                      "留空使用主机默认浏览器安装。不自动下载或安装。",
-                      "text",
-                      "/usr/bin/google-chrome-stable",
-                    )}
                   </div>
                 </section>
               )}

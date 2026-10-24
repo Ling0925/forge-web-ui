@@ -44,17 +44,25 @@ it("keeps legacy tool-call budgets out of the form while request timeouts stay e
     settings: { requestTimeoutMs: 30000 },
   });
 });
-it("validates numeric blanks, origin boundaries and LSP arguments", () => {
+it("ignores legacy global browser fields instead of re-sending them", () => {
+  const legacy = {
+    ...base,
+    browserAllowedOrigins: ["http://localhost:3000"],
+    browserExecutablePath: "/usr/bin/chromium",
+  };
+  const form = createSettingsDraft(legacy) as unknown as Record<string, unknown>;
+  expect(form).not.toHaveProperty("browserAllowedOrigins");
+  expect(form).not.toHaveProperty("browserExecutablePath");
+  const update = buildSettingsUpdate({ ...createSettingsDraft(legacy), theme: "dark" }, legacy, "", false);
+  expect(update).toEqual({ settings: { theme: "dark" } });
+});
+it("validates numeric blanks and LSP arguments", () => {
   let draft = createSettingsDraft(base);
   draft.requestTimeoutMs = "";
   expect(() => buildSettingsUpdate(draft, base, "", false)).toThrow("整数");
   draft = createSettingsDraft(base);
-  draft.browserAllowedOrigins = "https://example.test/path";
-  expect(() => buildSettingsUpdate(draft, base, "", false)).toThrow("browserAllowedOrigins");
-  draft.browserAllowedOrigins = " http://localhost:3000\n";
   draft.lspServers = [{ id: "ts", command: "typescript-language-server", args: '["--stdio"]', extensions: ".ts, .tsx" }];
   const update = buildSettingsUpdate(draft, base, "", false);
-  expect(update.settings?.browserAllowedOrigins).toEqual(["http://localhost:3000"]);
   expect(update.settings?.lspServers?.[0]?.args).toEqual(["--stdio"]);
   draft.lspServers[0]!.args = "--stdio";
   expect(() => buildSettingsUpdate(draft, base, "", false)).toThrow("JSON");

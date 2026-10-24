@@ -89,6 +89,21 @@ it("manages the built-in browser plugin and previews its absence from the produc
 
     // --- Plugin management in the real settings page -----------------------
     await openSettings(page, "插件");
+    // The legacy standalone browser settings category is gone; the plugin
+    // section is the only browser entry point in the real production build.
+    expect(
+      await page
+        .getByRole("navigation", { name: "设置分类" })
+        .getByRole("button", { name: "浏览器", exact: true })
+        .count(),
+    ).toBe(0);
+    expect(
+      await page.getByLabel("浏览器允许来源", { exact: true }).count(),
+    ).toBe(0);
+    expect(await page.locator("#setting-origins").count()).toBe(0);
+    expect(await page.locator("#setting-browserExecutablePath").count()).toBe(
+      0,
+    );
     const card = page.getByRole("article", {
       name: "插件 Browser · agent-browser",
     });

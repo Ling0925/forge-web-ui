@@ -11,8 +11,6 @@ export type SettingsDraft = {
   requestTimeoutMs: string;
   contextBudgetTokens: string;
   contextBudgetChars: string;
-  browserAllowedOrigins: string;
-  browserExecutablePath: string;
   modelContextWindows: { model: string; tokens: string }[];
   lspServers: { id: string; command: string; args: string; extensions: string }[];
 };
@@ -25,8 +23,6 @@ export function createSettingsDraft(s: PublicSettings): SettingsDraft {
     requestTimeoutMs: String(s.requestTimeoutMs),
     contextBudgetTokens: s.contextBudgetTokens == null ? "" : String(s.contextBudgetTokens),
     contextBudgetChars: String(s.contextBudgetChars),
-    browserAllowedOrigins: s.browserAllowedOrigins.join("\n"),
-    browserExecutablePath: s.browserExecutablePath,
     modelContextWindows: Object.entries(s.modelContextWindows ?? {}).map(([model, tokens]) => ({
       model,
       tokens: tokens == null ? "" : String(tokens),
@@ -63,12 +59,6 @@ export function buildSettingsUpdate(
         break;
       case "contextBudgetTokens":
         settings[name] = draft[name].trim() ? integer(draft[name], name) : null;
-        break;
-      case "browserAllowedOrigins":
-        settings[name] = draft[name]
-          .split("\n")
-          .map((v) => v.trim())
-          .filter(Boolean);
         break;
       case "modelContextWindows": {
         const entries = draft[name].map(
