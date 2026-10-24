@@ -55,6 +55,10 @@ const vite = await createViteServer({
   envFile: false,
   root: resolve(root, "src/renderer"),
   base: "/",
+  // Core is a locally rebuilt ESM package. A file:/linked dependency can change
+  // without changing the lockfile, leaving optimized strict RPC schemas stale.
+  // Serve all Core subpaths directly; keep normal optimization for third parties.
+  optimizeDeps: { exclude: ["@forge/core"] },
   plugins: [react(), {
     name: "forge-web-dev-boundary",
     configureServer(server) {

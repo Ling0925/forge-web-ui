@@ -49,6 +49,8 @@ pnpm dev -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
 
 修改 React/CSS 通常无需重启；不能 Fast Refresh 的模块可能整页刷新。修改开发启动脚本需要重启 Web，Vite 客户端恢复连接后会重载页面。后端任务仍由原 Core 持有。
 
+开发入口将 `@forge/core`（含所有子路径）排除在 Vite 依赖预打包之外，直接加载当前安装/链接包的 ESM 构建。Core 的本地重建不一定改变版本号或锁文件；若复用旧预打包缓存，严格的 RPC 校验可能把新增字段拒绝为 `Invalid host response`。升级开发入口后只重启 Web 并刷新页面即可替换这类缓存，不要删除会话或为此重启 Core。Core 本身的代码更新仍按其独立生命周期加载。
+
 ## 静态入口
 
 保留同一个 Core，停止开发 Web 后使用静态入口：
@@ -68,6 +70,7 @@ pnpm serve -- --host 127.0.0.1 --port 5173 --core-url http://127.0.0.1:5175
 pnpm exec vitest run tests/web-bridge.test.ts tests/renderer/session-pages.test.ts
 pnpm exec vitest run tests/web-dev-proxy.test.ts
 pnpm build
+pnpm exec vitest run tests/web-dev-contracts-browser.test.ts
 pnpm test:browser
 ```
 
@@ -75,7 +78,8 @@ pnpm test:browser
 
 - `tests/web-smoke-browser.test.ts`：静态网关、CSP/RPC、设置和分享地址，以及 Web 中断后同一 Core 继续执行、页面恢复事件。
 - `tests/web-dev-browser.test.ts`：React/CSS HMR、草稿保留、Web 重启后恢复同一 Core 对话。
-- 两个浏览器入口均检查 50 MiB 发布文件经网关下载。
+- 上述两个浏览器入口均检查 50 MiB 发布文件经网关下载。
+- `tests/web-dev-contracts-browser.test.ts`：Core 契约不进入预打包缓存、多轮会话分页、切换和刷新重开。
 - `tests/web-dev-proxy.test.ts`：拒绝不符合约定的 Host、Origin 与 WebSocket 升级。
 
 ## 网络边界
