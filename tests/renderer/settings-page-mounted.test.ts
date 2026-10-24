@@ -52,6 +52,22 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
       .click();
     expect(await page.getByLabel('默认思考强度').inputValue()).toBe('medium');
     await page.getByLabel('默认思考强度').selectOption('high');
+    await nav('执行与权限').click();
+    await page
+      .getByRole('group', { name: '权限策略选择' })
+      .getByRole('button', { name: /无限制模式/ })
+      .click();
+    expect(await page.getByText(/无限制模式允许直接执行命令/).count()).toBe(1);
+    await page
+      .getByRole('group', { name: '权限策略选择' })
+      .getByRole('button', { name: /只读模式/ })
+      .click();
+    expect(await page.getByLabel('默认权限').inputValue()).toBe('readonly');
+    await page
+      .getByRole('group', { name: '空闲超时快捷档位' })
+      .getByRole('button', { name: /2 分钟/ })
+      .click();
+    expect(await page.getByLabel('请求空闲超时（毫秒）').inputValue()).toBe('120000');
     await nav('上下文与记忆').click();
     await page.getByLabel('上下文 token 上限').fill('32000');
     await page.getByRole('button', { name: '添加模型窗口' }).click();
