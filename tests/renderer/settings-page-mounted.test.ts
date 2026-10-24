@@ -2,7 +2,6 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 
 it("settings page saves real fields, retains failed drafts and fits desktop/mobile themes", async () => {
   const bundle = await build({ stdin: { resolveDir: resolve("."), loader: "tsx", contents: `
@@ -28,7 +27,7 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
           return {ok:true,settings:next}};
         return <C.Provider value={{state:{settings,isSettingsOpen},updateSettings,openSettings}}><button onClick={()=>openSettings(true)}>重开设置</button>{children}</C.Provider>
       }` }));
-    } }, corePluginsContractPlugin()] });
+    } }] });
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();

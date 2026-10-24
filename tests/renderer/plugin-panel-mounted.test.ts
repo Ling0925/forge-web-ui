@@ -2,7 +2,6 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 
 /**
  * Mounted-renderer check for the plugin manager. The mocked bridge returns
@@ -84,7 +83,6 @@ it("manages the built-in browser plugin from settings without implicit checks", 
     outfile: "plugin.js",
     loader: { ".woff2": "dataurl" },
     define: { "process.env.NODE_ENV": '"development"' },
-    plugins: [corePluginsContractPlugin()],
   });
   const javascript = bundle.outputFiles.find((file) =>
     file.path.endsWith(".js"),

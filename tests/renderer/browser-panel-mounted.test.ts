@@ -2,7 +2,6 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 import { dataUrl, makePng } from "../fixtures/png";
 
 // Decodable, non-trivial fixture bytes: a schema-valid base64 string is not
@@ -70,6 +69,10 @@ it("previews screenshots and takes explicit control without implicit browser wor
             if (command.action === 'screenshot') return screenshot(input);
             if (!window.state.takeover[input.sessionId]) throw new Error('Take browser control explicitly before performing manual actions.');
             if (command.action === 'snapshot') {
+              if (window.failSnapshot) {
+                window.failSnapshot = false;
+                return { ...respond(input.sessionId), result: { text: 'Snapshot failed [ref=e99]', isError: true } };
+              }
               return { ...respond(input.sessionId), result: {
                 text: '- heading "Example" [level=1]\\\\n- button "Submit" [ref=e12]\\\\n- textbox "Email" [ref=e13]\\\\n<script>window.pwned=true</script>',
                 isError: false } };
@@ -86,11 +89,13 @@ it("previews screenshots and takes explicit control without implicit browser wor
         function Harness() {
           const [tick, setTick] = useState(0);
           const [sessionId, setSessionId] = useState(SESSION_A);
+          const [active, setActive] = useState(true);
           window.rerender = () => setTick(value => value + 1);
           window.switchSession = (id) => setSessionId(id);
+          window.setPanelActive = setActive;
           return (
-            <div className="wb-app" style={{width: '420px'}}>
-              <BrowserPanel sessionId={sessionId} permission={window.state.permission} active={true} />
+            <div className="wb-app" style={{width: '100%', maxWidth: '420px'}}>
+              <BrowserPanel sessionId={sessionId} permission={window.state.permission} active={active} />
             </div>
           );
         }
@@ -104,7 +109,6 @@ it("previews screenshots and takes explicit control without implicit browser wor
     outfile: "browser.js",
     loader: { ".woff2": "dataurl" },
     define: { "process.env.NODE_ENV": '"development"' },
-    plugins: [corePluginsContractPlugin()],
   });
   const javascript = bundle.outputFiles.find((file) =>
     file.path.endsWith(".js"),
@@ -225,6 +229,37 @@ it("previews screenshots and takes explicit control without implicit browser wor
     expect(
       await page.evaluate(() => Reflect.get(window, "pwned")),
     ).toBeUndefined();
+    // Failed snapshots are errors, never fresh refs or successful page state.
+    await page.evaluate(() => Reflect.set(window, "failSnapshot", true));
+    await page
+      .getByRole("button", { name: "读取页面快照", exact: true })
+      .click();
+    await page
+      .getByText("Snapshot failed [ref=e99]", { exact: true })
+      .waitFor();
+    expect(await snapshot.count()).toBe(0);
+    expect(await page.locator(".browser-ref").count()).toBe(0);
+    await page
+      .getByRole("button", { name: "读取页面快照", exact: true })
+      .click();
+    await expect.poll(() => snapshot.count()).toBe(1);
+
+    for (const width of [390, 768, 1024, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const theme of ["light", "dark"]) {
+        await page.evaluate((value) => {
+          document.documentElement.dataset.theme = value;
+        }, theme);
+        expect(
+          await page.evaluate(
+            () =>
+              document.documentElement.scrollWidth <=
+              document.documentElement.clientWidth + 1,
+          ),
+        ).toBe(true);
+      }
+    }
+    await page.setViewportSize({ width: 420, height: 900 });
     await page.getByRole("button", { name: "@e12", exact: true }).click();
     expect(await page.getByLabel("选择器或 snapshot ref").inputValue()).toBe(
       "@e12",
@@ -269,6 +304,28 @@ it("previews screenshots and takes explicit control without implicit browser wor
       )
       .toEqual({ naturalWidth: shotB.width, naturalHeight: shotB.height });
 
+    // Hiding/reopening the same tab must not abandon its action and leave busy stuck.
+    await page.evaluate(() => Reflect.get(window, "holdNextScreenshot")());
+    await page.getByRole("button", { name: "刷新截图", exact: true }).click();
+    await expect
+      .poll(
+        async () =>
+          (await rpc()).filter(
+            (entry) => entry.command?.action === "screenshot",
+          ).length,
+      )
+      .toBe(3);
+    await page.evaluate(() => Reflect.get(window, "setPanelActive")(false));
+    await page.waitForTimeout(20);
+    await page.evaluate(() => Reflect.get(window, "setPanelActive")(true));
+    await page.waitForTimeout(20);
+    await page.evaluate(() => Reflect.get(window, "releaseHeldScreenshot")());
+    await expect
+      .poll(() =>
+        page.getByRole("button", { name: "刷新截图", exact: true }).isEnabled(),
+      )
+      .toBe(true);
+
     // A late response for the previous session is discarded even if the RPC
     // resolves after the switch: hold session B's capture, switch back to A,
     // then release B's reply and require it never paints.
@@ -281,7 +338,9 @@ it("previews screenshots and takes explicit control without implicit browser wor
             (entry) => entry.command?.action === "screenshot",
           ).length,
       )
-      .toBe(3);
+      .toBe(4);
+    await page.evaluate(() => Reflect.get(window, "setPanelActive")(false));
+    await page.waitForTimeout(20);
     await page.evaluate(() =>
       (
         window as unknown as { switchSession: (id: string) => void }
@@ -292,6 +351,9 @@ it("previews screenshots and takes explicit control without implicit browser wor
     await page.waitForTimeout(50);
     expect(await page.locator(".browser-shot img").count()).toBe(0);
     expect(await page.locator(".browser-snapshot-text").count()).toBe(0);
+
+    expect(await page.locator(".browser-state").textContent()).toBe("未可用");
+    await page.evaluate(() => Reflect.get(window, "setPanelActive")(true));
 
     // Take control of session B, then downgrade to readonly and verify that
     // releasing control still works even though actions are now rejected.

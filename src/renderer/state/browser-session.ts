@@ -120,7 +120,7 @@ export function browserPermissionNotice(
     case "readonly":
       return "当前运行是只读模式：导航、快照、截图等浏览器动作都会被 Core 拒绝。仍可归还控制权，释放被阻塞的 Agent 队列。";
     case "workspace":
-      return "工作区模式：浏览器动作逐次请求审批，批准仅对本次请求有效；接管只改变由谁操作页面，不绕过审批。";
+      return "人工接管不绕过审批：工作区模式下 Agent 的浏览器动作仍逐次审批；人工动作由你的点击授权，仍受当前权限与允许域名限制。";
     case "unrestricted":
       return "无限制模式仍受域名允许列表限制，并保留接管串行化；它不是 OS 沙箱，页面脚本可能有远程副作用。";
     default:

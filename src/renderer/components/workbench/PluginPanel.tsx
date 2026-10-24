@@ -85,7 +85,7 @@ function BrowserConfigEditor({
       <Field
         id="plugin-browser-executable"
         label="agent-browser 可执行路径"
-        helper="Core 用它在隔离会话里启动 agent-browser。留空使用默认 agent-browser；不会自动安装。"
+        helper="默认 agent-browser 使用 Core 锁定的可选依赖；也可填写已安装程序的路径，不会自动安装。"
       >
         <Input
           id="plugin-browser-executable"
@@ -407,8 +407,9 @@ export function PluginPanel() {
             <p className="plugin-safety">
               <Lock size={13} weight="bold" aria-hidden="true" />
               <span>
-                不绕过审批：workspace / readonly 仍按当前运行权限拦截，workspace
-                下的导航与页面操作会逐次请求批准。只读模式下浏览器动作被拒绝。
+                不绕过审批：workspace 下 Agent
+                的浏览器调用逐次请求批准；人工动作由你的点击授权。
+                两者均受当前权限和允许域名限制，只读模式下浏览器动作被拒绝。
               </span>
             </p>
 

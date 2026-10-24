@@ -19,10 +19,10 @@
 ## 同会话浏览器预览与接管（执行详情 → 会话信息 → 浏览器）
 
 - 面板只绑定当前 Forge 会话。`browser({sessionId, action: 'status'})` 是只读元数据，面板只在对应子页可见时查询一次，用户也可以再次“查询状态”或“刷新面板状态”。
-- 只有 Agent 在该会话一次运行中首次使用浏览器后，Core 才报告 `available: true`；运行结束或取消时 Core 关闭浏览器，面板随之回到“未可用”。界面不会替你启动浏览器。
+- 只有 Agent 在该会话一次运行中首次使用浏览器后，Core 才报告 `available: true`；运行结束或取消时 Core 关闭浏览器，面板在下次查询状态时显示“未可用”，不在后台轮询。界面不会替你启动浏览器。
 - 首版预览是**用户点击刷新截图**：一次 `execute {action:'screenshot'}`，把返回的 `result.image`（`data`/`mimeType`）作为临时 `data:` URL 显示。`data` 必须通过 Core schema 的 base64 字形、最短长度与 `%4` 校验；渲染测试还断言浏览器解码后的 `naturalWidth > 0`，“存在 `<img>` 元素”不等于截图可显示。它是单帧快照，不是实时视频；不暴露裸 CDP 或上游 WebSocket，也不把图像 base64 写入日志或持久状态。Agent 的 `browser_screenshot` 走的是另一条路径：Core 发布 `PublishedFile` 附件，历史对话里以附件回放。
 - 面板记录每张截图的来源会话；切换会话会立即清空上一会话的截图、快照与控制横幅，迟到的旧会话响应也会被丢弃，不会串显。
-- 接管必须显式开启。接管后可使用 `navigate` / `snapshot` / `click` / `fill` / `press` / `scroll`；`snapshot` 以纯文本渲染，页面内容不会被当作 HTML 或脚本执行。截图不需要接管，其他 execute 都需要接管。
+- 接管必须显式开启。人工动作由用户点击直接授权，不另弹一轮 Agent 审批，但仍检查当前运行权限和允许域名；接管不会授予 Agent 额外权限。接管后可使用 `navigate` / `snapshot` / `click` / `fill` / `press` / `scroll`；`snapshot` 以纯文本渲染，页面内容不会被当作 HTML 或脚本执行。截图不需要接管，其他 execute 都需要接管。
 - “归还控制权”发 `takeover {enabled:false}`。Core 会串行化并等待释放，之后 Agent 继续；它必须重新获取 snapshot，页面变化后的旧 refs 不会被沿用。接管期间待执行的 Agent 变更动作会被拒绝并要求 fresh snapshot。
 - 运行降为 `readonly` 或取消后，浏览器动作被 Core 拒绝；归还控制权不需要页面动作，仍可用于释放阻塞的 Agent 队列。面板在只读模式下明示这一点。
 - 运行结束关闭浏览器，Web 断线重连不改变 run-scoped 生命周期；客户端连接的 Core 不提供浏览器 RPC 时，面板显示不可用而不是回退到本地模拟。

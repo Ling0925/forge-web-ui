@@ -2,7 +2,6 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 import { makePng } from "../fixtures/png";
 
 const sessionShot = makePng(20, 12);
@@ -83,7 +82,6 @@ it("binds the browser panel to the selected session and probes only when opened"
           }));
         },
       },
-      corePluginsContractPlugin(),
     ],
   });
   const javascript = bundle.outputFiles.find((file) =>

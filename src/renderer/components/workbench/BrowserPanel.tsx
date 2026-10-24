@@ -82,6 +82,7 @@ export function BrowserPanel({
     "down",
   );
   const scope = useRef(new OperationScope());
+  const operationInFlight = useRef(false);
   const supported = browserPanelAvailable();
 
   useEffect(() => {
@@ -97,6 +98,8 @@ export function BrowserPanel({
    */
   const probeStatus = useCallback(
     async (surface: boolean) => {
+      // Reopening a hidden tab must not invalidate an in-flight action's completion.
+      if (operationInFlight.current) return;
       if (!supported || !sessionId) {
         setStatus(undefined);
         return;
@@ -122,10 +125,6 @@ export function BrowserPanel({
     [sessionId, supported],
   );
 
-  useEffect(() => {
-    if (active) void probeStatus(true);
-  }, [active, probeStatus]);
-
   // Re-binding to another session must never keep the previous session's frame,
   // snapshot, takeover banner or in-flight busy flag on screen, even if a caller
   // omits the key. Clearing `busy` is required: the abandoned operation will
@@ -134,6 +133,9 @@ export function BrowserPanel({
   useEffect(() => {
     if (boundSession.current === sessionId) return;
     boundSession.current = sessionId;
+    scope.current.close();
+    scope.current = new OperationScope();
+    operationInFlight.current = false;
     setBusy(false);
     setProbing(false);
     setStatus(undefined);
@@ -144,11 +146,19 @@ export function BrowserPanel({
     setFillText("");
   }, [sessionId]);
 
+  // Reset the session generation before starting its visible metadata probe.
+  useEffect(() => {
+    if (active) void probeStatus(true);
+  }, [active, probeStatus]);
+
   const run = async (
     operation: (valid: () => boolean) => Promise<void>,
     surfaceError = true,
   ) => {
+    if (operationInFlight.current) return;
+    operationInFlight.current = true;
     const valid = scope.current.begin();
+    setProbing(false);
     setBusy(true);
     if (surfaceError) setError("");
     setNotice("");
@@ -158,12 +168,16 @@ export function BrowserPanel({
       if (valid() && surfaceError)
         setError(err instanceof Error ? err.message : "浏览器操作失败。");
     } finally {
-      if (valid()) setBusy(false);
+      if (valid()) {
+        operationInFlight.current = false;
+        setBusy(false);
+      }
     }
   };
 
-  const unavailable = !status?.available;
-  const takeover = status?.takeover === true;
+  const ownsStatus = status?.sessionId === sessionId;
+  const unavailable = !ownsStatus || !status?.available;
+  const takeover = ownsStatus && status?.takeover === true;
   // Defence in depth: only a frame recorded for the bound session may render.
   const sessionImage =
     view?.kind === "image" && view.sessionId === sessionId ? view : undefined;
@@ -247,6 +261,15 @@ export function BrowserPanel({
       if (response.sessionId !== sessionId) return;
       setStatus(response);
       const result = browserResultView(response);
+      if (!result || result.isError) {
+        setView({
+          kind: "text",
+          text: result?.text || "Core 未返回操作结果。",
+          isError: true,
+        });
+        setNotice("Core 报告操作失败；未自动重试，请检查当前页面状态。");
+        return;
+      }
       if (next.action === "snapshot") {
         const text = result?.text ?? "";
         setView({
