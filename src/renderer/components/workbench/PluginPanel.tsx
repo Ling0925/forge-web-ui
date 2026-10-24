@@ -5,8 +5,10 @@ import {
   Globe,
   Info,
   Lock,
+  Pulse,
+  PuzzlePiece,
   ShieldCheck,
-  Warning,
+  SlidersHorizontal,
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -82,54 +84,58 @@ function BrowserConfigEditor({
 }) {
   return (
     <div className="plugin-config">
-      <Field
-        id="plugin-browser-executable"
-        label="agent-browser 可执行路径"
-        helper="默认 agent-browser 使用 Core 锁定的可选依赖；也可填写已安装程序的路径，不会自动安装。"
-      >
-        <Input
+      <div className="plugin-config-paths">
+        <Field
           id="plugin-browser-executable"
-          isMono
-          value={draft.executablePath}
-          disabled={disabled}
-          onChange={(event) =>
-            onChange({ ...draft, executablePath: event.target.value })
-          }
-        />
-      </Field>
-      <Field
-        id="plugin-browser-chrome"
-        label="Chrome/Chromium 可执行路径（可选）"
-        helper="留空使用主机默认浏览器安装；不会自动下载或安装浏览器。"
-      >
-        <Input
+          label="agent-browser 可执行路径"
+          helper="默认 agent-browser 使用 Core 锁定的可选依赖；也可填写已安装程序的路径，不会自动安装。"
+        >
+          <Input
+            id="plugin-browser-executable"
+            isMono
+            value={draft.executablePath}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange({ ...draft, executablePath: event.target.value })
+            }
+          />
+        </Field>
+        <Field
           id="plugin-browser-chrome"
-          isMono
-          placeholder="/usr/bin/google-chrome-stable"
-          value={draft.browserExecutablePath}
-          disabled={disabled}
-          onChange={(event) =>
-            onChange({ ...draft, browserExecutablePath: event.target.value })
-          }
-        />
-      </Field>
-      <Field
-        id="plugin-browser-domains"
-        label="允许访问的主机名"
-        helper="每行一个主机名，可写 *.example.com；填写 * 允许全部网站（含本机和局域网）。不含协议、路径或凭据；空列表不能启用。先保存配置，再启用插件。"
-      >
-        <textarea
+          label="Chrome/Chromium 可执行路径（可选）"
+          helper="留空使用主机默认浏览器安装；不会自动下载或安装浏览器。"
+        >
+          <Input
+            id="plugin-browser-chrome"
+            isMono
+            placeholder="/usr/bin/google-chrome-stable"
+            value={draft.browserExecutablePath}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange({ ...draft, browserExecutablePath: event.target.value })
+            }
+          />
+        </Field>
+      </div>
+      <div className="plugin-config-domains">
+        <Field
           id="plugin-browser-domains"
-          className="form-textarea form-input-mono plugin-domain-input"
-          rows={4}
-          placeholder={"example.com\n*.trusted.example"}
-          value={draft.allowedDomains}
-          disabled={disabled}
-          onChange={(event) =>
-            onChange({ ...draft, allowedDomains: event.target.value })
-          }
-        />
-      </Field>
+          label="允许访问的主机名"
+          helper="每行一个主机名，可写 *.example.com；填写 * 允许全部网站（含本机和局域网）。不含协议、路径或凭据；空列表不能启用。先保存配置，再启用插件。"
+        >
+          <textarea
+            id="plugin-browser-domains"
+            className="form-textarea form-input-mono plugin-domain-input"
+            rows={3}
+            placeholder={"example.com\n*.trusted.example"}
+            value={draft.allowedDomains}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange({ ...draft, allowedDomains: event.target.value })
+            }
+          />
+        </Field>
+      </div>
       {error && (
         <p className="form-error" role="alert">
           <WarningCircle size={14} weight="bold" aria-hidden="true" />
@@ -313,6 +319,8 @@ export function PluginPanel() {
     );
   }
 
+  const enabledCount = plugins.filter((item) => item.enabled).length;
+
   return (
     <section className="plugin-panel" aria-label="插件管理">
       {error && (
@@ -321,10 +329,25 @@ export function PluginPanel() {
           <span>{error}</span>
         </p>
       )}
-      {notice && <output className="plugin-notice">{notice}</output>}
+      {notice && (
+        <output className="plugin-notice">
+          <CheckCircle size={14} weight="bold" aria-hidden="true" />
+          <span>{notice}</span>
+        </output>
+      )}
       <div className="plugin-panel-head">
-        <div>
-          <h3>插件</h3>
+        <div className="plugin-panel-intro">
+          <div className="plugin-panel-summary-row">
+            <span className="plugin-panel-kicker">
+              <PuzzlePiece size={12} weight="bold" aria-hidden="true" />
+              Core 插件清单
+            </span>
+            {!loading && plugins.length > 0 && (
+              <span className="plugin-panel-count-pill">
+                共 {plugins.length} 项 · 已启用 {enabledCount}
+              </span>
+            )}
+          </div>
           <p className="wb-muted">
             插件由 Core 注册并持有状态；这里只展示 Core
             返回的清单和配置。启用能力不等于授予权限，运行仍按会话权限与审批执行。
@@ -359,90 +382,148 @@ export function PluginPanel() {
         const dirty = draft ? configDraftDirty(draft, record.config) : false;
         const healthView = health[id];
         const schema = configSchemaProperties(record.manifest.configSchema);
+        const storedDomains =
+          record.config &&
+          Array.isArray(
+            (record.config as { allowedDomains?: unknown }).allowedDomains,
+          )
+            ? ((record.config as { allowedDomains: string[] }).allowedDomains ??
+              [])
+            : [];
         return (
           <article
             key={id}
-            className={`plugin-card${record.enabled ? " is-enabled" : ""}`}
+            className={`plugin-card${record.enabled ? " is-enabled" : ""}${record.status === "running" ? " is-running" : ""}`}
             aria-label={`插件 ${record.manifest.name}`}
           >
             <div className="plugin-card-head">
               <div className="plugin-title">
-                <Globe size={18} weight="duotone" aria-hidden="true" />
-                <div>
-                  <strong>{record.manifest.name}</strong>
-                  <p className="plugin-meta">
-                    <code>{id}</code> · v{record.manifest.version} · API v
-                    {record.manifest.apiVersion}
-                    {record.manifest.builtin ? " · 内置" : ""}
+                <span className="plugin-card-icon" aria-hidden="true">
+                  <Globe size={20} weight="duotone" />
+                </span>
+                <div className="plugin-title-body">
+                  <div className="plugin-title-row">
+                    <strong>{record.manifest.name}</strong>
+                    <div className="plugin-meta">
+                      <code className="plugin-meta-pill">{id}</code>
+                      <span className="plugin-meta-pill">
+                        v{record.manifest.version}
+                      </span>
+                      <span className="plugin-meta-pill">
+                        API v{record.manifest.apiVersion}
+                      </span>
+                      {record.manifest.builtin && (
+                        <span className="plugin-meta-pill is-builtin">内置</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="plugin-description">
+                    {record.manifest.description}
                   </p>
                 </div>
               </div>
-              <span
-                className={`plugin-status ${record.enabled ? "is-enabled" : "is-disabled"}`}
-              >
-                <span className="plugin-status-dot" aria-hidden="true" />
-                {pluginStatusLabel(record)}
-              </span>
+              <div className="plugin-card-status-group">
+                {dirty && (
+                  <span className="plugin-dirty-pill">配置未保存</span>
+                )}
+                <span
+                  className={`plugin-status ${
+                    record.status === "running"
+                      ? "is-running"
+                      : record.enabled
+                        ? "is-enabled"
+                        : "is-disabled"
+                  }`}
+                >
+                  <span className="plugin-status-dot" aria-hidden="true" />
+                  {pluginStatusLabel(record)}
+                </span>
+              </div>
             </div>
-            <p className="plugin-description">{record.manifest.description}</p>
 
-            <div className="plugin-capabilities">
-              <span className="plugin-section-label">
-                <ShieldCheck size={13} weight="bold" aria-hidden="true" />
-                声明的能力（不是已授予的权限）
-              </span>
+            <div className="plugin-subpanel plugin-capabilities">
+              <div className="plugin-subpanel-head">
+                <span className="plugin-section-label">
+                  <ShieldCheck size={14} weight="bold" aria-hidden="true" />
+                  声明的能力（不是已授予的权限）
+                </span>
+                <span className="plugin-subpanel-badge">
+                  {record.manifest.capabilities.length} 项声明
+                </span>
+              </div>
               <ul>
                 {record.manifest.capabilities.map((capability) => {
                   const item = pluginCapabilityLabel(capability);
                   return (
                     <li key={capability}>
-                      <strong>{item.label}</strong>
+                      <div className="plugin-capability-head">
+                        <strong>{item.label}</strong>
+                        <code>{capability}</code>
+                      </div>
                       <span>{item.description}</span>
                     </li>
                   );
                 })}
               </ul>
+              <p className="plugin-safety">
+                <Lock size={14} weight="bold" aria-hidden="true" />
+                <span>
+                  不绕过审批：workspace 下 Agent
+                  的浏览器调用逐次请求批准；人工动作由你的点击授权。
+                  两者均受当前权限和允许域名限制，只读模式下浏览器动作被拒绝。
+                </span>
+              </p>
             </div>
 
-            <p className="plugin-safety">
-              <Lock size={13} weight="bold" aria-hidden="true" />
-              <span>
-                不绕过审批：workspace 下 Agent
-                的浏览器调用逐次请求批准；人工动作由你的点击授权。
-                两者均受当前权限和允许域名限制，只读模式下浏览器动作被拒绝。
-              </span>
-            </p>
-
             {isBrowser && draft ? (
-              <>
+              <div className="plugin-subpanel plugin-config-panel">
+                <div className="plugin-subpanel-head">
+                  <span className="plugin-section-label">
+                    <SlidersHorizontal
+                      size={14}
+                      weight="bold"
+                      aria-hidden="true"
+                    />
+                    运行路径与域名访问控制
+                  </span>
+                  <span
+                    className={`plugin-subpanel-badge ${
+                      storedDomains.length > 0 ? "is-configured" : ""
+                    }`}
+                  >
+                    {storedDomains.includes("*")
+                      ? "已放行全部网站"
+                      : storedDomains.length > 0
+                        ? `已生效 ${storedDomains.length} 条域名规则`
+                        : "尚未配置允许域名"}
+                  </span>
+                </div>
+
                 <div className="plugin-domain-summary">
-                  <span className="plugin-section-label">域名限制</span>
-                  {record.config &&
-                  Array.isArray(
-                    (record.config as { allowedDomains?: unknown })
-                      .allowedDomains,
-                  ) &&
-                  (record.config as { allowedDomains: unknown[] })
-                    .allowedDomains.length > 0 ? (
-                    <ul className="plugin-domains">
-                      {(
-                        record.config as { allowedDomains: string[] }
-                      ).allowedDomains.map((domain) => (
-                        <li key={domain}>
-                          <code>{domain === "*" ? "全部网站（*）" : domain}</code>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="plugin-hint">
-                      尚未允许任何域名。不允许即无法导航；空列表不能启用。
-                    </p>
-                  )}
+                  <div className="plugin-domain-summary-head">
+                    <span className="plugin-section-label">域名限制</span>
+                    {storedDomains.length > 0 ? (
+                      <ul className="plugin-domains">
+                        {storedDomains.map((domain) => (
+                          <li key={domain}>
+                            <code>
+                              {domain === "*" ? "全部网站（*）" : domain}
+                            </code>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="plugin-hint is-inline">
+                        尚未允许任何域名。不允许即无法导航；空列表不能启用。
+                      </p>
+                    )}
+                  </div>
                   <p className="plugin-hint">
                     具体主机名限制访问范围；填写 * 关闭域名限制。导航仍只接受不含凭据的
                     HTTP(S) URL。浏览器使用运行级隔离会话，不导入个人浏览器配置或持久登录态。
                   </p>
                 </div>
+
                 <BrowserConfigEditor
                   draft={draft}
                   error={draftError}
@@ -451,23 +532,30 @@ export function PluginPanel() {
                     setDrafts((old) => ({ ...old, [id]: value }))
                   }
                 />
+
                 {schema.length > 0 && (
                   <details className="plugin-schema">
-                    <summary>Core 配置 schema</summary>
+                    <summary>Core 配置 schema（{schema.length} 个字段）</summary>
                     <ul>
                       {schema.map((property) => (
                         <li key={property.name}>
                           <code>{property.name}</code>
-                          {property.type ? ` · ${property.type}` : ""}
-                          {property.description
-                            ? ` — ${property.description}`
-                            : ""}
+                          {property.type && (
+                            <span className="plugin-schema-type">
+                              {property.type}
+                            </span>
+                          )}
+                          {property.description && (
+                            <span className="plugin-schema-desc">
+                              {property.description}
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>
                   </details>
                 )}
-              </>
+              </div>
             ) : (
               <p className="plugin-hint">
                 当前版本不提供该插件的可视化配置编辑器；配置由 Core
@@ -475,55 +563,60 @@ export function PluginPanel() {
               </p>
             )}
 
-            <div className="plugin-actions">
-              {isBrowser && draft && (
+            <div className="plugin-card-footer">
+              <div className="plugin-footer-status">
+                <p className="plugin-hint">
+                  {record.status === "configured"
+                    ? "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只探测 agent-browser 工具协议，不安装依赖、不启动网站访问。"
+                    : record.status === "running"
+                      ? `有 ${record.activeSessions} 个活动会话正在使用该插件；运行结束后浏览器会关闭。`
+                      : "插件已禁用。禁用不会启动、安装或下载任何组件。"}
+                </p>
+                <HealthLine view={healthView} />
+                {healthView?.state === "done" && healthView.health && (
+                  <p className="plugin-hint">
+                    检查成功只代表工具协议可用，不代表 Chrome
+                    能启动或已获得站点访问权限。
+                  </p>
+                )}
+              </div>
+
+              <div className="plugin-actions">
                 <Button
                   size="sm"
-                  variant="secondary"
-                  disabled={busy || !dirty}
-                  loading={busy && dirty}
-                  onClick={() => void save(record)}
+                  variant="ghost"
+                  icon={<Pulse size={13} weight="bold" />}
+                  disabled={busy || record.status === "running"}
+                  title={
+                    record.status === "running"
+                      ? "运行中的会话正在使用该插件，结束后再检查。"
+                      : "显式探测依赖，不会安装或启动浏览器窗口。"
+                  }
+                  onClick={() => void runCheck(record)}
                 >
-                  保存配置
+                  检查依赖健康
                 </Button>
-              )}
-              <Button
-                size="sm"
-                variant={record.enabled ? "secondary" : "primary"}
-                disabled={busy}
-                onClick={() => void toggle(record)}
-              >
-                {record.enabled ? "禁用插件" : "启用插件"}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<Warning size={13} />}
-                disabled={busy || record.status === "running"}
-                title={
-                  record.status === "running"
-                    ? "运行中的会话正在使用该插件，结束后再检查。"
-                    : "显式探测依赖，不会安装或启动浏览器窗口。"
-                }
-                onClick={() => void runCheck(record)}
-              >
-                检查依赖健康
-              </Button>
+                {isBrowser && draft && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={busy || !dirty}
+                    loading={busy && dirty}
+                    onClick={() => void save(record)}
+                  >
+                    保存配置
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant={record.enabled ? "secondary" : "primary"}
+                  disabled={busy}
+                  onClick={() => void toggle(record)}
+                >
+                  {record.enabled ? "禁用插件" : "启用插件"}
+                </Button>
+              </div>
             </div>
-            <p className="plugin-hint">
-              {record.status === "configured"
-                ? "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只探测 agent-browser 工具协议，不安装依赖、不启动网站访问。"
-                : record.status === "running"
-                  ? `有 ${record.activeSessions} 个活动会话正在使用该插件；运行结束后浏览器会关闭。`
-                  : "插件已禁用。禁用不会启动、安装或下载任何组件。"}
-            </p>
-            <HealthLine view={healthView} />
-            {healthView?.state === "done" && healthView.health && (
-              <p className="plugin-hint">
-                检查成功只代表工具协议可用，不代表 Chrome
-                能启动或已获得站点访问权限。
-              </p>
-            )}
           </article>
         );
       })}
