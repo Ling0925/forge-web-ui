@@ -322,7 +322,9 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
       for (const theme of ["light", "dark"]) {
         await page.evaluate((theme) => {
           document.documentElement.dataset.theme = theme;
+          window.scrollTo(0, 0);
         }, theme);
+        await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
         await page.screenshot({
           path: resolve(captureDirectory, `tools-390-${theme}.png`),
           fullPage: true,
@@ -467,7 +469,9 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
       for (const theme of ["light", "dark"]) {
         await desktopPage.evaluate((theme) => {
           document.documentElement.dataset.theme = theme;
+          window.scrollTo(0, 0);
         }, theme);
+        await desktopPage.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
         await desktopPage.screenshot({
           path: resolve(captureDirectory, `tools-1280-${theme}.png`),
           fullPage: true,
