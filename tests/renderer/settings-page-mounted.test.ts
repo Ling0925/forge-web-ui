@@ -69,9 +69,19 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
       .click();
     expect(await page.getByLabel('请求空闲超时（毫秒）').inputValue()).toBe('120000');
     await nav('上下文与记忆').click();
+    await page
+      .getByRole('group', { name: '压缩预算快捷档位' })
+      .getByRole('button', { name: /64K/ })
+      .click();
+    expect(await page.getByLabel('上下文 token 上限').inputValue()).toBe('64000');
     await page.getByLabel('上下文 token 上限').fill('32000');
     await page.getByRole('button', { name: '添加模型窗口' }).click();
     await page.getByLabel('模型 ID', { exact: true }).fill('fixture/model');
+    await page
+      .getByRole('group', { name: '模型 1 常用窗口容量' })
+      .getByRole('button', { name: '200K', exact: true })
+      .click();
+    expect(await page.getByLabel('窗口 tokens').inputValue()).toBe('200000');
     await page.getByLabel('窗口 tokens').fill('128000');
     await nav('语言服务').click();
     await page.getByRole('button', { name: '添加语言服务' }).click();
