@@ -6,7 +6,15 @@
 
 - 本仓库是独立的 Forge Web UI 仓库，只负责 `src/renderer` 的 React 界面、renderer 测试，以及 `scripts/dev.mjs` / `scripts/serve.mjs` 的薄启动装配。
 - 不复制、不修改 Core 的 HTTP/WebSocket 服务、RPC、存储、provider、工具运行时实现；这些属于 `@forge/core`。
-- 视觉约定见 `docs/WEB_UI_LAYOUT_SPEC.md`，启动与进程边界见 `docs/WEB_DEV.md`；不把一次性拆分任务或旧验收结果写成永久限制。
+- **修改任何界面组件、弹窗或 CSS 前，必须先阅读并严格遵守 [Web UI 设计规范与组件约定](docs/WEB_UI_LAYOUT_SPEC.md)**；启动与进程边界见 [docs/WEB_DEV.md](docs/WEB_DEV.md)；不把一次性拆分任务或旧验收结果写成永久限制。
+
+## 设计规范与视觉约束（修改 UI 必读）
+
+完整规范见 [`docs/WEB_UI_LAYOUT_SPEC.md`](docs/WEB_UI_LAYOUT_SPEC.md)，修改时必须遵守以下核心红线：
+
+- **主题与色彩 Token**：最终生效的是 `workspace-theme.css` 的暖纸墨色（浅色 `#faf9f6`）/ 石墨暗色（深色 `#171716`）与赤陶主色（`--accent: #a54f35` / `#dc9477`）。**注意 `--accent-sage` 在工作台主题中已被重映射为赤陶色**，表示「已完成 / 成功 / 缓存命中」等绿色语义时**必须使用 `var(--success)`**（浅色 `#226d40`、深色 `#34d399`），严禁硬编码 Tailwind 亮绿 `#16a34a` 或任何蓝色（`#3b82f6`、`#2563eb`、`rgba(59, 130, 246, ...)`），严禁使用红绿跨色相渐变。
+- **禁止原生简陋控件与边框套娃**：严禁新增原生 `<select>` 或裸 `<input type="checkbox">`，统一使用工作台自定义无障碍下拉组件（如 `SettingsSelect`、`ComposerDropdown`）与开关卡片（`.settings-toggle-card`）。父子容器交替使用 `--surface-elevated` 与 `--surface-soft`，设置页与详情栏严禁 3 层以上无意义边框套娃；空状态统一使用虚线引导卡片。
+- **防挤压与高度稳定**：`<dl>` 键值列表必须使用 `grid-template-columns: auto minmax(0, 1fr)` 并为 `<dt>` 设置 `white-space: nowrap`，严禁让右侧长公式把左侧标签挤成单字竖排；执行态动画合成在底部上下文进度条上，严禁在输入框上方动态增删文字提示行导致布局跳动。
 
 ## 依赖与导入
 
