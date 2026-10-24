@@ -5,6 +5,8 @@ import { createDiffPatch } from "@forge/core/shared/diff";
 import {
   sessionIdSchema,
   sessionSnapshotSchema,
+  type AgentEvent,
+  type Message,
 } from "@forge/core/shared/schemas";
 const id = sessionIdSchema.parse("11111111-1111-4111-8111-111111111111");
 it("reuses timeline for the same immutable snapshot and rebuilds replacements", () => {
@@ -465,4 +467,52 @@ it("metadata-only child joins preserve human run alignment and repeated call cor
     role: "user",
     content: '子代理汇总：{"result":1}',
   });
+});
+
+it("indexes a long execution turn without revisiting history for each tool call", () => {
+  function visits(count: number): number {
+    let reads = 0;
+    const messages: Message[] = [{ role: "user", content: "inspect files" }];
+    const events: AgentEvent[] = [{
+      type: "run_started", sessionId: id, timestamp: base.createdAt,
+      model: "m", permission: "readonly", messageIndex: 0, turn: 1,
+    }];
+    for (let index = 0; index < count; index++) {
+      const call = {
+        id: `call-${index}`, type: "function" as const,
+        function: { name: "read_file", arguments: "{}" },
+      };
+      messages.push(
+        { role: "assistant", content: null, tool_calls: [call] },
+        { role: "tool", tool_call_id: call.id, content: "native file content" },
+      );
+      events.push(
+        { type: "tool_started", sessionId: id, timestamp: base.createdAt, call },
+        { type: "tool_finished", sessionId: id, timestamp: base.updatedAt,
+          toolCallId: call.id, result: { content: "native file content", isError: false } },
+      );
+    }
+    const observed: SessionSnapshot = {
+      ...base,
+      messages: messages.map(message => new Proxy(message, {
+        get(target, property, receiver) {
+          if (property === "role") reads++;
+          return Reflect.get(target, property, receiver);
+        },
+      })),
+      events: events.map(event => new Proxy(event, {
+        get(target, property, receiver) {
+          if (property === "type") reads++;
+          return Reflect.get(target, property, receiver);
+        },
+      })),
+    };
+    const tools = reduceTimeline(observed).filter(item => item.kind === "tool");
+    expect(tools).toHaveLength(count);
+    expect(tools.every(item => item.status === "completed")).toBe(true);
+    expect(new Set(tools.map(item => item.id)).size).toBe(count);
+    return reads;
+  }
+  // Count input visits instead of wall time so this regression is independent of CI load.
+  expect(visits(400)).toBeLessThanOrEqual(visits(200) * 2.1);
 });

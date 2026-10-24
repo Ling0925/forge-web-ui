@@ -1,11 +1,11 @@
-import { fileChangeSchema } from "@forge/core/shared/schemas";
 import { executionTurns } from "@forge/core/shared/execution";
 import type { ImageAttachment } from "@forge/core/shared/images";
-import { publishedFilesSchema } from "@forge/core/shared/published-files";
 import type { ErrorInfo, FileChange, PublishedFile, SessionSnapshot, ToolCall } from "../shared-types";
 import { publishesPublishedFiles } from "./published-file-tools";
 import { retainedOutputs, type PendingOutput } from "./transcript-sync";
 import { draftPosition, mergeTranscriptDrafts } from "./timeline-drafts";
+import { indexTimelineTools } from "./timeline-tool-index";
+import { decodeStoredToolResult } from "./stored-tool-result";
 
 export type TimelineItem = {
   readonly turn?: number | undefined; readonly step?: number | undefined;
@@ -177,14 +177,8 @@ export function reduceTimeline(
       }
     });
   };
-  const starts = snapshot.events.filter((e) => e.type === "tool_started");
-  const finishes = snapshot.events.filter((e) => e.type === "tool_finished");
+  const toolMatches = indexTimelineTools(snapshot, turns);
   const occurrences = new Map<string, number>();
-  const totals = new Map<string, number>();
-  for (const message of snapshot.messages)
-    if (message.role === "assistant")
-      for (const call of message.tool_calls ?? [])
-        totals.set(call.id, (totals.get(call.id) ?? 0) + 1);
   // Persisted calls can be interrupted before emitting a start. Only correlate
   // repeated legacy IDs when counts agree, or with the final unresolved call.
   // Tool messages below remain authoritative for completed exchanges.
@@ -310,70 +304,7 @@ export function reduceTimeline(
         for (const [callIndex, call] of (message.tool_calls ?? []).entries()) {
           const occurrence = occurrences.get(call.id) ?? 0;
           occurrences.set(call.id, occurrence + 1);
-          const runEvents =
-            turns[turn]?.events.length
-              ? turns[turn]?.events
-              : null;
-          const scopedStarts =
-            runEvents?.filter((e) => e.type === "tool_started") ?? starts;
-          const scopedFinishes =
-            runEvents?.filter((e) => e.type === "tool_finished") ?? finishes;
-          const matchingStarts = scopedStarts.filter(
-            (e) => e.call.id === call.id && (!message.generationId || (e.generationId === message.generationId && e.callIndex === callIndex)),
-          );
-          const matchingFinishes = scopedFinishes.filter(
-            (e) => e.toolCallId === call.id && (!message.generationId || (e.generationId === message.generationId && e.callIndex === callIndex)),
-          );
-          const total = runEvents
-            ? snapshot.messages
-                .slice(
-                  turns[turn]?.messageStart,
-                  turns[turn]?.messageEnd,
-                )
-                .reduce(
-                  (count, m) =>
-                    count +
-                    (m.role === "assistant"
-                      ? (m.tool_calls ?? []).filter((c) => c.id === call.id)
-                          .length
-                      : 0),
-                  0,
-                )
-            : (totals.get(call.id) ?? 1);
-          const localOccurrence = runEvents
-            ? snapshot.messages
-                .slice(
-                  turns[turn]?.messageStart,
-                  index,
-                )
-                .reduce(
-                  (count, m) =>
-                    count +
-                    (m.role === "assistant"
-                      ? (m.tool_calls ?? []).filter((c) => c.id === call.id)
-                          .length
-                      : 0),
-                  0,
-                )
-            : occurrence;
-          const finalUnresolved =
-            localOccurrence === total - 1 &&
-            !snapshot.messages
-              .slice(index + 1)
-              .some((m) => m.role === "tool" && m.tool_call_id === call.id);
-          const start = message.generationId
-            ? matchingStarts.length === 1 ? matchingStarts[0] : undefined
-            : matchingStarts.length === total
-              ? matchingStarts[localOccurrence]
-              : finalUnresolved &&
-                  matchingStarts.length > matchingFinishes.length
-                ? matchingStarts.at(-1)
-                : undefined;
-          const finish = message.generationId
-            ? matchingFinishes.length === 1 ? matchingFinishes[0] : undefined
-            : matchingFinishes.length === total
-              ? matchingFinishes[localOccurrence]
-              : undefined;
+          const { start, finish } = toolMatches.get(index)?.[callIndex] ?? {};
           pending.set(call.id, [...(pending.get(call.id) ?? []), items.length]);
           items.push({
             kind: "tool",
@@ -403,46 +334,15 @@ export function reduceTimeline(
       const position = pending.get(message.tool_call_id)?.shift();
       const item = position === undefined ? undefined : items[position];
       if (item?.kind !== "tool" || position === undefined) continue;
-      // Tool messages are ordinary text; invalid JSON does not imply tool failure.
-      let output = message.content ?? "";
-      let failed = item.status === "failed";
-      let changes: readonly FileChange[] | undefined;
-      let files: readonly PublishedFile[] | undefined;
-      try {
-        const parsed: unknown = JSON.parse(output);
-        if (
-          typeof parsed === "object" &&
-          parsed !== null &&
-          "content" in parsed &&
-          typeof parsed.content === "string"
-        ) {
-          output = parsed.content;
-          failed = "isError" in parsed && parsed.isError === true;
-          if ("changes" in parsed && Array.isArray(parsed.changes)) {
-            // JSON inside message content is not covered by snapshot validation.
-            // Migrate old previews here too, and never trust malformed diff rows.
-            changes = parsed.changes.slice(0, 256).flatMap((value: unknown) => {
-              const change = fileChangeSchema.safeParse(value);
-              return change.success ? [change.data] : [];
-            });
-          }
-          if ("isError" in parsed && parsed.isError === false && publishesPublishedFiles(item.call.function.name) && "files" in parsed && Array.isArray(parsed.files)) {
-            const parsedFiles = publishedFilesSchema.safeParse(parsed.files);
-            if (parsedFiles.success && parsedFiles.data.length > 0) {
-              files = parsedFiles.data;
-            }
-          }
-        }
-      } catch {
-        /* native tool results may be plain text */
-      }
+      const { output, changes, files, failed: storedFailure } = decodeStoredToolResult(message.content ?? "");
+      const failed = item.status === "failed" || storedFailure;
       const { files: _eventFiles, ...messageItem } = item;
       items[position] = {
         ...messageItem,
         output,
         status: failed ? "failed" : "completed",
         ...(changes?.length ? { changes } : {}),
-        ...(files?.length ? { files } : {}),
+        ...(!failed && files?.length && publishesPublishedFiles(item.call.function.name) ? { files } : {}),
       };
     }
   }
