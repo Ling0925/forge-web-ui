@@ -3,6 +3,8 @@ import {
   ArrowsInLineVertical,
   ArrowUpLeft,
   ChartBar,
+  Check,
+  ClockCounterClockwise,
   Cpu,
   FileText,
   FolderSimple,
@@ -31,14 +33,22 @@ import { SubAgentActivity } from "./SubAgentActivity";
 
 function planProgress(plan: TaskPlan) {
   const completed = plan.steps.filter((step) => step.status === "completed").length;
+  const inProgress = plan.steps.filter((step) => step.status === "in_progress").length;
+  const pending = plan.steps.filter((step) => step.status === "pending").length;
   const total = plan.steps.length;
-  const label =
+  const tone: "completed" | "active" | "pending" =
     total > 0 && completed === total
+      ? "completed"
+      : inProgress > 0
+        ? "active"
+        : "pending";
+  const label =
+    tone === "completed"
       ? "已完成"
-      : plan.steps.some((step) => step.status === "in_progress")
+      : tone === "active"
         ? "进行中"
         : "待处理";
-  return { completed, total, label };
+  return { completed, inProgress, pending, total, label, tone };
 }
 
 function PlanSteps({ plan }: { readonly plan: TaskPlan }) {
@@ -49,14 +59,25 @@ function PlanSteps({ plan }: { readonly plan: TaskPlan }) {
           key={`${step.step}:${position}`}
           className={`plan-step-item plan-step-${step.status}`}
         >
-          <span className={`plan-status plan-${step.status}`}>
-            {step.status === "completed"
-              ? "✓"
-              : step.status === "in_progress"
-                ? "●"
-                : "○"}
-          </span>{" "}
-          <span className="plan-step-text">{step.step}</span>
+          <span
+            className={`plan-status plan-${step.status}`}
+            aria-hidden="true"
+          >
+            {step.status === "completed" ? (
+              <Check size={9} weight="bold" />
+            ) : step.status === "in_progress" ? (
+              <span className="plan-status-dot" />
+            ) : null}
+          </span>
+          <div className="plan-step-row">
+            <span className="plan-step-index">
+              {String(position + 1).padStart(2, "0")}
+            </span>
+            <span className="plan-step-text">{step.step}</span>
+            {step.status === "in_progress" && (
+              <span className="plan-step-tag is-active">当前步骤</span>
+            )}
+          </div>
         </li>
       ))}
     </ol>
@@ -77,7 +98,18 @@ function resolveDisplayPlans(snapshot: Pick<SessionSnapshot, "plan" | "plans">) 
     currentProgress && currentProgress.total > 0
       ? Math.round((currentProgress.completed / currentProgress.total) * 100)
       : 0;
-  return { plans, currentPlan, currentProgress, historical, percent };
+  const activePercent =
+    currentProgress && currentProgress.total > 0
+      ? Math.round((currentProgress.inProgress / currentProgress.total) * 100)
+      : 0;
+  return {
+    plans,
+    currentPlan,
+    currentProgress,
+    historical,
+    percent,
+    activePercent,
+  };
 }
 
 export function PlanProgressPanel({
@@ -85,60 +117,81 @@ export function PlanProgressPanel({
 }: {
   readonly snapshot: Pick<SessionSnapshot, "plan" | "plans">;
 }) {
-  const { currentPlan, currentProgress, percent } = resolveDisplayPlans(snapshot);
-  const inProgressCount = currentPlan
-    ? currentPlan.steps.filter((step) => step.status === "in_progress").length
-    : 0;
-  const pendingCount = currentPlan
-    ? currentPlan.steps.filter((step) => step.status === "pending").length
-    : 0;
+  const { currentPlan, currentProgress, percent, activePercent } =
+    resolveDisplayPlans(snapshot);
+  const inProgressCount = currentProgress?.inProgress ?? 0;
+  const pendingCount = currentProgress?.pending ?? 0;
 
   return (
     <section className="wb-stack inspector-section inspector-plan-section inspector-plan-progress-panel">
-      <div className="inspector-card-header">
+      <div className="inspector-card-header inspector-plan-header">
         <div className="inspector-title-row">
           <ListChecks size={14} weight="bold" className="inspector-title-icon" />
           <h3>计划进度</h3>
         </div>
         {currentProgress && (
-          <span className="inspector-plan-badge">
+          <span className={`inspector-plan-badge is-${currentProgress.tone}`}>
             {currentProgress.completed}/{currentProgress.total} · {currentProgress.label}
           </span>
         )}
       </div>
       {currentPlan && currentProgress ? (
         <div className="inspector-plan-body wb-stack">
-          <div className="wb-plan-current-title">
+          <div className="wb-plan-current-title inspector-plan-summary-card">
             <div className="wb-plan-title-line">
-              <strong>{currentPlan.title ?? "原有计划"}</strong>
-              {currentProgress.total > 0 && (
-                <div className="inspector-plan-stats-row">
-                  <span className="inspector-plan-stat-pill is-completed">
-                    已完成 {currentProgress.completed}
-                  </span>
-                  <span className="inspector-plan-stat-pill is-active">
-                    进行中 {inProgressCount}
-                  </span>
-                  <span className="inspector-plan-stat-pill is-pending">
-                    待处理 {pendingCount}
-                  </span>
-                  <span className="inspector-plan-percent">{percent}%</span>
-                </div>
-              )}
+              <div className="inspector-plan-title-group">
+                <span className="inspector-plan-kicker">当前计划</span>
+                <strong className="inspector-plan-title-text">
+                  {currentPlan.title ?? "原有计划"}
+                </strong>
+              </div>
+              <span className={`inspector-plan-percent is-${currentProgress.tone}`}>
+                {percent}%
+              </span>
             </div>
-            <div className="inspector-plan-progress-track">
+            <div
+              className="inspector-plan-progress-track"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={percent}
+            >
               <div
                 className="inspector-plan-progress-fill"
                 style={{ width: `${percent}%` }}
               />
+              {activePercent > 0 && (
+                <div
+                  className="inspector-plan-progress-active"
+                  style={{ width: `${Math.min(100 - percent, activePercent)}%` }}
+                />
+              )}
             </div>
+            {currentProgress.total > 0 && (
+              <div className="inspector-plan-stats-row">
+                <span className="inspector-plan-stat-pill is-completed">
+                  已完成 {currentProgress.completed}
+                </span>
+                <span className="inspector-plan-stat-pill is-active">
+                  进行中 {inProgressCount}
+                </span>
+                <span className="inspector-plan-stat-pill is-pending">
+                  待处理 {pendingCount}
+                </span>
+              </div>
+            )}
           </div>
           <PlanSteps plan={currentPlan} />
         </div>
       ) : (
-        <p className="wb-muted">
-          尚无已保存计划。使用 Plan 模式请求只读规划。
-        </p>
+        <div className="inspector-plan-empty">
+          <p className="wb-muted inspector-plan-empty-title">
+            尚无已保存计划。使用 Plan 模式请求只读规划。
+          </p>
+          <span className="inspector-plan-empty-hint">
+            执行过程中创建的任务步骤与完成进度将在此实时同步
+          </span>
+        </div>
       )}
     </section>
   );
@@ -154,23 +207,28 @@ export function PlanDocumentPanel({
 
   return (
     <section className="wb-stack inspector-section inspector-plan-section inspector-plan-doc-panel">
-      <div className="inspector-card-header">
+      <div className="inspector-card-header inspector-plan-header">
         <div className="inspector-title-row">
           <FileText size={14} weight="bold" className="inspector-title-icon" />
           <h3>Plan 规划</h3>
         </div>
         {currentProgress && (
-          <span className="inspector-plan-badge">
+          <span className={`inspector-plan-badge is-${currentProgress.tone}`}>
             {currentProgress.completed}/{currentProgress.total} · {currentProgress.label}
           </span>
         )}
       </div>
       {currentPlan && currentProgress ? (
         <div className="inspector-plan-body wb-stack">
-          <div className="wb-plan-current-title">
-            <div className="wb-row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-              <strong>{currentPlan.title ?? "原有计划"}</strong>
-              <span className="wb-muted" style={{ fontSize: "11px" }}>
+          <div className="wb-plan-current-title inspector-plan-doc-meta">
+            <div className="inspector-plan-doc-title-row">
+              <div className="inspector-plan-title-group">
+                <span className="inspector-plan-kicker">方案文档</span>
+                <strong className="inspector-plan-title-text">
+                  {currentPlan.title ?? "原有计划"}
+                </strong>
+              </div>
+              <span className="inspector-plan-step-count-pill">
                 共 {currentPlan.steps.length} 步
               </span>
             </div>
@@ -180,37 +238,78 @@ export function PlanDocumentPanel({
               <Markdown source={currentPlan.explanation} />
             </div>
           ) : (
-            <p className="wb-muted">当前计划未附带详细说明文档。</p>
+            <div className="inspector-plan-empty is-compact">
+              <p className="wb-muted inspector-plan-empty-title">
+                当前计划未附带详细说明文档。
+              </p>
+            </div>
           )}
         </div>
       ) : (
-        <p className="wb-muted">
-          尚无已保存计划。使用 Plan 模式请求只读规划。
-        </p>
+        <div className="inspector-plan-empty">
+          <p className="wb-muted inspector-plan-empty-title">
+            尚无已保存计划。使用 Plan 模式请求只读规划。
+          </p>
+          <span className="inspector-plan-empty-hint">
+            在对话中切换至 Plan 模式即可生成只读方案说明与分步计划
+          </span>
+        </div>
       )}
       {historical.length > 0 && (
-        <div className="wb-stack">
-          <p className="wb-muted">历史计划 {historical.length}</p>
-          {historical.map((plan) => {
-            const index = plans.indexOf(plan) + 1;
-            const progress = planProgress(plan);
-            return (
-              <details
-                open
-                key={`${plan.id}:${index}`}
-                className="wb-disclosure inspector-disclosure-card"
-              >
-                <summary>
-                  计划 {index} · {plan.title ?? "原有计划"} ·{" "}
-                  {progress.completed}/{progress.total} {progress.label}
-                </summary>
-                <div className="wb-disclosure-body">
-                  <PlanSteps plan={plan} />
-                  <Markdown source={plan.explanation} />
-                </div>
-              </details>
-            );
-          })}
+        <div className="inspector-plan-history-section wb-stack">
+          <div className="inspector-plan-history-header">
+            <ClockCounterClockwise
+              size={13}
+              weight="bold"
+              className="inspector-plan-history-icon"
+            />
+            <p className="wb-muted inspector-plan-history-title">
+              历史计划 {historical.length}
+            </p>
+          </div>
+          <div className="inspector-plan-history-list wb-stack">
+            {historical.map((plan) => {
+              const index = plans.indexOf(plan) + 1;
+              const progress = planProgress(plan);
+              return (
+                <details
+                  open
+                  key={`${plan.id}:${index}`}
+                  className="wb-disclosure inspector-disclosure-card inspector-plan-history-card"
+                >
+                  <summary className="inspector-plan-history-summary">
+                    <span className="inspector-plan-history-summary-main">
+                      <span className="inspector-plan-history-index">
+                        计划 {index}
+                      </span>
+                      <span className="inspector-plan-history-sep" aria-hidden="true">
+                        ·
+                      </span>
+                      <span className="inspector-plan-history-name">
+                        {plan.title ?? "原有计划"}
+                      </span>
+                    </span>
+                    <span
+                      className={`inspector-plan-history-status is-${progress.tone}`}
+                    >
+                      <span className="inspector-plan-history-sep" aria-hidden="true">
+                        ·{" "}
+                      </span>
+                      {progress.completed}/{progress.total} {progress.label}
+                    </span>
+                  </summary>
+                  <div className="wb-disclosure-body inspector-plan-history-body">
+                    <PlanSteps plan={plan} />
+                    {plan.explanation && (
+                      <div className="inspector-plan-history-explanation">
+                        <Markdown source={plan.explanation} />
+                      </div>
+                    )}
+                  </div>
+                </details>
+              );
+            })}
+          </div>
         </div>
       )}
     </section>
