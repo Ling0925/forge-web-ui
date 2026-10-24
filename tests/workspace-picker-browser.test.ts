@@ -16,7 +16,9 @@ it("selects a workspace by browsing server folders, preserves cancellation and u
   await new Promise<void>(done => reservation.close(() => done()));
   const directory = await mkdtemp(join(tmpdir(), "forge-workspace-picker-"));
   const project = join(directory, "中文 project");
+  const sibling = join(directory, "alpha-service");
   await mkdir(join(project, "src"), { recursive: true });
+  await mkdir(sibling, { recursive: true });
   const service = await createHarness({
     stateDir: join(directory, "state"),
     providerFactory: () => ({
@@ -72,6 +74,17 @@ it("selects a workspace by browsing server folders, preserves cancellation and u
     await expect.poll(() => trigger.getAttribute("title")).toBe(directory);
     await trigger.click();
     const dialog = page.getByRole("dialog", { name: "选择服务器工作区" });
+    // Filter subdirectories using the unified search/jump input
+    const searchInput = page.getByRole("textbox", { name: "搜索子文件夹或输入跳转路径" });
+    await expect.poll(() => page.getByRole("button", { name: "alpha-service", exact: true }).count()).toBe(1);
+    await searchInput.fill("中文");
+    await expect.poll(() => page.getByRole("button", { name: "alpha-service", exact: true }).count()).toBe(0);
+    await expect.poll(() => page.getByRole("button", { name: "中文 project", exact: true }).count()).toBe(1);
+    await page.getByRole("button", { name: "中文 project", exact: true }).click();
+    await expect.poll(() => page.getByLabel("当前浏览目录").innerText()).toBe(project);
+    // Navigate up via breadcrumb click
+    await page.getByRole("button", { name: `跳转到上级目录 ${directory}`, exact: true }).click();
+    await expect.poll(() => page.getByLabel("当前浏览目录").innerText()).toBe(directory);
     await page.getByRole("button", { name: "中文 project", exact: true }).click();
     await expect.poll(() => page.getByLabel("当前浏览目录").innerText()).toBe(project);
     await page.getByRole("button", { name: "上一级", exact: true }).click();
@@ -86,7 +99,18 @@ it("selects a workspace by browsing server folders, preserves cancellation and u
     await expect.poll(() => page.getByLabel("当前浏览目录").innerText()).toBe(project);
     await page.getByRole("button", { name: "选择此目录", exact: true }).click();
     await expect.poll(() => trigger.getAttribute("title")).toBe(project);
+    // Reopen and verify recent workspaces chip + inline path jump
     await trigger.click();
+    await expect.poll(() => page.getByRole("button", { name: "src", exact: true }).count()).toBe(1);
+    await searchInput.fill(sibling);
+    await searchInput.press("Enter");
+    await expect.poll(() => page.getByLabel("当前浏览目录").innerText()).toBe(sibling);
+    // Click recent workspace chip for `project` to immediately select and close
+    await page.getByRole("button", { name: `切换到最近工作区 中文 project (${project})`, exact: true }).click();
+    expect(await dialog.count()).toBe(0);
+    await expect.poll(() => trigger.getAttribute("title")).toBe(project);
+    await trigger.click();
+    await expect.poll(() => page.getByRole("button", { name: "src", exact: true }).count()).toBe(1);
     await expect.poll(() => page.getByLabel("当前浏览目录").innerText()).toBe(project);
     const bounds = await dialog.boundingBox();
     expect(bounds && bounds.x >= 0 && bounds.x + bounds.width <= 390 && bounds.y >= 0 && bounds.y + bounds.height <= 844).toBe(true);

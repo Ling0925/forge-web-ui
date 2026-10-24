@@ -954,6 +954,9 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
       {isNew && (
         <WorkspacePicker
           workspace={workspace}
+          recentWorkspaces={state.sessions
+            .map((session) => session.workspace)
+            .filter(Boolean)}
           chooseWorkspace={chooseWorkspace}
           onChange={setWorkspace}
           onDone={() => promptRef.current?.focus()}
