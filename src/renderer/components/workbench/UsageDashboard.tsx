@@ -26,6 +26,7 @@ import type {
   UsageStatsDto,
 } from "../../shared-types";
 import { compactTokens } from "../../state/session-usage";
+import { ingestUsageStatsPricing } from "../../state/usage-pricing";
 import { useWorkbench } from "../../state/workbench-context";
 import { Tabs } from "../primitives/Tabs";
 import { UsageOverview, renderUsageKpiGrid } from "./UsageOverview";
@@ -244,6 +245,7 @@ export function UsageDashboard() {
           ...(refreshPrices ? { refreshPrices: true } : {}),
         };
         const res = await window.forge.getUsageStats(filter);
+        ingestUsageStatsPricing(res);
         if (version === requestVersion.current) setData(res);
       } catch (err) {
         if (version === requestVersion.current) {

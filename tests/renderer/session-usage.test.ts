@@ -127,9 +127,11 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     }
     let snapshot = {version:1,id:events[0].sessionId,title:'test',workspace:'/tmp',model:'model',createdAt:events[0].timestamp,updatedAt:events.at(-1).timestamp,status:'completed',messages:[],changes:[],events:[...events]};
     if (location.search === '?unknown-window') snapshot.status = 'running';
+    let selection;
     const root = createRoot(document.getElementById('root'));
-    const render = () => root.render(<div className="wb-app"><UsagePopover events={[...events]} snapshot={snapshot} /></div>);
+    const render = () => root.render(<div className="wb-app"><UsagePopover events={[...events]} snapshot={snapshot} selection={selection} /></div>);
     window.setContextSettings = value => { window.contextSettings = value; render(); };
+    window.setSelection = value => { selection = value; render(); };
     window.finishUsage = () => { snapshot = { ...snapshot, status: 'completed' }; render(); };
     window.usageEvents = () => JSON.stringify(events);
     window.appendUsage = event => { events.push(event); snapshot = { ...snapshot, events: [...events], status: 'running' }; render(); };
@@ -258,6 +260,145 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     expect(await unknownPanel.innerText()).toContain("61.6K tokens 已用");
     expect(await unknownPanel.innerText()).toContain("上下文窗口未知，暂不计算百分比");
     expect(await page.getByRole("progressbar", { name: "上下文占用" }).count()).toBe(0);
+
+    // Verify linking model pricing from Usage (getUsageStats) and displaying TPS + breakdowns.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("http://usage.test/");
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = "dark";
+      Reflect.set(window, "forge", {
+        getUsageStats: async () => ({
+          totalPromptTokens: 487300,
+          totalCompletionTokens: 200,
+          totalCachedTokens: 475528,
+          totalTokens: 487500,
+          totalSessions: 1,
+          totalRuns: 1,
+          averageCacheRate: 0.976,
+          models: [],
+          daily: [],
+          topSessions: [],
+          pricing: { state: "ready" },
+          modelPrices: {
+            model: {
+              providerId: "anthropic",
+              modelId: "claude-sonnet-4-5",
+              rates: { input: 3, output: 15, cacheRead: 0.3 },
+              contextTiers: [
+                {
+                  aboveTokens: 200000,
+                  rates: { input: 6, output: 22.5, cacheRead: 0.6 },
+                },
+              ],
+            },
+          },
+        }),
+      });
+    });
+    const t0 = new Date(Date.now() - 10000).toISOString();
+    const t1 = new Date(Date.now() - 8000).toISOString();
+    const t2 = new Date(Date.now() - 5000).toISOString();
+    const t3 = new Date(Date.now() - 3000).toISOString();
+    await page.evaluate(
+      ([s1, e1, s2, e2]) => {
+        const append = Reflect.get(window, "appendUsage");
+        append(s1);
+        append(e1);
+        append(s2);
+        append(e2);
+      },
+      [
+        {
+          ...base,
+          type: "provider_attempt",
+          turn: 1,
+          step: 1,
+          timestamp: t0,
+          selection: {
+            model: "model",
+            sourceId: "src",
+            apiMode: "responses",
+            attempt: 1,
+            reason: "direct",
+            outcome: "started",
+            timestamp: t0,
+          },
+        },
+        {
+          ...base,
+          type: "provider_attempt",
+          turn: 1,
+          step: 1,
+          timestamp: t1,
+          selection: {
+            model: "model",
+            sourceId: "src",
+            apiMode: "responses",
+            attempt: 1,
+            reason: "direct",
+            outcome: "succeeded",
+            timestamp: t1,
+            usage: {
+              promptTokens: 1000,
+              completionTokens: 80,
+              cachedPromptTokens: 900,
+              totalTokens: 1080,
+            },
+          },
+        },
+        {
+          ...base,
+          type: "provider_attempt",
+          turn: 1,
+          step: 2,
+          timestamp: t2,
+          selection: {
+            model: "model",
+            sourceId: "src",
+            apiMode: "responses",
+            attempt: 1,
+            reason: "direct",
+            outcome: "started",
+            timestamp: t2,
+          },
+        },
+        {
+          ...base,
+          type: "provider_attempt",
+          turn: 1,
+          step: 2,
+          timestamp: t3,
+          selection: {
+            model: "model",
+            sourceId: "src",
+            apiMode: "responses",
+            attempt: 1,
+            reason: "direct",
+            outcome: "succeeded",
+            timestamp: t3,
+            usage: {
+              promptTokens: 486300,
+              completionTokens: 120,
+              cachedPromptTokens: 474628,
+              totalTokens: 486420,
+            },
+          },
+        },
+      ],
+    );
+    const richTrigger = page.getByLabel("上下文与用量", { exact: true });
+    await expect.poll(() => richTrigger.innerText()).toContain("50.0 tok/s");
+    await richTrigger.click();
+    const richPanel = page.getByRole("region", { name: "用量详情" });
+    await expect.poll(() => richPanel.innerText()).toContain("入 $6 · 出 $22.5 · 缓存 $0.6 /M");
+    expect(await richPanel.innerText()).toContain("模型单价 (>200K)");
+    expect(await richPanel.innerText()).toContain("$0.36");
+    expect(await richPanel.innerText()).toContain("省 $2.57");
+    expect(await richPanel.innerText()).toContain("输出速度 (TPS)");
+    expect(await richPanel.innerText()).toContain("50.0 tok/s");
+    expect(await richPanel.innerText()).toContain("峰值 60.0 · 耗时 4.0s");
+    expect(await richPanel.innerText()).toContain("未缓存 11.8K");
+    await page.screenshot({ path: "/tmp/forge-usage-priced-tps.png" });
   } finally {
     await browser.close();
   }

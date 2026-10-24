@@ -48,11 +48,16 @@ export function composerModelMetadata(
   const contextWindowTokens = candidates.find((entry) => entry?.contextWindowTokens != null)?.contextWindowTokens ?? null;
   const maxOutputTokens = candidates.find((entry) => entry?.maxOutputTokens != null)?.maxOutputTokens;
   const reasoningEfforts = candidates.find((entry) => entry?.reasoningEfforts?.length)?.reasoningEfforts;
+  const prices = candidates.flatMap((entry) => (entry?.pricing ? [entry.pricing] : []));
+  const pricing = prices.length
+    ? (Object.assign({}, ...prices.slice().reverse()) as NonNullable<ModelCatalogEntry["pricing"]>)
+    : undefined;
   return {
     id: model,
     contextWindowTokens,
     ...(maxOutputTokens == null ? {} : { maxOutputTokens }),
     ...(reasoningEfforts === undefined ? {} : { reasoningEfforts }),
+    ...(pricing === undefined ? {} : { pricing }),
   };
 }
 
