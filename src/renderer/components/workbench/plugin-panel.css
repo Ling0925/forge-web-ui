@@ -1,0 +1,308 @@
+/* Plugin management panel: reuses settings tokens and card language. */
+
+.plugin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.plugin-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.plugin-panel-head h3 {
+  margin: 0 0 4px;
+  font-size: var(--text-base, 14px);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.plugin-panel-head p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--text-xs, 12px);
+  line-height: 1.55;
+}
+
+.plugin-gate {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: var(--text-xs, 12px);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.plugin-gate svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.plugin-notice {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: var(--text-xs, 12px);
+  line-height: 1.5;
+}
+
+.plugin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card, 12px);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.plugin-card.is-enabled {
+  border-color: var(--border-control);
+}
+
+.plugin-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.plugin-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.plugin-title > svg {
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.plugin-title strong {
+  display: block;
+  font-size: var(--text-sm, 13px);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.plugin-meta {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-2xs, 11px);
+  overflow-wrap: anywhere;
+}
+
+.plugin-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: var(--text-2xs, 11px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.plugin-status.is-enabled {
+  color: var(--text-primary);
+  border-color: var(--border-control);
+}
+
+.plugin-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.plugin-status.is-enabled .plugin-status-dot {
+  background: var(--accent);
+}
+
+.plugin-description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs, 12px);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.plugin-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: var(--text-2xs, 11px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.plugin-capabilities ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plugin-capabilities li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-body);
+  font-size: var(--text-2xs, 11px);
+  line-height: 1.5;
+}
+
+.plugin-capabilities strong {
+  color: var(--text-primary);
+  font-size: var(--text-xs, 12px);
+}
+
+.plugin-capabilities span {
+  color: var(--text-muted);
+}
+
+.plugin-safety {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: var(--text-2xs, 11px);
+  line-height: 1.6;
+}
+
+.plugin-safety svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.plugin-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.plugin-config > .form-error {
+  grid-column: 1 / -1;
+}
+
+.plugin-domain-input {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+}
+
+.plugin-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plugin-domains li {
+  padding: 2px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--surface-soft);
+  font-size: var(--text-2xs, 11px);
+}
+
+.plugin-hint {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-2xs, 11px);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.plugin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plugin-health {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-2xs, 11px);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.plugin-health.is-pending {
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+}
+
+.plugin-health.is-ready {
+  color: var(--text-primary);
+  border-color: var(--border-control);
+  background: var(--surface-soft);
+}
+
+.plugin-health.is-error {
+  color: var(--text-primary);
+  border-color: var(--border-control);
+  background: var(--surface-soft);
+}
+
+.plugin-health svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.plugin-schema summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--text-2xs, 11px);
+}
+
+.plugin-schema ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: var(--text-2xs, 11px);
+  line-height: 1.6;
+}

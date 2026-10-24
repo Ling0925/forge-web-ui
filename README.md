@@ -15,7 +15,7 @@ Web 与 Core 独立运行：**更新界面不打断 Core 中已接受的任务**
 - 按工作区组织会话，搜索、恢复、重命名与归档任务。
 - 流式对话、图片输入、思考与工具折叠，运行中排队或插话。
 - 审批操作、查看计划与子任务，浏览文件、差异和检查点。
-- 管理模型来源、路由、MCP 等设置，查看用量与诊断。
+- 管理模型来源、路由、插件、MCP 等设置，查看用量与诊断。
 - 在桌面和手机布局间自适应，支持浅色、深色主题。
 
 ## 快速开始
@@ -104,6 +104,11 @@ Core 代码变化时，先在 Core 仓重新构建，再在本仓执行 `pnpm in
 ```sh
 # 聚焦单元与渲染测试
 pnpm exec vitest run tests/web-bridge.test.ts tests/renderer/session-pages.test.ts
+
+# 插件管理与同会话浏览器预览/接管
+pnpm exec vitest run tests/renderer/plugin-browser-state.test.ts \
+  tests/renderer/plugin-panel-mounted.test.ts \
+  tests/renderer/browser-panel-mounted.test.ts
 
 # 静态构建及开发/生产入口的浏览器烟测
 pnpm build

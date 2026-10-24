@@ -37,6 +37,7 @@ import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
 import { McpPanel } from "./McpPanel";
+import { PluginPanel } from "./PluginPanel";
 import { EffortBars } from "./ModelAccessPanels";
 import { PhonePairing } from "./PhonePairing";
 import { ProviderSources } from "./ProviderSources";
@@ -305,6 +306,13 @@ const sections = [
     description: "配置本机 LSP 服务器，为代码提供智能诊断与语义能力。",
     keywords: "LSP 命令 参数 扩展名",
     icon: Code,
+  },
+  {
+    id: "plugins",
+    title: "插件",
+    description: "显式启用、配置并检查 Core 注册的插件，例如隔离浏览器。",
+    keywords: "plugin 浏览器 browser 插件 启用 配置 依赖 检查 域名 权限",
+    icon: PuzzlePiece,
   },
   {
     id: "mcp",
@@ -1400,7 +1408,8 @@ export function Settings() {
                 <section className="settings-section" aria-label="浏览器配置">
                   <div className="settings-flat-group">
                     <p className="settings-section-hint">
-                      空列表不启用浏览器工具。这里的配置用于主机浏览器，不是当前设置页面的连接。
+                      空列表不启用旧版浏览器工具。这里的配置用于主机浏览器，不是当前设置页面的连接。内置
+                      browser 插件请在上方“插件”分区配置主机名允许列表与可执行路径。
                     </p>
                     <Field
                       id="setting-origins"
@@ -1563,6 +1572,15 @@ export function Settings() {
               )}
             </fieldset>
           </form>
+
+          {visible("plugins") && (
+            <section
+              className="settings-section settings-section-plugins"
+              aria-label="插件配置"
+            >
+              <PluginPanel />
+            </section>
+          )}
 
           {visible("mcp") && (
             <section

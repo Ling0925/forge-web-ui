@@ -33,6 +33,40 @@ it("restores real publish results but not failed/external results; live and save
   expect(reduceTimeline(live).find(item => item.kind === "tool")).toMatchObject({ files: [file], status: "completed" });
 });
 
+it("restores browser screenshot attachments but never failed or foreign results", () => {
+  const shot = { ...file, id: randomUUID(), name: "shot.png", size: 68, mimeType: "image/png", previewKind: "image" as const, description: "browser screenshot" };
+  const withShot = (isError = false) => sessionSnapshotSchema.parse({
+    version: 1, id, workspace: "/workspace", title: "fixture", model: "fixture", status: "completed",
+    createdAt: file.createdAt, updatedAt: file.createdAt, changes: [], events: [
+      { type: "run_started", sessionId: id, timestamp: file.createdAt, model: "fixture", permission: "workspace" },
+      { type: "run_finished", sessionId: id, timestamp: "2026-01-01T00:00:01Z", status: "completed", turns: 2, toolCalls: 1 },
+    ], messages: [
+      { role: "user", content: "shoot the page" },
+      { role: "assistant", content: null, tool_calls: [{ ...call, function: { ...call.function, name: "browser_screenshot" } }] },
+      { role: "tool", tool_call_id: call.id, content: JSON.stringify({ published: true, file: shot, content: "captured", isError, files: [shot] }) },
+      { role: "assistant", content: "Done" },
+    ],
+  });
+  expect(reduceTimeline(withShot()).find(item => item.kind === "tool")).toMatchObject({ files: [shot], status: "completed" });
+  // A failed screenshot never renders as an attachment, even if files leaked in.
+  expect(reduceTimeline(withShot(true)).some(item => item.kind === "tool" && item.files?.length)).toBe(false);
+  // A different tool carrying the same payload is not a host-owned attachment.
+  const foreign = sessionSnapshotSchema.parse({ ...withShot(), messages: [
+    { role: "user", content: "shoot the page" },
+    { role: "assistant", content: null, tool_calls: [{ ...call, function: { ...call.function, name: "run_command" } }] },
+    { role: "tool", tool_call_id: call.id, content: JSON.stringify({ content: "captured", isError: false, files: [shot] }) },
+    { role: "assistant", content: "Done" },
+  ] });
+  expect(reduceTimeline(foreign).some(item => item.kind === "tool" && item.files?.length)).toBe(false);
+  // Live events follow the same rule as restored messages.
+  const live = sessionSnapshotSchema.parse({ ...withShot(), status: "running", messages: [{ role: "user", content: "shoot the page" }], events: [
+    { type: "run_started", sessionId: id, timestamp: file.createdAt, model: "fixture", permission: "workspace" },
+    { type: "tool_started", sessionId: id, timestamp: file.createdAt, call: { ...call, function: { ...call.function, name: "browser_screenshot" } } },
+    { type: "tool_finished", sessionId: id, timestamp: file.createdAt, toolCallId: call.id, result: { content: "captured", isError: false, files: [shot] } },
+  ] });
+  expect(reduceTimeline(live).find(item => item.kind === "tool")).toMatchObject({ files: [shot], status: "completed" });
+});
+
 it("mounts visible attachments, safe text/image previews, downloads, errors and Blob cleanup", async () => {
   const image = { ...file, id: randomUUID(), name: "pixel.png", size: 68, mimeType: "image/png", previewKind: "image" };
   const html = { ...file, id: randomUUID(), name: "page.html", size: 34, mimeType: "text/html", previewKind: "html" };

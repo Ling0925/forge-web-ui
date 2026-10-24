@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 
 it("keeps execution details compact, navigable and diagnostics on demand", async () => {
   const bundle = await build({
@@ -94,6 +95,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           }));
         },
       },
+      corePluginsContractPlugin(),
     ],
   });
   const js = bundle.outputFiles.find((file) => file.path.endsWith(".js"))?.text;

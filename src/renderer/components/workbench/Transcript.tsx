@@ -10,6 +10,7 @@ import type {
   SessionSnapshot,
 } from "../../shared-types";
 import { reduceTimeline, type TimelineItem } from "../../state/timeline";
+import { publishesPublishedFiles } from "../../state/published-file-tools";
 import type { PendingOutput } from "../../state/transcript-sync";
 import { streamedOutput, type ActiveRunState } from "../../state/workbench-reducer";
 import { completedTurnExecutions, type CompletedTurnExecution } from "../../state/turn-execution";
@@ -761,7 +762,7 @@ export const StoredTranscript = memo(function StoredTranscript({
             (item.kind === "tool" && item.status === "failed"),
         );
         const summaryText = counts ? `${counts}${hasError ? " · 含异常记录" : ""}` : computeTurnSummary(turn.items);
-        const files = turn.items.flatMap(({ item }) => item.kind === "tool" && item.status === "completed" && item.call.function.name === "publish_file" ? item.files ?? [] : []);
+        const files = turn.items.flatMap(({ item }) => item.kind === "tool" && item.status === "completed" && publishesPublishedFiles(item.call.function.name) ? item.files ?? [] : []);
 
         return (
           <section className="transcript-turn" key={turn.id} data-turn={turn.turnNumber}>

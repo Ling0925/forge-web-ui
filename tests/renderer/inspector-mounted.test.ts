@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 
 // A real mounted browser run is required: server-rendered snapshots cannot
 // observe React reconciliation retaining stale sibling subtrees.
@@ -61,6 +62,7 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
           }));
         },
       },
+      corePluginsContractPlugin(),
     ],
   });
 

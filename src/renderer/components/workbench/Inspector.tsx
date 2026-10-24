@@ -17,6 +17,7 @@ import { DiffViewer, diffStats } from "../primitives/DiffViewer";
 import { StatusBadge } from "../primitives/StatusBadge";
 import { Tabs } from "../primitives/Tabs";
 import { CheckpointPanel, ProjectResources } from "./CatalogPanels";
+import { BrowserPanel } from "./BrowserPanel";
 import { ChangeSessionNavigation } from "./ChangeSessionNavigation";
 import {
   ContextManagementPanel,
@@ -130,7 +131,7 @@ export function Inspector({
     "browser",
   );
   const [sessionSubTab, setSessionSubTab] = useState<
-    "overview" | "resources"
+    "overview" | "browser" | "resources"
   >("overview");
   const { state, answerApproval, selectSession, refreshActiveSession, setMobileTab } =
     useWorkbench();
@@ -167,6 +168,11 @@ export function Inspector({
   const drawerApprovals = pendingApprovals.filter(
     (r) => r.pendingApproval?.id !== inlineApprovalId,
   );
+  const permission =
+    run?.permission ??
+    (started?.type === "run_started"
+      ? started.permission
+      : (state.settings?.defaultPermission ?? "workspace"));
   return (
     <aside
       ref={paneRef}
@@ -533,6 +539,7 @@ export function Inspector({
                       onChange={setSessionSubTab}
                       items={[
                         { id: "overview", label: "会话概览" },
+                        { id: "browser", label: "浏览器" },
                         { id: "resources", label: "项目资源" },
                       ]}
                     />
@@ -581,15 +588,7 @@ export function Inspector({
                             </dt>
                             <dd>
                               <span className="inspector-permission-pill">
-                                {
-                                  permissionLabels[
-                                    run?.permission ??
-                                      (started?.type === "run_started"
-                                        ? started.permission
-                                        : (state.settings?.defaultPermission ??
-                                          "workspace"))
-                                  ].split(" · ")[0]
-                                }
+                                {permissionLabels[permission].split(" · ")[0]}
                               </span>
                             </dd>
                             <dt>
@@ -614,6 +613,27 @@ export function Inspector({
                         />
                       </div>
                     ) : null}
+                    <div
+                      className="inspector-subtabpanel wb-stack"
+                      hidden={sessionSubTab !== "browser"}
+                      style={
+                        sessionSubTab !== "browser"
+                          ? { display: "none" }
+                          : undefined
+                      }
+                    >
+                      {/* Same-session binding: the panel is keyed and scoped to
+                          the selected session and only probes while visible. */}
+                      <BrowserPanel
+                        key={`browser:${state.activeSessionId ?? "none"}`}
+                        sessionId={state.activeSessionId ?? undefined}
+                        permission={permission}
+                        active={
+                          section === "inspector-resources" &&
+                          sessionSubTab === "browser"
+                        }
+                      />
+                    </div>
                     <div
                       className="inspector-subtabpanel wb-stack"
                       hidden={sessionSubTab !== "resources"}

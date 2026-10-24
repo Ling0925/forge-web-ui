@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
 
 // A real mounted browser run is required: horizontal overflow inside the
 // inspector pane is an outcome of the real CSS cascade (a 320px flex column
@@ -142,6 +143,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
           }));
         },
       },
+      corePluginsContractPlugin(),
     ],
   });
 

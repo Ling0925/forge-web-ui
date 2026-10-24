@@ -3,6 +3,7 @@ import { executionTurns } from "@forge/core/shared/execution";
 import type { ImageAttachment } from "@forge/core/shared/images";
 import { publishedFilesSchema } from "@forge/core/shared/published-files";
 import type { ErrorInfo, FileChange, PublishedFile, SessionSnapshot, ToolCall } from "../shared-types";
+import { publishesPublishedFiles } from "./published-file-tools";
 import { retainedOutputs, type PendingOutput } from "./transcript-sync";
 import { draftPosition, mergeTranscriptDrafts } from "./timeline-drafts";
 
@@ -393,7 +394,7 @@ export function reduceTimeline(
             ...(finish?.result.changes?.length
               ? { changes: finish.result.changes }
               : {}),
-            ...(finish?.result.files?.length && !finish.result.isError && call.function.name === "publish_file"
+            ...(finish?.result.files?.length && !finish.result.isError && publishesPublishedFiles(call.function.name)
               ? { files: finish.result.files }
               : {}),
           });
@@ -425,7 +426,7 @@ export function reduceTimeline(
               return change.success ? [change.data] : [];
             });
           }
-          if ("isError" in parsed && parsed.isError === false && item.call.function.name === "publish_file" && "files" in parsed && Array.isArray(parsed.files)) {
+          if ("isError" in parsed && parsed.isError === false && publishesPublishedFiles(item.call.function.name) && "files" in parsed && Array.isArray(parsed.files)) {
             const parsedFiles = publishedFilesSchema.safeParse(parsed.files);
             if (parsedFiles.success && parsedFiles.data.length > 0) {
               files = parsedFiles.data;
@@ -535,7 +536,7 @@ export function reduceTimeline(
             ? {}
             : toolTiming({ timestamp: item.startedAt }, event)),
           ...(event.result.changes?.length ? { changes: event.result.changes } : {}),
-          ...(event.result.files?.length && !event.result.isError && item.call.function.name === "publish_file"
+          ...(event.result.files?.length && !event.result.isError && publishesPublishedFiles(item.call.function.name)
             ? { files: event.result.files }
             : {}) };
       }
