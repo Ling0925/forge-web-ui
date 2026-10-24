@@ -20,7 +20,8 @@
 
 - 面板只绑定当前 Forge 会话。`browser({sessionId, action: 'status'})` 是只读元数据，面板只在对应子页可见时查询一次，用户也可以再次“查询状态”或“刷新面板状态”。
 - 只有 Agent 在该会话一次运行中首次使用浏览器后，Core 才报告 `available: true`；运行结束或取消时 Core 关闭浏览器，面板随之回到“未可用”。界面不会替你启动浏览器。
-- 首版预览是**用户点击刷新截图**：一次 `execute {action:'screenshot'}`，把返回的 `result.image`（`data`/`mimeType`）作为临时 `data:` URL 显示。它是单帧快照，不是实时视频；不暴露裸 CDP 或上游 WebSocket，也不把图像 base64 写入日志或持久状态。Agent 的 `browser_screenshot` 走的是另一条路径：Core 发布 `PublishedFile` 附件，历史对话里以附件回放。
+- 首版预览是**用户点击刷新截图**：一次 `execute {action:'screenshot'}`，把返回的 `result.image`（`data`/`mimeType`）作为临时 `data:` URL 显示。`data` 必须通过 Core schema 的 base64 字形、最短长度与 `%4` 校验；渲染测试还断言浏览器解码后的 `naturalWidth > 0`，“存在 `<img>` 元素”不等于截图可显示。它是单帧快照，不是实时视频；不暴露裸 CDP 或上游 WebSocket，也不把图像 base64 写入日志或持久状态。Agent 的 `browser_screenshot` 走的是另一条路径：Core 发布 `PublishedFile` 附件，历史对话里以附件回放。
+- 面板记录每张截图的来源会话；切换会话会立即清空上一会话的截图、快照与控制横幅，迟到的旧会话响应也会被丢弃，不会串显。
 - 接管必须显式开启。接管后可使用 `navigate` / `snapshot` / `click` / `fill` / `press` / `scroll`；`snapshot` 以纯文本渲染，页面内容不会被当作 HTML 或脚本执行。截图不需要接管，其他 execute 都需要接管。
 - “归还控制权”发 `takeover {enabled:false}`。Core 会串行化并等待释放，之后 Agent 继续；它必须重新获取 snapshot，页面变化后的旧 refs 不会被沿用。接管期间待执行的 Agent 变更动作会被拒绝并要求 fresh snapshot。
 - 运行降为 `readonly` 或取消后，浏览器动作被 Core 拒绝；归还控制权不需要页面动作，仍可用于释放阻塞的 Agent 队列。面板在只读模式下明示这一点。
@@ -38,6 +39,6 @@ pnpm build
 ```
 
 - 状态测试覆盖配置 draft/schema 映射、`configured ≠ ready`、截图图像校验、refs 解析与接管/变更判定。
-- 两个 mounted 测试用 esbuild 打包真实组件，在 Chromium 中验证：加载不触发检查或截图、保存/启停走 Core、显式检查、接管门控、截图仅点击刷新、快照纯文本、只读下降后归还，以及无控制台错误。
+- 两个 mounted 测试用 esbuild 打包真实组件，在 Chromium 中验证：加载不触发检查或截图、保存/启停走 Core、显式检查、接管门控、截图仅点击刷新、快照纯文本、只读下降后归还，以及无控制台错误。截图使用真实可解码 PNG，断言 `naturalWidth/naturalHeight`；切换会话后上一会话的截图与快照不再出现。
 - `published-files-ui` 覆盖 `browser_screenshot` 成功附件在历史与实时事件中的回放，并确认失败或非宿主工具的同形 payload 不会变成附件。
 - 真实浏览器烟测前先执行 `pnpm build`。Core 更新后先构建 Core，再刷新 Web 依赖。

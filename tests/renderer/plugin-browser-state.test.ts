@@ -1,4 +1,5 @@
 import type { PluginRecord } from "@forge/core/shared/plugins";
+import { browserCommandSchema } from "@forge/core/shared/plugins";
 import { describe, expect, it } from "vitest";
 import {
   browserCommandMutatesPage,
@@ -19,6 +20,7 @@ import {
   pluginStatusLabel,
 } from "../../src/renderer/state/plugins";
 import { publishesPublishedFiles } from "../../src/renderer/state/published-file-tools";
+import { makePng } from "../fixtures/png";
 
 const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=";
@@ -152,6 +154,25 @@ describe("browser session state", () => {
       expect(browserCommandNeedsTakeover(command)).toBe(true);
   });
 
+  it("rejects credential-bearing and non-HTTP navigation before any RPC", () => {
+    // The UI parses through the shared command schema, so a credential URL or a
+    // javascript: URL never reaches Core even while a user is typing.
+    for (const url of [
+      "https://user:pass@example.com/",
+      "javascript:alert(1)",
+      "file:///etc/passwd",
+    ])
+      expect(() =>
+        browserCommandSchema.parse({ action: "navigate", url }),
+      ).toThrow();
+    expect(
+      browserCommandSchema.parse({
+        action: "navigate",
+        url: "https://example.com/path?q=1",
+      }),
+    ).toEqual({ action: "navigate", url: "https://example.com/path?q=1" });
+  });
+
   it("invalidates refs only for page mutations", () => {
     expect(browserCommandMutatesPage({ action: "screenshot" })).toBe(false);
     expect(browserCommandMutatesPage({ action: "snapshot" })).toBe(false);
@@ -171,15 +192,23 @@ describe("browser session state", () => {
   });
 
   it("builds an image data URL only for a schema-valid payload", () => {
-    expect(browserImageDataUrl({ mimeType: "image/png", data: PNG })).toBe(
-      `data:image/png;base64,${PNG}`,
-    );
+    const png = makePng(3, 2);
+    expect(
+      browserImageDataUrl({ mimeType: "image/png", data: png.base64 }),
+    ).toBe(`data:image/png;base64,${png.base64}`);
     expect(browserImageDataUrl(undefined)).toBeUndefined();
+    // Tightened contract: MIME, base64 alphabet, minimum length and %4 === 0.
     expect(
       browserImageDataUrl({ mimeType: "text/html", data: PNG } as never),
     ).toBeUndefined();
     expect(
       browserImageDataUrl({ mimeType: "image/png", data: "<svg/>" } as never),
+    ).toBeUndefined();
+    expect(
+      browserImageDataUrl({ mimeType: "image/png", data: "abc" } as never),
+    ).toBeUndefined();
+    expect(
+      browserImageDataUrl({ mimeType: "image/png", data: "AAAAA" } as never),
     ).toBeUndefined();
   });
 

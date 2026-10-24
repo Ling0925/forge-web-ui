@@ -66,6 +66,8 @@ export function BrowserPanel({
       }
     | {
         readonly kind: "image";
+        /** The session the frame came from; another session must never show it. */
+        readonly sessionId: string;
         readonly dataUrl: string;
         readonly mimeType: string;
       }
@@ -104,6 +106,8 @@ export function BrowserPanel({
       try {
         const response = await readBrowserStatus(sessionId);
         if (!valid()) return;
+        // Discard a late probe that answers for a previously bound session.
+        if (response.sessionId !== sessionId) return;
         setStatus(response);
         if (surface) setError("");
       } catch (err) {
@@ -121,6 +125,24 @@ export function BrowserPanel({
   useEffect(() => {
     if (active) void probeStatus(true);
   }, [active, probeStatus]);
+
+  // Re-binding to another session must never keep the previous session's frame,
+  // snapshot, takeover banner or in-flight busy flag on screen, even if a caller
+  // omits the key. Clearing `busy` is required: the abandoned operation will
+  // intentionally skip its own `setBusy(false)` once the scope is stale.
+  const boundSession = useRef(sessionId);
+  useEffect(() => {
+    if (boundSession.current === sessionId) return;
+    boundSession.current = sessionId;
+    setBusy(false);
+    setProbing(false);
+    setStatus(undefined);
+    setView(undefined);
+    setNotice("");
+    setError("");
+    setSelector("");
+    setFillText("");
+  }, [sessionId]);
 
   const run = async (
     operation: (valid: () => boolean) => Promise<void>,
@@ -142,12 +164,16 @@ export function BrowserPanel({
 
   const unavailable = !status?.available;
   const takeover = status?.takeover === true;
+  // Defence in depth: only a frame recorded for the bound session may render.
+  const sessionImage =
+    view?.kind === "image" && view.sessionId === sessionId ? view : undefined;
 
   const changeTakeover = (enabled: boolean) =>
     run(async (valid) => {
       if (!sessionId) return;
       const response = await setBrowserTakeover(sessionId, enabled);
       if (!valid()) return;
+      if (response.sessionId !== sessionId) return;
       setStatus(response);
       setNotice(
         enabled
@@ -164,6 +190,8 @@ export function BrowserPanel({
         action: "screenshot",
       });
       if (!valid()) return;
+      // Discard a response for a session this panel is no longer bound to.
+      if (response.sessionId !== sessionId) return;
       setStatus(response);
       const result = browserResultView(response);
       const dataUrl = result?.image
@@ -177,7 +205,12 @@ export function BrowserPanel({
         });
         return;
       }
-      setView({ kind: "image", dataUrl, mimeType: result.image.mimeType });
+      setView({
+        kind: "image",
+        sessionId,
+        dataUrl,
+        mimeType: result.image.mimeType,
+      });
       setNotice(
         result.isError
           ? "截图返回了错误标记；预览可能是旧画面，请检查页面状态。"
@@ -211,6 +244,7 @@ export function BrowserPanel({
       if (!sessionId) return;
       const response = await executeBrowserCommand(sessionId, next);
       if (!valid()) return;
+      if (response.sessionId !== sessionId) return;
       setStatus(response);
       const result = browserResultView(response);
       if (next.action === "snapshot") {
@@ -347,15 +381,15 @@ export function BrowserPanel({
               显示，不写入日志、会话历史或浏览器存储。它是单帧快照，不是实时视频，也不暴露裸
               CDP 或上游 WebSocket。
             </p>
-            {view?.kind === "image" ? (
+            {sessionImage ? (
               <figure className="browser-shot">
                 <img
-                  src={view.dataUrl}
+                  src={sessionImage.dataUrl}
                   alt="当前浏览器页面截图"
-                  data-mime-type={view.mimeType}
+                  data-mime-type={sessionImage.mimeType}
                 />
                 <figcaption>
-                  截图时间点画面 · {view.mimeType} · 不随页面自动更新
+                  截图时间点画面 · {sessionImage.mimeType} · 不随页面自动更新
                 </figcaption>
               </figure>
             ) : (

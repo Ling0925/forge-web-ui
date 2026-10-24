@@ -3,6 +3,9 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 import { corePluginsContractPlugin } from "../fixtures/core-plugins-contract";
+import { makePng } from "../fixtures/png";
+
+const sessionShot = makePng(20, 12);
 
 /**
  * Integration-level rendered check: the Inspector mounts the browser panel only
@@ -27,7 +30,14 @@ it("binds the browser panel to the selected session and probes only when opened"
         window.forge = {
           browser: async (input) => {
             window.browserRpc.push(input);
-            return { sessionId: input.sessionId, available: false, takeover: false };
+            // Session A has a live browser and a frame already taken; session B
+            // does not. Switching must not carry A's frame into B.
+            if (input.sessionId === '11111111-1111-4111-8111-111111111111' && input.action === 'execute')
+              return { sessionId: input.sessionId, available: true, takeover: false,
+                result: { text: 'captured', isError: false, image: { mimeType: 'image/png', data: '${sessionShot.base64}' } } };
+            return { sessionId: input.sessionId,
+              available: input.sessionId === '11111111-1111-4111-8111-111111111111',
+              takeover: false };
           },
           listCheckpoints: async () => [],
           listMcpServers: async () => [],
@@ -109,7 +119,11 @@ it("binds the browser panel to the selected session and probes only when opened"
 
     const rpc = () =>
       page.evaluate(() => Reflect.get(window, "browserRpc")) as Promise<
-        readonly { readonly sessionId: string; readonly action: string }[]
+        readonly {
+          readonly sessionId: string;
+          readonly action: string;
+          readonly command?: { readonly action: string };
+        }[]
       >;
 
     await page.getByRole("tab", { name: "会话信息", exact: true }).click();
@@ -124,10 +138,27 @@ it("binds the browser panel to the selected session and probes only when opened"
       sessionId: "11111111-1111-4111-8111-111111111111",
       action: "status",
     });
-    await panel.getByText("未可用", { exact: true }).waitFor();
+    await panel.getByText("Agent 持有控制权", { exact: true }).waitFor();
     await panel.getByText(/不绕过审批/).waitFor();
 
-    // Switching the session rebinds the panel; the new probe names the new id.
+    // Capture a real frame for session A before switching away from it.
+    await panel.getByRole("button", { name: "刷新截图", exact: true }).click();
+    const shot = panel.getByRole("img", { name: "当前浏览器页面截图" });
+    await expect.poll(() => shot.isVisible()).toBe(true);
+    await expect
+      .poll(() =>
+        shot.evaluate((image: HTMLImageElement) => ({
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+        })),
+      )
+      .toEqual({
+        naturalWidth: sessionShot.width,
+        naturalHeight: sessionShot.height,
+      });
+
+    // Switching the session rebinds the panel; the new probe names the new id
+    // and the previous session's frame is gone before any new capture.
     await page.evaluate(() =>
       (
         window as unknown as { selectTestSession: (id: string) => void }
@@ -136,14 +167,28 @@ it("binds the browser panel to the selected session and probes only when opened"
     await expect
       .poll(async () => (await rpc()).at(-1)?.sessionId)
       .toBe("22222222-2222-4222-8222-222222222222");
-    expect((await rpc()).every((entry) => entry.action === "status")).toBe(
-      true,
-    );
+    await expect.poll(() => panel.locator(".browser-shot img").count()).toBe(0);
+    await panel.getByText("未可用", { exact: true }).waitFor();
 
-    // No page-load action, screenshot or takeover request was made.
-    expect((await rpc()).filter((entry) => entry.action !== "status")).toEqual(
-      [],
-    );
+    // The only non-status call is the explicitly clicked capture, and it is
+    // bound to session A. Nothing ran for session B, and there was no implicit
+    // capture or takeover.
+    const calls = await rpc();
+    expect(calls.filter((entry) => entry.action === "execute")).toEqual([
+      {
+        sessionId: "11111111-1111-4111-8111-111111111111",
+        action: "execute",
+        command: { action: "screenshot" },
+      },
+    ]);
+    expect(calls.filter((entry) => entry.action === "takeover")).toEqual([]);
+    expect(
+      calls.some(
+        (entry) =>
+          entry.sessionId === "22222222-2222-4222-8222-222222222222" &&
+          entry.action !== "status",
+      ),
+    ).toBe(false);
     expect(errors).toEqual([]);
   } finally {
     await browser.close();
