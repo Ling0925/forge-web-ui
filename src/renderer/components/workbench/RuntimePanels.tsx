@@ -5,7 +5,6 @@ import {
   ChartBar,
   Check,
   ClockCounterClockwise,
-  Cpu,
   FileText,
   FolderSimple,
   GitBranch,

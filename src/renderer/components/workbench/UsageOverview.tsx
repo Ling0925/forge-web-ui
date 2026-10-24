@@ -983,7 +983,6 @@ export function UsageOverview({
       : "rgba(165, 79, 53, 0.24)";
     const providerFill = isDark ? "#2c332a" : "#e7ece3";
     const providerStroke = isDark ? "#8fad82" : "#55684d";
-    const modelFill = isDark ? "#282522" : "#f6f2ec";
     const modelStroke = isDark ? "#b89f8d" : "#8c7362";
     const mainConduitColor = isDark ? "#dc9477" : "#a54f35";
     const subagentConduitColor = isDark ? "#56b881" : "#226d40";

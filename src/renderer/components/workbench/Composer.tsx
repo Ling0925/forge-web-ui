@@ -39,7 +39,6 @@ import {
 } from "./ImageAttachments";
 import { useAutosizePrompt } from "./useAutosizePrompt";
 import { useSlashCommands } from "./useSlashCommands";
-import "./composer-activity.css";
 import "./composer-layout.css";
 import "./composer-live-input.css";
 
