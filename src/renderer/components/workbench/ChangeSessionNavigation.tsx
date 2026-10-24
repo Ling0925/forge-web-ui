@@ -48,23 +48,30 @@ export function ChangeSessionNavigation({
           <p className="wb-muted">
             委派子任务的文件变更与检查点保存在各自会话中，不合并到父任务。以下仅为已保存会话导航，不表示每个子任务都有文件变更；打开后查看其真实记录。
           </p>
-          {visible.map((child) => (
+          {visible.map((child, idx) => (
             <article
               key={child.id}
-              className="agent-card wb-stack child-session-card wb-child-row"
+              className={`agent-card wb-stack child-session-card wb-child-row is-${child.status}`}
             >
-              <strong
-                className="child-title-clamp"
-                title={child.title}
-                aria-label={child.title}
-              >
-                {child.title}
-              </strong>
-              <details>
+              <div className="child-card-header">
+                <span className="child-index-badge">
+                  #{currentPage * pageSize + idx + 1}
+                </span>
+                <strong
+                  className="child-title-clamp"
+                  title={child.title}
+                  aria-label={child.title}
+                >
+                  {child.title}
+                </strong>
+                <StatusBadge status={child.status} />
+              </div>
+              <details className="wb-disclosure child-title-disclosure">
                 <summary>查看完整子任务标题</summary>
-                <p className="message-body">{child.title}</p>
+                <div className="wb-disclosure-body">
+                  <p className="message-body">{child.title}</p>
+                </div>
               </details>
-              <StatusBadge status={child.status} />
               {/* Repeated raw identifiers collapse into one quiet disclosure;
                   nothing is dropped, only deferred. */}
               <details className="wb-disclosure">
@@ -79,7 +86,11 @@ export function ChangeSessionNavigation({
                   </p>
                 </div>
               </details>
-              <Button size="sm" onClick={() => onOpenChanges(child.id)}>
+              <Button
+                size="sm"
+                className="child-open-changes-btn"
+                onClick={() => onOpenChanges(child.id)}
+              >
                 打开此子任务的变更 / 检查点
               </Button>
             </article>

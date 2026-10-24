@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowSquareOut, CaretDown, CaretUp } from "@phosphor-icons/react";
+import { ArrowDown, ArrowSquareOut, CaretDown, CaretUp, Cpu } from "@phosphor-icons/react";
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SessionId, SessionSnapshot, SessionSummary } from "../../shared-types";
 import { toolActivity } from "@forge/core/shared/tool-activity";
@@ -40,7 +40,10 @@ const ActivityEntry = memo(function ActivityEntry({ item, live }: { readonly ite
   }
   if (item.kind !== "message") return <p className="form-error child-activity-error">{activityText(item)}</p>;
   return <div className="child-conversation-message" data-live={live || undefined}>
-    <div className="child-conversation-speaker">助手{live && <span> · 正在输出</span>}</div>
+    <div className="child-conversation-speaker">
+      <span className="child-speaker-badge">助手</span>
+      {live && <span className="child-speaker-live"> · 正在输出</span>}
+    </div>
     <Markdown source={item.content} highlight={!live} />
     {item.truncated && <p className="wb-muted">实时预览已截断；保存后的完整内容请打开会话查看。</p>}
   </div>;
@@ -122,18 +125,43 @@ export const SubAgentActivity = memo(function SubAgentActivity({ child, cached, 
     if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
   };
 
-  return <section className="child-activity" aria-label="子任务动态">
+  const modeLabel =
+    view === "conversation" && !active
+      ? "过程记录"
+      : active
+        ? "实时会话"
+        : child.status === "completed"
+          ? "最终报告"
+          : "执行结果";
+  const footerHint = reading
+    ? "正在同步记录…"
+    : conversation.entries.length > 0
+      ? `最近 ${conversation.entries.length} 条动态`
+      : active
+        ? "实时流已连接"
+        : "只读归档记录";
+
+  return <section className={`child-activity is-view-${view}${active ? " is-active" : ""}`} aria-label="子任务动态">
     <div className="child-activity-heading">
-      <strong>{view === "conversation" && !active ? "过程记录" : active ? "实时会话" : child.status === "completed" ? "最终报告" : "执行结果"}</strong>
+      <div className="child-activity-heading-left">
+        <span className={`child-activity-mode-pill${active ? " is-live" : child.status === "completed" ? " is-completed" : ""}`}>
+          <span className="child-activity-mode-dot" aria-hidden="true" />
+          <strong>{modeLabel}</strong>
+        </span>
+        <span className="child-model-pill" title={child.model}>
+          <Cpu size={11} weight="bold" className="child-model-icon" />
+          <span>{child.model}</span>
+        </span>
+      </div>
       {date && Number.isFinite(date.getTime()) && <time dateTime={timestamp} title={date.toLocaleString()}>
         更新于 {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
       </time>}
     </div>
-    {view === "preview" && <p className={`child-activity-preview${last?.kind === "error" || last?.kind === "tool" && last.status === "failed" ? " is-error" : ""}`}>{preview.slice(0, 1000)}</p>}
+    {view === "preview" && <p className={`child-activity-preview${last?.kind === "error" || last?.kind === "tool" && last.status === "failed" ? " is-error" : ""}${!report && !currentTool && !last ? " is-empty" : ""}`}>{preview.slice(0, 1000)}</p>}
     {view === "conversation" && <>
       <div className="child-conversation-toolbar">
-        <span>只读 · 最近记录</span>
-        <Button size="sm" variant="ghost" onClick={() => void onOpen(child.id)}>
+        <span className="child-conversation-toolbar-label">只读 · 最近记录</span>
+        <Button size="sm" variant="ghost" className="child-open-full-btn" onClick={() => void onOpen(child.id)}>
           打开完整会话 <ArrowSquareOut size={12} />
         </Button>
       </div>
@@ -145,7 +173,7 @@ export const SubAgentActivity = memo(function SubAgentActivity({ child, cached, 
         onClickCapture={event => {
           if (event.target instanceof Element && event.target.closest("summary, button[aria-expanded]")) follow.current.inspectDisclosure();
         }}>
-        {conversation.omitted > 0 && <p className="wb-muted">仅显示最近 {conversation.entries.length} 条，更早内容请打开完整会话。</p>}
+        {conversation.omitted > 0 && <p className="wb-muted child-conversation-omitted">仅显示最近 {conversation.entries.length} 条，更早内容请打开完整会话。</p>}
         {conversation.entries.map(item => <ActivityEntry key={item.id} item={item} live={item.id === conversation.liveId && active} />)}
         {currentTool && !toolAlreadyShown && <p className="child-conversation-current">正在{currentTool}</p>}
         {!conversation.entries.length && !currentTool && <p className="wb-muted">{reading ? "正在读取会话记录…" : empty}</p>}
@@ -162,15 +190,18 @@ export const SubAgentActivity = memo(function SubAgentActivity({ child, cached, 
       <Button size="sm" variant="ghost" disabled={reading} onClick={() => setAttempt(value => value + 1)}>重试读取</Button>
     </div>}
     <div className="child-activity-actions">
-      {report && <Button size="sm" variant="ghost" aria-expanded={view === "report"} aria-controls={view === "report" ? bodyId : undefined}
-        onClick={() => setView(view === "report" ? "preview" : "report")}>
-        {view === "report" ? "收起报告" : "展开报告"}
-      </Button>}
-      <Button size="sm" variant="ghost" aria-expanded={view === "conversation"} aria-controls={view === "conversation" ? bodyId : undefined}
-        onClick={() => setView(view === "conversation" ? "preview" : "conversation")}>
-        {view === "conversation" ? "收起记录" : active ? "展开记录" : "查看过程记录"}
-        {view === "conversation" ? <CaretUp size={12} /> : <CaretDown size={12} />}
-      </Button>
+      <span className="child-activity-footer-hint">{footerHint}</span>
+      <div className="child-activity-action-btns">
+        {report && <Button size="sm" variant="ghost" className={`child-activity-toggle-btn${view === "report" ? " is-active" : ""}`} aria-expanded={view === "report"} aria-controls={view === "report" ? bodyId : undefined}
+          onClick={() => setView(view === "report" ? "preview" : "report")}>
+          {view === "report" ? "收起报告" : "展开报告"}
+        </Button>}
+        <Button size="sm" variant="ghost" className={`child-activity-toggle-btn${view === "conversation" ? " is-active" : ""}`} aria-expanded={view === "conversation"} aria-controls={view === "conversation" ? bodyId : undefined}
+          onClick={() => setView(view === "conversation" ? "preview" : "conversation")}>
+          {view === "conversation" ? "收起记录" : active ? "展开记录" : "查看过程记录"}
+          {view === "conversation" ? <CaretUp size={11} weight="bold" /> : <CaretDown size={11} weight="bold" />}
+        </Button>
+      </div>
     </div>
   </section>;
 });

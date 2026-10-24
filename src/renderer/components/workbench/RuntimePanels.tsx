@@ -1,10 +1,14 @@
 import {
   ArrowSquareOut,
   ArrowsInLineVertical,
+  ArrowUpLeft,
   ChartBar,
   Cpu,
   FileText,
+  FolderSimple,
+  GitBranch,
   ListChecks,
+  Target,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
@@ -264,66 +268,159 @@ export function SubAgentsPanel() {
 
   if (!snapshot) return null;
   const parentId = snapshot.parentSessionId;
-  const children = state.sessions.filter(
+  const sortedChildren = [...state.sessions.filter(
     (session) => session.parentSessionId === snapshot.id,
-  );
+  )]
+    // Keep cards in creation order: finishing a task must not move the
+    // conversation someone is reading to another place in the list.
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
   const updates = snapshot.events.filter(
     (event) => event.type === "agent_update",
   );
+  const runningCount = sortedChildren.filter(
+    (child) => child.status === "running" || child.status === "awaiting_approval",
+  ).length;
+  const completedCount = sortedChildren.filter(
+    (child) => child.status === "completed",
+  ).length;
+  const failedCount = sortedChildren.filter(
+    (child) =>
+      child.status === "failed" ||
+      child.status === "interrupted" ||
+      child.status === "cancelled",
+  ).length;
+  const hasChildMeta = Boolean(
+    parentId || snapshot.agentTask || snapshot.ownership || snapshot.agentWorktree,
+  );
 
   return (
-    <section className="wb-stack inspector-section">
-      <div className="inspector-card-header">
-        <h3>
-          子任务 <span className="wb-muted">{children.length}</span>
-        </h3>
-        {parentId && (
-          <Button size="sm" variant="ghost" onClick={() => void selectSession(parentId)}>
-            打开父任务
-          </Button>
-        )}
+    <section className="wb-stack inspector-section inspector-subagents-section">
+      <div className="inspector-card-header inspector-subagents-header">
+        <div className="inspector-title-row">
+          <GitBranch size={14} weight="bold" className="inspector-title-icon" />
+          <h3>子任务</h3>
+          <span className="inspector-subagents-count">{sortedChildren.length}</span>
+        </div>
+        <div className="inspector-subagents-header-actions">
+          {sortedChildren.length > 0 && (
+            <div className="inspector-plan-stats-row inspector-subagents-stats">
+              {runningCount > 0 && (
+                <span className="inspector-plan-stat-pill is-active">
+                  运行中 {runningCount}
+                </span>
+              )}
+              {completedCount > 0 && (
+                <span className="inspector-plan-stat-pill is-completed">
+                  完成 {completedCount}
+                </span>
+              )}
+              {failedCount > 0 && (
+                <span className="inspector-plan-stat-pill is-failed">
+                  结束/异常 {failedCount}
+                </span>
+              )}
+            </div>
+          )}
+          {parentId && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="inspector-parent-jump-btn"
+              onClick={() => void selectSession(parentId)}
+            >
+              <ArrowUpLeft size={12} weight="bold" />
+              <span>打开父任务</span>
+            </Button>
+          )}
+        </div>
       </div>
-      {children.length ? (
-        [...children]
-          // Keep cards in creation order: finishing a task must not move the
-          // conversation someone is reading to another place in the list.
-          .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
-          .map((child) => (
+
+      {hasChildMeta && (
+        <div className="inspector-subagent-context-card wb-stack">
+          {(parentId || snapshot.ownership || snapshot.agentWorktree) && (
+            <div className="inspector-subagent-meta-list">
+              {parentId && (
+                <div className="inspector-subagent-meta-item">
+                  <span className="inspector-subagent-meta-label">所属父会话</span>
+                  <code className="inspector-subagent-meta-code">{parentId}</code>
+                </div>
+              )}
+              {snapshot.ownership && (
+                <p className="inspector-ownership-tag">
+                  <Target size={12} weight="bold" className="inspector-ownership-icon" />
+                  <span>负责范围：{snapshot.ownership}</span>
+                </p>
+              )}
+              {snapshot.agentWorktree && (
+                <p className="inspector-ownership-tag">
+                  <FolderSimple size={12} weight="bold" className="inspector-ownership-icon" />
+                  <span>
+                    工作树：<code>{snapshot.agentWorktree.worktree}</code>
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+          {parentId &&
+            (snapshot.status === "running" ||
+              snapshot.status === "awaiting_approval") && (
+              <Button
+                size="sm"
+                variant="danger"
+                className="inspector-self-cancel-btn"
+                disabled={cancelling}
+                onClick={() => void cancelOwned(snapshot.id)}
+              >
+                {cancelling ? "正在取消…" : "取消此子任务（本进程）"}
+              </Button>
+            )}
+          {snapshot.agentTask && (
+            <details open className="wb-disclosure inspector-disclosure-card">
+              <summary>查看子任务指令</summary>
+              <div className="wb-disclosure-body">
+                <Markdown source={snapshot.agentTask} />
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {sortedChildren.length ? (
+        <div className="inspector-subagents-list wb-stack">
+          {sortedChildren.map((child, index) => (
             <article
               key={child.id}
-              className="agent-card child-session-card wb-child-row"
+              className={`agent-card child-session-card wb-child-row is-${child.status}`}
             >
-              <div className="child-card-header">
-                <Button
-                  size="sm"
-                  className="child-title-button"
-                  title={child.title}
-                  aria-label={`打开子任务：${child.title}`}
-                  onClick={() => void selectSession(child.id)}
-                >
-                  <ArrowSquareOut size={12} weight="bold" className="child-title-icon" />
-                  <span className="child-title-clamp">{child.title}</span>
-                </Button>
-                <div className="child-card-badges">
-                  <StatusBadge status={child.status} />
-                  {(child.status === "running" ||
-                    child.status === "awaiting_approval") && (
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      disabled={cancelling}
-                      onClick={() => void cancelOwned(child.id)}
-                    >
-                      {cancelling ? "正在取消…" : "取消任务"}
-                    </Button>
-                  )}
+              <div className="child-card-top">
+                <div className="child-card-header">
+                  <span className="child-index-badge">#{index + 1}</span>
+                  <Button
+                    size="sm"
+                    className="child-title-button"
+                    title={child.title}
+                    aria-label={`打开子任务：${child.title}`}
+                    onClick={() => void selectSession(child.id)}
+                  >
+                    <span className="child-title-clamp">{child.title}</span>
+                    <ArrowSquareOut size={12} weight="bold" className="child-title-icon" />
+                  </Button>
+                  <div className="child-card-badges">
+                    <StatusBadge status={child.status} />
+                    {(child.status === "running" ||
+                      child.status === "awaiting_approval") && (
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        className="child-cancel-btn"
+                        disabled={cancelling}
+                        onClick={() => void cancelOwned(child.id)}
+                      >
+                        {cancelling ? "正在取消…" : "取消任务"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="inspector-child-meta">
-                <span title={child.model}>
-                  <Cpu size={11} weight="bold" style={{ display: "inline", verticalAlign: "middle", marginRight: 3 }} />
-                  {child.model}
-                </span>
               </div>
               <SubAgentActivity
                 child={child}
@@ -333,35 +430,17 @@ export function SubAgentsPanel() {
                 onOpen={selectSession}
               />
             </article>
-          ))
+          ))}
+        </div>
       ) : (
-        <p className="wb-muted">没有已保存的子任务</p>
+        <div className="inspector-subagents-empty">
+          <p className="wb-muted inspector-subagents-empty-title">没有已保存的子任务</p>
+          <p className="inspector-subagents-empty-hint">
+            主代理委派并行或专项任务时，子代理的实时进度与最终报告会在此展示。
+          </p>
+        </div>
       )}
-      {parentId &&
-        (snapshot.status === "running" ||
-          snapshot.status === "awaiting_approval") && (
-          <Button
-            disabled={cancelling}
-            onClick={() => void cancelOwned(snapshot.id)}
-          >
-            取消此子任务（本进程）
-          </Button>
-        )}
-      {snapshot.agentTask && (
-        <details open className="wb-disclosure">
-          <summary>查看子任务指令</summary>
-          <div className="wb-disclosure-body">
-            <Markdown source={snapshot.agentTask} />
-          </div>
-        </details>
-      )}
-      {snapshot.ownership && <p className="inspector-ownership-tag">负责范围：{snapshot.ownership}</p>}
-      {snapshot.agentWorktree && (
-        <p className="inspector-ownership-tag">
-          工作树：<code>{snapshot.agentWorktree.worktree}</code>
-        </p>
-      )}
-      {controlMessage && <output>{controlMessage}</output>}
+      {controlMessage && <output className="inspector-control-output">{controlMessage}</output>}
       {error && (
         <p role="alert" className="form-error">
           {error}
