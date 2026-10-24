@@ -120,7 +120,7 @@ it("scopes pending steering to its session and settles drafts per owner", async 
     await page.addScriptTag({ content: js });
 
     const input = page.locator("textarea.composer-textarea");
-    const steerButton = page.locator(".composer-btn-steer-hold");
+    const steerButton = page.locator(".composer-steer-btn");
     const openA = page.getByRole("button", { name: "打开 A", exact: true });
     const openB = page.getByRole("button", { name: "打开 B", exact: true });
 

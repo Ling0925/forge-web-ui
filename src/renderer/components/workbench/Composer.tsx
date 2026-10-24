@@ -1,12 +1,14 @@
 import {
   ArrowUp,
   Check,
+  ClockCountdown,
   Compass,
   DotsSixVertical,
   Images,
   Lightning,
   Lock,
   PencilSimple,
+  Play,
   ShieldCheck,
   ShieldWarning,
   Stop,
@@ -146,15 +148,6 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
   const [workspace, setWorkspace] = useState("");
   const promptRef = useRef<HTMLTextAreaElement>(null);
   useAutosizePrompt(promptRef, prompt);
-  const [longPressing, setLongPressing] = useState(false);
-  const [steerReady, setSteerReady] = useState(false);
-  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pressStartRef = useRef<number>(0);
-  useEffect(() => {
-    return () => {
-      if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-    };
-  }, []);
   useEffect(() => {
     if (/[\r\n]/.test(prompt))
       setManualDrafts((old) =>
@@ -428,18 +421,22 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
     }
   }, [running, draftId]);
 
-  const isDual = running && Boolean(prompt.trim() || images.length > 0);
+  const isSlashDraft = images.length === 0 && /^\s*\//.test(prompt);
+  const isDual = running && !isSlashDraft && Boolean(prompt.trim() || images.length > 0);
   const wasDualRef = useRef(false);
   const [rebounding, setRebounding] = useState(false);
   useEffect(() => {
     if (isDual) {
+      wasDualRef.current = true;
       setRebounding(false);
     } else if (wasDualRef.current && running) {
+      wasDualRef.current = false;
       setRebounding(true);
       const timer = setTimeout(() => setRebounding(false), 260);
       return () => clearTimeout(timer);
+    } else {
+      wasDualRef.current = false;
     }
-    wasDualRef.current = isDual;
   }, [isDual, running]);
 
   const sameActivityOwner = lastActiveRun.current.draftId === draftId;
@@ -758,48 +755,41 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
       if (alive.current) setDraftBusy(capturedDraftId, false);
     }
   };
-  const handleSendPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-    setLongPressing(true);
-    setSteerReady(false);
-    pressStartRef.current = Date.now();
-    if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-    pressTimerRef.current = setTimeout(() => {
-      setSteerReady(true);
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-        try { navigator.vibrate(30); } catch {}
+  const [steeringQueueIndex, setSteeringQueueIndex] = useState<number | null>(null);
+  const steerQueuedItem = async (index: number, item: RunInput) => {
+    if (!running || !state.activeSessionId) return;
+    const targetDraftId = draftId;
+    if (
+      submitting.current.has(targetDraftId) ||
+      busyDrafts.has(targetDraftId) ||
+      submissions[targetDraftId] ||
+      steeringQueueIndex !== null
+    )
+      return;
+    const id = state.activeSessionId;
+    submitting.current.add(targetDraftId);
+    setDraftBusy(targetDraftId, true);
+    setSteeringQueueIndex(index);
+    setError("");
+    try {
+      const accepted = await sendSteering(
+        item.prompt,
+        id,
+        item.images && item.images.length > 0 ? item.images : undefined,
+      );
+      if (!alive.current) return;
+      if (accepted) {
+        const currentIdx = pendingInputs.indexOf(item);
+        removeQueuedInput?.(currentIdx >= 0 ? currentIdx : index);
+      } else if (selectedDraft.current === targetDraftId) {
+        setError("插话未确认写入，消息仍保留在待发队列中。");
       }
-    }, 500);
-  };
-  const handleSendPointerUp = () => {
-    if (!longPressing && !pressStartRef.current) return;
-    const isSteer = steerReady || (Date.now() - pressStartRef.current >= 500);
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-    setLongPressing(false);
-    setSteerReady(false);
-    pressStartRef.current = 0;
-    if (isSteer) {
-      void submit("steer");
-    } else {
-      void submit("follow-up");
-    }
-  };
-  const handleSendPointerCancel = () => {
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-    setLongPressing(false);
-    setSteerReady(false);
-    pressStartRef.current = 0;
-  };
-  const handleSendClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    if (pressStartRef.current === 0 && !longPressing) {
-      void submit("follow-up");
+    } finally {
+      submitting.current.delete(targetDraftId);
+      if (alive.current) {
+        setDraftBusy(targetDraftId, false);
+        setSteeringQueueIndex(null);
+      }
     }
   };
   const listModels = async (refresh = false) => {
@@ -969,52 +959,74 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
           }${activityClosing ? " is-leaving" : ""}`}
         >
           {showActivity && (
-            <output
-              className={`composer-activity${displayRun?.status === "running" && !displayRun.isCancelling ? " is-executing" : ""}`}
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <span className="composer-activity-bars" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-              <span>
-                {displayRun?.isCancelling
-                  ? "正在停止"
-                  : displayRun?.status === "awaiting_approval"
-                    ? "等待审批"
-                    : displayRun?.providerRetry
-                      ? `重试 ${displayRun.providerRetry}/5`
-                    : "正在执行"}
-              </span>
-              {!isNew && state.activeSnapshot?.id === state.activeSessionId && (
-                <OutputSpeed run={displayRun} events={state.activeSnapshot.events} />
+            <>
+              <output
+                className={`composer-activity${
+                  displayRun?.status === "running" && !displayRun.isCancelling
+                    ? " is-executing"
+                    : ""
+                }${displayRun?.isCancelling ? " is-cancelling" : ""}${
+                  displayRun?.status === "awaiting_approval" ? " is-awaiting" : ""
+                }${displayRun?.providerRetry ? " is-retrying" : ""}`}
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <span className="composer-activity-bars" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <span className="composer-activity-label">
+                  {displayRun?.isCancelling
+                    ? "正在停止"
+                    : displayRun?.status === "awaiting_approval"
+                      ? "等待审批"
+                      : displayRun?.providerRetry
+                        ? `重试 ${displayRun.providerRetry}/5`
+                        : "正在执行"}
+                </span>
+                {!isNew && state.activeSnapshot?.id === state.activeSessionId && (
+                  <OutputSpeed run={displayRun} events={state.activeSnapshot.events} />
+                )}
+              </output>
+              {running && !displayRun?.isCancelling && (
+                <div className="composer-activity-meta" aria-hidden="true">
+                  <span className="composer-activity-hint">
+                    <kbd>Enter</kbd> 排队
+                  </span>
+                  <span className="composer-activity-sep">·</span>
+                  <span className="composer-activity-hint">
+                    <kbd>Alt+Enter</kbd> 插话
+                  </span>
+                </div>
               )}
-            </output>
+            </>
           )}
         </div>
         {pendingInputs.length > 0 && (
           <div
-            className="composer-status composer-queue"
+            className={`composer-status composer-queue${inputQueuePaused ? " is-paused" : ""}`}
             role="region"
             aria-label="待发消息队列"
           >
             <div className="composer-queue-header">
-              <span className="composer-queue-title">
-                待发 {pendingInputs.length} 条{inputQueuePaused ? " · 已暂停" : ""}
-              </span>
-              {pendingInputs.length > 1 && (
-                <span className="composer-queue-tip">拖动可调整顺序</span>
-              )}
+              <div className="composer-queue-header-main">
+                <span className="composer-queue-title">
+                  待发 {pendingInputs.length} 条{inputQueuePaused ? " · 已暂停" : ""}
+                </span>
+                {pendingInputs.length > 1 && (
+                  <span className="composer-queue-tip">拖动可调整顺序</span>
+                )}
+              </div>
               <div className="composer-queue-header-btns">
                 {inputQueuePaused && !running && (
                   <button
                     type="button"
-                    className="composer-queue-link-btn"
+                    className="composer-queue-link-btn is-primary"
                     onClick={() => resumeInputs()}
                   >
-                    继续发送
+                    <Play size={11} weight="fill" aria-hidden="true" />
+                    <span>继续发送</span>
                   </button>
                 )}
                 {pendingInputs.length > 1 && (
@@ -1139,6 +1151,19 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
                           {itemText && imageCount > 0 ? ` · 图片 ${imageCount} 张` : ""}
                         </span>
                         <div className="composer-queue-item-btns">
+                          {running && (
+                            <button
+                              type="button"
+                              className="composer-queue-steer-btn"
+                              aria-label={`立即插话第 ${index + 1} 条待发消息`}
+                              title="立即作为插话发送到当前运行"
+                              disabled={busy || !!submission || steeringQueueIndex !== null}
+                              onClick={() => void steerQueuedItem(index, item)}
+                            >
+                              <Lightning size={11} weight="fill" aria-hidden="true" />
+                              <span>插话</span>
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="composer-queue-icon-btn"
@@ -1331,62 +1356,33 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
                   icon={<Stop size={16} weight="fill" aria-hidden="true" />}
                   onClick={() => void cancelRun()}
                 />
-                {Boolean(prompt.trim() || images.length > 0) && (
-                  <div className="composer-dual-send-wrap">
-                    {longPressing && (
-                      <div
-                        className={`composer-longpress-tip ${
-                          steerReady ? "is-steer" : ""
-                        }`}
-                        role="status"
-                      >
-                        {steerReady ? "松开立即插话 ⚡" : "长按插话…"}
-                      </div>
-                    )}
+                {isDual && (
+                  <div
+                    className="composer-dual-send-wrap"
+                    role="group"
+                    aria-label="运行中发送方式"
+                  >
                     <button
                       type="button"
-                      className={`btn btn-primary btn-sm composer-submit composer-action composer-btn-steer-hold ${
-                        longPressing ? "is-pressing" : ""
-                      } ${steerReady ? "is-steer-ready" : ""}`}
+                      className="btn btn-sm composer-steer-btn"
                       disabled={busy || !!submission || reading || savingEffort}
-                      aria-label={steerReady ? "插话" : "发送"}
-                      title="点击排队发送，长按插话"
-                      onContextMenu={(e) => e.preventDefault()}
-                      onPointerDown={handleSendPointerDown}
-                      onPointerUp={handleSendPointerUp}
-                      onPointerLeave={handleSendPointerCancel}
-                      onPointerCancel={handleSendPointerCancel}
-                      onClick={handleSendClick}
+                      aria-label="插话"
+                      title="立即插话到当前运行 · Alt+Enter"
+                      onClick={() => void submit("steer")}
                     >
-                      {longPressing && (
-                        <svg
-                          className={`composer-longpress-ring ${
-                            steerReady ? "is-ready" : ""
-                          }`}
-                          viewBox="0 0 44 44"
-                          aria-hidden="true"
-                        >
-                          <circle
-                            cx="22"
-                            cy="22"
-                            r="18"
-                            className="composer-ring-track"
-                          />
-                          <circle
-                            cx="22"
-                            cy="22"
-                            r="18"
-                            className={`composer-ring-indicator ${
-                              steerReady ? "is-ready" : ""
-                            }`}
-                          />
-                        </svg>
-                      )}
-                      {steerReady ? (
-                        <Lightning size={16} weight="fill" aria-hidden="true" />
-                      ) : (
-                        <ArrowUp size={16} weight="bold" aria-hidden="true" />
-                      )}
+                      <Lightning size={15} weight="fill" aria-hidden="true" />
+                      <span className="composer-dual-btn-label">插话</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm composer-submit composer-queue-btn"
+                      disabled={busy || !!submission || reading || savingEffort}
+                      aria-label="排队发送"
+                      title="加入待发队列，当前运行结束后自动发送 · Enter"
+                      onClick={() => void submit("follow-up")}
+                    >
+                      <ClockCountdown size={15} weight="bold" aria-hidden="true" />
+                      <span className="composer-dual-btn-label">排队</span>
                     </button>
                   </div>
                 )}

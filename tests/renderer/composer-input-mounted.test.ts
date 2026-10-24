@@ -115,7 +115,7 @@ it("composer grows to six lines and requires explicit submission for multiline d
       await slider.dispatchEvent("pointerup");
     };
     await setSlider("5");
-    expect(await slider.getAttribute("aria-valuetext")).toBe("高");
+    expect(await slider.getAttribute("aria-valuetext")).toBe("MAX");
     await input.fill("wait for effort");
     expect(
       await page
@@ -125,22 +125,22 @@ it("composer grows to six lines and requires explicit submission for multiline d
     await input.press("Enter");
     expect(await calls()).toBe("1");
     await page.getByRole("button", { name: "保存等级", exact: true }).click();
-    await expect.poll(() => page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("高");
+    await expect.poll(() => page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("MAX");
     await trigger.click();
     await setSlider("3");
-    expect(await slider.getAttribute("aria-valuetext")).toBe("低");
+    expect(await slider.getAttribute("aria-valuetext")).toBe("xhigh");
     await page
       .getByRole("button", { name: "保存等级失败", exact: true })
       .click();
     await expect
       .poll(() => page.getByRole("alert").innerText())
       .toBe("思考等级保存失败，请重试。");
-    expect(await page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("高");
+    expect(await page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("MAX");
     await trigger.click();
-    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("高");
+    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("MAX");
     await slider.press("Home");
     await page.getByRole("button", { name: "保存等级", exact: true }).click();
-    await expect.poll(() => page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("自动");
+    await expect.poll(() => page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("low");
     await input.fill("one");
     await input.press("Shift+Enter");
     await input.press("Enter");

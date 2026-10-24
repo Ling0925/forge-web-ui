@@ -26,7 +26,7 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
         for(const [id,item]of pending)if(item.sessionId===sessionId){item.reject(Error('未写入，草稿已保留'));pending.delete(id);}
         emit(runId,{type:'run_finished',sessionId,status,turns:1,toolCalls:0});}};
     window.forge={getSettings:async()=>({...defaultPublicSettings,isConfigured:true,baseUrl:'https://b.invalid/v1',model:'b-model',activeSourceId:'b',
-      providerSources:[{id:'a',label:'Source A',baseUrl:'https://a.invalid/v1',model:'a-model',hasApiKey:false},{id:'b',label:'Source B',baseUrl:'https://b.invalid/v1',model:'b-model',hasApiKey:false}]}),
+      providerSources:[{id:'a',label:'Source A',baseUrl:'https://a.invalid/v1',model:'a-model',hasApiKey:false,modelSelection:{mode:'all',manual:[{id:'shared-model',contextWindowTokens:null}]}},{id:'b',label:'Source B',baseUrl:'https://b.invalid/v1',model:'b-model',hasApiKey:false,modelSelection:{mode:'all',manual:[{id:'shared-model',contextWindowTokens:null}]}}]}),
       listSessions:async()=>Object.values(snapshots),getSession:async id=>structuredClone(snapshots[id]),
       listModels:async source=>{fixture.catalogues.push(source);return [source+'-model', 'shared-model'];},
       onEvent:listener=>{listeners.add(listener);return()=>listeners.delete(listener);},
@@ -67,8 +67,10 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     await effortSlider.waitFor();
     expect(await effortSlider.isVisible()).toBe(true);
     expect(await page.locator('.composer-model-source-area').count()).toBe(0);
+    await page.locator(".model-picker-current").click();
     expect(await page.getByRole('group', { name: 'Source A', exact: true }).getByRole('button', { pressed: true }).innerText()).toContain('a-model');
     expect(await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { pressed: true }).count()).toBe(0);
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").catalogues.includes("a"))).toBe(true);
     await input.fill("initial"); await input.press("Enter");
@@ -96,10 +98,11 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
       return el ? window.getComputedStyle(el).animationName : "";
     });
     expect(sendAnim).toContain("composer-dual-send-in");
-    const steerBtn = page.locator(".composer-btn-steer-hold");
-    await steerBtn.dispatchEvent("pointerdown", { button: 0 });
-    await expect.poll(() => page.locator(".composer-longpress-tip").innerText()).toContain("松开立即插话");
-    await steerBtn.dispatchEvent("pointerup");
+    const steerBtn = page.locator(".composer-steer-btn");
+    const queueBtn = page.locator(".composer-queue-btn");
+    expect(await steerBtn.count()).toBe(1);
+    expect(await queueBtn.count()).toBe(1);
+    await steerBtn.click();
     await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending())).toBe(1);
     expect(await input.inputValue()).toBe("change direction\nsecond line");
     const inputRect1 = await input.boundingBox();
@@ -124,12 +127,22 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     expect(reboundAnim.colClass).toContain("is-rebounding");
     expect(reboundAnim.btnAnim).toContain("composer-cancel-shift-right");
     await input.fill("follow one draft");
-    await page.locator(".composer-btn-steer-hold").click();
+    await page.locator(".composer-queue-btn").click();
     await expect.poll(() => input.inputValue()).toBe("");
     expect(await page.locator(".composer-queue-title").innerText()).toBe("待发 1 条");
     expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual(["follow one draft"]);
+    expect(await page.getByRole("button", { name: "立即插话第 1 条待发消息", exact: true }).count()).toBe(1);
     expect(await page.locator(".composer-queue-hint").count()).toBe(0);
     expect(await page.locator(".composer-slash-message").count()).toBe(0);
+    // Test promoting a queued item to immediate steer via the queue item button
+    await input.fill("queued to steer");
+    await page.locator(".composer-queue-btn").click();
+    expect(await page.locator(".composer-queue-item").count()).toBe(2);
+    await page.getByRole("button", { name: "立即插话第 2 条待发消息", exact: true }).click();
+    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending())).toBe(1);
+    await page.evaluate(() => Reflect.get(window, "fixture").apply());
+    await expect.poll(() => page.locator(".composer-queue-item").count()).toBe(1);
+    expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual(["follow one draft"]);
     // Edit queued item in place
     await page.getByRole("button", { name: "编辑第 1 条待发消息", exact: true }).click();
     const editBox = page.locator(".composer-queue-edit-input");
@@ -181,10 +194,12 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     expect(alertRect.y + alertRect.height).toBeLessThanOrEqual(inputRect3.y);
     expect(await input.inputValue()).toBe("retain on cancellation");
     await modelSummary.click();
+    await page.locator(".model-picker-current").click();
     await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { name: 'shared-model shared-model', exact: true }).click();
-    await modelSummary.click();
+    await page.locator(".model-picker-current").click();
     expect(await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { pressed: true }).innerText()).toContain('shared-model');
     expect(await page.getByRole('group', { name: 'Source A', exact: true }).getByRole('button', { pressed: true }).count()).toBe(0);
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await input.fill("explicit source change"); await page.getByRole("button", { name: "运行", exact: true }).click();
     await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").starts.at(-1).providerSourceId)).toBe("b");

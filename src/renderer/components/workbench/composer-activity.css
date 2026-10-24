@@ -1,38 +1,86 @@
 .composer-activity {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 20px;
-  padding-inline: var(--space-2);
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
+  gap: 7px;
+  min-height: 26px;
+  padding: 2px 10px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: var(--text-xs, 12px);
   line-height: 20px;
   user-select: none;
+  box-sizing: border-box;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
+
+.composer-activity.is-executing {
+  background: color-mix(in srgb, var(--accent-sage, #2f6f5e) 8%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--accent-sage, #2f6f5e) 24%, var(--border-subtle));
+}
+
+.composer-activity.is-awaiting,
+.composer-activity.is-retrying {
+  background: color-mix(in srgb, var(--warning, #d97706) 10%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--warning, #d97706) 30%, var(--border-subtle));
+}
+
+.composer-activity.is-cancelling {
+  background: color-mix(in srgb, var(--error, #c2410c) 8%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--error, #c2410c) 24%, var(--border-subtle));
+  color: var(--text-secondary);
+}
+
+.composer-activity-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.composer-activity.is-awaiting .composer-activity-label,
+.composer-activity.is-retrying .composer-activity-label {
+  color: var(--warning, #d97706);
+}
+
 .composer-activity-bars {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  width: 15px;
+  gap: 2.5px;
+  width: 13px;
   height: 12px;
-  color: var(--accent-sage);
+  color: var(--accent-sage, #2f6f5e);
+  flex-shrink: 0;
 }
+
+.composer-activity.is-awaiting .composer-activity-bars,
+.composer-activity.is-retrying .composer-activity-bars {
+  color: var(--warning, #d97706);
+}
+
+.composer-activity.is-cancelling .composer-activity-bars {
+  color: var(--error, #c2410c);
+}
+
 .composer-activity-bars > span {
-  width: 3px;
+  width: 2.5px;
   height: 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-full, 9999px);
   background: currentColor;
-  transform: scaleY(0.4);
+  transform: scaleY(0.45);
 }
+
 .composer-activity.is-executing .composer-activity-bars > span {
   animation: composer-activity-pulse 1.2s ease-in-out infinite;
 }
+
 .composer-activity.is-executing .composer-activity-bars > span:nth-child(2) {
   animation-delay: -1s;
 }
+
 .composer-activity.is-executing .composer-activity-bars > span:nth-child(3) {
   animation-delay: -0.8s;
 }
+
 @keyframes composer-activity-pulse {
   0%,
   100% {
@@ -44,6 +92,7 @@
     opacity: 1;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .composer-activity.is-executing .composer-activity-bars > span {
     animation: none;
@@ -53,10 +102,55 @@
 
 .composer-output-speed {
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
   white-space: nowrap;
   min-width: 9ch;
   display: inline-block;
-  font-size: var(--text-xs);
-  line-height: 20px;
+  font-size: 11px;
+  line-height: 18px;
+  padding-left: 7px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.composer-activity-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.composer-activity-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.composer-activity-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.composer-activity-sep {
+  opacity: 0.5;
+}
+
+@media (max-width: 560px) {
+  .composer-activity-meta {
+    display: none;
+  }
 }

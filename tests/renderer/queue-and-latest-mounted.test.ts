@@ -247,9 +247,9 @@ it("renders floating jump-to-latest button and interactive queue list with cance
           flexDirection: s.flexDirection,
         };
       });
-    expect(queueOuterStyle.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(queueOuterStyle.borderTopWidth).toBe("0px");
-    expect(queueOuterStyle.flexDirection).toBe("row");
+    expect(queueOuterStyle.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+    expect(queueOuterStyle.borderTopWidth).toBe("1px");
+    expect(queueOuterStyle.flexDirection).toBe("column");
 
     await mkdir(resolve(".build/queue-ui"), { recursive: true });
     await page.evaluate(() => {
