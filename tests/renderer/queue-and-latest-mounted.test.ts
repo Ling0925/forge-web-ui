@@ -182,7 +182,7 @@ it("renders floating jump-to-latest button and interactive queue list with cance
         page.evaluate(() => Reflect.get(window, "fixture").starts.length),
       )
       .toBe(1);
-    await page.locator(".composer-activity").waitFor();
+    await page.locator(".usage-track.is-active").waitFor();
 
     // Measure scroll container height before floating button appears
     const scrollBoxBefore = await scrollContainer.boundingBox();

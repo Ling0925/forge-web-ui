@@ -63,7 +63,7 @@ beforeAll(async () => {
             const [id,setId]=useState('a');const [runs,setRuns]=useState({});
             useLayoutEffect(()=>{
               window.activityFrames??=[];
-              window.activityFrames.push({id,text:document.querySelector('.composer-activity')?.textContent??''});
+              window.activityFrames.push({id,text:document.querySelector('.usage-track')?.getAttribute('data-run-status')??''});
             });
             return <Context.Provider value={{
               select:setId,selectSession:async id=>setId(id),
@@ -244,27 +244,32 @@ it("scopes mode controls, submissions and queued inputs to each session without 
 it("never shows the previous session's run activity while retaining same-session exit animation", async () => {
   const page = await mount();
   try {
-    const activity = () => page.locator(".composer-activity").innerText();
+    const track = page.locator(".usage-track");
+    const activity = () => track.getAttribute("data-run-status");
     await page.getByRole("button", { name: "Run A", exact: true }).click();
-    await expect.poll(activity).toContain("重试 2/5");
+    await expect.poll(activity).toBe("重试 2/5");
+    expect(await track.getAttribute("class")).toContain("is-retrying");
+    expect(await page.locator(".composer-activity").count()).toBe(0);
     await page.getByRole("button", { name: "Session B", exact: true }).click();
-    expect(await page.locator(".composer-activity").count()).toBe(0);
+    expect(await activity()).toBe(null);
+    expect(await track.getAttribute("class")).not.toContain("is-active");
     await page.getByRole("button", { name: "New session", exact: true }).click();
-    expect(await page.locator(".composer-activity").count()).toBe(0);
+    expect(await activity()).toBe(null);
     const inactiveFrames = await page.evaluate(() =>
       (window as unknown as { activityFrames: { id: string; text: string }[] }).activityFrames.filter(frame => frame.id !== "a"));
     expect(inactiveFrames.every(frame => frame.text === "")).toBe(true);
 
     await page.getByRole("button", { name: "Run B", exact: true }).click();
     await page.getByRole("button", { name: "Session B", exact: true }).click();
-    await expect.poll(activity).toContain("等待审批");
-    expect(await activity()).not.toContain("重试");
+    await expect.poll(activity).toBe("等待审批");
+    expect(await track.getAttribute("class")).toContain("is-awaiting");
     await page.getByRole("button", { name: "Session A", exact: true }).click();
-    await expect.poll(activity).toContain("重试 2/5");
+    await expect.poll(activity).toBe("重试 2/5");
     await page.clock.install();
     await page.getByRole("button", { name: "Finish A", exact: true }).click();
-    await expect.poll(() => page.locator(".composer-activity-slot").getAttribute("class")).toContain("is-leaving");
+    await expect.poll(() => track.getAttribute("class")).toContain("is-leaving");
     await page.clock.fastForward(250);
-    await expect.poll(() => page.locator(".composer-activity").count()).toBe(0);
+    await expect.poll(activity).toBe(null);
+    expect(await track.getAttribute("class")).not.toContain("is-active");
   } finally { await page.close(); }
 });

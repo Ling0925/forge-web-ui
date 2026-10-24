@@ -33,7 +33,6 @@ import { WorkspacePicker } from "./WorkspacePicker";
 import { ComposerDropdown } from "./ComposerDropdown";
 import { ModelPicker } from "./ModelPicker";
 import { UsagePopover } from "./UsagePopover";
-import { OutputSpeed } from "./OutputSpeed";
 import {
   ImageAttachments,
   useImageAttachments,
@@ -953,56 +952,6 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
         />
       )}
       <div className="composer-inner composer-split">
-        <div
-          className={`composer-activity-slot${showActivity ? " is-visible" : ""}${
-            running && !activityClosing ? " is-entering" : ""
-          }${activityClosing ? " is-leaving" : ""}`}
-        >
-          {showActivity && (
-            <>
-              <output
-                className={`composer-activity${
-                  displayRun?.status === "running" && !displayRun.isCancelling
-                    ? " is-executing"
-                    : ""
-                }${displayRun?.isCancelling ? " is-cancelling" : ""}${
-                  displayRun?.status === "awaiting_approval" ? " is-awaiting" : ""
-                }${displayRun?.providerRetry ? " is-retrying" : ""}`}
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                <span className="composer-activity-bars" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </span>
-                <span className="composer-activity-label">
-                  {displayRun?.isCancelling
-                    ? "正在停止"
-                    : displayRun?.status === "awaiting_approval"
-                      ? "等待审批"
-                      : displayRun?.providerRetry
-                        ? `重试 ${displayRun.providerRetry}/5`
-                        : "正在执行"}
-                </span>
-                {!isNew && state.activeSnapshot?.id === state.activeSessionId && (
-                  <OutputSpeed run={displayRun} events={state.activeSnapshot.events} />
-                )}
-              </output>
-              {running && !displayRun?.isCancelling && (
-                <div className="composer-activity-meta" aria-hidden="true">
-                  <span className="composer-activity-hint">
-                    <kbd>Enter</kbd> 排队
-                  </span>
-                  <span className="composer-activity-sep">·</span>
-                  <span className="composer-activity-hint">
-                    <kbd>Alt+Enter</kbd> 插话
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
         {pendingInputs.length > 0 && (
           <div
             className={`composer-status composer-queue${inputQueuePaused ? " is-paused" : ""}`}
@@ -1573,6 +1522,8 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
         </div>
         </div>
         <UsagePopover
+          run={showActivity ? (displayRun ?? null) : null}
+          closing={activityClosing}
           selection={{ model, sourceId: providerSourceId, metadata: selectedMetadata }}
           snapshot={
             !isNew && state.activeSnapshot?.id === state.activeSessionId

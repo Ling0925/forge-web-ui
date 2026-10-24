@@ -106,13 +106,14 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending())).toBe(1);
     expect(await input.inputValue()).toBe("change direction\nsecond line");
     const inputRect1 = await input.boundingBox();
-    const actRect = await page.locator(".composer-activity").boundingBox();
-    if (!inputRect1 || !actRect) throw new Error("Missing rects for live status check");
+    const trackRect = await page.locator(".usage-track.is-active").boundingBox();
+    if (!inputRect1 || !trackRect) throw new Error("Missing rects for live status check");
+    expect(await page.locator(".composer-activity").count()).toBe(0);
     expect(await page.locator(".composer-live-actions").count()).toBe(0);
     expect(await page.getByRole("button", { name: "运行中消息", exact: true }).count()).toBe(0);
     expect(await page.getByRole("button", { name: "发送插话", exact: true }).count()).toBe(0);
     expect(await page.getByRole("button", { name: "加入待发队列", exact: true }).count()).toBe(0);
-    expect(actRect.y + actRect.height).toBeLessThanOrEqual(inputRect1.y);
+    expect(trackRect.y).toBeGreaterThanOrEqual(inputRect1.y + inputRect1.height);
     await page.evaluate(() => Reflect.get(window, "fixture").apply());
     await expect.poll(() => input.inputValue()).toBe("");
     await expect.poll(() => page.locator(".composer-submit-col.is-dual").count()).toBe(0);

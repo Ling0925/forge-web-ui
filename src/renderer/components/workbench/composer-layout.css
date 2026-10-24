@@ -236,12 +236,6 @@
   min-width: 0;
 }
 
-@media (pointer: coarse), (max-width: 768px) {
-  .wb-app .composer-split .composer-activity-slot.is-visible {
-    min-height: 24px;
-  }
-}
-
 .wb-app .composer-split .composer-submit-col .btn,
 .wb-app .composer-split .composer-toolbar .composer-dropdown-trigger {
   border-radius: var(--radius-composer, 12px);

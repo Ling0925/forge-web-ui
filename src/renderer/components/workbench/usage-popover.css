@@ -49,14 +49,89 @@
   }
 }
 .usage-track {
+  --usage-run-color: var(--accent-sage, #2f6f5e);
   display: flex;
   position: relative;
   flex: 1;
   min-width: 24px;
-  height: 3px;
+  height: 4px;
   overflow: hidden;
-  border-radius: 2px;
+  border-radius: 999px;
   background: var(--border-subtle);
+  transition: background-color 180ms ease;
+}
+.usage-track.is-awaiting,
+.usage-track.is-retrying {
+  --usage-run-color: var(--warning, #d97706);
+}
+.usage-track.is-cancelling {
+  --usage-run-color: var(--error, #c2410c);
+}
+.usage-track-empty {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  transition: opacity 180ms ease, background-color 180ms ease;
+}
+.usage-track.is-active .usage-track-empty {
+  background-color: color-mix(in srgb, var(--usage-run-color) 20%, transparent);
+}
+.usage-track.is-leaving .usage-track-empty {
+  opacity: 0;
+}
+.usage-track-wave {
+  position: absolute;
+  inset: 0;
+  width: 48%;
+  min-width: 56px;
+  max-width: 200px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--usage-run-color) 55%, transparent) 25%,
+    var(--usage-run-color) 50%,
+    color-mix(in srgb, var(--usage-run-color) 55%, transparent) 75%,
+    transparent 100%
+  );
+  transform: translateX(-110%);
+  transition: none !important;
+}
+.usage-track.is-active .usage-track-wave {
+  opacity: 1;
+}
+.usage-track.is-executing .usage-track-wave,
+.usage-track.is-cancelling .usage-track-wave {
+  animation: usage-track-wave-flow 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.usage-track.is-awaiting .usage-track-wave {
+  animation: none;
+  width: 100%;
+  max-width: none;
+  transform: none;
+  opacity: 0.55;
+}
+@keyframes usage-track-wave-flow {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .usage-track.is-executing .usage-track-wave,
+  .usage-track.is-cancelling .usage-track-wave {
+    animation: none;
+    width: 100%;
+    max-width: none;
+    transform: none;
+    opacity: 0.45;
+  }
 }
 .usage-segment,
 .usage-panel-segment {

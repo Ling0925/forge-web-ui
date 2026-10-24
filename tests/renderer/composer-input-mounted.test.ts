@@ -267,21 +267,22 @@ it("composer grows to six lines and requires explicit submission for multiline d
       await page.getByRole("button", { name: "接收", exact: true }).click();
       await expect.poll(() => action.getAttribute("aria-label")).toBe("取消");
       const activeBox = await action.boundingBox();
-      expect(activeBox?.y).toBeGreaterThan(initial.y);
-      const activity = page.locator(".composer-activity");
-      expect(await activity.innerText()).toContain("正在执行");
-      const speed = activity.locator(".composer-output-speed");
-      await expect.poll(() => speed.innerText()).toBe("平均 20 tok/s");
-      expect(await speed.evaluate(node => node.previousElementSibling?.textContent?.trim())).toBe("正在执行");
+      expect(activeBox?.y).toBe(initial.y);
+      expect(await page.locator(".composer-activity").count()).toBe(0);
+      const track = page.locator(".usage-track");
+      expect(await track.getAttribute("class")).toContain("is-executing");
+      expect(await track.getAttribute("data-run-status")).toBe("正在执行");
+      const speed = page.locator(".usage-speed-chip");
+      await expect.poll(() => speed.innerText()).toBe("20.0 tok/s");
       expect(await page.locator(".composer-toolbar .composer-output-speed").count()).toBe(0);
       const speedBounds = await speed.boundingBox();
       expect(speedBounds?.x).toBeGreaterThanOrEqual(0);
       expect(speedBounds!.x + speedBounds!.width).toBeLessThanOrEqual(width);
       await page.emulateMedia({ reducedMotion: "no-preference" });
-      const bar = activity.locator(".composer-activity-bars > span").first();
-      const frames = await bar.evaluate((node) => {
+      const wave = track.locator(".usage-track-wave");
+      const frames = await wave.evaluate((node) => {
         const animation = node.getAnimations()[0];
-        if (!animation) throw new Error("Missing activity animation");
+        if (!animation) throw new Error("Missing usage track wave animation");
         animation.pause();
         animation.currentTime = 0;
         const first = getComputedStyle(node).transform;
@@ -301,14 +302,15 @@ it("composer grows to six lines and requires explicit submission for multiline d
       }
       await page.emulateMedia({ reducedMotion: "reduce" });
       expect(
-        await bar.evaluate((node) => getComputedStyle(node).animationName),
+        await wave.evaluate((node) => getComputedStyle(node).animationName),
       ).toBe("none");
       await page.getByRole("button", { name: "等待批准", exact: true }).click();
-      expect(await activity.innerText()).toContain("等待审批");
-      expect(await speed.innerText()).toBe("平均 20 tok/s");
+      expect(await track.getAttribute("data-run-status")).toBe("等待审批");
+      expect(await track.getAttribute("class")).toContain("is-awaiting");
+      expect(await speed.innerText()).toBe("20.0 tok/s");
       await page.emulateMedia({ reducedMotion: "no-preference" });
       expect(
-        await bar.evaluate((node) => getComputedStyle(node).animationName),
+        await wave.evaluate((node) => getComputedStyle(node).animationName),
       ).toBe("none");
       await page.getByRole("button", { name: "接收", exact: true }).click();
       await page.getByRole("button", { name: "执行权限", exact: true }).click();
@@ -332,13 +334,14 @@ it("composer grows to six lines and requires explicit submission for multiline d
       await action.click();
       await expect.poll(() => action.getAttribute("aria-busy")).toBe("true");
       expect((await action.boundingBox())?.y).toBe(activeBox?.y);
-      expect(await activity.innerText()).toContain("正在停止");
-      expect(await speed.innerText()).toBe("平均 20 tok/s");
+      expect(await track.getAttribute("data-run-status")).toBe("正在停止");
+      expect(await track.getAttribute("class")).toContain("is-cancelling");
+      expect(await speed.innerText()).toBe("20.0 tok/s");
       await page.getByRole("button", { name: "完成运行", exact: true }).click();
       await expect.poll(() => action.getAttribute("aria-label")).toBe("运行");
       await expect.poll(async () => (await action.boundingBox())?.y).toBe(initial.y);
       expect(await action.boundingBox()).toEqual(initial);
-      expect(await activity.count()).toBe(0);
+      await expect.poll(() => track.getAttribute("data-run-status")).toBe(null);
     }
   } finally {
     await browser.close();

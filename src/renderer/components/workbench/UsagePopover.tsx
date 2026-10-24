@@ -20,6 +20,7 @@ import {
   useUsagePricing,
 } from "../../state/usage-pricing";
 import { useWorkbench } from "../../state/workbench-context";
+import type { ActiveRunState } from "../../state/workbench-reducer";
 import "./usage-popover.css";
 
 const percent = (value: number | undefined) =>
@@ -51,6 +52,8 @@ export function UsagePopover({
   events,
   snapshot,
   selection,
+  run,
+  closing = false,
 }: {
   readonly events: readonly AgentEvent[];
   readonly snapshot?: SessionSnapshot | undefined;
@@ -59,10 +62,43 @@ export function UsagePopover({
     readonly sourceId?: string | undefined;
     readonly metadata?: ModelCatalogEntry | undefined;
   };
+  readonly run?: ActiveRunState | null | undefined;
+  readonly closing?: boolean | undefined;
 }) {
   const { state } = useWorkbench();
   const settings = state?.settings;
-  const activeRun = snapshot?.id ? state?.activeRuns?.[snapshot.id] : undefined;
+  const activeRun =
+    run !== undefined
+      ? (run ?? undefined)
+      : snapshot?.id
+        ? state?.activeRuns?.[snapshot.id]
+        : undefined;
+  const isRunActive = Boolean(
+    activeRun &&
+      (activeRun.status === "running" ||
+        activeRun.status === "awaiting_approval" ||
+        closing),
+  );
+  const isCancelling = Boolean(isRunActive && activeRun?.isCancelling);
+  const isAwaiting = Boolean(
+    isRunActive && !isCancelling && activeRun?.status === "awaiting_approval",
+  );
+  const retryCount = activeRun?.providerRetry;
+  const isRetrying = Boolean(
+    isRunActive && !isCancelling && !isAwaiting && retryCount,
+  );
+  const isExecuting = Boolean(
+    isRunActive && !isCancelling && !isAwaiting && activeRun?.status === "running",
+  );
+  const runStatusLabel = !isRunActive
+    ? undefined
+    : isCancelling
+      ? "正在停止"
+      : isAwaiting
+        ? "等待审批"
+        : isRetrying
+          ? `重试 ${retryCount}/5`
+          : "正在执行";
   const usage = useMemo(
     () =>
       snapshot &&
@@ -274,9 +310,17 @@ export function UsagePopover({
       <summary
         className="usage-trigger"
         aria-label="上下文与用量"
-        title={`${contextDisplayLabel(context, usage.compacted)}；点击查看本地预估和累计用量`}
+        title={`${runStatusLabel ? `${runStatusLabel} · ` : ""}${contextDisplayLabel(context, usage.compacted)}；点击查看本地预估和累计用量`}
       >
-        <span className="usage-track" aria-hidden="true">
+        <span
+          className={`usage-track${isRunActive ? " is-active" : ""}${
+            isExecuting ? " is-executing" : ""
+          }${isAwaiting ? " is-awaiting" : ""}${
+            isCancelling ? " is-cancelling" : ""
+          }${isRetrying ? " is-retrying" : ""}${closing ? " is-leaving" : ""}`}
+          data-run-status={runStatusLabel}
+          aria-hidden="true"
+        >
           {context &&
             ratio !== undefined &&
             categories.map(([key, label]) => (
@@ -289,6 +333,16 @@ export function UsagePopover({
                 }}
               />
             ))}
+          <span
+            className="usage-track-empty"
+            style={
+              reserveRatio !== undefined && reserveTokens !== undefined
+                ? { marginRight: `${reserveRatio * 100}%` }
+                : undefined
+            }
+          >
+            <span className="usage-track-wave" />
+          </span>
           {reserveRatio !== undefined && reserveTokens !== undefined && (
             <span
               className="usage-reserve"
