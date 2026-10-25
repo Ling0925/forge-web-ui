@@ -2,6 +2,7 @@ import type { PluginHealth, PluginRecord } from "@forge/core/shared/plugins";
 import {
   ArrowClockwise,
   CheckCircle,
+  FileDoc,
   Globe,
   Info,
   Lock,
@@ -14,15 +15,21 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import {
+  BROWSER_PLUGIN_ID,
+  type ConfigSchemaProperty,
+  OFFICECLI_PLUGIN_ID,
+  OFFICECLI_TIMEOUT_SECONDS,
+  type OfficeCliConfigDraft,
   type PluginConfigDraft,
-  browserConfigDraft,
   browserConfigFromDraft,
   checkPlugin,
-  configDraftDirty,
   configSchemaProperties,
   configurePlugin,
   listPlugins,
+  officeCliConfigFromDraft,
   pluginCapabilityLabel,
+  pluginDraftDirty,
+  pluginDraftFor,
   pluginManagementAvailable,
   pluginStatusLabel,
 } from "../../state/plugins";
@@ -31,7 +38,7 @@ import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import "./plugin-panel.css";
 
-const BROWSER_PLUGIN_ID = "browser";
+type PluginDraft = PluginConfigDraft | OfficeCliConfigDraft;
 
 interface HealthView {
   readonly state: "idle" | "checking" | "done";
@@ -146,11 +153,110 @@ function BrowserConfigEditor({
   );
 }
 
+function OfficeCliConfigEditor({
+  draft,
+  error,
+  disabled,
+  onChange,
+}: {
+  readonly draft: OfficeCliConfigDraft;
+  readonly error: string;
+  readonly disabled: boolean;
+  readonly onChange: (value: OfficeCliConfigDraft) => void;
+}) {
+  return (
+    <div className="plugin-config">
+      <div className="plugin-config-paths">
+        <Field
+          id="plugin-officecli-executable"
+          label="OfficeCLI 可执行路径"
+          helper="默认 officecli（在本机 PATH 中查找）；也可填写绝对路径。Forge 不会自动安装、下载或升级 OfficeCLI。"
+        >
+          <Input
+            id="plugin-officecli-executable"
+            isMono
+            value={draft.executablePath}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange({ ...draft, executablePath: event.target.value })
+            }
+          />
+        </Field>
+        <Field
+          id="plugin-officecli-timeout"
+          label="单次执行超时（秒）"
+          helper={`${OFFICECLI_TIMEOUT_SECONDS.min}–${OFFICECLI_TIMEOUT_SECONDS.max} 秒，最多 ${OFFICECLI_TIMEOUT_SECONDS.decimals} 位小数（精确到毫秒），默认 120；只限制单次 OfficeCLI 调用。`}
+        >
+          <Input
+            id="plugin-officecli-timeout"
+            type="number"
+            inputMode="decimal"
+            min={OFFICECLI_TIMEOUT_SECONDS.min}
+            max={OFFICECLI_TIMEOUT_SECONDS.max}
+            step={OFFICECLI_TIMEOUT_SECONDS.step}
+            isMono
+            value={draft.timeoutSeconds}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange({ ...draft, timeoutSeconds: event.target.value })
+            }
+          />
+        </Field>
+      </div>
+      {error && (
+        <p className="form-error" role="alert">
+          <WarningCircle size={14} weight="bold" aria-hidden="true" />
+          <span>{error}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ConfigSchemaDetails({
+  schema,
+}: {
+  readonly schema: readonly ConfigSchemaProperty[];
+}) {
+  if (schema.length === 0) return null;
+  return (
+    <details className="plugin-schema">
+      <summary>Core 配置 schema（{schema.length} 个字段）</summary>
+      <ul>
+        {schema.map((property) => (
+          <li key={property.name}>
+            <code>{property.name}</code>
+            {property.type && (
+              <span className="plugin-schema-type">{property.type}</span>
+            )}
+            {property.description && (
+              <span className="plugin-schema-desc">{property.description}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** Per-plugin approval wording; enabling never implies installation or a new model. */
+function safetyNote(id: string): string {
+  if (id === OFFICECLI_PLUGIN_ID)
+    return "不绕过审批：workspace 下 Agent 的 OfficeCLI 调用逐次请求批准；可执行文件是本机受信程序，不是 OS 沙箱。文档内容是不可信数据，不改变模型或 provider。只读模式下 OfficeCLI 调用被拒绝。";
+  return "不绕过审批：workspace 下 Agent 的浏览器调用逐次请求批准；人工动作由你的点击授权。两者均受当前权限和允许域名限制，只读模式下浏览器动作被拒绝。";
+}
+
+function PluginIcon({ id }: { readonly id: string }) {
+  if (id === OFFICECLI_PLUGIN_ID) return <FileDoc size={20} weight="duotone" />;
+  if (id === BROWSER_PLUGIN_ID) return <Globe size={20} weight="duotone" />;
+  return <PuzzlePiece size={20} weight="duotone" />;
+}
+
 export function PluginPanel() {
   const [plugins, setPlugins] = useState<readonly PluginRecord[]>([]);
-  const [drafts, setDrafts] = useState<
-    Readonly<Record<string, PluginConfigDraft>>
-  >({});
+  const [drafts, setDrafts] = useState<Readonly<Record<string, PluginDraft>>>(
+    {},
+  );
   const [draftErrors, setDraftErrors] = useState<
     Readonly<Record<string, string>>
   >({});
@@ -167,14 +273,15 @@ export function PluginPanel() {
   const adopt = useCallback((records: readonly PluginRecord[]) => {
     setPlugins(records);
     setDrafts((old) => {
-      const next: Record<string, PluginConfigDraft> = {};
+      const next: Record<string, PluginDraft> = {};
       for (const record of records) {
         const id = record.manifest.id;
         const previous = old[id];
-        next[id] =
-          previous && configDraftDirty(previous, record.config)
+        const current =
+          previous && pluginDraftDirty(id, previous, record.config)
             ? previous
-            : browserConfigDraft(record.config).draft;
+            : pluginDraftFor(id, record.config);
+        if (current) next[id] = current;
       }
       return next;
     });
@@ -268,7 +375,10 @@ export function PluginPanel() {
       const id = record.manifest.id;
       const draft = drafts[id];
       if (!draft) return;
-      const parsed = browserConfigFromDraft(draft);
+      const parsed =
+        id === OFFICECLI_PLUGIN_ID
+          ? officeCliConfigFromDraft(draft as OfficeCliConfigDraft)
+          : browserConfigFromDraft(draft as PluginConfigDraft);
       if (parsed.error) {
         setDraftErrors((old) => ({ ...old, [id]: parsed.error }));
         setNotice("");
@@ -284,7 +394,9 @@ export function PluginPanel() {
       // A saved configuration is not a successful dependency check.
       setHealth((old) => ({ ...old, [id]: { state: "idle" } }));
       setNotice(
-        "浏览器插件配置已保存。status=configured 只表示配置已持久化，不代表依赖可用。",
+        id === OFFICECLI_PLUGIN_ID
+          ? "OfficeCLI 插件配置已保存。status=configured 只表示配置已持久化，不代表依赖可用。"
+          : "浏览器插件配置已保存。status=configured 只表示配置已持久化，不代表依赖可用。",
       );
     });
 
@@ -300,7 +412,9 @@ export function PluginPanel() {
       setHealth((old) => ({ ...old, [id]: { state: "idle" } }));
       setNotice(
         next.enabled
-          ? "插件已启用。启用不启动浏览器，也不绕过审批；下一次运行时才会创建隔离会话。"
+          ? id === OFFICECLI_PLUGIN_ID
+            ? "OfficeCLI 插件已启用。不会自动安装 OfficeCLI；下一次运行时才会注册 officecli_* 工具，并沿用当前模型与 provider。"
+            : "插件已启用。启用不启动浏览器，也不绕过审批；下一次运行时才会创建隔离会话。"
           : "插件已禁用，新运行不会再注册它的工具。已启动的运行由 Core 按配置变更处理。",
       );
     });
@@ -377,9 +491,14 @@ export function PluginPanel() {
         const id = record.manifest.id;
         const busy = busyId === id;
         const isBrowser = id === BROWSER_PLUGIN_ID;
+        const isOfficeCli = id === OFFICECLI_PLUGIN_ID;
+        const editable = isBrowser || isOfficeCli;
         const draft = drafts[id];
         const draftError = draftErrors[id] ?? "";
-        const dirty = draft ? configDraftDirty(draft, record.config) : false;
+        const dirty =
+          draft && editable
+            ? pluginDraftDirty(id, draft, record.config)
+            : false;
         const healthView = health[id];
         const schema = configSchemaProperties(record.manifest.configSchema);
         const storedDomains =
@@ -399,7 +518,7 @@ export function PluginPanel() {
             <div className="plugin-card-head">
               <div className="plugin-title">
                 <span className="plugin-card-icon" aria-hidden="true">
-                  <Globe size={20} weight="duotone" />
+                  <PluginIcon id={id} />
                 </span>
                 <div className="plugin-title-body">
                   <div className="plugin-title-row">
@@ -413,7 +532,9 @@ export function PluginPanel() {
                         API v{record.manifest.apiVersion}
                       </span>
                       {record.manifest.builtin && (
-                        <span className="plugin-meta-pill is-builtin">内置</span>
+                        <span className="plugin-meta-pill is-builtin">
+                          内置
+                        </span>
                       )}
                     </div>
                   </div>
@@ -423,9 +544,7 @@ export function PluginPanel() {
                 </div>
               </div>
               <div className="plugin-card-status-group">
-                {dirty && (
-                  <span className="plugin-dirty-pill">配置未保存</span>
-                )}
+                {dirty && <span className="plugin-dirty-pill">配置未保存</span>}
                 <span
                   className={`plugin-status ${
                     record.status === "running"
@@ -467,15 +586,54 @@ export function PluginPanel() {
               </ul>
               <p className="plugin-safety">
                 <Lock size={14} weight="bold" aria-hidden="true" />
-                <span>
-                  不绕过审批：workspace 下 Agent
-                  的浏览器调用逐次请求批准；人工动作由你的点击授权。
-                  两者均受当前权限和允许域名限制，只读模式下浏览器动作被拒绝。
-                </span>
+                <span>{safetyNote(id)}</span>
               </p>
             </div>
 
-            {isBrowser && draft ? (
+            {isOfficeCli && draft ? (
+              <div className="plugin-subpanel plugin-config-panel">
+                <div className="plugin-subpanel-head">
+                  <span className="plugin-section-label">
+                    <SlidersHorizontal
+                      size={14}
+                      weight="bold"
+                      aria-hidden="true"
+                    />
+                    OfficeCLI 执行路径与超时
+                  </span>
+                  <span className="plugin-subpanel-badge">
+                    {record.enabled ? "已启用" : "未启用"}
+                  </span>
+                </div>
+
+                <div className="plugin-config-note">
+                  <p className="plugin-hint is-inline">
+                    <strong>预览附件</strong>
+                    ：officecli_preview 生成不可变的 HTML
+                    快照附件，在隔离、断网的 HTML 预览中查看；它不是 Office
+                    像素级渲染，也不是实时预览。
+                    修改文档后需要重新生成预览，原文件仍用 publish_file 下载。
+                  </p>
+                  <p className="plugin-hint">
+                    依赖需由你自行安装并保持可执行；Forge
+                    不自动安装、不下载、不升级，也不会改用其它 Office
+                    后端。启用只影响新的运行，当前会话与已启动的运行不热更新；不会修改模型或
+                    provider。
+                  </p>
+                </div>
+
+                <OfficeCliConfigEditor
+                  draft={draft as OfficeCliConfigDraft}
+                  error={draftError}
+                  disabled={busy}
+                  onChange={(value) =>
+                    setDrafts((old) => ({ ...old, [id]: value }))
+                  }
+                />
+
+                <ConfigSchemaDetails schema={schema} />
+              </div>
+            ) : isBrowser && draft ? (
               <div className="plugin-subpanel plugin-config-panel">
                 <div className="plugin-subpanel-head">
                   <span className="plugin-section-label">
@@ -519,13 +677,14 @@ export function PluginPanel() {
                     )}
                   </div>
                   <p className="plugin-hint">
-                    具体主机名限制访问范围；填写 * 关闭域名限制。导航仍只接受不含凭据的
-                    HTTP(S) URL。浏览器使用运行级隔离会话，不导入个人浏览器配置或持久登录态。
+                    具体主机名限制访问范围；填写 *
+                    关闭域名限制。导航仍只接受不含凭据的 HTTP(S)
+                    URL。浏览器使用运行级隔离会话，不导入个人浏览器配置或持久登录态。
                   </p>
                 </div>
 
                 <BrowserConfigEditor
-                  draft={draft}
+                  draft={draft as PluginConfigDraft}
                   error={draftError}
                   disabled={busy}
                   onChange={(value) =>
@@ -533,28 +692,7 @@ export function PluginPanel() {
                   }
                 />
 
-                {schema.length > 0 && (
-                  <details className="plugin-schema">
-                    <summary>Core 配置 schema（{schema.length} 个字段）</summary>
-                    <ul>
-                      {schema.map((property) => (
-                        <li key={property.name}>
-                          <code>{property.name}</code>
-                          {property.type && (
-                            <span className="plugin-schema-type">
-                              {property.type}
-                            </span>
-                          )}
-                          {property.description && (
-                            <span className="plugin-schema-desc">
-                              {property.description}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
+                <ConfigSchemaDetails schema={schema} />
               </div>
             ) : (
               <p className="plugin-hint">
@@ -567,16 +705,21 @@ export function PluginPanel() {
               <div className="plugin-footer-status">
                 <p className="plugin-hint">
                   {record.status === "configured"
-                    ? "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只探测 agent-browser 工具协议，不安装依赖、不启动网站访问。"
+                    ? isOfficeCli
+                      ? "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只执行 officecli --version，不安装依赖、不转换文档。"
+                      : "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只探测 agent-browser 工具协议，不安装依赖、不启动网站访问。"
                     : record.status === "running"
-                      ? `有 ${record.activeSessions} 个活动会话正在使用该插件；运行结束后浏览器会关闭。`
+                      ? isOfficeCli
+                        ? `有 ${record.activeSessions} 个活动会话正在使用 OfficeCLI；运行结束后工具随之卸载。`
+                        : `有 ${record.activeSessions} 个活动会话正在使用该插件；运行结束后浏览器会关闭。`
                       : "插件已禁用。禁用不会启动、安装或下载任何组件。"}
                 </p>
                 <HealthLine view={healthView} />
                 {healthView?.state === "done" && healthView.health && (
                   <p className="plugin-hint">
-                    检查成功只代表工具协议可用，不代表 Chrome
-                    能启动或已获得站点访问权限。
+                    {isOfficeCli
+                      ? "检查成功只代表 officecli 能启动并输出版本，不代表文档转换或 HTML 渲染可用；请用一个真实文档验证。"
+                      : "检查成功只代表工具协议可用，不代表 Chrome 能启动或已获得站点访问权限。"}
                   </p>
                 )}
               </div>
@@ -590,13 +733,15 @@ export function PluginPanel() {
                   title={
                     record.status === "running"
                       ? "运行中的会话正在使用该插件，结束后再检查。"
-                      : "显式探测依赖，不会安装或启动浏览器窗口。"
+                      : isOfficeCli
+                        ? "显式执行 officecli --version，不会安装或转换文档。"
+                        : "显式探测依赖，不会安装或启动浏览器窗口。"
                   }
                   onClick={() => void runCheck(record)}
                 >
                   检查依赖健康
                 </Button>
-                {isBrowser && draft && (
+                {editable && draft && (
                   <Button
                     size="sm"
                     variant="secondary"

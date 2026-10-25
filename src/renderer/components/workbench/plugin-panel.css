@@ -101,9 +101,14 @@
   gap: 8px;
   margin: 0;
   padding: 9px 12px;
-  border: 1px solid color-mix(in srgb, var(--success, #226d40) 28%, var(--border-subtle));
+  border: 1px solid
+    color-mix(in srgb, var(--success, #226d40) 28%, var(--border-subtle));
   border-radius: var(--radius-md, 8px);
-  background: color-mix(in srgb, var(--success, #226d40) 8%, var(--surface-elevated));
+  background: color-mix(
+    in srgb,
+    var(--success, #226d40) 8%,
+    var(--surface-elevated)
+  );
   color: var(--text-primary);
   font-size: var(--text-xs, 12px);
   line-height: 1.5;
@@ -125,8 +130,8 @@
   border-radius: var(--radius-card, 12px);
   background: var(--surface-elevated);
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast, 120ms ease),
-    box-shadow var(--transition-fast, 120ms ease);
+  transition: border-color var(--transition-fast, 120ms ease), box-shadow
+    var(--transition-fast, 120ms ease);
 }
 
 .plugin-card.is-enabled {
@@ -268,8 +273,16 @@
 
 .plugin-status.is-running {
   color: var(--success, #226d40);
-  background: color-mix(in srgb, var(--success, #226d40) 10%, var(--surface-soft));
-  border-color: color-mix(in srgb, var(--success, #226d40) 26%, var(--border-subtle));
+  background: color-mix(
+    in srgb,
+    var(--success, #226d40) 10%,
+    var(--surface-soft)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--success, #226d40) 26%,
+    var(--border-subtle)
+  );
 }
 
 .plugin-status-dot {
@@ -346,8 +359,16 @@
 
 .plugin-subpanel-badge.is-configured {
   color: var(--success, #226d40);
-  background: color-mix(in srgb, var(--success, #226d40) 9%, var(--surface-soft));
-  border-color: color-mix(in srgb, var(--success, #226d40) 24%, var(--border-subtle));
+  background: color-mix(
+    in srgb,
+    var(--success, #226d40) 9%,
+    var(--surface-soft)
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--success, #226d40) 24%,
+    var(--border-subtle)
+  );
 }
 
 .plugin-capabilities ul {
@@ -504,6 +525,36 @@
   color: var(--text-secondary);
 }
 
+/* Flat explanatory block: one soft surface, no extra nested frame. */
+.plugin-config-note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-soft);
+}
+
+.plugin-config-note strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* A number field is a normal themed input; keep spinner chrome subtle. */
+.plugin-config input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.plugin-config input[type="number"]::-webkit-inner-spin-button,
+.plugin-config input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.55;
+}
+
+.plugin-config input[type="number"]:focus-visible::-webkit-inner-spin-button {
+  opacity: 1;
+}
+
 /* Collapsible Schema Reference */
 .plugin-schema {
   border: 1px solid var(--border-subtle);
@@ -619,8 +670,16 @@
 
 .plugin-health.is-ready {
   color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--success, #226d40) 32%, var(--border-subtle));
-  background: color-mix(in srgb, var(--success, #226d40) 9%, var(--surface-soft));
+  border-color: color-mix(
+    in srgb,
+    var(--success, #226d40) 32%,
+    var(--border-subtle)
+  );
+  background: color-mix(
+    in srgb,
+    var(--success, #226d40) 9%,
+    var(--surface-soft)
+  );
 }
 
 .plugin-health.is-ready svg {

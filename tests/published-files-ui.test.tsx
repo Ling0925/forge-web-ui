@@ -110,7 +110,12 @@ it("mounts visible attachments, safe text/image previews, downloads, errors and 
     await imageCard.getByRole("button", { name: "预览", exact: true }).click();
     expect(await page.getByRole("dialog").locator("img").count()).toBe(1);
     await page.getByRole("button", { name: "关闭面板" }).click();
-    await page.getByRole("article", { name: "附件 page.html", exact: true }).getByRole("button", { name: "预览", exact: true }).click();
+    // This bridge has no authenticated preview endpoint: HTML stays
+    // download/source-only and says so, instead of opening a nested dialog.
+    const htmlCard = page.getByRole("article", { name: "附件 page.html", exact: true });
+    await htmlCard.getByText(/当前宿主不支持隔离 HTML 预览/).waitFor();
+    expect(await htmlCard.getByRole("button", { name: "HTML 预览", exact: true }).count()).toBe(0);
+    await htmlCard.getByRole("button", { name: "查看源码", exact: true }).click();
     await expect.poll(() => page.getByRole("dialog").locator("pre").innerText()).toBe("<script>window.pwned=true</script>");
     expect(await page.getByRole("dialog").locator("script").count()).toBe(0);
     expect(await page.evaluate(() => (window as any).pwned)).toBeUndefined();

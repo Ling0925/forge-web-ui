@@ -22,6 +22,18 @@ export interface HtmlPreviewProps {
   readonly path?: string;
   readonly label?: string;
   readonly className?: string;
+  /** Optional explicit dialog title, e.g. a delivered attachment name. */
+  readonly title?: string;
+  /**
+   * Controlled dialog visibility. Omit it for the default self-managed dialog:
+   * a trigger button owns the state. Supplying `open` lets a caller open the
+   * same secure dialog directly (for example from an attachment card).
+   */
+  readonly open?: boolean;
+  /** Receives every open/close request, including Escape and the close button. */
+  readonly onOpenChange?: (open: boolean) => void;
+  /** Hide the built-in trigger when the caller renders its own preview button. */
+  readonly showTrigger?: boolean;
 }
 
 /**
@@ -39,8 +51,21 @@ export function HtmlPreview({
   path,
   label = "预览 HTML",
   className = "",
+  title,
+  open: openProp,
+  onOpenChange,
+  showTrigger = true,
 }: HtmlPreviewProps) {
-  const [open, setOpen] = useState(false);
+  const [selfOpen, setSelfOpen] = useState(false);
+  const controlled = openProp !== undefined;
+  const open = openProp ?? selfOpen;
+  const requestOpen = useCallback(
+    (next: boolean) => {
+      if (!controlled) setSelfOpen(next);
+      onOpenChange?.(next);
+    },
+    [controlled, onOpenChange],
+  );
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -74,24 +99,42 @@ export function HtmlPreview({
     if (open) void load();
   }, [open, load]);
 
+  // Closing or unmounting invalidates any in-flight host response so a late
+  // URL can never reopen or repopulate a preview the caller has dismissed.
+  useEffect(() => {
+    if (open) return;
+    ticket.current += 1;
+    setUrl("");
+    setError("");
+    setLoading(false);
+  }, [open]);
+  useEffect(
+    () => () => {
+      ticket.current += 1;
+    },
+    [],
+  );
+
   if (!htmlPreviewAvailable()) return null;
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={className}
-        icon={<Eye size={14} weight="regular" />}
-        onClick={() => setOpen(true)}
-        aria-label={label}
-      >
-        {label}
-      </Button>
+      {showTrigger && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={className}
+          icon={<Eye size={14} weight="regular" />}
+          onClick={() => requestOpen(true)}
+          aria-label={label}
+        >
+          {label}
+        </Button>
+      )}
       {open && (
         <HtmlPreviewDialog
           titleId={titleId}
-          title={path ? `HTML 预览 · ${path}` : "HTML 预览"}
-          onClose={() => setOpen(false)}
+          title={title ?? (path ? `HTML 预览 · ${path}` : "HTML 预览")}
+          onClose={() => requestOpen(false)}
         >
           {loading && (
             <p className="html-preview-status">
