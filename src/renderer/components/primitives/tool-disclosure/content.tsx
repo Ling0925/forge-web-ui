@@ -1,5 +1,7 @@
 import { CaretRight, WarningCircle } from "@phosphor-icons/react";
+import { chartFenceBody, parseChartFence } from "@forge/core/shared/chart-spec";
 import { DiffViewer } from "../DiffViewer";
+import { ChartCard } from "../../charts/ChartCard";
 import { type ToolDisclosureProps } from "./types";
 import { ToolCopyButton, SectionHead } from "./common";
 import { PlanView } from "./plans";
@@ -65,6 +67,16 @@ export function ToolDisclosureContent({
     canShowReadFile,
     canShowListFiles,
   } = model;
+  // render_chart echoes a canonical ```chart fence; show the chart itself in
+  // the card so the model's self-check matches what the body will render.
+  const chartPreview =
+    toolName === "render_chart" && !failureReason
+      ? parseChartFence(
+          typeof parsedOutputRecord?.["fence"] === "string"
+            ? chartFenceBody(parsedOutputRecord["fence"] as string)
+            : "",
+        )
+      : undefined;
   return (
     <div className="tool-disclosure-body">
       {truncated && (
@@ -254,6 +266,14 @@ export function ToolDisclosureContent({
               }
               isWaiting={isWaiting}
             />
+          ) : chartPreview?.ok ? (
+            <div className="tool-section tool-chart-section">
+              <SectionHead title="图表预览" />
+              <ChartCard
+                spec={chartPreview.spec}
+                source={String(parsedOutputRecord?.["fence"] ?? "")}
+              />
+            </div>
           ) : (
             (hasResult || (!result && !failureReason && !changes?.length)) && (
               <div className="tool-section">

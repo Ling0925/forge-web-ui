@@ -1,0 +1,88 @@
+.chart-card {
+  margin: 10px 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface-elevated);
+  overflow: hidden;
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-soft);
+}
+
+.chart-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm, 13px);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.chart-card-canvas {
+  width: 100%;
+  min-height: 220px;
+}
+
+.chart-card-table {
+  max-height: 360px;
+  overflow: auto;
+}
+
+.chart-card-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs, 12px);
+}
+
+.chart-card-table th,
+.chart-card-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.chart-card-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.chart-card-note {
+  margin: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: var(--text-xs, 12px);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chart-card-error .chart-card-title {
+  color: var(--warning);
+}
+
+.chart-card-error .chart-card-note {
+  border-top: none;
+  color: var(--text-secondary);
+}

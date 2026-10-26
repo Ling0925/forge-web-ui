@@ -3,7 +3,9 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { isHtmlLanguage } from "@forge/core/shared/html-preview";
 import { externalUrlSchema } from "@forge/core/shared/ipc";
+import { parseChartFence } from "@forge/core/shared/chart-spec";
 import { CodeBlock } from "../primitives/CodeBlock";
+import { ChartCard } from "../charts/ChartCard";
 
 // Bound parsing work, not displayed content. Large messages remain complete,
 // selectable plain text; source and persisted transcript are never truncated.
@@ -35,7 +37,7 @@ class MarkdownBoundary extends Component<
   }
 }
 
-function components(highlight: boolean): Components {
+function components(highlight: boolean, enableCharts: boolean): Components {
   return {
     a: ({ children, href }) => {
       const safe = externalUrlSchema.safeParse(href);
@@ -75,6 +77,13 @@ function components(highlight: boolean): Components {
         /(?:^|\s)language-([^\s]+)/.exec(
           Array.isArray(classes) ? classes.join(" ") : String(classes ?? ""),
         )?.[1] ?? "text";
+      // Settled chart fences render as interactive cards; a streaming block
+      // (highlight disabled) still shows its code so half-written JSON never
+      // flashes as an error. Invalid fences always fall back to the code block.
+      if (enableCharts && highlight && language === "chart") {
+        const validation = parseChartFence(code);
+        if (validation.ok) return <ChartCard spec={validation.spec} source={code} />;
+      }
       return (
         <div className="markdown-code">
           <CodeBlock
@@ -102,11 +111,17 @@ function components(highlight: boolean): Components {
 export const Markdown = memo(function Markdown({
   source,
   highlight = true,
+  enableCharts = false,
 }: {
   readonly source: string;
   readonly highlight?: boolean;
+  /** Render ```chart fences as interactive cards (assistant messages only). */
+  readonly enableCharts?: boolean;
 }) {
-  const renderers = useMemo(() => components(highlight), [highlight]);
+  const renderers = useMemo(
+    () => components(highlight, enableCharts),
+    [highlight, enableCharts],
+  );
   return (
     <div className="markdown-content message-prose">
       <MarkdownBoundary source={source}>

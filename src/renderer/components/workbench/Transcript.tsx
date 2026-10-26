@@ -592,7 +592,7 @@ function renderTimelineEntry(
           )}
           {item.content && <div className="message-body">
             {item.truncated && <p className="wb-muted">实时预览已达显示上限，完整内容以同步后的记录为准。</p>}
-            {item.streaming ? <StreamingMarkdown source={item.content} /> : <Markdown source={item.content} />}
+            {item.streaming ? <StreamingMarkdown source={item.content} enableCharts /> : <Markdown source={item.content} enableCharts />}
           </div>}
           {item.webSearchDetails && <div className="message-body"><Markdown source={item.webSearchDetails} /></div>}
         </article>

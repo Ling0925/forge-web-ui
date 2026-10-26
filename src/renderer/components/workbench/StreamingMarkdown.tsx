@@ -5,7 +5,13 @@ export const MARKDOWN_STREAM_INTERVAL = 80;
 
 /** Trailing throttle (not debounce): continuous deltas cannot starve updates.
  * The caller keys this component by session/run and unmounts at turn boundaries. */
-export function StreamingMarkdown({ source }: { readonly source: string }) {
+export function StreamingMarkdown({
+  source,
+  enableCharts = false,
+}: {
+  readonly source: string;
+  readonly enableCharts?: boolean;
+}) {
   const [displayed, setDisplayed] = useState(source);
   const latest = useRef(source);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -19,5 +25,5 @@ export function StreamingMarkdown({ source }: { readonly source: string }) {
     }
   }, [source, displayed]);
   useEffect(() => () => clearTimeout(timer.current), []);
-  return <Markdown source={displayed} highlight={false} />;
+  return <Markdown source={displayed} highlight={false} enableCharts={enableCharts} />;
 }
