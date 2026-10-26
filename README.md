@@ -17,6 +17,7 @@ Web 与 Core 独立运行：**更新界面不打断 Core 中已接受的任务**
 - 审批操作、查看计划与子任务，浏览文件、差异和检查点。
 - 管理模型来源、路由、插件、MCP 等设置，查看用量与诊断。
 - 在桌面和手机布局间自适应，支持浅色、深色主题。
+- 将助手回复中的 `chart` 围栏渲染为交互图表，可切换数据表、复制 JSON、导出 PNG；卡片右上角可重新绘制。
 
 ## 快速开始
 
@@ -99,6 +100,8 @@ Core 代码变化时，先在 Core 仓重新构建，再在本仓执行 `pnpm in
 
 **改界面后没有更新**：开发时修改本仓的 `src/renderer`；静态部署需要重新构建。Forge 主仓根目录没有另一份有效的 renderer 源码。
 
+**图表空白或显示绘制失败**：先使用卡片右上角「重新绘制图表」。普通图表仍可切到「数据」查看原始数值；自定义 `raw` 配置若不能绘制，会在卡片内提示，不影响其余对话。若提示图表库加载失败且页面刚更新，请刷新页面以获取新的资源。
+
 ## 开发检查
 
 ```sh
@@ -110,8 +113,13 @@ pnpm exec vitest run tests/renderer/plugin-browser-state.test.ts \
   tests/renderer/plugin-panel-mounted.test.ts \
   tests/renderer/browser-panel-mounted.test.ts
 
-# 静态构建及开发/生产入口的浏览器烟测
+# 图表：编译配置、实际绘制与持久化会话恢复（先构建页面）
 pnpm build
+pnpm exec vitest run tests/renderer/chart-build-option.test.ts \
+  tests/renderer/chart-sanitize.test.ts tests/renderer/chart-markdown-mounted.test.ts \
+  tests/web-chart-browser.test.ts
+
+# 开发/生产入口的浏览器烟测
 pnpm test:browser
 ```
 

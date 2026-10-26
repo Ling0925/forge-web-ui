@@ -26,9 +26,8 @@
   --run-hover: #49463f;
   --run-active: #24221e;
   --shadow-composer: 0 2px 8px rgb(35 30 20 / 4%);
-  /* Series palette for ```chart cards (canvas cannot read per-element CSS,
-     so charts/theme.ts samples this list). Same hues as the usage dashboard. */
-  --chart-series: #a54f35, #226d40, #3b6998, #975a06, #55684d, #7d5a7c, #6b5439;
+  /* Chart series use the workbench's earthy hues, sampled by charts/theme.ts. */
+  --chart-series: #a54f35, #55684d, #975a06, #7d5a7c, #68665f, #226d40, #6b5439;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
   --chart-heat: #f6f3ee, #dc9477, #7a3520;
   --rail-width: 264px;
@@ -69,7 +68,7 @@
   --run-hover: #ffffff;
   --run-active: #d4d0c5;
   --shadow-composer: 0 2px 8px rgb(0 0 0 / 8%);
-  --chart-series: #dc9477, #56b881, #6ca6d9, #f0be65, #8fad82, #c39bc1, #b89b7c;
+  --chart-series: #dc9477, #8fad82, #f0be65, #c39bc1, #aaa79f, #56b881, #b89b7c;
   --chart-heat: #1c1b1a, #dc9477, #f2c4ae;
 }
 

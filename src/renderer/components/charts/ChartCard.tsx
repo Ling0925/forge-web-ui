@@ -1,4 +1,5 @@
 import {
+  ArrowClockwise,
   ChartBar,
   Check,
   Copy,
@@ -6,14 +7,7 @@ import {
   Image as ImageIcon,
   WarningCircle,
 } from "@phosphor-icons/react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChartSpec } from "@forge/core/shared/chart-spec";
 import { Button } from "../primitives/Button";
 import { buildChartOption } from "./build-option";
@@ -23,12 +17,27 @@ import { useChartTheme } from "./theme";
 import "./chart-card.css";
 
 type EChartsInstance = ReturnType<EchartsModule["init"]>;
+type RenderState = { status: "loading" | "ready" | "error"; message?: string };
 
 interface ChartCardProps {
   readonly spec: ChartSpec;
   /** Original fence JSON, offered through the copy button. */
   readonly source: string;
 }
+
+const CHART_LABELS = {
+  bar: "柱状图",
+  line: "折线图",
+  "bar-line": "组合图",
+  candlestick: "K 线图",
+  pie: "饼图",
+  funnel: "漏斗图",
+  radar: "雷达图",
+  scatter: "散点图",
+  heatmap: "热力图",
+  gauge: "仪表盘",
+  table: "数据表",
+} as const;
 
 function DataTable({
   table,
@@ -39,26 +48,43 @@ function DataTable({
   };
 }) {
   return (
-    <div className="chart-card-table markdown-table-scroll">
+    <section
+      className="chart-card-table markdown-table-scroll"
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: The scrollable data region must support keyboard scrolling.
+      tabIndex={0}
+      aria-label="图表数据"
+    >
       <table>
         <thead>
           <tr>
-            {table.header.map((cell) => (
-              <th key={cell}>{cell}</th>
+            {table.header.map((cell, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Plain cells have no state and column names may repeat.
+              <th key={index} scope="col">
+                {cell}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {table.rows.map((row, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Snapshot rows are stateless and may have identical contents.
             <tr key={index}>
               {row.map((cell, column) => (
-                <td key={column}>{cell ?? ""}</td>
+                <td
+                  // biome-ignore lint/suspicious/noArrayIndexKey: Cells have no identity apart from their column.
+                  key={column}
+                  className={
+                    typeof cell === "number" ? "chart-card-number" : undefined
+                  }
+                >
+                  {cell ?? "—"}
+                </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 }
 
@@ -66,11 +92,15 @@ export function ChartCard({ spec, source }: ChartCardProps) {
   const theme = useChartTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const instanceRef = useRef<EChartsInstance | undefined>(undefined);
-  const echartsRef = useRef<EchartsModule | undefined>(undefined);
-  const [ready, setReady] = useState(false);
-  const [loadFailed, setLoadFailed] = useState(false);
+  const [renderState, setRenderState] = useState<RenderState>({
+    status: "loading",
+  });
+  const [attempt, setAttempt] = useState(0);
   const [showTable, setShowTable] = useState(false);
   const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const isTable = !spec.raw && spec.chart?.type === "table";
   const built = useMemo(
@@ -82,88 +112,135 @@ export function ChartCard({ spec, source }: ChartCardProps) {
     [spec],
   );
   const invalidRaw = rawResult !== undefined && !rawResult.ok;
-  const failed = invalidRaw || loadFailed;
-  const failureMessage =
-    rawResult && !rawResult.ok
-      ? rawResult.error ?? "raw 选项未通过安全检查。"
-      : loadFailed
-        ? "图表库加载失败，请检查网络后刷新。"
-        : undefined;
-
-  const option: Record<string, unknown> | undefined = spec.raw
-    ? rawResult?.ok
-      ? rawResult.option
-      : undefined
-    : built?.option;
-  const table = isTable
-    ? built?.table
-    : spec.raw
-      ? undefined
-      : built?.table;
+  const option = useMemo(
+    () =>
+      spec.raw
+        ? rawResult?.ok
+          ? {
+              color: theme.palette,
+              backgroundColor: "transparent",
+              textStyle: { color: theme.ink, fontFamily: theme.fontFamily },
+              ...rawResult.option,
+            }
+          : undefined
+        : built?.option,
+    [spec.raw, rawResult, built, theme],
+  );
+  const table = spec.raw ? undefined : built?.table;
   const height = built?.height ?? 320;
+  const tableVisible = Boolean(table && (isTable || showTable));
+  const failureMessage = invalidRaw
+    ? (rawResult?.error ?? "raw 选项未通过安全检查。")
+    : renderState.status === "error"
+      ? renderState.message
+      : undefined;
 
-  // Latest option, so an instance created later (or rebuilt after a failure
-  // toggle) can be painted immediately instead of waiting for a dep change.
-  const optionRef = useRef<Record<string, unknown> | undefined>(option);
-  optionRef.current = option;
-
-  // Lazy-load ECharts once per card that actually needs a canvas.
+  // One lifecycle owns async loading, layout, painting and disposal. Restored
+  // sessions can mount in a hidden pane: never initialize a zero-size chart.
+  // Keep the container mounted on failure so retry/data/theme changes can recover.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: attempt explicitly requests a fresh chart instance.
   useEffect(() => {
-    if (isTable || failed) return;
+    if (tableVisible || invalidRaw || !option || !containerRef.current) return;
+    const container = containerRef.current;
     let alive = true;
+    let stopped = false;
+    let frame = 0;
+    let module: EchartsModule | undefined;
+    let instance: EChartsInstance | undefined;
+    let needsPaint = true;
+    setRenderState({ status: "loading" });
+
+    const dispose = () => {
+      if (instanceRef.current === instance) instanceRef.current = undefined;
+      instance?.dispose();
+      instance = undefined;
+    };
+    const fail = (message: string) => {
+      stopped = true;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      dispose();
+      if (alive) setRenderState({ status: "error", message });
+    };
+    const draw = () => {
+      frame = 0;
+      if (!alive || stopped || !module) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      if (!width || !height) {
+        needsPaint = true;
+        return;
+      }
+      try {
+        if (!instance) {
+          instance = module.init(container, undefined, {
+            renderer: "canvas",
+            width,
+            height,
+          });
+          instanceRef.current = instance;
+          needsPaint = true;
+        } else if (
+          instance.getWidth() !== width ||
+          instance.getHeight() !== height
+        ) {
+          instance.resize({ width, height, animation: { duration: 0 } });
+        }
+        if (needsPaint) {
+          instance.setOption(structuredClone(option), {
+            notMerge: true,
+            lazyUpdate: false,
+          });
+          needsPaint = false;
+        }
+        setRenderState((state) =>
+          state.status === "ready" ? state : { status: "ready" },
+        );
+      } catch {
+        fail("图表配置无法绘制。可重试，或查看数据、复制 JSON 检查配置。");
+      }
+    };
+    const schedule = () => {
+      if (alive && !stopped && !frame) frame = requestAnimationFrame(draw);
+    };
+    const restore = () => {
+      if (document.visibilityState === "hidden") return;
+      // A browser/page restore may discard the bitmap without changing size;
+      // resize alone is not a substitute for reapplying the saved option.
+      needsPaint = true;
+      schedule();
+    };
+    const observer = new ResizeObserver(schedule);
+    observer.observe(container);
+    window.addEventListener("pageshow", restore);
+    document.addEventListener("visibilitychange", restore);
     loadEcharts().then(
-      (module) => {
+      (loaded) => {
         if (!alive) return;
-        echartsRef.current = module;
-        setReady(true);
+        module = loaded;
+        schedule();
       },
       () => {
-        if (alive) setLoadFailed(true);
+        if (alive) fail("图表库加载失败。请重试；若页面刚更新，请刷新页面。");
       },
     );
     return () => {
       alive = false;
-    };
-  }, [isTable, failed]);
-
-  // Create/destroy the instance with the container and library availability.
-  // showTable is a dependency: toggling to the data table unmounts the canvas
-  // div, so the instance must be disposed and rebuilt (painted from
-  // optionRef) when the graph comes back — otherwise toggle-back stays blank.
-  useEffect(() => {
-    if (!ready || showTable || isTable || failed || !containerRef.current || !echartsRef.current)
-      return;
-    const instance = echartsRef.current.init(containerRef.current, undefined, {
-      renderer: "canvas",
-    });
-    instanceRef.current = instance;
-    const pending = optionRef.current;
-    if (pending && Object.keys(pending).length > 0) {
-      instance.setOption(structuredClone(pending), { notMerge: true });
-    }
-    const observer = new ResizeObserver(() => instance.resize());
-    observer.observe(containerRef.current);
-    return () => {
+      cancelAnimationFrame(frame);
       observer.disconnect();
-      instance.dispose();
-      instanceRef.current = undefined;
+      window.removeEventListener("pageshow", restore);
+      document.removeEventListener("visibilitychange", restore);
+      dispose();
     };
-  }, [ready, showTable, isTable, failed]);
+  }, [option, tableVisible, invalidRaw, attempt]);
 
-  // Re-apply the option whenever data or theme changes (theme → full redraw).
-  // The first paint happens in the init effect above: this effect must NOT list
-  // `ready`, because it also runs (and is skipped) while no instance exists yet.
-  useEffect(() => {
-    const instance = instanceRef.current;
-    if (!instance || !option || Object.keys(option).length === 0) return;
-    instance.setOption(structuredClone(option), { notMerge: true });
-  }, [option, theme]);
-
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   const copy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(source);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard may be unavailable outside secure contexts.
     }
@@ -183,74 +260,116 @@ export function ChartCard({ spec, source }: ChartCardProps) {
     link.click();
   }, [spec.title, theme.surface]);
 
-  const actions = (
-    <div className="chart-card-actions">
-      {table && (
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Database size={14} />}
-          aria-pressed={showTable}
-          onClick={() => setShowTable((value) => !value)}
-          title="在数据表和图形之间切换"
-        >
-          {showTable ? "图形" : "数据"}
-        </Button>
-      )}
-      {ready && !isTable && !failed && (
-        <Button variant="ghost" size="sm" icon={<ImageIcon size={14} />} onClick={exportPng} title="导出 PNG">
-          PNG
-        </Button>
-      )}
-      <Button
-        variant="ghost"
-        size="sm"
-        icon={copied ? <Check size={14} /> : <Copy size={14} />}
-        onClick={() => void copy()}
-        title="复制图表 JSON"
-      >
-        {copied ? "已复制" : "JSON"}
-      </Button>
-    </div>
-  );
-
-  if (failed)
-    return (
-      <section className="chart-card chart-card-error" aria-label="图表错误">
-        <header className="chart-card-header">
-          <span className="chart-card-title">
-            <WarningCircle size={15} /> 图表无法渲染
-          </span>
-          {actions}
-        </header>
-        <p className="chart-card-note">{failureMessage}</p>
-      </section>
-    );
-
-  let body: ReactNode;
-  if (isTable && table) body = <DataTable table={table} />;
-  else if (showTable && table) body = <DataTable table={table} />;
-  else
-    body = (
-      <div
-        ref={containerRef}
-        className="chart-card-canvas"
-        style={{ height }}
-        role="img"
-        aria-label={spec.title ?? "数据图表"}
-      />
-    );
-
+  const label = spec.chart ? CHART_LABELS[spec.chart.type] : "自定义图表";
+  const title = spec.title ?? label;
   return (
-    <section className="chart-card" aria-label={spec.title ?? "图表"}>
+    <section
+      className={`chart-card${failureMessage ? " chart-card-error" : ""}`}
+      aria-label={title}
+    >
       <header className="chart-card-header">
-        <span className="chart-card-title">
-          <ChartBar size={15} />
-          {spec.title ?? "图表"}
-        </span>
-        {actions}
+        <div className="chart-card-heading">
+          <span className="chart-card-icon" aria-hidden="true">
+            <ChartBar size={18} />
+          </span>
+          <div className="chart-card-heading-text">
+            <span className="chart-card-title" title={title}>
+              {title}
+            </span>
+            <span className="chart-card-meta">
+              {label}
+              {table && (
+                <>
+                  {" "}
+                  ·{" "}
+                  <span className="chart-card-count">{table.rows.length}</span>{" "}
+                  项数据
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+        <div className="chart-card-actions">
+          {table && !isTable && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="chart-card-toggle"
+              icon={showTable ? <ChartBar size={15} /> : <Database size={15} />}
+              aria-pressed={showTable}
+              onClick={() => setShowTable((value) => !value)}
+              title="在数据表和图形之间切换"
+            >
+              {showTable ? "图形" : "数据"}
+            </Button>
+          )}
+          {!isTable && !invalidRaw && !tableVisible && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="chart-card-icon-button"
+                icon={<ArrowClockwise size={16} />}
+                onClick={() => setAttempt((value) => value + 1)}
+                aria-label="重新绘制图表"
+                title="重新绘制图表"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="chart-card-icon-button"
+                icon={<ImageIcon size={16} />}
+                onClick={exportPng}
+                disabled={renderState.status !== "ready"}
+                aria-label="导出 PNG"
+                title="导出 PNG"
+              />
+            </>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="chart-card-icon-button"
+            icon={copied ? <Check size={16} /> : <Copy size={16} />}
+            onClick={() => void copy()}
+            aria-label={copied ? "已复制 JSON" : "复制图表 JSON"}
+            title={copied ? "已复制 JSON" : "复制图表 JSON"}
+          />
+        </div>
       </header>
-      {body}
+      {tableVisible && table ? (
+        <DataTable table={table} />
+      ) : (
+        <div
+          className="chart-card-plot"
+          aria-busy={!failureMessage && renderState.status === "loading"}
+        >
+          {!invalidRaw && (
+            <div
+              ref={containerRef}
+              className="chart-card-canvas"
+              style={{ height }}
+              role="img"
+              aria-label={title}
+              aria-hidden={Boolean(failureMessage) || undefined}
+            />
+          )}
+          {failureMessage ? (
+            <output className="chart-card-status chart-card-failure">
+              <WarningCircle size={24} aria-hidden="true" />
+              <strong>暂时无法显示图表</strong>
+              <span>{failureMessage}</span>
+            </output>
+          ) : (
+            renderState.status === "loading" && (
+              <output className="chart-card-status">
+                <ChartBar size={24} aria-hidden="true" />
+                <span>正在绘制图表…</span>
+              </output>
+            )
+          )}
+        </div>
+      )}
       {spec.note && <p className="chart-card-note">{spec.note}</p>}
     </section>
   );

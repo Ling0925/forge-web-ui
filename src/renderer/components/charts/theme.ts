@@ -33,11 +33,11 @@ function cssVar(node: Element, name: string, fallback: string): string {
 
 export function readChartTheme(): ChartTheme {
   const root = document.documentElement;
-  const dark = root.getAttribute("data-theme") !== "light";
+  const dark = root.getAttribute("data-theme") === "dark";
   const palette = cssVar(
     root,
     "--chart-series",
-    "#a54f35, #226d40, #3b6998, #975a06, #55684d",
+    "#a54f35, #55684d, #975a06, #7d5a7c, #68665f",
   )
     .split(",")
     .map((value) => value.trim())
@@ -97,7 +97,7 @@ const FALLBACK_THEME: ChartTheme = {
   success: "#226d40",
   warning: "#975a06",
   error: "#b82420",
-  palette: ["#a54f35", "#226d40", "#3b6998", "#975a06", "#55684d"],
+  palette: ["#a54f35", "#55684d", "#975a06", "#7d5a7c", "#68665f"],
   positive: "#b82420",
   negative: "#226d40",
   heat: ["#f6f3ee", "#dc9477", "#7a3520"],
