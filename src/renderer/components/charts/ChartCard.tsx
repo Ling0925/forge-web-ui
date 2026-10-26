@@ -102,6 +102,11 @@ export function ChartCard({ spec, source }: ChartCardProps) {
       : built?.table;
   const height = built?.height ?? 320;
 
+  // Latest option, so an instance created later (or rebuilt after a failure
+  // toggle) can be painted immediately instead of waiting for a dep change.
+  const optionRef = useRef<Record<string, unknown> | undefined>(option);
+  optionRef.current = option;
+
   // Lazy-load ECharts once per card that actually needs a canvas.
   useEffect(() => {
     if (isTable || failed) return;
@@ -122,13 +127,20 @@ export function ChartCard({ spec, source }: ChartCardProps) {
   }, [isTable, failed]);
 
   // Create/destroy the instance with the container and library availability.
+  // showTable is a dependency: toggling to the data table unmounts the canvas
+  // div, so the instance must be disposed and rebuilt (painted from
+  // optionRef) when the graph comes back — otherwise toggle-back stays blank.
   useEffect(() => {
-    if (!ready || isTable || failed || !containerRef.current || !echartsRef.current)
+    if (!ready || showTable || isTable || failed || !containerRef.current || !echartsRef.current)
       return;
     const instance = echartsRef.current.init(containerRef.current, undefined, {
       renderer: "canvas",
     });
     instanceRef.current = instance;
+    const pending = optionRef.current;
+    if (pending && Object.keys(pending).length > 0) {
+      instance.setOption(structuredClone(pending), { notMerge: true });
+    }
     const observer = new ResizeObserver(() => instance.resize());
     observer.observe(containerRef.current);
     return () => {
@@ -136,9 +148,11 @@ export function ChartCard({ spec, source }: ChartCardProps) {
       instance.dispose();
       instanceRef.current = undefined;
     };
-  }, [ready, isTable, failed]);
+  }, [ready, showTable, isTable, failed]);
 
   // Re-apply the option whenever data or theme changes (theme → full redraw).
+  // The first paint happens in the init effect above: this effect must NOT list
+  // `ready`, because it also runs (and is skipped) while no instance exists yet.
   useEffect(() => {
     const instance = instanceRef.current;
     if (!instance || !option || Object.keys(option).length === 0) return;

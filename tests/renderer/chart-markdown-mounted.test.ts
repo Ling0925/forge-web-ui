@@ -3,6 +3,22 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
+/**
+ * A canvas element exists as soon as echarts.init() runs, so presence alone
+ * cannot prove anything was painted. Count pixels that differ from the
+ * transparent/blank baseline to catch a chart that mounts but never setOption.
+ */
+const paintedCount = (canvasSelector: string) => `(() => {
+  const canvas = document.querySelector(${JSON.stringify(canvasSelector)});
+  if (!canvas) return -1;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return -1;
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let painted = 0;
+  for (let i = 3; i < data.length; i += 4) if (data[i] > 0) painted++;
+  return painted;
+})()`;
+
 const validFence = [
   "```chart",
   JSON.stringify({
@@ -12,7 +28,19 @@ const validFence = [
   "```",
 ].join("\n");
 
+/**
+ * In production the ECharts chunk arrives over the network tens of milliseconds
+ * after mount, so the theme re-render lands *before* the instance exists. An
+ * inlined dynamic import resolves in a microtask and hides that ordering,
+ * which is exactly how the "card mounts but canvas stays blank" regression
+ * slipped past this test once. Delay the loader with a real macrotask and run
+ * under StrictMode like main.tsx so the effect order matches the real page.
+ */
 it("renders chart fences only for enabled settled messages and degrades safely", async () => {
+  const echartsInstancePath = resolve(
+    ".",
+    "src/renderer/components/charts/echarts-instance.ts",
+  ).replace(/\\/g, "/");
   const bundle = await build({
     stdin: {
       contents: `
@@ -23,11 +51,11 @@ it("renders chart fences only for enabled settled messages and degrades safely",
         import {ToolDisclosure} from './src/renderer/components/primitives/ToolDisclosure';
         window.render = (source, enableCharts, highlight = true) => flushSync(() =>
           root.render(
-            <Markdown source={source} highlight={highlight} enableCharts={enableCharts}/>
+            <React.StrictMode><Markdown source={source} highlight={highlight} enableCharts={enableCharts}/></React.StrictMode>
           ));
         window.renderToolCard = (output) => flushSync(() =>
           root.render(
-            <ToolDisclosure toolName="render_chart" status="completed" defaultExpanded={true} output={output}/>
+            <React.StrictMode><ToolDisclosure toolName="render_chart" status="completed" defaultExpanded={true} output={output}/></React.StrictMode>
           ));
         const root = createRoot(document.getElementById('root'));
       `,
@@ -40,6 +68,29 @@ it("renders chart fences only for enabled settled messages and degrades safely",
     jsx: "automatic",
     define: { "process.env.NODE_ENV": '"production"' },
     loader: { ".css": "empty" },
+    plugins: [
+      {
+        name: "slow-load-echarts",
+        setup(pluginBuild) {
+          pluginBuild.onResolve({ filter: /^\.\/load-echarts$/ }, () => ({
+            path: "slow-load-echarts",
+            namespace: "slow-echarts",
+          }));
+          pluginBuild.onLoad({ filter: /.*/, namespace: "slow-echarts" }, () => ({
+            contents: `
+              import { echarts } from '${echartsInstancePath}';
+              let loader;
+              export function loadEcharts() {
+                loader ??= new Promise((resolve) => setTimeout(() => resolve(echarts), 120));
+                return loader;
+              }
+            `,
+            loader: "ts",
+            resolveDir: resolve("."),
+          }));
+        },
+      },
+    ],
   });
   const browser = await chromium.launch({
     headless: true,
@@ -63,9 +114,19 @@ it("renders chart fences only for enabled settled messages and degrades safely",
     expect(await page.locator(".chart-card").count()).toBe(1);
     expect(await page.locator(".chart-card-title").innerText()).toContain("月度收入");
     await page.waitForSelector(".chart-card-canvas canvas", { timeout: 5000 });
+    // Regression guard: the canvas must actually be painted, not just created.
+    await expect
+      .poll(() => page.evaluate(paintedCount(".chart-card-canvas canvas")))
+      .toBeGreaterThan(200);
     // The data-table toggle exists and swaps the canvas for a table.
     await page.getByRole("button", { name: "数据" }).click();
     expect(await page.locator(".chart-card-table th").count()).toBe(2);
+    // Toggling back rebuilds the instance on the fresh canvas and repaints it.
+    await page.getByRole("button", { name: "图形" }).click();
+    await page.waitForSelector(".chart-card-canvas canvas", { timeout: 5000 });
+    await expect
+      .poll(() => page.evaluate(paintedCount(".chart-card-canvas canvas")))
+      .toBeGreaterThan(200);
     // Theme toggle re-renders without page errors.
     await page.evaluate("document.documentElement.setAttribute('data-theme','dark')");
     await page.waitForTimeout(120);
@@ -113,6 +174,9 @@ it("renders chart fences only for enabled settled messages and degrades safely",
     await page.evaluate(`window.renderToolCard(${JSON.stringify(toolOutput)})`);
     expect(await page.locator(".tool-chart-section .chart-card").count()).toBe(1);
     await page.waitForSelector(".tool-chart-section .chart-card-canvas canvas", { timeout: 5000 });
+    await expect
+      .poll(() => page.evaluate(paintedCount(".tool-chart-section .chart-card-canvas canvas")))
+      .toBeGreaterThan(200);
 
     // A failed render_chart result shows no preview card.
     const failureOutput = JSON.stringify({ ok: false, errors: ["chart.type: 无效图型"] });

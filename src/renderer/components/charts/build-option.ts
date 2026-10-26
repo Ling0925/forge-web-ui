@@ -8,7 +8,18 @@ import type { ChartTheme } from "./theme";
 
 type Option = Record<string, unknown>;
 
-const GRID = { left: 48, right: 20, top: 44, bottom: 32, containLabel: true };
+// ECharts 6 deprecated `containLabel` (it now needs the opt-in
+// LegacyGridContainLabel module and logs a warning otherwise). outerBounds
+// 'same' + 'axisLabel' is the documented equivalent: shrink the grid so axis
+// labels stay inside.
+const GRID = {
+  left: 48,
+  right: 20,
+  top: 44,
+  bottom: 32,
+  outerBoundsMode: "same",
+  outerBoundsContain: "axisLabel",
+};
 
 function baseOption(theme: ChartTheme): Option {
   return {

@@ -27,7 +27,7 @@ describe("sanitizeRawOption", () => {
   it("rejects prototype-polluting and event-handler keys", () => {
     // JSON.parse keeps "__proto__" as an own property, unlike an object literal.
     expect(
-      sanitizeRawOption({ option: JSON.parse('{"__proto__": {"x": 1}}') as Record<string, unknown> }).ok,
+      sanitizeRawOption({ option: JSON.parse('{"__proto__": {"x": 1}}') }).ok,
     ).toBe(false);
     expect(sanitizeRawOption({ option: { onClick: "x" } }).ok).toBe(false);
     expect(
