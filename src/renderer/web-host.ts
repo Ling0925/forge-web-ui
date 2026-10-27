@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { createTransportBridge } from "@forge/core/shared/bridge";
+import { coreBuildInfo } from "@forge/core/shared/build-info";
+import { versionNotice } from "./version-notice";
 import { htmlPreviewResponseSchema } from "@forge/core/shared/html-preview";
 import { lanStatusSchema, type ForgeLanBridge } from "@forge/core/shared/lan";
 import {
@@ -32,8 +34,9 @@ export async function installWebHost(): Promise<void> {
   if (window.forge) return;
   const status = document.createElement("div");
   status.setAttribute("role", "status");
+  status.dataset.forgeConnectionStatus = "true";
   status.style.cssText =
-    "display:none;padding:6px 16px;font:12px system-ui;background:#eee9d7;color:#333;flex-shrink:0;overflow-wrap:anywhere";
+    "display:none;padding:6px 16px;font:12px system-ui;background:var(--warning-bg);color:var(--text-primary);flex-shrink:0;overflow-wrap:anywhere";
   document.body.prepend(status);
   const layout = document.createElement("style");
   layout.textContent =
@@ -41,6 +44,7 @@ export async function installWebHost(): Promise<void> {
   document.head.append(layout);
   let stopped = false;
   let clientId = "";
+  let versionWarning = "";
   let eventSocket: WebSocket | undefined;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   let connecting = false;
@@ -59,7 +63,7 @@ export async function installWebHost(): Promise<void> {
     socket?.close();
     cleanupForeground();
     status.textContent = message;
-    status.style.background = "#f7d4cf";
+    status.style.background = "var(--error-bg)";
     status.style.display = "";
   };
   async function post(path: string, input: unknown, timeout = 125_000, sessionId?: string): Promise<unknown> {
@@ -84,6 +88,8 @@ export async function installWebHost(): Promise<void> {
         `Web request failed (${response.status}); inspect state before retrying.`,
       );
     }
+    if (path === "/api/connect" || path === "/api/connection")
+      versionWarning = versionNotice(response.headers, coreBuildInfo?.id);
     let value: unknown = await response.json();
     if (sessionId) {
       const delta = z.object({ id: z.string(), ok: z.literal(true), method: z.literal("getSession"),
@@ -92,9 +98,13 @@ export async function installWebHost(): Promise<void> {
         if (!cached) throw new Error("Missing session cache base");
         value = { ...delta.data, result: applySessionDelta(cached.snapshot, cached.revision, delta.data.result.sessionDelta) };
       }
-      const result = rpcResponseSchema.parse(value);
+      // Only cache validated results. The shared bridge owns public diagnostics;
+      // throwing raw Zod issues here would bypass them and expose payload fields.
+      const parsed = rpcResponseSchema.safeParse(value);
+      const result = parsed.success ? parsed.data : undefined;
       const revision = response.headers.get("X-Forge-Snapshot");
-      if (result.ok && result.method === "getSession" && revision) {
+      const requestId = typeof input === "object" && input !== null && "id" in input ? input.id : undefined;
+      if (result?.ok && result.id === requestId && result.method === "getSession" && result.result.id === sessionId && revision) {
         snapshots.delete(sessionId);
         snapshots.set(sessionId, { revision, snapshot: result.result, size: JSON.stringify(result.result).length });
         let size = 0;
@@ -129,7 +139,7 @@ export async function installWebHost(): Promise<void> {
         if (stopped || retryTimer !== undefined) return;
         status.title = "";
         status.textContent = "连接中断，正在自动重连…任务继续在后台运行。";
-        status.style.background = "#eee9d7";
+        status.style.background = "var(--warning-bg)";
         status.style.display = "";
         retryTimer = setTimeout(() => {
           retryTimer = undefined;
@@ -189,9 +199,9 @@ export async function installWebHost(): Promise<void> {
               connecting = false;
               failures = 0;
               status.title = connectedTitle;
-              status.textContent = connectedStatus;
-              status.style.background = "#eee9d7";
-              status.style.display = "none";
+              status.textContent = versionWarning || connectedStatus;
+              status.style.background = "var(--warning-bg)";
+              status.style.display = versionWarning ? "" : "none";
               ready();
             } catch { disconnect(); }
           };
