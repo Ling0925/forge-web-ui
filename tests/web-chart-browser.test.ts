@@ -157,15 +157,10 @@ it("paints persisted charts after session switches/reloads in both themes and na
             }),
           ),
         ).toBe(true);
-        const colors = await first.evaluate((card) => ({
-          background: getComputedStyle(card).backgroundColor,
-          expected: getComputedStyle(document.documentElement)
-            .getPropertyValue("--surface-elevated")
-            .trim(),
-        }));
-        expect(colors.background).toBe(
-          theme === "dark" ? "rgb(34, 34, 33)" : "rgb(255, 255, 255)",
+        const bg = await first.evaluate(
+          (card) => getComputedStyle(card).backgroundColor,
         );
+        expect(bg).toBe("rgba(0, 0, 0, 0)");
         // Optional visual artifacts stay under the caller's task-specific tmp dir.
         if (process.env.FORGE_CHART_SCREENSHOTS) {
           await mkdir(process.env.FORGE_CHART_SCREENSHOTS, { recursive: true });

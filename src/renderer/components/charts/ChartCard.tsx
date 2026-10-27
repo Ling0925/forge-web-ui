@@ -266,28 +266,13 @@ export function ChartCard({ spec, source }: ChartCardProps) {
     <section
       className={`chart-card${failureMessage ? " chart-card-error" : ""}`}
       aria-label={title}
+      data-show-table={tableVisible ? "true" : undefined}
     >
       <header className="chart-card-header">
         <div className="chart-card-heading">
-          <span className="chart-card-icon" aria-hidden="true">
-            <ChartBar size={18} />
+          <span className="chart-card-title" title={title}>
+            {spec.title ?? ""}
           </span>
-          <div className="chart-card-heading-text">
-            <span className="chart-card-title" title={title}>
-              {title}
-            </span>
-            <span className="chart-card-meta">
-              {label}
-              {table && (
-                <>
-                  {" "}
-                  ·{" "}
-                  <span className="chart-card-count">{table.rows.length}</span>{" "}
-                  项数据
-                </>
-              )}
-            </span>
-          </div>
         </div>
         <div className="chart-card-actions">
           {table && !isTable && (
@@ -295,7 +280,7 @@ export function ChartCard({ spec, source }: ChartCardProps) {
               variant="ghost"
               size="sm"
               className="chart-card-toggle"
-              icon={showTable ? <ChartBar size={15} /> : <Database size={15} />}
+              icon={showTable ? <ChartBar size={14} /> : <Database size={14} />}
               aria-pressed={showTable}
               onClick={() => setShowTable((value) => !value)}
               title="在数据表和图形之间切换"
@@ -309,7 +294,7 @@ export function ChartCard({ spec, source }: ChartCardProps) {
                 variant="ghost"
                 size="sm"
                 className="chart-card-icon-button"
-                icon={<ArrowClockwise size={16} />}
+                icon={<ArrowClockwise size={14} />}
                 onClick={() => setAttempt((value) => value + 1)}
                 aria-label="重新绘制图表"
                 title="重新绘制图表"
@@ -318,7 +303,7 @@ export function ChartCard({ spec, source }: ChartCardProps) {
                 variant="ghost"
                 size="sm"
                 className="chart-card-icon-button"
-                icon={<ImageIcon size={16} />}
+                icon={<ImageIcon size={14} />}
                 onClick={exportPng}
                 disabled={renderState.status !== "ready"}
                 aria-label="导出 PNG"
@@ -330,7 +315,7 @@ export function ChartCard({ spec, source }: ChartCardProps) {
             variant="ghost"
             size="sm"
             className="chart-card-icon-button"
-            icon={copied ? <Check size={16} /> : <Copy size={16} />}
+            icon={copied ? <Check size={14} /> : <Copy size={14} />}
             onClick={() => void copy()}
             aria-label={copied ? "已复制 JSON" : "复制图表 JSON"}
             title={copied ? "已复制 JSON" : "复制图表 JSON"}
