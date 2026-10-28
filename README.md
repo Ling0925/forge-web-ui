@@ -167,6 +167,6 @@ tests/web-*.test.ts     Web 传输、代理和浏览器检查
 
 源 HTML 保持 `connect-src 'none'`；Web 服务按入口开放同源 HTTP/WebSocket，开发入口额外支持 HMR，不应为连通后端而随意放宽源文件 CSP。
 
-首页和侧栏使用 [256px 锻造图标](src/renderer/public/forge-mark-v3.png)，由 `ForgeMark` 组件呈现；标签页使用 [64px favicon](src/renderer/public/forge-favicon-v3.png)。布局、主题与组件约定见 [Web UI 设计规范](docs/WEB_UI_LAYOUT_SPEC.md)，启动细节见 [Web 开发说明](docs/WEB_DEV.md)。
+首页和侧栏使用 [256px 锻造图标](src/renderer/public/forge-mark-v3.png)，由 `ForgeMark` 组件呈现；标签页使用 [64px favicon](src/renderer/public/forge-favicon-v3.png)。布局、主题与组件约定见 [Web UI 设计规范](docs/WEB_UI_LAYOUT_SPEC.md)，当前实测的 token 值、字号刻度与已知偏差见 [设计系统参考](docs/DESIGN_SYSTEM.md)，启动细节见 [Web 开发说明](docs/WEB_DEV.md)。
 
 本仓包名为 `@forge/web-ui`，在 Forge 主仓中位于 `repos/forge-web-ui` 子模块，独立维护提交历史。作者与历史来源见 [作者说明](docs/AUTHORSHIP.md)。

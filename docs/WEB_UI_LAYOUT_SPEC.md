@@ -2,7 +2,7 @@
 
 本规范是 `forge-web-ui` 的唯一视觉与交互设计准则。所有代理（Agent）和开发者在新增或修改任何 React 组件、样式表或弹窗前，**必须先阅读并遵守本规范**，严禁脱离本规范自行发明配色、堆叠边框或退回浏览器原生简陋控件。
 
-启动与进程边界见 [WEB_DEV.md](WEB_DEV.md)；内置浏览器插件见 [PLUGINS_AND_BROWSER.md](PLUGINS_AND_BROWSER.md)。
+启动与进程边界见 [WEB_DEV.md](WEB_DEV.md)；内置浏览器插件见 [PLUGINS_AND_BROWSER.md](PLUGINS_AND_BROWSER.md)；某个 token 或尺寸的当前生效值、以及本文与实现的已知偏差，见 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)。
 
 ---
 

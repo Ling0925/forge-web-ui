@@ -6,7 +6,7 @@
 
 - 本仓库是独立的 Forge Web UI 仓库，只负责 `src/renderer` 的 React 界面、renderer 测试，以及 `scripts/dev.mjs` / `scripts/serve.mjs` 的薄启动装配。
 - 不复制、不修改 Core 的 HTTP/WebSocket 服务、RPC、存储、provider、工具运行时实现；这些属于 `@forge/core`。
-- **修改任何界面组件、弹窗或 CSS 前，必须先阅读并严格遵守 [Web UI 设计规范与组件约定](docs/WEB_UI_LAYOUT_SPEC.md)**；启动与进程边界见 [docs/WEB_DEV.md](docs/WEB_DEV.md)；不把一次性拆分任务或旧验收结果写成永久限制。
+- **修改任何界面组件、弹窗或 CSS 前，必须先阅读并严格遵守 [Web UI 设计规范与组件约定](docs/WEB_UI_LAYOUT_SPEC.md)**；启动与进程边界见 [docs/WEB_DEV.md](docs/WEB_DEV.md)；不把一次性拆分任务或旧验收结果写成永久限制。需要查某个 token 或尺寸的真实生效值、或确认某处实现是否为已知偏差时，查 [设计系统参考](docs/DESIGN_SYSTEM.md)——它记录事实，规范记录要求，冲突时以规范为准。
 
 ## 设计规范与视觉约束（修改 UI 必读）
 
