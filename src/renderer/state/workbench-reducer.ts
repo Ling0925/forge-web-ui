@@ -13,6 +13,7 @@ import type {
   SessionSummary,
 } from "../shared-types";
 import { appendSessionEvent } from "./session-usage";
+import type { AdvisorRequest } from "@forge/core/shared/agent-coordination";
 import { estimateTokens } from "@forge/core/shared/context-usage";
 import { recordPlan } from "@forge/core/shared/plans";
 import type { SessionPage } from "@forge/core/shared/session-page";
@@ -60,6 +61,8 @@ export interface ActiveRunState {
   readonly streamStartMessage?: number;
   readonly permission?: Permission;
   readonly runId?: RunId | undefined;
+  /** Core coordination identity from run_started.budget; distinct from the host transport runId. */
+  readonly rootRunId?: string | undefined;
   readonly sessionId: SessionId;
   readonly status: SessionStatus;
   readonly streamingText: string;
@@ -485,6 +488,56 @@ export function workbenchReducer(
         for (const id of Object.keys(progress).slice(0, -32)) delete progress[id];
         return { ...state, agentProgress: progress };
       }
+      if (event.type === "advisor_update") {
+        const updateRequests = (
+          requests: readonly AdvisorRequest[] | undefined,
+        ): readonly AdvisorRequest[] => {
+          const list = requests ?? [];
+          const idx = list.findIndex((r) => r.id === event.request.id);
+          if (idx >= 0) {
+            const nextList = [...list];
+            nextList[idx] = event.request;
+            return nextList;
+          }
+          return [...list, event.request];
+        };
+
+        const activeSnap = state.activeSnapshot;
+        const nextActiveSnapshot =
+          activeSnap && activeSnap.id === event.sessionId
+            ? {
+                ...activeSnap,
+                advisorRequests: updateRequests(activeSnap.advisorRequests),
+                updatedAt: event.timestamp,
+                events: appendSessionEvent(activeSnap.events, event),
+              }
+            : activeSnap;
+
+        const cacheEntry = state.snapshotCache[event.sessionId];
+        const nextCache = cacheEntry
+          ? {
+              ...state.snapshotCache,
+              [event.sessionId]: {
+                ...cacheEntry,
+                snapshot: {
+                  ...cacheEntry.snapshot,
+                  advisorRequests: updateRequests(cacheEntry.snapshot.advisorRequests),
+                  updatedAt: event.timestamp,
+                  events: appendSessionEvent(cacheEntry.snapshot.events, event),
+                },
+              },
+            }
+          : state.snapshotCache;
+
+        return {
+          ...state,
+          sessions: state.sessions.map((s) =>
+            s.id === event.sessionId ? { ...s, updatedAt: event.timestamp } : s,
+          ),
+          activeSnapshot: nextActiveSnapshot,
+          snapshotCache: nextCache,
+        };
+      }
       const run: ActiveRunState = supersedesTerminalRun
         ? {
             // Clean slate for the new turn: nothing is inherited from the old
@@ -597,6 +650,7 @@ export function workbenchReducer(
         next = {
           ...next,
           accepted: true,
+          rootRunId: event.budget?.rootRunId,
           permission: event.permission,
           toolPreviews: [],
           ...(event.turn === undefined ? {} : { streamTurn: event.turn }),

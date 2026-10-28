@@ -333,3 +333,90 @@ describe("inline new conversation navigation", () => {
     expect(untouched.isSettingsOpen).toBe(false);
   });
 });
+describe("advisor_update event handling", () => {
+  it("keeps the Core coordination ID distinct from the host transport run ID", () => {
+    const rootRunId = "55555555-5555-4555-8555-555555555555";
+    const started = { type: "run_started" as const, sessionId: sessionA,
+      timestamp: "2026-01-01T00:00:00.000Z", model: "model", permission: "readonly" as const };
+    let state = workbenchReducer(initialWorkbenchState, { type: "RUN_EVENT_RECEIVED", event: {
+      runId: runA, event: { ...started, budget: {
+        rootRunId, rootSessionId: sessionA, maxToolCalls: null, timeoutMs: null,
+        startedAt: started.timestamp, deadlineAt: null, consumed: 0, reserved: 0, remaining: null,
+        stopReason: null, sessions: [], usage: { basis: "reported", reportedRequests: 0, missingRequests: 0,
+          promptTokens: 0, completionTokens: 0, totalTokens: 0, cachedPromptTokens: 0, complete: true },
+      } },
+    } });
+    expect(state.activeRuns[sessionA]?.runId).toBe(runA);
+    expect(state.activeRuns[sessionA]?.rootRunId).toBe(rootRunId);
+    // An old host without coordination metadata must not inherit a previous identity.
+    state = workbenchReducer(state, { type: "RUN_EVENT_RECEIVED", event: { runId: runA, event: started } });
+    expect(state.activeRuns[sessionA]?.rootRunId).toBeUndefined();
+  });
+  const req1 = {
+    id: "44444444-4444-4444-8444-444444444444",
+    parentSessionId: sessionA,
+    parentRunId: runA,
+    childSessionId: sessionB,
+    toolCallId: "call_1",
+    question: "兼容旧契约还是迁移到新契约？",
+    status: "pending" as const,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    deadlineAt: "2026-01-01T00:10:00.000Z",
+  };
+  it("appends new advisor request to activeSnapshot and snapshotCache", () => {
+    let state: WorkbenchState = {
+      ...initialWorkbenchState,
+      activeSessionId: sessionA,
+      activeSnapshot: snapshot,
+      snapshotCache: { [sessionA]: { snapshot, persistedAt: null } },
+      sessions: [snapshot],
+    };
+    state = workbenchReducer(state, {
+      type: "RUN_EVENT_RECEIVED",
+      event: {
+        runId: runA,
+        event: {
+          type: "advisor_update",
+          sessionId: sessionA,
+          request: req1,
+          timestamp: "2026-01-01T00:00:01.000Z",
+        },
+      },
+    });
+    expect(state.activeSnapshot?.advisorRequests).toEqual([req1]);
+    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests).toEqual([req1]);
+    expect(state.sessions[0]?.updatedAt).toBe("2026-01-01T00:00:01.000Z");
+  });
+  it("replaces existing advisor request by ID idempotently without duplicates", () => {
+    const answeredReq = {
+      ...req1,
+      status: "answered" as const,
+      answer: "保留旧契约",
+      nextInstruction: "继续运行现有测试",
+      updatedAt: "2026-01-01T00:01:00.000Z",
+    };
+    let state: WorkbenchState = {
+      ...initialWorkbenchState,
+      activeSessionId: sessionA,
+      activeSnapshot: { ...snapshot, advisorRequests: [req1] },
+      snapshotCache: { [sessionA]: { snapshot: { ...snapshot, advisorRequests: [req1] }, persistedAt: null } },
+    };
+    state = workbenchReducer(state, {
+      type: "RUN_EVENT_RECEIVED",
+      event: {
+        runId: runA,
+        event: {
+          type: "advisor_update",
+          sessionId: sessionA,
+          request: answeredReq,
+          timestamp: "2026-01-01T00:01:00.000Z",
+        },
+      },
+    });
+    expect(state.activeSnapshot?.advisorRequests?.length).toBe(1);
+    expect(state.activeSnapshot?.advisorRequests?.[0]).toEqual(answeredReq);
+    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests?.length).toBe(1);
+    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests?.[0]).toEqual(answeredReq);
+  });
+});

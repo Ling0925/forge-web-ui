@@ -18,6 +18,7 @@ import {
   ShieldWarning,
   Stack,
   Trash,
+  Users,
   Warning,
   WarningCircle,
   X,
@@ -35,6 +36,7 @@ import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
+import { AgentProfilesPanel } from "./AgentProfilesPanel";
 import { McpPanel } from "./McpPanel";
 import { PluginPanel } from "./PluginPanel";
 import { EffortBars } from "./ModelAccessPanels";
@@ -286,6 +288,13 @@ const sections = [
     icon: ShieldCheck,
   },
   {
+    id: "agents",
+    title: "智能体",
+    description: "配置子代理角色、模型绑定与权限工具边界。",
+    keywords: "智能体 agent profile 角色 模板 探索 前端 后端 审查 隔离 worktree 工具组",
+    icon: Users,
+  },
+  {
     id: "context",
     title: "上下文与记忆",
     description: "控制输入预算与模型窗口，平衡连续性和成本。",
@@ -348,6 +357,8 @@ export function Settings() {
   const [busy, setBusy] = useState(false);
   const [listing, setListing] = useState(false);
   const [mobile] = useState(() => isMobileAppHost());
+  const [agentDirty, setAgentDirty] = useState(false);
+  const [agentBusy, setAgentBusy] = useState(false);
   const sourceBusy = useRef(false);
   const locked = useRef(false);
   const alive = useRef(true);
@@ -382,6 +393,12 @@ export function Settings() {
   }, [state.isSettingsOpen]);
 
   const close = () => {
+    if (agentBusy) return;
+    if (agentDirty) {
+      if (!window.confirm("当前智能体有未保存的修改，确定离开设置吗？")) {
+        return;
+      }
+    }
     if (!locked.current && !sourceBusy.current) openSettings(false);
   };
 
@@ -394,13 +411,19 @@ export function Settings() {
         !document.querySelector("dialog[open]") &&
         !event.isComposing
       ) {
+        if (agentBusy) return;
+        if (agentDirty) {
+          if (!window.confirm("当前智能体有未保存的修改，确定离开设置吗？")) {
+            return;
+          }
+        }
         event.preventDefault();
         if (!locked.current && !sourceBusy.current) openSettings(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [state.isSettingsOpen, openSettings]);
+  }, [state.isSettingsOpen, openSettings, agentDirty, agentBusy]);
 
   const change = <K extends keyof SettingsDraft>(
     name: K,
@@ -533,13 +556,37 @@ export function Settings() {
             aria-label="搜索设置"
             placeholder="搜索设置…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            disabled={agentBusy}
+            onChange={(e) => {
+              if (agentDirty) {
+                if (
+                  !window.confirm(
+                    "当前智能体有未保存的修改，搜索将重置分类视图并丢失草稿。是否继续？",
+                  )
+                ) {
+                  return;
+                }
+              }
+              setQuery(e.target.value);
+            }}
           />
           {query && (
             <button
               type="button"
               className="settings-search-clear"
-              onClick={() => setQuery("")}
+              disabled={agentBusy}
+              onClick={() => {
+                if (agentDirty) {
+                  if (
+                    !window.confirm(
+                      "当前智能体有未保存的修改，清空搜索将重置分类视图并丢失草稿。是否继续？",
+                    )
+                  ) {
+                    return;
+                  }
+                }
+                setQuery("");
+              }}
               aria-label="清空搜索"
             >
               <X size={13} weight="bold" />
@@ -557,7 +604,18 @@ export function Settings() {
                 key={item.id}
                 className={`settings-nav-item ${isCurrent ? "is-active" : ""}`}
                 aria-current={isCurrent ? "page" : undefined}
+                disabled={agentBusy}
                 onClick={() => {
+                  if (agentBusy) return;
+                  if (item.id !== section && agentDirty) {
+                    if (
+                      !window.confirm(
+                        "当前智能体有未保存的修改，切换分类将丢失这些草稿。是否继续？",
+                      )
+                    ) {
+                      return;
+                    }
+                  }
                   setSection(item.id);
                   setQuery("");
                 }}
@@ -707,7 +765,7 @@ export function Settings() {
                         const activeOption =
                           GLOBAL_REASONING_EFFORT_OPTIONS.find(
                             (item) => item.value === draft.reasoningEffort,
-                          ) ?? GLOBAL_REASONING_EFFORT_OPTIONS[0];
+                          ) ?? GLOBAL_REASONING_EFFORT_OPTIONS[0]!;
                         return (
                           <div className="provider-inference-summary">
                             <span className="provider-inference-summary-desc">
@@ -1530,6 +1588,18 @@ export function Settings() {
               )}
             </fieldset>
           </form>
+
+          {visible("agents") && (
+            <section
+              className="settings-section settings-section-agents"
+              aria-label="智能体配置"
+            >
+              <AgentProfilesPanel
+                onDirtyChange={setAgentDirty}
+                onBusyChange={setAgentBusy}
+              />
+            </section>
+          )}
 
           {visible("plugins") && (
             <section

@@ -126,8 +126,10 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
   - **历史计划（`.inspector-plan-history-card`）**：在 `Plan` 视图底部以结构化折叠卡片展示，`<summary>` 左侧展示 `计划 N` 徽章与标题，右侧展示完成进度胶囊；展开内容中步骤列表与 Markdown 说明之间用虚线分隔。
 - **子任务区域（`SubAgentsPanel` / `SubAgentActivity`）**：
   - 每张子任务卡（`.child-session-card`）左侧带 `2.5px` 语义状态边条（运行中 `--accent`、已完成 `--success`、失败/中断 `--danger`）。
-  - 头部包含 `#1` 等宽序号徽章、带外链图标的单行可点击标题按钮、语义状态徽章及运行中取消按钮。
+  - 头部包含 `#1` 等宽序号徽章、带外链图标的单行可点击标题按钮、智能体角色徽章（`.child-role-badge`）、等待答疑胶囊（`.child-advisor-pill`，仅在父运行活跃且 `run_started.budget.rootRunId` 与请求 `parentRunId` 匹配时为动态脉冲；这是 Core 协调身份，不能与 Web 传输 `runId` 比较，历史或缺失活跃运行身份时显示不可控制状态）、语义状态徽章及运行中取消按钮。
   - 内容区展示模型胶囊、Token 消耗、更新时间、职责范围（Ownership）、最新报告摘要，以及带脉冲圆点的实时进展和可折叠过程记录。
+  - 查看子会话时，上下文卡片（`.inspector-agent-profile-card`）展示完整智能体角色快照（名称、ID、权限上限、工作树隔离、模型策略、工具策略）。
+  - 集中答疑区域（`.inspector-advisor-section`）：集中展示该父任务下所有子代理发起的答疑与协调请求（`pending`/`answered`/`cancelled`/`expired`/`interrupted`），如实区分“已在主会话保存，等待子代理同步确认”与“已投递到子代理（带 deliveredAt 时间戳）”，真实反映在线与历史不可控制状态，并附带主代理自动答复的实事求是说明。
 - **空状态规范（Empty States）**：
   - 当计划、子任务、记忆或说明文档为空时，**严禁只渲染一行裸 `<p className="wb-muted">`**。
   - 统一使用虚线柔和容器（`.inspector-plan-empty` / `.inspector-subagents-empty`：`background: var(--surface-soft); border: 1px dashed var(--border-subtle); border-radius: var(--radius-md)`），包含主状态说明与次级引导提示。
@@ -135,9 +137,13 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 ### 4.5 工作区选择弹窗（`WorkspacePicker`）与设置中心（`SettingsModal`）
 
 - **工作区选择弹窗**：提供「最近使用工作区」一键切换、可点击路径面包屑、实时目录过滤、内联新建文件夹输入行，以及底部清晰的当前选中路径确认栏。
-- **设置中心（模型连接、路由组、默认思考等级、执行与权限、上下文与记忆）**：
+- **设置中心（模型连接、外观、执行与权限、智能体、上下文与记忆、语言服务）**：
   - 左侧分类导航与右侧内容区分离；右侧直接展示章节标题与功能面板卡（`.settings-panel-card`），**不套最外层冗余大框**。
   - 批量导入/导出、路由组列表、策略矩阵与压缩阈值均采用结构化卡片网格、状态徽章与自定义下拉/分段控件。
+  - **智能体管理（`AgentProfilesPanel`）**：
+    - 提供角色列表、一键新建、从预置模板添加（探索/前端/后端/代码审查）、编辑、复制、启停与带安全二次确认的删除。
+    - 字段包含 ID、名称、简要描述、适用场景（whenToUse）、系统指令（instructions）、模型绑定（继承主模型或绑定已配置 Provider 来源与精确模型 ID，禁止虚构 fallback）、权限上限（readonly/workspace/unrestricted，明确提示权限绝不突破宿主）、工作树隔离（shared/worktree，明确提示非 OS 沙箱）、工具组限定策略（inherit/restricted）及 MCP 白名单。
+    - 具备版本冲突保护（保留草稿，提供拉取最新配置与放弃修改选项）、未保存草稿全局离开拦截（分类切换、搜索、关闭防护）、保存繁忙态锁定保护，以及旧配置缺省兼容。禁止使用原生 select 与裸 checkbox，采用全键盘与读屏支持的 `SettingsSelect` 与 `SettingsToggleCard`。
 
 ---
 

@@ -9,13 +9,14 @@ import {
   FolderSimple,
   GitBranch,
   ListChecks,
+  Question,
   Target,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import { sessionUsage } from "../../state/session-usage";
 import { useWorkbench } from "../../state/workbench-context";
-import type { Message, SessionSnapshot, TaskPlan } from "@forge/core/shared/schemas";
+import { parseSessionId, type Message, type SessionSnapshot, type TaskPlan } from "@forge/core/shared/schemas";
 import { sessionPlans } from "@forge/core/shared/plans";
 import { Button } from "../primitives/Button";
 import { StatusBadge } from "../primitives/StatusBadge";
@@ -387,8 +388,17 @@ export function SubAgentsPanel() {
       child.status === "interrupted" ||
       child.status === "cancelled",
   ).length;
+  const activeParentRun = state.activeRuns[snapshot.id];
+  const isParentLive =
+    Boolean(activeParentRun) &&
+    (activeParentRun?.status === "running" ||
+      activeParentRun?.status === "awaiting_approval");
   const hasChildMeta = Boolean(
-    parentId || snapshot.agentTask || snapshot.ownership || snapshot.agentWorktree,
+    parentId ||
+      snapshot.agentTask ||
+      snapshot.ownership ||
+      snapshot.agentWorktree ||
+      snapshot.agentProfile,
   );
 
   return (
@@ -459,6 +469,59 @@ export function SubAgentsPanel() {
               )}
             </div>
           )}
+          {snapshot.agentProfile && (
+            <div className="inspector-agent-profile-card">
+              <div className="inspector-agent-profile-header">
+                <span className="inspector-agent-profile-tag">智能体角色快照</span>
+                <strong className="inspector-agent-profile-name">
+                  {snapshot.agentProfile.name}
+                </strong>
+                <code className="inspector-agent-profile-id">
+                  {snapshot.agentProfile.id}
+                </code>
+              </div>
+              <p className="inspector-agent-profile-desc">
+                {snapshot.agentProfile.description}
+              </p>
+              <div className="inspector-agent-profile-specs">
+                <span className="inspector-agent-spec-item">
+                  权限上限：<code>{snapshot.agentProfile.permission}</code>
+                </span>
+                <span className="inspector-agent-spec-item">
+                  工作树：<code>{snapshot.agentProfile.isolation}</code>
+                </span>
+                <span className="inspector-agent-spec-item">
+                  模型：
+                  <code>
+                    {snapshot.agentProfile.model.mode === "inherit"
+                      ? "继承父模型"
+                      : `${snapshot.agentProfile.model.providerSourceId}/${snapshot.agentProfile.model.model}`}
+                  </code>
+                </span>
+                <span className="inspector-agent-spec-item">
+                  工具：
+                  <code>
+                    {snapshot.agentProfile.tools.mode === "inherit"
+                      ? "继承宿主"
+                      : snapshot.agentProfile.tools.groups.join(", ")}
+                  </code>
+                </span>
+                {snapshot.agentProfile.tools.mode === "restricted" && snapshot.agentProfile.tools.groups.includes("mcp") && (
+                  <span className="inspector-agent-spec-item">
+                    MCP：<code>{snapshot.agentProfile.tools.mcpServers.join(", ") || "未授权服务器"}</code>
+                  </span>
+                )}
+                <span className="inspector-agent-spec-item">
+                  配置版本：<code>{snapshot.agentProfile.revision}</code>
+                </span>
+              </div>
+              <details className="inspector-agent-profile-details">
+                <summary>角色指令与适用场景</summary>
+                <p className="inspector-agent-profile-desc">{snapshot.agentProfile.whenToUse}</p>
+                <p className="advisor-context-text">{snapshot.agentProfile.instructions}</p>
+              </details>
+            </div>
+          )}
           {parentId &&
             (snapshot.status === "running" ||
               snapshot.status === "awaiting_approval") && (
@@ -485,50 +548,92 @@ export function SubAgentsPanel() {
 
       {sortedChildren.length ? (
         <div className="inspector-subagents-list wb-stack">
-          {sortedChildren.map((child, index) => (
-            <article
-              key={child.id}
-              className={`agent-card child-session-card wb-child-row is-${child.status}`}
-            >
-              <div className="child-card-top">
-                <div className="child-card-header">
-                  <span className="child-index-badge">#{index + 1}</span>
-                  <Button
-                    size="sm"
-                    className="child-title-button"
-                    title={child.title}
-                    aria-label={`打开子任务：${child.title}`}
-                    onClick={() => void selectSession(child.id)}
-                  >
-                    <span className="child-title-clamp">{child.title}</span>
-                    <ArrowSquareOut size={12} weight="bold" className="child-title-icon" />
-                  </Button>
-                  <div className="child-card-badges">
-                    <StatusBadge status={child.status} />
-                    {(child.status === "running" ||
-                      child.status === "awaiting_approval") && (
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        className="child-cancel-btn"
-                        disabled={cancelling}
-                        onClick={() => void cancelOwned(child.id)}
-                      >
-                        {cancelling ? "正在取消…" : "取消任务"}
-                      </Button>
-                    )}
+          {sortedChildren.map((child, index) => {
+            const roleName =
+              child.agentProfileName ||
+              state.snapshotCache?.[child.id]?.snapshot?.agentProfile?.name;
+            const childAdvisorReq = snapshot.advisorRequests?.find(
+              (req) => req.childSessionId === child.id && req.status === "pending",
+            );
+            const isChildAdvisorLive =
+              Boolean(childAdvisorReq) &&
+              isParentLive &&
+              Boolean(activeParentRun?.rootRunId) &&
+              activeParentRun?.rootRunId === childAdvisorReq?.parentRunId;
+
+            return (
+              <article
+                key={child.id}
+                className={`agent-card child-session-card wb-child-row is-${child.status}`}
+              >
+                <div className="child-card-top">
+                  <div className="child-card-header">
+                    <span className="child-index-badge">#{index + 1}</span>
+                    <Button
+                      size="sm"
+                      className="child-title-button"
+                      title={child.title}
+                      aria-label={`打开子任务：${child.title}`}
+                      onClick={() => void selectSession(child.id)}
+                    >
+                      <span className="child-title-clamp">{child.title}</span>
+                      <ArrowSquareOut size={12} weight="bold" className="child-title-icon" />
+                    </Button>
+                    <div className="child-card-badges">
+                      {roleName && (
+                        <span
+                          className="child-role-badge"
+                          title={`智能体角色：${roleName}`}
+                        >
+                          {roleName}
+                        </span>
+                      )}
+                      {childAdvisorReq &&
+                        (isChildAdvisorLive ? (
+                          <span
+                            className="child-advisor-pill is-waiting"
+                            title="子代理正在等待主代理答复"
+                          >
+                            <span
+                              className="child-advisor-dot is-live"
+                              aria-hidden="true"
+                            />
+                            等待答疑
+                          </span>
+                        ) : (
+                          <span
+                            className="child-advisor-pill is-interrupted"
+                            title="历史答疑已中断（主代理未运行或属于历史运行）"
+                          >
+                            答疑已中断
+                          </span>
+                        ))}
+                      <StatusBadge status={child.status} />
+                      {(child.status === "running" ||
+                        child.status === "awaiting_approval") && (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          className="child-cancel-btn"
+                          disabled={cancelling}
+                          onClick={() => void cancelOwned(child.id)}
+                        >
+                          {cancelling ? "正在取消…" : "取消任务"}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <SubAgentActivity
-                child={child}
-                cached={state.snapshotCache?.[child.id]?.snapshot}
-                progress={state.agentProgress?.[child.id]}
-                update={updates.findLast(update => update.childSessionId === child.id)}
-                onOpen={selectSession}
-              />
-            </article>
-          ))}
+                <SubAgentActivity
+                  child={child}
+                  cached={state.snapshotCache?.[child.id]?.snapshot}
+                  progress={state.agentProgress?.[child.id]}
+                  update={updates.findLast(update => update.childSessionId === child.id)}
+                  onOpen={selectSession}
+                />
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="inspector-subagents-empty">
@@ -536,6 +641,169 @@ export function SubAgentsPanel() {
           <p className="inspector-subagents-empty-hint">
             主代理委派并行或专项任务时，子代理的实时进度与最终报告会在此展示。
           </p>
+        </div>
+      )}
+
+      {snapshot.advisorRequests && snapshot.advisorRequests.length > 0 && (
+        <div className="inspector-advisor-section wb-stack">
+          <div className="inspector-advisor-header">
+            <div className="inspector-title-row">
+              <Question size={14} weight="bold" className="inspector-title-icon" />
+              <h4>答疑与协调 (Advisor)</h4>
+              <span className="inspector-subagents-count">
+                {snapshot.advisorRequests.length}
+              </span>
+            </div>
+          </div>
+          <p className="inspector-advisor-hint">
+            子代理遇到关键决策或歧义时向主代理发起答疑。默认由主代理在后续步骤自动答复，不提供人工审批按钮；如需干预，可在主会话输入框发送指令补充说明。
+          </p>
+
+          <div className="inspector-advisor-list wb-stack">
+            {snapshot.advisorRequests.map((req) => {
+              const targetChildIndex = sortedChildren.findIndex(
+                (c) => c.id === req.childSessionId,
+              );
+              const childLabel =
+                targetChildIndex >= 0
+                  ? `#${targetChildIndex + 1} ${sortedChildren[targetChildIndex]?.title}`
+                  : req.childSessionId.slice(0, 8);
+
+              const isReqLive =
+                isParentLive &&
+                Boolean(activeParentRun?.rootRunId) &&
+                activeParentRun?.rootRunId === req.parentRunId;
+
+              return (
+                <article
+                  key={req.id}
+                  className={`inspector-advisor-card is-${req.status}`}
+                >
+                  <div className="inspector-advisor-card-top">
+                    <div className="inspector-advisor-card-badges">
+                      {req.status === "pending" ? (
+                        isReqLive ? (
+                          <span className="advisor-badge is-pending">
+                            <span className="advisor-live-dot" aria-hidden="true" />
+                            等待主代理答复
+                          </span>
+                        ) : (
+                          <span className="advisor-badge is-interrupted">
+                            已中断（主代理未运行或属于历史运行，不可控制）
+                          </span>
+                        )
+                      ) : req.status === "answered" ? (
+                        req.deliveredAt ? (
+                          <span className="advisor-badge is-delivered">
+                            已答复并投递
+                          </span>
+                        ) : (
+                          <span className="advisor-badge is-answered">
+                            已答复（等待子代理接收）
+                          </span>
+                        )
+                      ) : req.status === "cancelled" ? (
+                        <span className="advisor-badge is-cancelled">已取消</span>
+                      ) : req.status === "expired" ? (
+                        <span className="advisor-badge is-expired">已超时</span>
+                      ) : (
+                        <span className="advisor-badge is-interrupted">已中断</span>
+                      )}
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="advisor-child-link-btn"
+                        onClick={() => void selectSession(parseSessionId(req.childSessionId))}
+                        title={`前往子任务：${childLabel}`}
+                      >
+                        子任务：{childLabel}
+                      </Button>
+                    </div>
+
+                    <time
+                      className="advisor-time"
+                      dateTime={req.createdAt}
+                      title={new Date(req.createdAt).toLocaleString()}
+                    >
+                      {new Date(req.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false,
+                      })}
+                    </time>
+                  </div>
+
+                  <div className="inspector-advisor-field">
+                    <span className="advisor-field-label">问题：</span>
+                    <strong className="advisor-question-text">{req.question}</strong>
+                  </div>
+
+                  {req.context && (
+                    <div className="inspector-advisor-field">
+                      <span className="advisor-field-label">背景：</span>
+                      <p className="advisor-context-text">{req.context}</p>
+                    </div>
+                  )}
+
+                  {req.options && req.options.length > 0 && (
+                    <div className="inspector-advisor-field">
+                      <span className="advisor-field-label">候选项：</span>
+                      <div className="advisor-options-chips">
+                        {req.options.map((opt, i) => (
+                          <span key={i} className="advisor-option-chip">
+                            {opt}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {req.recommendation && (
+                    <div className="inspector-advisor-field">
+                      <span className="advisor-field-label">子代理建议：</span>
+                      <span className="advisor-recommendation-text">
+                        {req.recommendation}
+                      </span>
+                    </div>
+                  )}
+
+                  {req.status === "answered" && req.answer && (
+                    <div className="advisor-answer-box">
+                      <div className="advisor-answer-header">
+                        <span className="advisor-field-label">主代理答复：</span>
+                      </div>
+                      <div className="advisor-answer-text">{req.answer}</div>
+                      {req.nextInstruction && (
+                        <div className="advisor-next-instruction">
+                          <span className="advisor-field-label">下一步指令：</span>
+                          <span>{req.nextInstruction}</span>
+                        </div>
+                      )}
+                      <div className="advisor-delivery-footer">
+                        {req.deliveredAt ? (
+                          <span className="advisor-delivered-receipt">
+                            ✓ 已投递到子代理 ·{" "}
+                            {new Date(req.deliveredAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        ) : (
+                          <span className="advisor-pending-receipt">
+                            ● 已在主会话保存，等待子代理同步确认
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
         </div>
       )}
       {controlMessage && <output className="inspector-control-output">{controlMessage}</output>}
