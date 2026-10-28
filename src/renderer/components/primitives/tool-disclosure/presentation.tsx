@@ -14,6 +14,7 @@ import {
   PaperPlaneTilt,
   PencilSimple,
   PuzzlePiece,
+  Question,
   Robot,
   ShieldCheck,
   TerminalWindow,
@@ -49,6 +50,9 @@ const friendlyLabels: Readonly<Record<string, string>> = {
   resolve_agent: "确认子任务解决",
   cancel_agent: "取消子代理",
   list_agents: "查看子代理列表",
+  list_agent_profiles: "列出智能体配置",
+  advisor: "智能体咨询",
+  answer_advisor: "答复智能体咨询",
   mcp_list_tools: "列出 MCP 工具",
   mcp_call_tool: "调用 MCP 工具",
   project_context: "读取项目上下文",
@@ -98,9 +102,13 @@ export function getToolIcon(name: string) {
     name === "wait_agents" ||
     name === "get_agent_result" ||
     name === "list_agents" ||
-    name === "cancel_agent"
+    name === "cancel_agent" ||
+    name === "list_agent_profiles"
   ) {
     return <Robot size={16} weight="regular" />;
+  }
+  if (name === "answer_advisor" || name === "advisor") {
+    return <Question size={16} weight="regular" />;
   }
   if (name === "send_agent_message") {
     return <PaperPlaneTilt size={16} weight="regular" />;

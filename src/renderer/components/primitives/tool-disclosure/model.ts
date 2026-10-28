@@ -90,12 +90,22 @@ export function createToolDisclosureModel({
   const isGetAgentResult = toolName === "get_agent_result";
   const isSendMessage = toolName === "send_agent_message";
   const isResolveAgent = toolName === "resolve_agent";
+  const isAnswerAdvisor = toolName === "answer_advisor";
+  const isAdvisor = toolName === "advisor";
+  const isListAgentProfiles = toolName === "list_agent_profiles";
+  const isListAgents = toolName === "list_agents";
+  const isCancelAgent = toolName === "cancel_agent";
   const isAgentTool =
     isSpawnAgent ||
     isWaitAgents ||
     isGetAgentResult ||
     isSendMessage ||
-    isResolveAgent;
+    isResolveAgent ||
+    isAnswerAdvisor ||
+    isAdvisor ||
+    isListAgentProfiles ||
+    isListAgents ||
+    isCancelAgent;
 
   const agentParamsRecord =
     typeof parsedParams === "object" && parsedParams !== null
@@ -106,10 +116,14 @@ export function createToolDisclosureModel({
     !target && isAgentTool && agentParamsRecord
       ? (() => {
           if (isSpawnAgent) {
-            if (typeof agentParamsRecord.ownership === "string")
-              return agentParamsRecord.ownership;
-            if (typeof agentParamsRecord.task === "string")
-              return firstLine(agentParamsRecord.task, 70);
+            const profile = typeof agentParamsRecord.profileId === "string" ? agentParamsRecord.profileId : undefined;
+            const task = typeof agentParamsRecord.task === "string" ? firstLine(agentParamsRecord.task, 50) : undefined;
+            if (profile && task) return `${profile} · ${task}`;
+            if (profile) return profile;
+            if (typeof agentParamsRecord.ownership === "string") {
+              return task ? `${agentParamsRecord.ownership} · ${task}` : agentParamsRecord.ownership;
+            }
+            if (task) return task;
             if (typeof agentParamsRecord.model === "string")
               return agentParamsRecord.model;
           }
@@ -120,7 +134,7 @@ export function createToolDisclosureModel({
             return "全部当前子任务";
           }
           if (isGetAgentResult && typeof agentParamsRecord.id === "string") {
-            return `子代理 ${agentParamsRecord.id.slice(0, 8)}...`;
+            return `子代理 #${agentParamsRecord.id.slice(0, 8)}`;
           }
           if (isSendMessage && typeof agentParamsRecord.message === "string") {
             return firstLine(agentParamsRecord.message, 60);
@@ -130,6 +144,26 @@ export function createToolDisclosureModel({
             typeof agentParamsRecord.resolution === "string"
           ) {
             return firstLine(agentParamsRecord.resolution, 60);
+          }
+          if (isAnswerAdvisor) {
+            const req = typeof agentParamsRecord.requestId === "string" ? `#${agentParamsRecord.requestId.slice(0, 8)}` : "";
+            const ans = typeof agentParamsRecord.answer === "string" ? firstLine(agentParamsRecord.answer, 40) : "";
+            return [req ? `答复 ${req}` : "答复咨询", ans].filter(Boolean).join(" · ") || undefined;
+          }
+          if (isAdvisor && typeof agentParamsRecord.question === "string") {
+            return firstLine(agentParamsRecord.question, 60);
+          }
+          if (isListAgentProfiles) {
+            if (typeof agentParamsRecord.query === "string" && agentParamsRecord.query) {
+              return `过滤：${agentParamsRecord.query}`;
+            }
+            return "查看全部可用角色";
+          }
+          if (isCancelAgent && typeof agentParamsRecord.id === "string") {
+            return `取消 #${agentParamsRecord.id.slice(0, 8)}`;
+          }
+          if (isListAgents) {
+            return agentParamsRecord.currentRun ? "当前运行子任务" : "全部子任务";
           }
           return undefined;
         })()
@@ -278,6 +312,11 @@ export function createToolDisclosureModel({
     isGetAgentResult,
     isSendMessage,
     isResolveAgent,
+    isAnswerAdvisor,
+    isAdvisor,
+    isListAgentProfiles,
+    isListAgents,
+    isCancelAgent,
     agentParamsRecord,
     isWebSearch,
     displayTarget,

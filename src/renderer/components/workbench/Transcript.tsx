@@ -1,4 +1,4 @@
-import { ArrowDown, CaretDown, CaretRight, Check, Copy, WarningCircle } from "@phosphor-icons/react";
+import { ArrowDown, CaretDown, CaretRight, Check, Copy, Robot, WarningCircle } from "@phosphor-icons/react";
 import { Fragment, memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Collapsible } from "../primitives/Collapsible";
 import { commandActivity, toolActivity } from "@forge/core/shared/tool-activity";
@@ -529,10 +529,22 @@ function renderTimelineEntry(
   if (item.kind === "hook_diagnostic" && item.historical) return null;
   if (item.kind === "message" && item.origin === "agent_reconciliation")
     return (
-      <details className="message message-internal" key={item.id}>
-        <summary>子代理汇总 · 内部记录</summary>
-        <p className="wb-muted">运行时追加的子任务汇总，不是人工输入。</p>
-        <pre className="message-body">{item.content}</pre>
+      <details className="message message-internal agent-reconciliation-card" key={item.id}>
+        <summary className="agent-reconciliation-summary">
+          <span className="agent-reconciliation-title">
+            <Robot size={15} weight="bold" />
+            <span>子任务执行汇总</span>
+          </span>
+          <span className="agent-internal-tag">内部状态同步</span>
+        </summary>
+        <div className="agent-reconciliation-body">
+          <p className="wb-muted agent-reconciliation-hint">
+            运行时自动汇总的子任务状态记录，用于主智能体上下文对齐，非人工输入。
+          </p>
+          <div className="agent-reconciliation-content markdown-body">
+            <Markdown source={item.content} />
+          </div>
+        </div>
       </details>
     );
   if (item.kind === "hook_diagnostic") {

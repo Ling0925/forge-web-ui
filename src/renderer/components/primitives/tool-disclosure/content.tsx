@@ -12,6 +12,9 @@ import {
   WaitAgentsView,
   SendAgentMessageView,
   ResolveAgentView,
+  AnswerAdvisorView,
+  AdvisorCallView,
+  ListAgentProfilesView,
 } from "./agents";
 import {
   type CommandTaskItem,
@@ -56,6 +59,11 @@ export function ToolDisclosureContent({
     isGetAgentResult,
     isSendMessage,
     isResolveAgent,
+    isAnswerAdvisor,
+    isAdvisor,
+    isListAgentProfiles,
+    isListAgents,
+    isCancelAgent,
     agentParamsRecord,
     isWebSearch,
     showParameters,
@@ -248,6 +256,36 @@ export function ToolDisclosureContent({
               <ResolveAgentView
                 id={agentParamsRecord?.id as string}
                 resolution={agentParamsRecord?.resolution as string}
+              />
+            </div>
+          ) : isAnswerAdvisor ? (
+            <div className="tool-section tool-agent-section">
+              <SectionHead title="答复智能体咨询" />
+              <AnswerAdvisorView
+                requestId={agentParamsRecord?.requestId as string}
+                answer={agentParamsRecord?.answer as string}
+                nextInstruction={agentParamsRecord?.nextInstruction as string}
+              />
+            </div>
+          ) : isAdvisor ? (
+            <div className="tool-section tool-agent-section">
+              <SectionHead title="智能体咨询" />
+              <AdvisorCallView
+                question={agentParamsRecord?.question as string}
+                context={agentParamsRecord?.context as string}
+                options={agentParamsRecord?.options as readonly string[]}
+                recommendation={agentParamsRecord?.recommendation as string}
+              />
+            </div>
+          ) : isListAgentProfiles ? (
+            <div className="tool-section tool-agent-section">
+              <SectionHead title="可用智能体配置" />
+              <ListAgentProfilesView
+                result={
+                  result?.kind === "object"
+                    ? result.record
+                    : parseParams(output)
+                }
               />
             </div>
           ) : canShowReadFile && result?.kind === "object" ? (
