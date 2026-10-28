@@ -2393,6 +2393,18 @@
   border: 1px solid var(--border-subtle);
 }
 
+.agent-model-select .settings-select-label,
+.agent-model-select .settings-select-option-label,
+.agent-fixed-model-fields #agent-input-model {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-model-select .settings-select-option-label,
+.agent-fixed-model-fields .agent-help-callout {
+  overflow-wrap: anywhere;
+}
+
 .agent-restricted-tools-wrap {
   display: flex;
   flex-direction: column;

@@ -46,7 +46,12 @@ const service = await createHarness({
     },
   }),
 });
-await service.updateSettings({ settings: { baseUrl: "http://127.0.0.1:1/v1", model: "fixture/offline" } });
+await service.updateSettings({ source: { type: "save", source: {
+  id: "fixture-source", label: "离线测试来源", apiMode: "chat-completions",
+  baseUrl: "http://127.0.0.1:1/v1", model: "fixture/offline",
+  modelSelection: { mode: "selected", models: ["fixture/offline", "fixture/alternate"] },
+} } });
+await service.updateSettings({ source: { type: "activate", id: "fixture-source" } });
 await service.updateSettings({ agent: { type: "save", expectedRevision: 0,
   profile: { ...agentProfileTemplates[0], id: "integration-explorer", name: "离线集成探索" } } });
 parent = await service.createSession({ workspace: directory, model: "fixture/offline", title: "协作集成检查" });

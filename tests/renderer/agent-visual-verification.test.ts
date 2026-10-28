@@ -128,6 +128,7 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
                   id: "default",
                   label: "Default Provider",
                   model: "cn:deepseek-v4.1-flash",
+                  modelSelection: { mode: "all", models: ["cn:deepseek-v4.1-flash", testProfile.model.model] },
                   protocol: "openai-compatible",
                   baseUrl: "https://api.deepseek.com",
                 },
@@ -265,6 +266,34 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
         await page.getByRole("region", { name: "智能体编辑器", exact: true }).waitFor();
         expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
         await page.screenshot({ path: `${screenshotDir}/settings-agent-editor-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
+
+        const modelPicker = page.getByRole("button", { name: "智能体模型", exact: true });
+        expect(await modelPicker.textContent()).toContain("long-model-id-");
+        expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
+        await modelPicker.click();
+        const modelMenu = page.getByRole("listbox", { name: "智能体模型", exact: true });
+        await modelMenu.waitFor();
+        const modelBounds = await modelMenu.boundingBox();
+        expect(modelBounds).not.toBeNull();
+        expect(modelBounds!.x).toBeGreaterThanOrEqual(0);
+        expect(modelBounds!.x + modelBounds!.width).toBeLessThanOrEqual(width);
+        const selectedModelLabel = modelMenu.locator('[aria-selected="true"] .settings-select-option-label');
+        expect(await selectedModelLabel.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+        expect(await selectedModelLabel.evaluate(element => getComputedStyle(element).fontFamily)).toContain("monospace");
+        expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+        await page.screenshot({ path: `${screenshotDir}/settings-agent-models-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
+        await page.keyboard.press("Escape");
+        await modelMenu.waitFor({ state: "hidden" });
+        expect(await page.getByRole("region", { name: "智能体编辑器", exact: true }).count()).toBe(1);
+        await modelPicker.click();
+        await page.getByRole("option", { name: /手动输入模型 ID/ }).click();
+        const longLegacyModel = `legacy/${"x".repeat(180)}`;
+        await page.getByLabel("精确模型 ID", { exact: true }).fill(longLegacyModel);
+        const modelNotice = page.getByRole("note").filter({ hasText: longLegacyModel });
+        await modelNotice.waitFor();
+        expect(await modelNotice.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+        await page.screenshot({ path: `${screenshotDir}/settings-agent-manual-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
 
         // 2. Switch to Inspector / Subagents & Advisor view
         await page.evaluate(() => {

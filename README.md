@@ -72,13 +72,14 @@ pnpm serve -- --host 127.0.0.1 --port 5173 \
 
 1. 打开 **设置 → 智能体**，选择「新建智能体」或「从模板添加」。探索、前端、后端和代码审查模板均可编辑；不会自动写入你的配置。
 2. 填写稳定 ID、名称、职责、适用场景和角色指令。**适用场景供主代理选择角色，角色指令只加载到被选中的子代理**。
-3. 选择继承主模型，或绑定已配置的 Provider 来源和精确模型 ID；不会在模型不可用时自动换模型。再配置权限上限、共享工作区 / worktree，以及工具组和 MCP 白名单。
+3. 选择继承主模型，或切换为「固定绑定模型」，选择 Provider 后直接从「已配置模型」下拉中选取模型，无需重复输入 ID。可选项与该来源在「模型连接」中的配置一致；未列出的模型可选「手动输入模型 ID…」。已有角色的未列出模型会保留原值，不自动替换。再配置权限上限、共享工作区 / worktree，以及工具组和 MCP 白名单。
 4. 保存后，在主会话中描述任务，也可以明确要求主代理使用某个角色。主代理通过 `list_agent_profiles` 发现角色，再通过 `spawn_agent` 派发；创建角色不会立即启动任务。
 
 在 **执行详情 → 子任务** 查看角色、进展及集中答疑记录，打开子会话可查看启动时的角色快照。子代理通过 `advisor` 提问，主代理通过 `answer_advisor` 回答并给出下一步指导；不是要求用户逐条审批的弹窗。「答复已保存」和「已投递到子代理」分别展示，历史或已中断运行不会伪装成仍在实时等待。
 
 - 编辑、停用或删除角色仅影响后续派发，不修改已有任务的角色快照，也不会自动取消正在运行的子任务。
 - 未保存草稿离开前会提示；版本冲突不会覆盖另一窗口的改动。按提示刷新最新配置后再决定下一次操作，刷新本身不重放保存、启停或删除。
+- 切换 Provider 会重新选择新来源的可选模型，请保存前确认；不会因模型不可用而自动换模型或回退到主模型。
 - 角色和 advisor 指导都不能提升宿主权限。`worktree` 与职责路径用于协作，不是操作系统沙箱。
 - 配置由 Core 持久化，不以浏览器本地存储作为唯一来源。刷新页面会恢复已持久化的协作状态，不会重新派发任务。
 
@@ -137,6 +138,7 @@ pnpm exec vitest run tests/renderer/chart-build-option.test.ts \
 # 智能体：设置交互、advisor 状态和真实 Core 离线协作（先构建页面）
 pnpm build
 pnpm exec vitest run tests/renderer/agent-profiles-mounted.test.ts \
+  tests/renderer/agent-profile-models-mounted.test.ts \
   tests/renderer/agent-advisor-mounted.test.ts \
   tests/renderer/agent-visual-verification.test.ts tests/web-agents-browser.test.ts
 

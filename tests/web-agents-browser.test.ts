@@ -50,14 +50,36 @@ it("persists role edits and renders real advisor requests, replies and reloads",
       expect(prompted).toBe(true);
       expect(await page.getByLabel("智能体名称", { exact: true }).inputValue()).toBe("  界面创建角色  ");
     }
+    // Choose a saved model without entering its ID; persist the source/model pair via real Core.
+    await page.getByRole("button", { name: "模型模式选择", exact: true }).click();
+    await page.getByRole("option", { name: /固定绑定模型/ }).click();
+    const modelPicker = page.getByRole("button", { name: "智能体模型", exact: true });
+    await modelPicker.click();
+    await page.getByRole("option", { name: "fixture/alternate", exact: true }).click();
+    expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
+    const sourceBeforeSave = await page.evaluate(async () => {
+      const settings = await window.forge.getSettings();
+      return { sourceId: settings.activeSourceId, sourceModel: settings.model };
+    });
     const save = () => page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
     await save();
     await page.getByText("智能体保存成功。配置仅影响后续派发的子任务。", { exact: true }).waitFor();
     expect(await page.getByLabel("智能体名称", { exact: true }).inputValue()).toBe("界面创建角色");
     expect(await page.locator(".agent-draft-badge").count()).toBe(0);
-    await page.getByRole("button", { name: "返回列表", exact: true }).click();
+    const settingsAfterSave = await page.evaluate(() => window.forge.getSettings());
+    expect(settingsAfterSave.agentProfiles!.find(p => p.id === "ui-integration")?.model).toEqual({
+      mode: "fixed", providerSourceId: sourceBeforeSave.sourceId, model: "fixture/alternate",
+    });
+    expect(settingsAfterSave.model).toBe(sourceBeforeSave.sourceModel);
+    expect(settingsAfterSave.activeSourceId).toBe(sourceBeforeSave.sourceId);
+    await page.reload();
+    await page.locator(".composer-textarea").waitFor();
+    await page.keyboard.press("Control+,");
+    await page.getByRole("button", { name: "智能体", exact: true }).click();
     const card = page.getByRole("article", { name: "智能体：界面创建角色", exact: true });
     await card.getByRole("button", { name: "编辑", exact: true }).click();
+    expect(await modelPicker.textContent()).toContain("fixture/alternate");
+    expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
     await page.getByLabel("智能体名称", { exact: true }).fill("保留本地草稿");
     // A second RPC caller updates storage without replacing the editor's state.
     await page.evaluate(async () => {

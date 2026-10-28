@@ -6,6 +6,7 @@ import {
   agentProfileTemplates,
   agentToolGroups,
 } from "@forge/core/shared/agent-profiles";
+import { selectableModelIds } from "../../state/composer-model";
 import {
   ArrowLeft,
   FloppyDisk,
@@ -132,12 +133,15 @@ export function AgentProfilesPanel({
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<AgentProfileInput>(defaultNewProfile);
+  const [isManualInput, setIsManualInput] = useState(false);
   // Keep separators while typing; normalizing a controlled comma list on every
   // keystroke otherwise removes the comma before the next server can be entered.
   const [mcpServersText, setMcpServersText] = useState("");
   const resetDraft = (profile: AgentProfileInput) => {
     setDraft(profile);
     setMcpServersText(profile.tools.mode === "restricted" ? profile.tools.mcpServers.join(", ") : "");
+    // Unlisted values are shown as manual below, without changing the binding.
+    setIsManualInput(false);
   };
   const [originalProfile, setOriginalProfile] = useState<AgentProfile | null>(
     null,
@@ -223,6 +227,42 @@ export function AgentProfilesPanel({
               items.length) %
             items.length;
     items[nextIndex]?.focus({ preventScroll: true });
+  };
+
+  const fixedModel = draft.model.mode === "fixed" ? draft.model : undefined;
+  const currentFixedSource = providerSources.find((s) => s.id === fixedModel?.providerSourceId);
+  const availableModelIds = useMemo(
+    () => currentFixedSource ? selectableModelIds(currentFixedSource) : [],
+    [currentFixedSource],
+  );
+  const showManualModel = isManualInput || !availableModelIds.includes(fixedModel?.model ?? "");
+  const providerSourceOptions = [
+    ...(fixedModel?.providerSourceId && !currentFixedSource ? [{
+      value: fixedModel.providerSourceId,
+      label: `${fixedModel.providerSourceId}（未找到配置）`,
+      sub: "已保留原绑定来源",
+      disabled: true,
+    }] : []),
+    ...providerSources.map((s) => ({ value: s.id, label: s.label || s.id, sub: `来源 ID: ${s.id}` })),
+  ];
+  const modelOptions = [
+    ...availableModelIds.map((id) => ({ value: id, label: id })),
+    { value: "", label: "手动输入模型 ID…", sub: "自定义或未列入可选列表的精确模型 ID" },
+  ];
+  // Only an explicit source change chooses a new default; opening an existing
+  // profile or refreshing settings must never rewrite its saved model.
+  const selectFixedSource = (sourceId: string) => {
+    const source = providerSources.find((s) => s.id === sourceId);
+    const models = source ? selectableModelIds(source) : [];
+    setDraft({
+      ...draft,
+      model: {
+        mode: "fixed",
+        providerSourceId: sourceId,
+        model: source && models.includes(source.model) ? source.model : models[0] ?? "",
+      },
+    });
+    setIsManualInput(false);
   };
 
   // Compute dirty flag
@@ -736,18 +776,14 @@ export function AgentProfilesPanel({
               options={MODEL_MODE_OPTIONS}
               disabled={busy}
               onChange={(val) => {
+                if (val === draft.model.mode) return;
                 if (val === "inherit") {
                   setDraft({ ...draft, model: { mode: "inherit" } });
+                  setIsManualInput(false);
                 } else {
-                  const firstSource = providerSources[0];
-                  setDraft({
-                    ...draft,
-                    model: {
-                      mode: "fixed",
-                      providerSourceId: firstSource ? firstSource.id : "",
-                      model: firstSource?.model || "",
-                    },
-                  });
+                  const preferredSource = providerSources.find((s) => s.id === state.settings?.activeSourceId)
+                    ?? providerSources[0];
+                  selectFixedSource(preferredSource?.id ?? "");
                 }
               }}
             />
@@ -761,6 +797,14 @@ export function AgentProfilesPanel({
                 </p>
               )}
 
+              {draft.model.providerSourceId &&
+                providerSources.length > 0 &&
+                !currentFixedSource && (
+                  <p className="agent-help-callout" role="alert">
+                    绑定的 Provider 来源（{draft.model.providerSourceId}）未在当前已配置来源中找到，已保留原绑定。
+                  </p>
+                )}
+
               <Field
                 id="agent-input-source"
                 label="Provider 来源标识"
@@ -770,19 +814,10 @@ export function AgentProfilesPanel({
                   <SettingsSelect
                     ariaLabel="Provider 来源"
                     value={draft.model.providerSourceId}
-                    options={providerSources.map((s) => ({
-                      value: s.id,
-                      label: s.label || s.id,
-                      sub: `来源 ID: ${s.id}`,
-                    }))}
+                    options={providerSourceOptions}
                     disabled={busy}
                     onChange={(val) => {
-                      if (draft.model.mode === "fixed") {
-                        setDraft({
-                          ...draft,
-                          model: { ...draft.model, providerSourceId: val },
-                        });
-                      }
+                      if (val !== fixedModel?.providerSourceId) selectFixedSource(val);
                     }}
                   />
                 ) : (
@@ -808,26 +843,66 @@ export function AgentProfilesPanel({
                 )}
               </Field>
 
-              <Field
-                id="agent-input-model"
-                label="精确模型 ID"
-                helper="原样保留完整模型 ID（含冒号或斜杠，不作来源分隔符）。精确匹配，不虚构模型。"
-              >
-                <Input
+              {providerSources.length > 0 && (
+                <Field
+                  id="agent-select-model"
+                  label="已配置模型"
+                  helper="从当前 Provider 已配置的模型列表中直接选择，或选择手动输入精确 ID。"
+                >
+                  <SettingsSelect
+                    ariaLabel="智能体模型"
+                    id="agent-select-model"
+                    className="agent-model-select"
+                    value={showManualModel ? "" : draft.model.model}
+                    options={modelOptions}
+                    disabled={busy}
+                    onChange={(val) => {
+                      if (!fixedModel) return;
+                      setIsManualInput(val === "");
+                      if (val) setDraft({ ...draft, model: { ...fixedModel, model: val } });
+                    }}
+                  />
+                </Field>
+              )}
+
+              {availableModelIds.length === 0 && currentFixedSource && (
+                <p className="agent-help-callout" role="note">
+                  该 Provider 来源未列出可用模型。可前往「模型连接」配置可选模型，或手动输入精确模型 ID。
+                </p>
+              )}
+
+              {currentFixedSource &&
+                availableModelIds.length > 0 &&
+                draft.model.model &&
+                !availableModelIds.includes(draft.model.model) && (
+                  <p className="agent-help-callout" role="note">
+                    当前模型 ID（{draft.model.model}）未在来源已配置模型列表中。可保留此 ID，或从上方选择已配置模型。
+                  </p>
+                )}
+
+              {showManualModel && (
+                <Field
                   id="agent-input-model"
-                  value={draft.model.model}
-                  disabled={busy}
-                  onChange={(e) => {
-                    if (draft.model.mode === "fixed") {
-                      setDraft({
-                        ...draft,
-                        model: { ...draft.model, model: e.target.value.trim() },
-                      });
-                    }
-                  }}
-                  placeholder="例如: cn:deepseek-v4.1-flash"
-                />
-              </Field>
+                  label="精确模型 ID"
+                  helper="原样保留完整模型 ID（含冒号或斜杠，不作来源分隔符）。精确匹配，不虚构模型。"
+                >
+                  <Input
+                    id="agent-input-model"
+                    value={draft.model.model}
+                    disabled={busy}
+                    onChange={(e) => {
+                      if (draft.model.mode === "fixed") {
+                        setIsManualInput(true);
+                        setDraft({
+                          ...draft,
+                          model: { ...draft.model, model: e.target.value.trim() },
+                        });
+                      }
+                    }}
+                    placeholder="例如: cn:deepseek-v4.1-flash"
+                  />
+                </Field>
+              )}
             </div>
           )}
         </div>

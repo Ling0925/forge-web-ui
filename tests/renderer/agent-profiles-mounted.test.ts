@@ -338,6 +338,8 @@ describe("Agent Profiles Mounted Tests", () => {
       expect(await servers.inputValue()).toBe("github, memory");
       await selectTrigger.click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
+      await page.getByRole("button", { name: "智能体模型", exact: true }).click();
+      await page.getByRole("option", { name: /手动输入模型 ID/ }).click();
       await page.getByLabel("精确模型 ID", { exact: true }).fill("ag/gemini-3.8-flash");
       await page.locator("#agent-input-instructions").fill("长".repeat(9000));
       await page.getByRole("button", { name: "保存智能体角色" }).click();
