@@ -249,6 +249,18 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
           animations: "disabled",
         });
 
+        await page.getByRole("button", { name: "从模板添加", exact: true }).click();
+        const templateMenu = page.getByRole("menu");
+        await templateMenu.waitFor();
+        const menuBounds = await templateMenu.boundingBox();
+        expect(menuBounds).not.toBeNull();
+        expect(menuBounds!.x).toBeGreaterThanOrEqual(0);
+        expect(menuBounds!.x + menuBounds!.width).toBeLessThanOrEqual(width);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+        await page.screenshot({ path: `${screenshotDir}/settings-agent-templates-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
+        await page.keyboard.press("Escape");
+        await templateMenu.waitFor({ state: "hidden" });
+
         await page.getByRole("button", { name: "编辑", exact: true }).click();
         await page.getByRole("region", { name: "智能体编辑器", exact: true }).waitFor();
         expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);

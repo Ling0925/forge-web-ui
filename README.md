@@ -15,7 +15,8 @@ Web 与 Core 独立运行：**更新界面不打断 Core 中已接受的任务**
 - 按工作区组织会话，搜索、恢复、重命名与归档任务。
 - 流式对话、图片输入、思考与工具折叠，运行中排队或插话。
 - 审批操作、查看计划与子任务，浏览文件、差异和检查点。
-- 管理模型来源、路由、插件、MCP 等设置，查看用量与诊断。
+- 管理模型来源、路由、插件、MCP 和智能体角色，查看用量与诊断。
+- 配置探索、前端、后端、代码审查等角色供主代理调用，在子任务详情中查看 advisor 问答与投递状态。
 - 在桌面和手机布局间自适应，支持浅色、深色主题。
 - 将助手回复中的 `chart` 围栏渲染为交互图表，可切换数据表、复制 JSON、导出 PNG；卡片右上角可重新绘制。
 
@@ -66,6 +67,20 @@ pnpm serve -- --host 127.0.0.1 --port 5173 \
 打开 `http://127.0.0.1:5173`，首次使用在设置中配置模型来源、凭据和模型，再开始会话。实际发送消息会调用所选模型，可能产生费用。
 
 `--core-url` 必填且必须是另一个本机回环 IPv4 HTTP origin，带显式端口，不带路径、查询或凭据。缺少 Core 时 Web 不会自行创建运行时。
+
+## 配置智能体与查看协作
+
+1. 打开 **设置 → 智能体**，选择「新建智能体」或「从模板添加」。探索、前端、后端和代码审查模板均可编辑；不会自动写入你的配置。
+2. 填写稳定 ID、名称、职责、适用场景和角色指令。**适用场景供主代理选择角色，角色指令只加载到被选中的子代理**。
+3. 选择继承主模型，或绑定已配置的 Provider 来源和精确模型 ID；不会在模型不可用时自动换模型。再配置权限上限、共享工作区 / worktree，以及工具组和 MCP 白名单。
+4. 保存后，在主会话中描述任务，也可以明确要求主代理使用某个角色。主代理通过 `list_agent_profiles` 发现角色，再通过 `spawn_agent` 派发；创建角色不会立即启动任务。
+
+在 **执行详情 → 子任务** 查看角色、进展及集中答疑记录，打开子会话可查看启动时的角色快照。子代理通过 `advisor` 提问，主代理通过 `answer_advisor` 回答并给出下一步指导；不是要求用户逐条审批的弹窗。「答复已保存」和「已投递到子代理」分别展示，历史或已中断运行不会伪装成仍在实时等待。
+
+- 编辑、停用或删除角色仅影响后续派发，不修改已有任务的角色快照，也不会自动取消正在运行的子任务。
+- 未保存草稿离开前会提示；版本冲突不会覆盖另一窗口的改动。按提示刷新最新配置后再决定下一次操作，刷新本身不重放保存、启停或删除。
+- 角色和 advisor 指导都不能提升宿主权限。`worktree` 与职责路径用于协作，不是操作系统沙箱。
+- 配置由 Core 持久化，不以浏览器本地存储作为唯一来源。刷新页面会恢复已持久化的协作状态，不会重新派发任务。
 
 ## 开发界面：使用 HMR
 
@@ -118,6 +133,12 @@ pnpm build
 pnpm exec vitest run tests/renderer/chart-build-option.test.ts \
   tests/renderer/chart-sanitize.test.ts tests/renderer/chart-markdown-mounted.test.ts \
   tests/web-chart-browser.test.ts
+
+# 智能体：设置交互、advisor 状态和真实 Core 离线协作（先构建页面）
+pnpm build
+pnpm exec vitest run tests/renderer/agent-profiles-mounted.test.ts \
+  tests/renderer/agent-advisor-mounted.test.ts \
+  tests/renderer/agent-visual-verification.test.ts tests/web-agents-browser.test.ts
 
 # 开发/生产入口的浏览器烟测
 pnpm test:browser

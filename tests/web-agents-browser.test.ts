@@ -29,6 +29,13 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     await page.locator(".composer-textarea").waitFor();
     await page.keyboard.press("Control+,");
     await page.getByRole("button", { name: "智能体", exact: true }).click();
+    const templateTrigger = page.getByRole("button", { name: "从模板添加", exact: true });
+    await templateTrigger.click();
+    await page.getByRole("menu").waitFor();
+    await page.keyboard.press("Escape");
+    await page.getByRole("menu").waitFor({ state: "hidden" });
+    expect(await templateTrigger.evaluate(element => element === document.activeElement)).toBe(true);
+    await page.getByRole("region", { name: "智能体角色配置", exact: true }).waitFor();
     await page.getByRole("button", { name: "新建智能体", exact: true }).click();
     await page.getByLabel("智能体 ID", { exact: true }).fill("ui-integration");
     await page.getByLabel("智能体名称", { exact: true }).fill("  界面创建角色  ");
@@ -65,7 +72,41 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     await page.getByRole("button", { name: "刷新为最新配置", exact: true }).click();
     await expect.poll(() => page.getByLabel("智能体名称", { exact: true }).inputValue()).toBe("另一窗口的新版本");
     await page.getByRole("button", { name: "返回列表", exact: true }).click();
-    await page.getByRole("article", { name: "智能体：另一窗口的新版本", exact: true }).waitFor();
+    const latestCard = page.getByRole("article", { name: "智能体：另一窗口的新版本", exact: true });
+    await latestCard.waitFor();
+
+    // List actions also need revision recovery. Refresh must never replay a mutation.
+    const bumpProfile = () => page.evaluate(async () => {
+      const current = (await window.forge.getSettings()).agentProfiles!.find(p => p.id === "ui-integration")!;
+      const { revision, ...profile } = current;
+      return window.forge.updateSettings({ agent: { type: "save", expectedRevision: revision, profile } });
+    });
+    const readProfile = () => page.evaluate(async () =>
+      (await window.forge.getSettings()).agentProfiles!.find(p => p.id === "ui-integration"));
+    await bumpProfile();
+    const beforeToggle = await readProfile();
+    await latestCard.getByRole("button", { name: "停用", exact: true }).click();
+    await page.getByRole("alert").waitFor();
+    await page.getByRole("button", { name: "刷新为最新配置", exact: true }).click();
+    await page.getByRole("alert").waitFor({ state: "hidden" });
+    expect(await readProfile()).toEqual(beforeToggle);
+    await latestCard.getByRole("button", { name: "停用", exact: true }).click();
+    await latestCard.getByText("已停用", { exact: true }).waitFor();
+    expect((await readProfile())?.enabled).toBe(false);
+
+    await bumpProfile();
+    const beforeDelete = await readProfile();
+    await latestCard.getByRole("button", { name: /删除智能体/ }).click();
+    await latestCard.getByRole("button", { name: "确定删除", exact: true }).click();
+    await page.getByRole("alert").waitFor();
+    await page.getByRole("button", { name: "刷新为最新配置", exact: true }).click();
+    await page.getByRole("alert").waitFor({ state: "hidden" });
+    expect(await latestCard.getByRole("button", { name: "确定删除", exact: true }).count()).toBe(0);
+    expect(await readProfile()).toEqual(beforeDelete);
+    await latestCard.getByRole("button", { name: /删除智能体/ }).click();
+    await latestCard.getByRole("button", { name: "确定删除", exact: true }).click();
+    await latestCard.waitFor({ state: "hidden" });
+    expect(await readProfile()).toBeUndefined();
     await page.getByRole("button", { name: "返回工作台", exact: true }).click();
 
     const run = await page.evaluate(async () => {

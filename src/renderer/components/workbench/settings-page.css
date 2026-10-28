@@ -2110,6 +2110,15 @@
   max-width: 90vw;
 }
 
+@media (max-width: 600px) {
+  .agent-template-popover {
+    left: 0;
+    right: auto;
+    width: min(280px, calc(100vw - 32px));
+    max-width: calc(100vw - 32px);
+  }
+}
+
 .agent-template-item {
   display: flex;
   flex-direction: column;
@@ -2124,8 +2133,11 @@
   transition: background-color var(--transition-fast);
 }
 
-.agent-template-item:hover {
+.agent-template-item:hover,
+.agent-template-item:focus-visible,
+.agent-template-item:focus {
   background-color: var(--surface-hover);
+  outline: none;
 }
 
 .agent-template-item strong {

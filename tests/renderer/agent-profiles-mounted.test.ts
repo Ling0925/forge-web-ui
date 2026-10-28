@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { build } from "esbuild";
-import { chromium } from "playwright";
-import { describe, expect, it } from "vitest";
+import { chromium, type Browser } from "playwright";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const executablePath = process.env.FORGE_BROWSER_EXECUTABLE;
 
@@ -9,15 +9,20 @@ declare global {
   interface Window {
     updateCalls: any[];
     failWithConflict: boolean;
+    failGetSettings: boolean;
     getSettingsCalls: number;
+    escapeModalClosed: boolean;
     testState: any;
     testController: any;
   }
 }
 
 describe("Agent Profiles Mounted Tests", () => {
-  it("verifies CRUD payloads, templates, toggles, duplicate, conflict preservation, and draft protection", async () => {
-    const bundle = await build({
+  let bundle: any;
+  let browser: Browser;
+
+  beforeAll(async () => {
+    bundle = await build({
       stdin: {
         resolveDir: resolve("."),
         loader: "tsx",
@@ -32,7 +37,9 @@ describe("Agent Profiles Mounted Tests", () => {
 
           window.updateCalls = [];
           window.failWithConflict = false;
+          window.failGetSettings = false;
           window.getSettingsCalls = 0;
+          window.escapeModalClosed = false;
 
           const initialProfile = {
             id: "reviewer",
@@ -62,12 +69,15 @@ describe("Agent Profiles Mounted Tests", () => {
             window.forge = {
               getSettings: async () => {
                 window.getSettingsCalls++;
+                if (window.failGetSettings) {
+                  throw new Error("服务端连接超时");
+                }
                 return {
                   ...settings,
                   agentProfiles: (settings.agentProfiles || []).map((p) => ({
                     ...p,
                     revision: p.revision + 1,
-                    name: "服务器最新探索",
+                    name: p.id === "reviewer" ? "代码审查（权威更新）" : "服务器最新探索",
                   })),
                 };
               },
@@ -113,9 +123,18 @@ describe("Agent Profiles Mounted Tests", () => {
             };
 
             return (
-              <div id="test-container">
-                <AgentProfilesPanel onDirtyChange={setDirty} onBusyChange={setBusy} />
-                <div id="dirty-indicator" data-dirty={String(dirty)} />
+              <div
+                id="mock-settings-modal"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    window.escapeModalClosed = true;
+                  }
+                }}
+              >
+                <div id="test-container">
+                  <AgentProfilesPanel onDirtyChange={setDirty} onBusyChange={setBusy} />
+                  <div id="dirty-indicator" data-dirty={String(dirty)} />
+                </div>
               </div>
             );
           }
@@ -148,23 +167,33 @@ describe("Agent Profiles Mounted Tests", () => {
       ],
     });
 
-    const browser = await chromium.launch({
+    browser = await chromium.launch({
       headless: true,
       ...(executablePath ? { executablePath } : {}),
     });
+  });
 
+  afterAll(async () => {
+    await browser?.close();
+  });
+
+  const setupPage = async () => {
+    const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.setContent('<div id="root"></div>');
+    await page.addStyleTag({
+      content: bundle.outputFiles.find((f: any) => f.path.endsWith(".css"))!.text,
+    });
+    await page.addScriptTag({
+      content: bundle.outputFiles.find((f: any) => f.path.endsWith(".js"))!.text,
+    });
+    return page;
+  };
+
+  it("verifies CRUD payloads, templates, toggles, duplicate, conflict preservation, and draft protection", async () => {
+    const page = await setupPage();
     try {
-      const page = await browser.newPage();
-      page.setDefaultTimeout(5000);
-      page.on("dialog", (dialog) => dialog.accept());
-      await page.setContent('<div id="root"></div>');
-      await page.addStyleTag({
-        content: bundle.outputFiles.find((f) => f.path.endsWith(".css"))!.text,
-      });
-      await page.addScriptTag({
-        content: bundle.outputFiles.find((f) => f.path.endsWith(".js"))!.text,
-      });
-
       // 1. Initial render & Old data compatibility check
       await page.getByRole("region", { name: "智能体角色配置" }).waitFor();
       expect(await page.getByText("已配置 1 / 64 个智能体").count()).toBe(1);
@@ -173,7 +202,10 @@ describe("Agent Profiles Mounted Tests", () => {
       // 2. Enable/Disable toggle test
       const toggleBtn = page.getByRole("button", { name: "停用", exact: true });
       await toggleBtn.click();
-      await page.waitForTimeout(60);
+      await expect.poll(async () => {
+        const calls = await page.evaluate(() => window.updateCalls);
+        return calls.length;
+      }).toBeGreaterThan(0);
 
       const toggleCall = (await page.evaluate(() => window.updateCalls)).at(-1);
       expect(toggleCall).toEqual({
@@ -200,7 +232,9 @@ describe("Agent Profiles Mounted Tests", () => {
 
       // Save new profile
       await page.getByRole("button", { name: "保存智能体角色" }).click();
-      await page.waitForTimeout(60);
+      await expect.poll(async () => {
+        return await page.locator("#dirty-indicator").getAttribute("data-dirty");
+      }).toBe("false");
 
       const saveNewCall = (await page.evaluate(() => window.updateCalls)).at(-1);
       expect(saveNewCall).toEqual({
@@ -215,9 +249,6 @@ describe("Agent Profiles Mounted Tests", () => {
           expectedRevision: 0,
         },
       });
-
-      // After save success, dirty indicator must reset to false
-      expect(await page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
 
       // 4. Return to list and verify count is now 2
       await page.getByRole("button", { name: "返回列表" }).click();
@@ -246,10 +277,10 @@ describe("Agent Profiles Mounted Tests", () => {
       // Confirm delete
       await deleteBtn.click();
       await page.getByRole("button", { name: "确定删除", exact: true }).click();
-      await page.waitForTimeout(60);
-
-      const deleteCall = (await page.evaluate(() => window.updateCalls)).at(-1);
-      expect(deleteCall?.agent?.type).toBe("remove");
+      await expect.poll(async () => {
+        const calls = await page.evaluate(() => window.updateCalls);
+        return calls.at(-1)?.agent?.type;
+      }).toBe("remove");
 
       // 7. Conflict handling: retain draft, and refresh from host test
       // Edit remaining profile (explorer)
@@ -263,23 +294,24 @@ describe("Agent Profiles Mounted Tests", () => {
       });
 
       await page.getByRole("button", { name: "保存智能体角色" }).click();
-      await page.waitForTimeout(60);
+      await expect.poll(async () => {
+        return await page.getByText(/版本冲突/).count();
+      }).toBe(1);
 
       // Verify draft is retained and conflict notice is displayed
-      expect(await page.getByText(/版本冲突/).count()).toBe(1);
       expect(await page.locator("#agent-input-name").inputValue()).toBe("探索（修改中）");
 
       // Click "刷新为最新配置"
       const refreshBtn = page.getByRole("button", { name: "刷新为最新配置" });
       expect(await refreshBtn.count()).toBe(1);
       await refreshBtn.click();
-      await page.waitForTimeout(60);
 
       // Verify window.forge.getSettings was called
-      const getSettingsCalls = await page.evaluate(() => window.getSettingsCalls);
-      expect(getSettingsCalls).toBe(1);
+      await expect.poll(async () => {
+        return await page.evaluate(() => window.getSettingsCalls);
+      }).toBe(1);
 
-      // 8. Test SettingsSelect Escape keydown: only closes dropdown popover, does not close modal
+      // 8. Test SettingsSelect Escape keydown
       const selectTrigger = page.getByRole("button", { name: /模型模式选择/ });
       await selectTrigger.click();
       expect(await selectTrigger.getAttribute("aria-expanded")).toBe("true");
@@ -287,10 +319,10 @@ describe("Agent Profiles Mounted Tests", () => {
 
       // Press Escape
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(60);
+      await expect.poll(async () => {
+        return await selectTrigger.getAttribute("aria-expanded");
+      }).toBe("false");
 
-      // Verify dropdown is closed but editor is still mounted
-      expect(await selectTrigger.getAttribute("aria-expanded")).toBe("false");
       expect(await page.getByRole("listbox", { name: /模型模式选择/ }).count()).toBe(0);
       expect(await page.getByRole("region", { name: "智能体编辑器" }).count()).toBe(1);
       expect(await page.locator("#agent-input-name").inputValue()).toBe("服务器最新探索");
@@ -330,7 +362,257 @@ describe("Agent Profiles Mounted Tests", () => {
       await page.getByRole("button", { name: "保存智能体角色" }).click();
       await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
     } finally {
-      await browser.close();
+      await page.close();
+    }
+  });
+
+  it("handles list conflicts on toggle and delete with refresh recovery, new revision retry, and failure feedback", async () => {
+    const page = await setupPage();
+    try {
+      await page.getByRole("region", { name: "智能体角色配置" }).waitFor();
+
+      // 1. Toggle conflict test
+      await page.evaluate(() => {
+        window.failWithConflict = true;
+      });
+
+      const toggleBtn = page.getByRole("button", { name: "停用", exact: true });
+      await toggleBtn.click();
+
+      // Verify Core conflict message displayed
+      const conflictMsg = "该智能体配置已被其他窗口或 CLI 修改。请重新加载设置后再保存，避免覆盖对方的改动。";
+      await expect.poll(async () => {
+        return await page.locator(".form-error").textContent();
+      }).toContain(conflictMsg);
+
+      // Verify list conflict recovery button appears with exact text "刷新为最新配置"
+      const listRefreshBtn = page.locator(".form-error").getByRole("button", { name: "刷新为最新配置" });
+      expect(await listRefreshBtn.isVisible()).toBe(true);
+
+      const callsCountBeforeRefresh = await page.evaluate(() => window.updateCalls.length);
+
+      // Turn off conflict on server side to simulate fresh state
+      await page.evaluate(() => {
+        window.failWithConflict = false;
+      });
+
+      // Click "刷新为最新配置"
+      await listRefreshBtn.click();
+
+      // Verify authoritative state loaded
+      await expect.poll(async () => {
+        return await page.evaluate(() => window.getSettingsCalls);
+      }).toBe(1);
+
+      // Verify the list now shows authoritative updated profile name "代码审查（权威更新）"
+      expect(await page.getByText("代码审查（权威更新）").isVisible()).toBe(true);
+
+      // Verify refresh did NOT re-dispatch or auto-retry any toggle or delete operation
+      const callsCountAfterRefresh = await page.evaluate(() => window.updateCalls.length);
+      expect(callsCountAfterRefresh).toBe(callsCountBeforeRefresh);
+
+      // 2. User re-initiates toggle; verify payload carries new revision (2 instead of 1)
+      const nextToggleBtn = page.getByRole("button", { name: "停用", exact: true });
+      await nextToggleBtn.click();
+      await expect.poll(async () => {
+        return (await page.evaluate(() => window.updateCalls)).length;
+      }).toBe(callsCountBeforeRefresh + 1);
+
+      const retryToggleCall = (await page.evaluate(() => window.updateCalls)).at(-1);
+      expect(retryToggleCall).toEqual({
+        agent: {
+          type: "save",
+          profile: expect.objectContaining({
+            id: "reviewer",
+            enabled: false,
+          }),
+          expectedRevision: 2,
+        },
+      });
+
+      // 3. Delete conflict test
+      // Start delete
+      const deleteBtn = page.getByRole("button", { name: /删除智能体/ });
+      await deleteBtn.click();
+      expect(await page.getByText("确认删除？此操作不可逆").isVisible()).toBe(true);
+
+      // Inject conflict for delete
+      await page.evaluate(() => {
+        window.failWithConflict = true;
+      });
+
+      await page.getByRole("button", { name: "确定删除", exact: true }).click();
+
+      // Conflict appears in list
+      await expect.poll(async () => {
+        return await page.locator(".form-error").textContent();
+      }).toContain(conflictMsg);
+      expect(await page.locator(".form-error").getByRole("button", { name: "刷新为最新配置" }).isVisible()).toBe(true);
+
+      // Turn off conflict
+      await page.evaluate(() => {
+        window.failWithConflict = false;
+      });
+
+      // Refresh from host
+      await page.locator(".form-error").getByRole("button", { name: "刷新为最新配置" }).click();
+
+      // Verify previous deletion confirmation state was cleared upon refresh
+      expect(await page.getByText("确认删除？此操作不可逆").count()).toBe(0);
+
+      // Re-trigger delete with new revision (revision 3 after previous save & refresh)
+      await page.getByRole("button", { name: /删除智能体/ }).click();
+      expect(await page.getByText("确认删除？此操作不可逆").isVisible()).toBe(true);
+      await page.getByRole("button", { name: "确定删除", exact: true }).click();
+
+      await expect.poll(async () => {
+        const lastCall = (await page.evaluate(() => window.updateCalls)).at(-1);
+        return lastCall?.agent?.type;
+      }).toBe("remove");
+
+      const finalDeleteCall = (await page.evaluate(() => window.updateCalls)).at(-1);
+      expect(finalDeleteCall).toEqual({
+        agent: {
+          type: "remove",
+          id: "reviewer",
+          expectedRevision: 4,
+        },
+      });
+
+      // 4. Refresh failure feedback test
+      // Trigger a conflict to show the refresh button
+      // First create a new agent so we have something to operate on
+      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      await page.locator("#agent-input-id").fill("temp-agent");
+      await page.locator("#agent-input-name").fill("临时智能体");
+      await page.getByRole("button", { name: "保存智能体角色" }).click();
+      await expect.poll(async () => {
+        return await page.locator("#dirty-indicator").getAttribute("data-dirty");
+      }).toBe("false");
+      await page.getByRole("button", { name: "返回列表" }).click();
+
+      // Now toggle with conflict
+      await page.evaluate(() => {
+        window.failWithConflict = true;
+      });
+      await page.getByRole("button", { name: "停用", exact: true }).click();
+      expect(await page.locator(".form-error").getByRole("button", { name: "刷新为最新配置" }).isVisible()).toBe(true);
+
+      // Now simulate loadSettings failure
+      await page.evaluate(() => {
+        window.failGetSettings = true;
+      });
+
+      const updateCallsBeforeFailRefresh = await page.evaluate(() => window.updateCalls.length);
+      await page.locator(".form-error").getByRole("button", { name: "刷新为最新配置" }).click();
+
+      // Error message should reflect the refresh failure, not false success
+      await expect.poll(async () => {
+        return await page.locator(".form-error").textContent();
+      }).toContain("拉取最新配置失败：服务端连接超时");
+
+      // The refresh entry MUST still be retained for retry
+      expect(await page.locator(".form-error").getByRole("button", { name: "刷新为最新配置" }).isVisible()).toBe(true);
+
+      // No update calls dispatched during failed refresh
+      expect(await page.evaluate(() => window.updateCalls.length)).toBe(updateCallsBeforeFailRefresh);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("verifies template menu ARIA, focus on open, keyboard navigation, Escape without closing modal, and click/tab out", async () => {
+    const page = await setupPage();
+    try {
+      await page.getByRole("region", { name: "智能体角色配置" }).waitFor();
+
+      const trigger = page.getByRole("button", { name: "从模板添加" });
+      expect(await trigger.isVisible()).toBe(true);
+
+      // 1. ARIA attributes when closed
+      expect(await trigger.getAttribute("aria-haspopup")).toBe("menu");
+      expect(await trigger.getAttribute("aria-expanded")).toBe("false");
+
+      // 2. Click to open: check aria-expanded and focus on first item
+      await trigger.click();
+      expect(await trigger.getAttribute("aria-expanded")).toBe("true");
+
+      const menu = page.getByRole("menu");
+      expect(await menu.isVisible()).toBe(true);
+      const menuId = await menu.getAttribute("id");
+      expect(menuId).toBeTruthy();
+      expect(await trigger.getAttribute("aria-controls")).toBe(menuId);
+
+      // Open focus: check that the first menu item is focused
+      const items = menu.getByRole("menuitem");
+      const firstItem = items.first();
+      await expect.poll(async () => {
+        return await page.evaluate(() => document.activeElement?.textContent);
+      }).toContain(await firstItem.locator("strong").textContent());
+
+      // 3. ArrowDown navigation
+      await page.keyboard.press("ArrowDown");
+      const secondItem = items.nth(1);
+      await expect.poll(async () => {
+        return await page.evaluate(() => document.activeElement?.textContent);
+      }).toContain(await secondItem.locator("strong").textContent());
+
+      // 4. End key navigation: jumps to last item
+      await page.keyboard.press("End");
+      const lastItem = items.last();
+      await expect.poll(async () => {
+        return await page.evaluate(() => document.activeElement?.textContent);
+      }).toContain(await lastItem.locator("strong").textContent());
+
+      // 5. Home key navigation: jumps back to first item
+      await page.keyboard.press("Home");
+      await expect.poll(async () => {
+        return await page.evaluate(() => document.activeElement?.textContent);
+      }).toContain(await firstItem.locator("strong").textContent());
+
+      // 6. ArrowUp navigation: wraps around to last item
+      await page.keyboard.press("ArrowUp");
+      await expect.poll(async () => {
+        return await page.evaluate(() => document.activeElement?.textContent);
+      }).toContain(await lastItem.locator("strong").textContent());
+
+      // 7. Escape keydown: closes menu, returns focus to trigger, and does NOT close modal
+      await page.keyboard.press("Escape");
+      await expect.poll(async () => {
+        return await trigger.getAttribute("aria-expanded");
+      }).toBe("false");
+      expect(await menu.count()).toBe(0);
+
+      // Focus returned to trigger
+      await expect.poll(async () => {
+        return await page.evaluate(() => document.activeElement?.id);
+      }).toBe("agent-template-menu-trigger");
+
+      // Modal is NOT closed (escapeModalClosed should remain false)
+      const modalClosed = await page.evaluate(() => window.escapeModalClosed);
+      expect(modalClosed).toBe(false);
+
+      // 8. Click outside closes menu
+      await trigger.click();
+      expect(await page.getByRole("menu").isVisible()).toBe(true);
+      // Click on background count badge outside menu
+      await page.locator(".agent-count-badge").click();
+      await expect.poll(async () => {
+        return await trigger.getAttribute("aria-expanded");
+      }).toBe("false");
+      expect(await page.getByRole("menu").count()).toBe(0);
+
+      // 9. Focus leaves container closes menu
+      await trigger.click();
+      expect(await page.getByRole("menu").isVisible()).toBe(true);
+      // Tab must reach the next control, not strand focus on the document body.
+      await page.keyboard.press("Tab");
+      await expect.poll(() => trigger.getAttribute("aria-expanded")).toBe("false");
+      expect(await page.getByRole("menu").count()).toBe(0);
+      await expect.poll(() => page.getByRole("button", { name: "新建智能体", exact: true })
+        .evaluate(element => element === document.activeElement)).toBe(true);
+    } finally {
+      await page.close();
     }
   });
 });

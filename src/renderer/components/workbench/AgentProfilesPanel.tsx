@@ -13,7 +13,14 @@ import {
   Sparkle,
   Trash,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  type KeyboardEvent,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
@@ -21,6 +28,18 @@ import { Input } from "../primitives/Input";
 import { SettingsSelect } from "../primitives/SettingsSelect";
 import { SettingsToggleCard } from "../primitives/SettingsToggleCard";
 import { Textarea } from "../primitives/Textarea";
+
+function isConflictError(error: string): boolean {
+  return (
+    error.includes("该智能体配置已被其他") ||
+    error.includes("已被其他窗口或 CLI 修改") ||
+    error.includes("重新加载设置") ||
+    error.includes("revision") ||
+    error.includes("冲突") ||
+    error.includes("conflict") ||
+    error.includes("expected")
+  );
+}
 
 const PERMISSION_OPTIONS = [
   {
@@ -132,6 +151,79 @@ export function AgentProfilesPanel({
   );
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [listConflict, setListConflict] = useState(false);
+
+  const templateMenuRef = useRef<HTMLDivElement>(null);
+  const templatePopoverRef = useRef<HTMLDivElement>(null);
+  const templateMenuId = useId();
+
+  // Template menu focus and keyboard interaction
+  useEffect(() => {
+    if (!showTemplateMenu) return;
+
+    templatePopoverRef.current
+      ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
+      ?.focus({ preventScroll: true });
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !templateMenuRef.current?.contains(event.target)
+      ) {
+        setShowTemplateMenu(false);
+      }
+    };
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => window.removeEventListener("pointerdown", handlePointerDown);
+  }, [showTemplateMenu]);
+
+  const handleTemplateMenuKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+  ) => {
+    if (event.key === "Escape" && showTemplateMenu) {
+      event.preventDefault();
+      event.stopPropagation();
+      setShowTemplateMenu(false);
+      templateMenuRef.current
+        ?.querySelector<HTMLButtonElement>("#agent-template-menu-trigger")
+        ?.focus({ preventScroll: true });
+      return;
+    }
+
+    if (event.key === "Tab" && showTemplateMenu) {
+      setShowTemplateMenu(false);
+      return;
+    }
+
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+
+    if (!showTemplateMenu) {
+      if (!busy) setShowTemplateMenu(true);
+      return;
+    }
+
+    const items = Array.from(
+      templatePopoverRef.current?.querySelectorAll<HTMLButtonElement>(
+        'button[role="menuitem"]:not(:disabled)',
+      ) ?? [],
+    );
+    if (!items.length) return;
+
+    const currentIndex = items.findIndex(
+      (item) => item === document.activeElement,
+    );
+    const nextIndex =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? items.length - 1
+          : (currentIndex +
+              (event.key === "ArrowDown" ? 1 : -1) +
+              items.length) %
+            items.length;
+    items[nextIndex]?.focus({ preventScroll: true });
+  };
 
   // Compute dirty flag
   const isDirty = useMemo(() => {
@@ -177,6 +269,7 @@ export function AgentProfilesPanel({
     setStatusMessage(null);
     setErrorMessage(null);
     setConflictRevision(null);
+    setListConflict(false);
     setShowTemplateMenu(false);
   };
 
@@ -190,6 +283,7 @@ export function AgentProfilesPanel({
     setStatusMessage(null);
     setErrorMessage(null);
     setConflictRevision(null);
+    setListConflict(false);
   };
 
   const handleDuplicate = (profile: AgentProfile) => {
@@ -214,6 +308,7 @@ export function AgentProfilesPanel({
     setStatusMessage(null);
     setErrorMessage(null);
     setConflictRevision(null);
+    setListConflict(false);
   };
 
   const handleCancelEdit = () => {
@@ -230,6 +325,7 @@ export function AgentProfilesPanel({
     setEditingId(null);
     setOriginalProfile(null);
     setConflictRevision(null);
+    setListConflict(false);
     setErrorMessage(null);
     setStatusMessage(null);
   };
@@ -256,8 +352,12 @@ export function AgentProfilesPanel({
         setStatusMessage(
           `已${updatedInput.enabled ? "启用" : "停用"}智能体「${profile.name}」`,
         );
+        setListConflict(false);
       } else {
         setErrorMessage(res.error);
+        if (isConflictError(res.error)) {
+          setListConflict(true);
+        }
       }
     } catch (err) {
       setErrorMessage(
@@ -284,12 +384,16 @@ export function AgentProfilesPanel({
       if (res.ok) {
         setStatusMessage(`已删除智能体「${profile.name}」`);
         setDeletingId(null);
+        setListConflict(false);
         if (editingId === profile.id) {
           setEditingId(null);
           setOriginalProfile(null);
         }
       } else {
         setErrorMessage(res.error);
+        if (isConflictError(res.error)) {
+          setListConflict(true);
+        }
       }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "删除智能体失败");
@@ -367,14 +471,7 @@ export function AgentProfilesPanel({
         setErrorMessage(null);
       } else {
         // Detect conflict
-        const isConflict =
-          res.error.includes("该智能体配置已被其他") ||
-          res.error.includes("revision") ||
-          res.error.includes("冲突") ||
-          res.error.includes("conflict") ||
-          res.error.includes("expected");
-
-        if (isConflict) {
+        if (isConflictError(res.error)) {
           setConflictRevision(true);
           setErrorMessage(
             "版本冲突：该智能体已被其他操作更新。当前草稿已保留，请选择刷新最新版本或放弃。",
@@ -424,6 +521,28 @@ export function AgentProfilesPanel({
       setErrorMessage(
         `拉取最新配置失败：${err instanceof Error ? err.message : String(err)}`,
       );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRefreshListFromHost = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const latestSettings = await loadSettings();
+      if (!latestSettings) {
+        throw new Error("未能读取服务器配置，请稍后重试。");
+      }
+      setDeletingId(null);
+      setListConflict(false);
+      setErrorMessage(null);
+      setStatusMessage("已同步最新服务器配置。");
+    } catch (err) {
+      setErrorMessage(
+        `拉取最新配置失败：${err instanceof Error ? err.message : String(err)}`,
+      );
+      setListConflict(true);
     } finally {
       setBusy(false);
     }
@@ -894,18 +1013,37 @@ export function AgentProfilesPanel({
           已配置 {profiles.length} / 64 个智能体
         </span>
         <div className="agent-list-actions">
-          <div className="agent-template-menu-container">
+          <div
+            ref={templateMenuRef}
+            className="agent-template-menu-container"
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setShowTemplateMenu(false);
+              }
+            }}
+            onKeyDown={handleTemplateMenuKeyDown}
+          >
             <Button
+              id="agent-template-menu-trigger"
               size="sm"
               variant="secondary"
               icon={<Sparkle size={13} weight="bold" />}
-              onClick={() => setShowTemplateMenu(!showTemplateMenu)}
+              onClick={() => setShowTemplateMenu((prev) => !prev)}
               disabled={busy}
+              aria-haspopup="menu"
+              aria-expanded={showTemplateMenu}
+              aria-controls={showTemplateMenu ? templateMenuId : undefined}
             >
               从模板添加
             </Button>
             {showTemplateMenu && (
-              <div className="agent-template-popover" role="menu">
+              <div
+                ref={templatePopoverRef}
+                id={templateMenuId}
+                className="agent-template-popover"
+                role="menu"
+                aria-labelledby="agent-template-menu-trigger"
+              >
                 {agentProfileTemplates.map((tmpl) => (
                   <button
                     type="button"
@@ -941,7 +1079,19 @@ export function AgentProfilesPanel({
 
       {errorMessage && (
         <div role="alert" className="form-error">
-          {errorMessage}
+          <span>{errorMessage}</span>
+          {listConflict && (
+            <div className="agent-conflict-actions">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => void handleRefreshListFromHost()}
+                disabled={busy}
+              >
+                刷新为最新配置
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
