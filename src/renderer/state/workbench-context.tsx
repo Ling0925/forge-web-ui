@@ -27,6 +27,7 @@ import { ForgeError } from "@forge/core/shared/errors";
 import { shouldRefreshTranscript } from "./refresh-events";
 import { RunInputQueue } from "./run-input-queue";
 import { pageSnapshot } from "./session-pages";
+import { modelServiceStatus } from "./model-service-status";
 import type { ImageAttachment } from "@forge/core/shared/images";
 import {
   type WorkbenchAction,
@@ -204,7 +205,7 @@ function useController() {
     try {
       const settings = await window.forge.getSettings();
       dispatch({ type: "SET_SETTINGS", settings });
-      if (!settings.isConfigured)
+      if (modelServiceStatus(settings).state === "missing")
         dispatch({ type: "OPEN_SETTINGS", isOpen: true });
       return settings;
     } catch (err) {

@@ -155,9 +155,6 @@
   padding: 0;
   border: 0;
 }
-.wb-app .sidebar-footer {
-  justify-content: space-between;
-}
 @media (max-width: 1000px) {
   .wb-app .workbench-content > .workbench-task-header {
     min-height: calc(var(--touch-min-target) + var(--space-3));

@@ -26,6 +26,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { isMobileAppHost } from "../../state/mobile-connection";
 import { permissionLabels } from "../../state/permission-labels";
+import { modelServiceStatus } from "../../state/model-service-status";
 import {
   type SettingsDraft,
   buildSettingsUpdate,
@@ -348,6 +349,7 @@ type TextKey = {
 export function Settings() {
   const { state, updateSettings, openSettings } = useWorkbench();
   const initial = state.settings ?? defaultPublicSettings;
+  const serviceStatus = modelServiceStatus(state.settings);
   const [original, setOriginal] = useState(initial);
   const [draft, setDraft] = useState(() => createSettingsDraft(initial));
   const [section, setSection] = useState<Section>("connection");
@@ -648,14 +650,13 @@ export function Settings() {
                 : selected.description}
             </p>
           </div>
-          <div className="settings-status">
+          <div className="settings-status" title={serviceStatus.hint}>
             <span
-              className={`wb-status-dot ${initial.isConfigured ? "is-configured" : "is-pending"}`}
-              data-status={initial.isConfigured ? "ready" : "awaiting_approval"}
+              className="wb-status-dot"
+              data-status={serviceStatus.state === "configured" ? "ready" : undefined}
+              aria-hidden="true"
             />
-            <span>
-              {initial.isConfigured ? "已配置模型服务" : "尚未配置模型服务"}
-            </span>
+            <span>{serviceStatus.label}</span>
           </div>
         </header>
 

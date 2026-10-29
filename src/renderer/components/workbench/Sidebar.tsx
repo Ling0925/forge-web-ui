@@ -3,18 +3,20 @@ import {
   ArrowClockwise,
   CaretRight,
   ChartBar,
+  CheckCircle,
   Folder,
   FolderOpen,
   Gear,
   MagnifyingGlass,
   Plus,
-  WarningCircle,
+  Plugs,
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
 import { useWorkbench } from "../../state/workbench-context";
+import { modelServiceStatus } from "../../state/model-service-status";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
 
@@ -43,6 +45,7 @@ export function Sidebar() {
     createSession,
   } = useWorkbench();
 
+  const serviceStatus = modelServiceStatus(state.settings);
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [creatingWorkspace, setCreatingWorkspace] = useState<string | null>(null);
@@ -146,7 +149,6 @@ export function Sidebar() {
           <div className="sidebar-logo">
             <ForgeMark className="sidebar-mark" />
             <span className="sidebar-title">Forge</span>
-            <span className="sidebar-badge">Agent</span>
           </div>
           <div className="sidebar-brand-actions">
             <button
@@ -331,8 +333,6 @@ export function Sidebar() {
             <Gear size={15} />
             <span>设置</span>
           </button>
-        </div>
-        <div className="wb-row sidebar-footer-status">
           <button
             type="button"
             className="sidebar-refresh-btn"
@@ -342,25 +342,23 @@ export function Sidebar() {
           >
             <ArrowClockwise size={14} />
           </button>
-          {!state.settings?.isConfigured && (
-            <span className="wb-status-warning" title="尚未配置 API 端点或模型">
-              <WarningCircle size={12} weight="bold" />
-              未配置
-            </span>
-          )}
-          <span
-            className={`wb-status-dot${state.settings?.isConfigured ? "" : " is-pending"}`}
-            data-status={
-              state.settings?.isConfigured ? "ready" : "awaiting_approval"
-            }
-            role="img"
-            aria-label={
-              state.settings?.isConfigured
-                ? "本地工作台 · 已配置"
-                : "本地工作台 · 尚未配置 API 端点或模型"
-            }
-          />
         </div>
+        <button
+          type="button"
+          className="sidebar-model-status"
+          data-state={serviceStatus.state}
+          title={serviceStatus.hint}
+          onClick={() => {
+            setMobileSidebar(false);
+            openSettings(true);
+          }}
+        >
+          {serviceStatus.state === "configured"
+            ? <CheckCircle size={14} aria-hidden="true" />
+            : <Plugs size={14} aria-hidden="true" />}
+          <span>{serviceStatus.label}</span>
+          <CaretRight size={12} aria-hidden="true" />
+        </button>
       </div>
     </aside>
   );

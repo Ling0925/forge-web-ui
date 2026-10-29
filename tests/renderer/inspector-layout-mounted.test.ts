@@ -1,9 +1,12 @@
+import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
 it("keeps execution details compact, navigable and diagnostics on demand", async () => {
+  const output = resolve(process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/inspector-layout");
+  await mkdir(output, { recursive: true });
   const bundle = await build({
     stdin: {
       resolveDir: resolve("."),
@@ -158,7 +161,8 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         expect(stepMetrics.pendingBorderColor).not.toBe("rgba(0, 0, 0, 0)");
         expect(stepMetrics.titleRowDisplay).toBe("flex");
         await page.screenshot({
-          path: `/tmp/forge-inspector-plan-${width}-${theme}.png`,
+          path: resolve(output, `forge-inspector-plan-${width}-${theme}.png`),
+          animations: "disabled",
         });
         await page.getByRole("tab", { name: "Plan", exact: true }).click();
         expect(
@@ -227,7 +231,8 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
             .isVisible(),
         ).toBe(true);
         await page.screenshot({
-          path: `/tmp/forge-inspector-${width}-${theme}.png`,
+          path: resolve(output, `forge-inspector-${width}-${theme}.png`),
+          animations: "disabled",
         });
         await page.getByRole("tab", { name: "项目资源", exact: true }).click();
         expect(
