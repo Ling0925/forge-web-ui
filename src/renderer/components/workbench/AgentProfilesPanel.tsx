@@ -44,19 +44,20 @@ function isConflictError(error: string): boolean {
 
 const PERMISSION_OPTIONS = [
   {
+    // A role ceiling, not an independent grant: no extra restriction on the parent.
+    value: "unrestricted",
+    label: "继承主会话权限（推荐）",
+    sub: "不额外降级；主会话免审批时，子任务无需重复审批",
+  },
+  {
     value: "readonly",
     label: "只读 (readonly)",
-    sub: "不可修改文件，不可执行系统命令",
+    sub: "额外限制为只读，不可修改文件或执行系统命令",
   },
   {
     value: "workspace",
-    label: "工作区 (workspace)",
-    sub: "仅允许修改工作区文件及执行受限命令",
-  },
-  {
-    value: "unrestricted",
-    label: "无限制 (unrestricted)",
-    sub: "最高执行与文件权限（仍受宿主上限约束）",
+    label: "工作区逐次审批 (workspace)",
+    sub: "命令、浏览器、网络等操作仍需逐次用户审批",
   },
 ];
 
@@ -108,7 +109,7 @@ function defaultNewProfile(): AgentProfileInput {
     instructions: "针对该角色执行任务时的专属补充指令（系统提示词）。",
     enabled: true,
     model: { mode: "inherit" },
-    permission: "workspace",
+    permission: "unrestricted",
     tools: { mode: "inherit" },
     isolation: "shared",
   };
@@ -913,8 +914,8 @@ export function AgentProfilesPanel({
 
           <Field
             id="agent-select-permission"
-            label="权限上限 (permission ceiling)"
-            helper="作为子代理运行权限的最高上限。"
+            label="权限策略（主会话为上限）"
+            helper="默认继承主会话；仅需额外限制角色时选择只读或逐次审批。"
           >
             <SettingsSelect
               ariaLabel="权限上限选择"
@@ -931,9 +932,15 @@ export function AgentProfilesPanel({
           </Field>
 
           <div className="agent-help-callout">
-            <strong>权限不提升说明：</strong>
-            子代理有效权限为父会话当前权限、子会话创建时上限及角色上限的交集。角色配置绝不会突破或提升宿主权限。父会话降权也会同步收紧子任务。
+            <strong>权限继承说明：</strong>
+            继承模式不增加子任务审批：主会话免审批，子任务也免审批；主会话需要审批，子任务仍遵守同一规则。只读、计划模式和工具组限制不能被绕过，父会话降权也会同步收紧子任务。权限不会超过子任务创建时的主会话权限。
           </div>
+          {draft.permission === "workspace" && (
+            <div className="agent-help-callout" role="note">
+              <strong>当前角色仍需逐次用户审批：</strong>
+              该上限会让免审批主会话的子任务也停下来等待审批。需要长任务托管时，请选择“继承主会话权限”并保存。已保存的旧配置不会自动放宽，修改仅影响后续新派发的子任务。
+            </div>
+          )}
 
           <Field
             id="agent-select-isolation"
@@ -1213,7 +1220,7 @@ export function AgentProfilesPanel({
                       {profile.enabled ? "已启用" : "已停用"}
                     </span>
                     <span className="agent-profile-badge">
-                      权限：{profile.permission}
+                      权限：{profile.permission === "unrestricted" ? "继承主会话" : profile.permission === "workspace" ? "逐次审批" : "只读"}
                     </span>
                     <span className="agent-profile-badge">
                       隔离：{profile.isolation}

@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
 
 const executablePath = process.env.FORGE_BROWSER_EXECUTABLE;
-const screenshotDir = resolve("../../.forge/tmp/agent-collaboration-retry");
+const screenshotDir = resolve("../../.forge/tmp/agent-permissions/visual");
 
 declare global {
   interface Window {
@@ -294,6 +294,24 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
         expect(await modelNotice.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
         expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
         await page.screenshot({ path: `${screenshotDir}/settings-agent-manual-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
+
+        // Permission policy must remain readable at both widths and preserve legacy caps.
+        const permissionPicker = page.getByRole("button", { name: "权限上限选择", exact: true });
+        expect(await permissionPicker.textContent()).toContain("工作区逐次审批");
+        const permissionWarning = page.getByRole("note").filter({ hasText: "当前角色仍需逐次用户审批" });
+        await permissionWarning.scrollIntoViewIfNeeded();
+        expect(await permissionWarning.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+        await permissionPicker.click();
+        const permissionMenu = page.getByRole("listbox", { name: "权限上限选择", exact: true });
+        const permissionBounds = await permissionMenu.boundingBox();
+        expect(permissionBounds).not.toBeNull();
+        expect(permissionBounds!.x).toBeGreaterThanOrEqual(0);
+        expect(permissionBounds!.x + permissionBounds!.width).toBeLessThanOrEqual(width);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+        await page.screenshot({ path: `${screenshotDir}/settings-agent-permissions-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
+        await page.getByRole("option", { name: /继承主会话权限/ }).click();
+        await permissionWarning.waitFor({ state: "hidden" });
+        expect(await permissionPicker.textContent()).toContain("继承主会话权限");
 
         // 2. Switch to Inspector / Subagents & Advisor view
         await page.evaluate(() => {

@@ -37,6 +37,8 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     expect(await templateTrigger.evaluate(element => element === document.activeElement)).toBe(true);
     await page.getByRole("region", { name: "智能体角色配置", exact: true }).waitFor();
     await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+    const permissionPicker = page.getByRole("button", { name: "权限上限选择", exact: true });
+    expect(await permissionPicker.textContent()).toContain("继承主会话权限");
     await page.getByLabel("智能体 ID", { exact: true }).fill("ui-integration");
     await page.getByLabel("智能体名称", { exact: true }).fill("  界面创建角色  ");
     for (const navigate of [
@@ -70,6 +72,7 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     expect(settingsAfterSave.agentProfiles!.find(p => p.id === "ui-integration")?.model).toEqual({
       mode: "fixed", providerSourceId: sourceBeforeSave.sourceId, model: "fixture/alternate",
     });
+    expect(settingsAfterSave.agentProfiles!.find(p => p.id === "ui-integration")?.permission).toBe("unrestricted");
     expect(settingsAfterSave.model).toBe(sourceBeforeSave.sourceModel);
     expect(settingsAfterSave.activeSourceId).toBe(sourceBeforeSave.sourceId);
     await page.reload();
@@ -79,6 +82,7 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     const card = page.getByRole("article", { name: "智能体：界面创建角色", exact: true });
     await card.getByRole("button", { name: "编辑", exact: true }).click();
     expect(await modelPicker.textContent()).toContain("fixture/alternate");
+    expect(await permissionPicker.textContent()).toContain("继承主会话权限");
     expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
     await page.getByLabel("智能体名称", { exact: true }).fill("保留本地草稿");
     // A second RPC caller updates storage without replacing the editor's state.

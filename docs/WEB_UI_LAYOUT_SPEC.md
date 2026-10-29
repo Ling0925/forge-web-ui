@@ -143,7 +143,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
   - 批量导入/导出、路由组列表、策略矩阵与压缩阈值均采用结构化卡片网格、状态徽章与自定义下拉/分段控件。
   - **智能体管理（`AgentProfilesPanel`）**：
     - 提供角色列表、一键新建、从预置模板添加（探索/前端/后端/代码审查）、编辑、复制、启停与带安全二次确认的删除。
-    - 字段包含 ID、名称、简要描述、适用场景（whenToUse）、系统指令（instructions）、模型绑定（继承主模型或绑定已配置 Provider 来源与精确模型 ID，禁止虚构 fallback）、权限上限（readonly/workspace/unrestricted，明确提示权限绝不突破宿主）、工作树隔离（shared/worktree，明确提示非 OS 沙箱）、工具组限定策略（inherit/restricted）及 MCP 白名单。
+    - 字段包含 ID、名称、简要描述、适用场景（whenToUse）、系统指令（instructions）、模型绑定（继承主模型或绑定已配置 Provider 来源与精确模型 ID，禁止虚构 fallback）、权限策略（默认“继承主会话权限”，存储为 unrestricted 上限；readonly 为额外只读限制，workspace 明示“工作区逐次审批”，旧配置不自动放宽；明确提示权限绝不突破主会话）、工作树隔离（shared/worktree，明确提示非 OS 沙箱）、工具组限定策略（inherit/restricted）及 MCP 白名单。
     - 固定模型优先通过「已配置模型」下拉选择，复用 `selectableModelIds` 与所选来源的 `modelSelection` 可见性规则；模型与来源必须成对保存。仅在显式选择手动、无可选模型或保留旧未列出绑定时显示 ID 输入，不得要求用户重复录入已有模型。切换来源重新选择新来源可选值，读取已有配置则保留原绑定，不按远端目录或主模型静默回退。
     - 具备版本冲突保护（保留草稿，提供拉取最新配置与放弃修改选项）、未保存草稿全局离开拦截（分类切换、搜索、关闭防护）、保存繁忙态锁定保护，以及旧配置缺省兼容。禁止使用原生 select 与裸 checkbox，采用全键盘与读屏支持的 `SettingsSelect` 与 `SettingsToggleCard`。
 

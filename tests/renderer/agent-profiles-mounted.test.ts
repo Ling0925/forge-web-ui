@@ -368,6 +368,62 @@ describe("Agent Profiles Mounted Tests", () => {
     }
   });
 
+  it.each(["new", "frontend", "backend"])("defaults %s roles to parent permission inheritance and saves that policy", async kind => {
+    const page = await setupPage();
+    try {
+      if (kind === "new") {
+        await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      } else {
+        await page.getByRole("button", { name: "从模板添加", exact: true }).click();
+        await page.getByRole("menuitem", { name: kind === "frontend" ? /前端设计与实现/ : /后端实现/ }).click();
+      }
+      const permission = page.getByRole("button", { name: "权限上限选择", exact: true });
+      expect(await permission.textContent()).toContain("继承主会话权限");
+      expect(await page.getByRole("note").filter({ hasText: "当前角色仍需逐次用户审批" }).count()).toBe(0);
+      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
+      await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
+      const saved = (await page.evaluate(() => window.updateCalls)).at(-1).agent;
+      expect(saved.profile.permission).toBe("unrestricted");
+      expect(saved.expectedRevision).toBe(0);
+      await page.getByRole("button", { name: "返回列表", exact: true }).click();
+      await page.getByRole("article", { name: `智能体：${saved.profile.name}`, exact: true })
+        .getByText("权限：继承主会话", { exact: true }).waitFor();
+    } finally { await page.close(); }
+  });
+
+  it("preserves saved readonly/workspace caps and only switches to inheritance after an explicit edit", async () => {
+    const page = await setupPage();
+    try {
+      await page.getByRole("button", { name: "编辑", exact: true }).click();
+      const permission = page.getByRole("button", { name: "权限上限选择", exact: true });
+      expect(await permission.textContent()).toContain("只读");
+      expect(await page.evaluate(() => window.updateCalls)).toEqual([]);
+      await page.getByRole("button", { name: "返回列表", exact: true }).click();
+      // Seed a pre-existing workspace role, not the new default.
+      await page.evaluate(async () => {
+        const { revision, ...profile } = window.testState.settings.agentProfiles[0];
+        await window.testController.updateSettings({ agent: { type: "save", expectedRevision: revision,
+          profile: { ...profile, permission: "workspace" } } });
+      });
+      await page.getByText("权限：逐次审批", { exact: true }).waitFor();
+      await page.getByRole("button", { name: "编辑", exact: true }).click();
+      expect(await permission.textContent()).toContain("工作区逐次审批");
+      const warning = page.getByRole("note").filter({ hasText: "当前角色仍需逐次用户审批" });
+      await warning.waitFor();
+      expect(await page.evaluate(() => window.updateCalls.length)).toBe(1);
+      await permission.click();
+      await page.getByRole("option", { name: /继承主会话权限/ }).click();
+      await warning.waitFor({ state: "hidden" });
+      expect(await page.evaluate(() => window.updateCalls.length)).toBe(1);
+      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
+      await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
+      const saved = (await page.evaluate(() => window.updateCalls)).at(-1).agent;
+      expect(saved.expectedRevision).toBe(2);
+      expect(saved.profile).toMatchObject({ id: "reviewer", permission: "unrestricted",
+        model: { mode: "inherit" }, tools: { mode: "restricted", groups: ["read"] } });
+    } finally { await page.close(); }
+  });
+
   it("handles list conflicts on toggle and delete with refresh recovery, new revision retry, and failure feedback", async () => {
     const page = await setupPage();
     try {
