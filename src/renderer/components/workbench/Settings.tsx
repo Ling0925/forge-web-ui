@@ -653,7 +653,13 @@ export function Settings() {
           <div className="settings-status" title={serviceStatus.hint}>
             <span
               className="wb-status-dot"
-              data-status={serviceStatus.state === "configured" ? "ready" : undefined}
+              data-status={
+                serviceStatus.state === "configured"
+                  ? "ready"
+                  : serviceStatus.state === "loading"
+                    ? "running"
+                    : "awaiting_approval"
+              }
               aria-hidden="true"
             />
             <span>{serviceStatus.label}</span>

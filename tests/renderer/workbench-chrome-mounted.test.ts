@@ -66,8 +66,18 @@ beforeAll(async () => {
 
 afterAll(async () => { await browser?.close(); });
 
-async function mount(emptyServices = false) {
-  const page = await browser.newPage({ viewport: { width: 1172, height: 800 }, reducedMotion: "reduce" });
+async function mount(emptyServices = false, options: { hasTouch?: boolean; pointerCoarse?: boolean } = {}) {
+  const page = await browser.newPage({
+    viewport: { width: 1172, height: 800 },
+    reducedMotion: "reduce",
+    hasTouch: options.hasTouch,
+  });
+  if (options.pointerCoarse) {
+    const client = await page.context().newCDPSession(page);
+    await client.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "pointer", value: "coarse" }],
+    });
+  }
   page.setDefaultTimeout(5000);
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
@@ -182,5 +192,31 @@ it("still reveals a newly pending background approval when details start collaps
     }));
     await expect.poll(() => page.locator('.wb-app').getAttribute('class')).not.toContain('inspector-collapsed');
     await page.getByRole('button', { name: '待批准 1 项，打开执行详情' }).waitFor();
+  } finally { await page.close(); }
+});
+
+it("maintains accessible touch targets on coarse pointer devices without layout overflow", async () => {
+  const { page, errors } = await mount(false, { hasTouch: true, pointerCoarse: true });
+  try {
+    await page.getByRole('button', { name: '模型服务已添加', exact: true }).waitFor();
+    const isCoarse = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
+    expect(isCoarse).toBe(true);
+
+    const refreshBox = await page.locator('.sidebar-refresh-btn').boundingBox();
+    expect(refreshBox).not.toBeNull();
+    expect(refreshBox!.width).toBeGreaterThanOrEqual(44);
+    expect(refreshBox!.height).toBeGreaterThanOrEqual(44);
+
+    const statusBox = await page.locator('.sidebar-model-status').boundingBox();
+    expect(statusBox).not.toBeNull();
+    expect(statusBox!.height).toBeGreaterThanOrEqual(44);
+
+    const settingsBox = await page.getByRole('button', { name: '设置', exact: true }).boundingBox();
+    expect(settingsBox).not.toBeNull();
+    expect(settingsBox!.height).toBeGreaterThanOrEqual(44);
+    expect(settingsBox!.width).toBeGreaterThanOrEqual(44);
+
+    await assertFooterFits(page);
+    expect(errors).toEqual([]);
   } finally { await page.close(); }
 });

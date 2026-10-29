@@ -3,13 +3,11 @@ import {
   ArrowClockwise,
   CaretRight,
   ChartBar,
-  CheckCircle,
   Folder,
   FolderOpen,
   Gear,
   MagnifyingGlass,
   Plus,
-  Plugs,
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -306,6 +304,31 @@ export function Sidebar() {
       </div>
 
       <div className="sidebar-footer">
+        <button
+          type="button"
+          className="sidebar-model-status"
+          data-state={serviceStatus.state}
+          title={serviceStatus.hint}
+          onClick={() => {
+            setMobileSidebar(false);
+            openSettings(true);
+          }}
+        >
+          <i
+            className="sidebar-status-dot wb-status-dot"
+            data-status={
+              serviceStatus.state === "configured"
+                ? "ready"
+                : serviceStatus.state === "loading"
+                  ? "running"
+                  : "awaiting_approval"
+            }
+            aria-hidden="true"
+          />
+          <span>{serviceStatus.label}</span>
+          <CaretRight size={12} className="sidebar-status-arrow" aria-hidden="true" />
+        </button>
+
         <div className="sidebar-footer-actions">
           <button
             type="button"
@@ -343,22 +366,6 @@ export function Sidebar() {
             <ArrowClockwise size={14} />
           </button>
         </div>
-        <button
-          type="button"
-          className="sidebar-model-status"
-          data-state={serviceStatus.state}
-          title={serviceStatus.hint}
-          onClick={() => {
-            setMobileSidebar(false);
-            openSettings(true);
-          }}
-        >
-          {serviceStatus.state === "configured"
-            ? <CheckCircle size={14} aria-hidden="true" />
-            : <Plugs size={14} aria-hidden="true" />}
-          <span>{serviceStatus.label}</span>
-          <CaretRight size={12} aria-hidden="true" />
-        </button>
       </div>
     </aside>
   );

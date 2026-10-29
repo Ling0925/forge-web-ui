@@ -117,8 +117,12 @@
     border-color: var(--border-control);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
+  .wb-app .wb-header-actions .wb-details-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
   .wb-app .wb-header-actions .wb-details-toggle.is-active {
-    background: var(--accent-subtle, rgba(59, 130, 246, 0.1));
+    background: var(--accent-subtle, color-mix(in srgb, var(--accent) 12%, transparent));
     color: var(--accent);
     border-color: var(--accent);
     font-weight: 600;
