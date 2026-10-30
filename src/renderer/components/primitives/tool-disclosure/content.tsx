@@ -62,8 +62,6 @@ export function ToolDisclosureContent({
     isAnswerAdvisor,
     isAdvisor,
     isListAgentProfiles,
-    isListAgents,
-    isCancelAgent,
     agentParamsRecord,
     isWebSearch,
     showParameters,
