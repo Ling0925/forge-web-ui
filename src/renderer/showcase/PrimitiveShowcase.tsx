@@ -512,7 +512,7 @@ export function PrimitiveShowcase() {
                       <Select
                         aria-label="选择模型"
                         value={demoModel}
-                        onChange={(e) => setDemoModel(e.target.value)}
+                        onValueChange={(value) => setDemoModel(value)}
                         placeholder="请选择模型"
                         options={SAMPLE_MODELS}
                       />
@@ -525,7 +525,7 @@ export function PrimitiveShowcase() {
                       <Select
                         aria-label="选择授权策略"
                         value={demoPermission}
-                        onChange={(e) => setDemoPermission(e.target.value)}
+                        onValueChange={(value) => setDemoPermission(value)}
                         options={SAMPLE_PERMISSIONS}
                       />
                     </SettingRow>

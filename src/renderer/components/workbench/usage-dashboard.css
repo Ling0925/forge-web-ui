@@ -401,47 +401,7 @@
   flex-shrink: 0;
 }
 
-.usage-dashboard-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  background-color: var(--surface-elevated);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), border-color
-    var(--transition-fast);
-  white-space: nowrap;
-}
-
-.usage-dashboard-btn:hover:not(:disabled) {
-  background-color: var(--surface-hover);
-  border-color: var(--border-control);
-}
-
-.usage-dashboard-btn:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-.usage-dashboard-btn:disabled {
-  color: var(--text-disabled);
-  cursor: default;
-}
-
-.usage-dashboard-btn-icon {
-  width: 32px;
-  padding: 0;
-}
-
-.usage-dashboard-btn.refreshing svg {
+.usage-refresh-btn.refreshing svg {
   animation: usage-spin 1s linear infinite;
 }
 
@@ -1449,35 +1409,6 @@
   overflow-wrap: anywhere;
 }
 
-.usage-request-status {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 7px;
-  border-radius: var(--radius-full);
-  font-size: var(--text-2xs);
-  font-weight: 600;
-}
-
-.usage-request-status.is-succeeded {
-  color: var(--success);
-  background-color: var(--success-bg);
-}
-
-.usage-request-status.is-failed {
-  color: var(--error);
-  background-color: var(--error-bg);
-}
-
-.usage-request-status.is-started {
-  color: var(--accent);
-  background-color: var(--accent-soft);
-}
-
-.usage-request-status.is-unknown {
-  color: var(--text-secondary);
-  background-color: var(--surface-soft);
-}
-
 .usage-request-detail-row td {
   background-color: var(--surface-soft);
   padding: 14px 18px;
@@ -1543,7 +1474,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .usage-dashboard-btn.refreshing svg,
+  .usage-refresh-btn.refreshing svg,
   .usage-bar-stack,
   .usage-bar-segment,
   .usage-model-bar-fill {
@@ -1629,13 +1560,8 @@
     right: auto;
   }
 
-  .usage-dashboard-btn,
   .usage-back-btn {
     height: 36px;
-  }
-
-  .usage-dashboard-btn-icon {
-    width: 36px;
   }
 
   .usage-dashboard-body {

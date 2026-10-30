@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState } from "react";
 import type { UsageRequest } from "../../shared-types";
 import { useWorkbench } from "../../state/workbench-context";
+import { Button } from "../primitives/Button";
+import { type BadgeTone, ToneBadge } from "../primitives/StatusBadge";
 
 const pageSize = 50;
 
@@ -28,7 +30,17 @@ const costUsd = (value: number | undefined) => {
   return "<$0.0001";
 };
 const reasoningEffort = (value: UsageRequest["reasoningEffort"]) =>
-  value === "default" ? "模型默认" : value === "max" ? "MAX" : value ?? "未记录";
+  value === "default"
+    ? "模型默认"
+    : value === "max"
+      ? "MAX"
+      : (value ?? "未记录");
+const REQUEST_TONE: Record<string, BadgeTone> = {
+  started: "accent",
+  succeeded: "success",
+  failed: "error",
+};
+
 const outcome = (request: UsageRequest) => {
   if (request.outcome === "started") return "请求中";
   if (request.outcome === "succeeded") return "成功";
@@ -245,25 +257,25 @@ export function UsageRequests({
           </div>
           {pageCount > 1 && (
             <nav className="usage-request-pagination" aria-label="请求记录分页">
-              <button
-                type="button"
-                className="usage-dashboard-btn"
+              <Button
+                variant="secondary"
+                size="sm"
                 disabled={currentPage === 0}
                 onClick={() => setPage(currentPage - 1)}
               >
                 上一页
-              </button>
+              </Button>
               <span>
                 {currentPage + 1} / {pageCount}
               </span>
-              <button
-                type="button"
-                className="usage-dashboard-btn"
+              <Button
+                variant="secondary"
+                size="sm"
                 disabled={currentPage + 1 === pageCount}
                 onClick={() => setPage(currentPage + 1)}
               >
                 下一页
-              </button>
+              </Button>
             </nav>
           )}
         </div>
@@ -318,9 +330,11 @@ export function UsageRequests({
                       </td>
                       <td
                         className="usage-mono usage-request-reasoning"
-                        title={request.reasoningEffort === undefined
-                          ? "此请求未保存思考等级，不能用当前设置还原；旧版 Web/CLI 需更新并重启，才能记录新请求"
-                          : "请求时配置的思考等级；供应商可能映射或忽略此设置"}
+                        title={
+                          request.reasoningEffort === undefined
+                            ? "此请求未保存思考等级，不能用当前设置还原；旧版 Web/CLI 需更新并重启，才能记录新请求"
+                            : "请求时配置的思考等级；供应商可能映射或忽略此设置"
+                        }
                       >
                         {reasoningEffort(request.reasoningEffort)}
                       </td>
@@ -330,11 +344,12 @@ export function UsageRequests({
                           "默认凭据"}
                       </td>
                       <td>
-                        <span
+                        <ToneBadge
+                          tone={REQUEST_TONE[request.outcome] ?? "neutral"}
                           className={`usage-request-status is-${request.outcome}`}
                         >
                           {outcome(request)}
-                        </span>
+                        </ToneBadge>
                         {request.errorCode && (
                           <span className="usage-request-secondary usage-mono">
                             {request.errorCode}
@@ -363,9 +378,9 @@ export function UsageRequests({
                         {costUsd(request.estimatedCostUsd)}
                       </td>
                       <td>
-                        <button
-                          type="button"
-                          className="usage-dashboard-btn"
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           aria-expanded={isExpanded}
                           aria-controls={detailId}
                           onClick={() =>
@@ -373,7 +388,7 @@ export function UsageRequests({
                           }
                         >
                           {isExpanded ? "收起" : "详情"}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                     {isExpanded && (
@@ -421,7 +436,9 @@ export function UsageRequests({
                             </div>
                             <div>
                               <dt>思考等级</dt>
-                              <dd>{reasoningEffort(request.reasoningEffort)}</dd>
+                              <dd>
+                                {reasoningEffort(request.reasoningEffort)}
+                              </dd>
                             </div>
                             <div>
                               <dt>选择原因</dt>

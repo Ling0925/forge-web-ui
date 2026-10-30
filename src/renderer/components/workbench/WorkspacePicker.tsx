@@ -13,7 +13,14 @@ import {
   SpinnerGap,
   X,
 } from "@phosphor-icons/react";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   isAbsoluteWorkspacePath,
   type WorkspaceDirectoryPage,
@@ -21,6 +28,8 @@ import {
 import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
 import "./workspace-picker.css";
+import { useDismiss } from "../primitives/useDismiss";
+import { IconButton } from "../primitives/IconButton";
 
 const RECENT_WORKSPACES_STORAGE_KEY = "forge-recent-workspaces";
 const MAX_RECENT_WORKSPACES = 6;
@@ -38,9 +47,15 @@ export function splitWorkspaceDisplay(rawPath: string): {
 } {
   const trimmed = rawPath.trim();
   if (!trimmed) {
-    return { name: "选择工作区", parent: "", shortParent: "", immediateParent: "" };
+    return {
+      name: "选择工作区",
+      parent: "",
+      shortParent: "",
+      immediateParent: "",
+    };
   }
-  const isWindows = /^[A-Za-z]:[\\/]/.test(trimmed) || trimmed.startsWith("\\\\");
+  const isWindows =
+    /^[A-Za-z]:[\\/]/.test(trimmed) || trimmed.startsWith("\\\\");
   const sep = isWindows ? "\\" : "/";
   const normalized = trimmed.replace(/[\\/]+$/, "");
   if (!normalized || normalized === "/" || /^[A-Za-z]:$/.test(normalized)) {
@@ -58,13 +73,13 @@ export function splitWorkspaceDisplay(rawPath: string): {
     : `/${parentParts.join("/")}`;
   const immediateParent = parentParts.at(-1) ?? "";
   const shortParent =
-    parentParts.length > 2
-      ? parentParts.slice(-2).join(sep)
-      : parent;
+    parentParts.length > 2 ? parentParts.slice(-2).join(sep) : parent;
   return { name, parent, shortParent, immediateParent };
 }
 
-export function parsePathBreadcrumbs(rawPath: string): readonly PathBreadcrumb[] {
+export function parsePathBreadcrumbs(
+  rawPath: string,
+): readonly PathBreadcrumb[] {
   const trimmed = rawPath.trim();
   if (!trimmed) return [];
 
@@ -122,7 +137,10 @@ function readStoredRecentWorkspaces(): readonly string[] {
   }
 }
 
-function persistRecentWorkspace(selectedPath: string, existing: readonly string[]): readonly string[] {
+function persistRecentWorkspace(
+  selectedPath: string,
+  existing: readonly string[],
+): readonly string[] {
   const normalized = selectedPath.trim();
   if (!isAbsoluteWorkspacePath(normalized)) return existing;
   const next = [
@@ -169,8 +187,12 @@ export function WorkspacePicker({
   const alive = useRef(true);
   const panelId = useId();
   const searchId = useId();
-  const restricted = hostCapabilities.web && window.forge.restrictWorkspace !== false;
-  const canBrowse = hostCapabilities.web && !restricted && Boolean(window.forge.browseWorkspaces);
+  const restricted =
+    hostCapabilities.web && window.forge.restrictWorkspace !== false;
+  const canBrowse =
+    hostCapabilities.web &&
+    !restricted &&
+    Boolean(window.forge.browseWorkspaces);
 
   useEffect(() => {
     alive.current = true;
@@ -187,13 +209,16 @@ export function WorkspacePicker({
     setQuery("");
     try {
       const read = window.forge.browseWorkspaces;
-      if (!read) throw new Error("目录浏览不可用，请重启 Forge 服务并刷新页面。");
+      if (!read)
+        throw new Error("目录浏览不可用，请重启 Forge 服务并刷新页面。");
       const result = await read(path);
       if (request !== generation.current || !alive.current) return;
       setPage(result);
     } catch (cause) {
       if (request !== generation.current || !alive.current) return;
-      setError(`无法读取目录，请选择其他目录或返回默认目录。${cause instanceof Error ? ` ${cause.message}` : ""}`);
+      setError(
+        `无法读取目录，请选择其他目录或返回默认目录。${cause instanceof Error ? ` ${cause.message}` : ""}`,
+      );
     } finally {
       if (request === generation.current && alive.current) setLoading(false);
     }
@@ -207,15 +232,15 @@ export function WorkspacePicker({
       void browse(workspace || undefined);
     }
     panelRef.current?.focus();
-    const dismiss = (event: PointerEvent) => {
-      if (event.target instanceof Node && !containerRef.current?.contains(event.target)) setOpen(false);
-    };
-    window.addEventListener("pointerdown", dismiss);
     return () => {
       generation.current++;
-      window.removeEventListener("pointerdown", dismiss);
     };
   }, [open, canBrowse, workspace, browse]);
+  useDismiss({
+    open,
+    refs: [containerRef],
+    onDismiss: () => setOpen(false),
+  });
 
   const currentPath = page?.path ?? workspace;
 
@@ -257,7 +282,9 @@ export function WorkspacePicker({
       }
     } catch (cause) {
       if (alive.current) {
-        setError(cause instanceof Error ? cause.message : "选择目录失败，请重试。");
+        setError(
+          cause instanceof Error ? cause.message : "选择目录失败，请重试。",
+        );
         setOpen(true);
       }
     } finally {
@@ -266,16 +293,26 @@ export function WorkspacePicker({
     }
   };
 
-  const triggerDisplay = useMemo(() => splitWorkspaceDisplay(workspace), [workspace]);
-  const currentDisplay = useMemo(() => splitWorkspaceDisplay(currentPath), [currentPath]);
-  const breadcrumbs = useMemo(() => parsePathBreadcrumbs(currentPath), [currentPath]);
+  const triggerDisplay = useMemo(
+    () => splitWorkspaceDisplay(workspace),
+    [workspace],
+  );
+  const currentDisplay = useMemo(
+    () => splitWorkspaceDisplay(currentPath),
+    [currentPath],
+  );
+  const breadcrumbs = useMemo(
+    () => parsePathBreadcrumbs(currentPath),
+    [currentPath],
+  );
 
   const mergedRecentWorkspaces = useMemo(() => {
     const seen = new Set<string>();
     const list: string[] = [];
     for (const candidate of [...storedRecent, ...recentWorkspaces, workspace]) {
       const trimmed = candidate?.trim();
-      if (!trimmed || !isAbsoluteWorkspacePath(trimmed) || seen.has(trimmed)) continue;
+      if (!trimmed || !isAbsoluteWorkspacePath(trimmed) || seen.has(trimmed))
+        continue;
       seen.add(trimmed);
       list.push(trimmed);
       if (list.length >= MAX_RECENT_WORKSPACES) break;
@@ -331,12 +368,18 @@ export function WorkspacePicker({
       void browse(trimmedQuery);
       return;
     }
-    if (!loading && filteredDirectories.length === 1 && filteredDirectories[0]) {
+    if (
+      !loading &&
+      filteredDirectories.length === 1 &&
+      filteredDirectories[0]
+    ) {
       void browse(filteredDirectories[0].path);
     }
   };
 
-  const isCurrentAlreadySelected = Boolean(page?.path && workspace && page.path === workspace);
+  const isCurrentAlreadySelected = Boolean(
+    page?.path && workspace && page.path === workspace,
+  );
 
   return (
     <div
@@ -351,15 +394,23 @@ export function WorkspacePicker({
         if (event.key === "Tab" && open) {
           const items = Array.from(
             panelRef.current?.querySelectorAll<HTMLElement>(
-              'button:not(:disabled), input:not(:disabled), summary',
+              "button:not(:disabled), input:not(:disabled), summary",
             ) ?? [],
           ).filter((item) => item.getClientRects().length > 0);
           const first = items[0];
           const last = items.at(-1);
-          if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
+          if (
+            event.shiftKey &&
+            (document.activeElement === first ||
+              document.activeElement === panelRef.current)
+          ) {
             event.preventDefault();
             last?.focus();
-          } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panelRef.current)) {
+          } else if (
+            !event.shiftKey &&
+            (document.activeElement === last ||
+              document.activeElement === panelRef.current)
+          ) {
             event.preventDefault();
             first?.focus();
           }
@@ -384,13 +435,19 @@ export function WorkspacePicker({
         <span className="composer-project-trigger-icon" aria-hidden="true">
           <FolderOpen size={14} weight="duotone" />
         </span>
-        <span className="composer-project-trigger-name">{triggerDisplay.name}</span>
+        <span className="composer-project-trigger-name">
+          {triggerDisplay.name}
+        </span>
         {triggerDisplay.shortParent && (
           <span className="composer-project-trigger-parent" aria-hidden="true">
             {triggerDisplay.shortParent}
           </span>
         )}
-        <CaretDown size={12} className="composer-project-trigger-caret" aria-hidden="true" />
+        <CaretDown
+          size={12}
+          className="composer-project-trigger-caret"
+          aria-hidden="true"
+        />
       </button>
 
       {open && (
@@ -405,7 +462,9 @@ export function WorkspacePicker({
             id={panelId}
             className="composer-project-panel workspace-picker-panel"
             role="dialog"
-            aria-label={hostCapabilities.web ? "选择服务器工作区" : "选择工作区"}
+            aria-label={
+              hostCapabilities.web ? "选择服务器工作区" : "选择工作区"
+            }
             tabIndex={-1}
           >
             <div className="workspace-picker-header">
@@ -421,10 +480,14 @@ export function WorkspacePicker({
                     {canBrowse && page?.path && (
                       <span
                         className={`workspace-picker-state-pill${
-                          isCurrentAlreadySelected ? " is-active" : " is-changed"
+                          isCurrentAlreadySelected
+                            ? " is-active"
+                            : " is-changed"
                         }`}
                       >
-                        {isCurrentAlreadySelected ? "当前工作区" : "新目录待确认"}
+                        {isCurrentAlreadySelected
+                          ? "当前工作区"
+                          : "新目录待确认"}
                       </span>
                     )}
                   </div>
@@ -452,26 +515,28 @@ export function WorkspacePicker({
                   </div>
                 </div>
               </div>
-              <button
-                type="button"
-                className="workspace-picker-close-btn"
+              <IconButton
+                label="关闭面板"
+                icon={<X size={16} aria-hidden="true" />}
                 onClick={close}
-                aria-label="关闭面板"
                 title="关闭 (Esc)"
-              >
-                <X size={16} aria-hidden="true" />
-              </button>
+              />
             </div>
 
             <div className="workspace-picker-body">
               {canBrowse ? (
                 <>
                   {showRecentSection && (
-                    <div className="workspace-picker-recent" aria-label="最近使用的工作区">
+                    <div
+                      className="workspace-picker-recent"
+                      aria-label="最近使用的工作区"
+                    >
                       <div className="workspace-picker-section-label">
                         <ClockCounterClockwise size={13} aria-hidden="true" />
                         <span>最近使用</span>
-                        <span className="workspace-picker-section-hint">点击直接选用</span>
+                        <span className="workspace-picker-section-hint">
+                          点击直接选用
+                        </span>
                       </div>
                       <div className="workspace-picker-recent-list">
                         {mergedRecentWorkspaces.map((recentPath) => {
@@ -479,7 +544,8 @@ export function WorkspacePicker({
                           const isCurrentWorkspace = recentPath === workspace;
                           const isBrowsingThis = recentPath === currentPath;
                           const showDisambiguator =
-                            duplicateRecentNames.has(info.name) && Boolean(info.immediateParent);
+                            duplicateRecentNames.has(info.name) &&
+                            Boolean(info.immediateParent);
                           return (
                             <button
                               type="button"
@@ -493,13 +559,27 @@ export function WorkspacePicker({
                                 commitWorkspace(recentPath);
                               }}
                             >
-                              <FolderOpen size={13} weight="duotone" className="workspace-picker-recent-icon" aria-hidden="true" />
-                              <span className="workspace-picker-recent-name">{info.name}</span>
+                              <FolderOpen
+                                size={13}
+                                weight="duotone"
+                                className="workspace-picker-recent-icon"
+                                aria-hidden="true"
+                              />
+                              <span className="workspace-picker-recent-name">
+                                {info.name}
+                              </span>
                               {showDisambiguator && (
-                                <span className="workspace-picker-recent-parent">{info.immediateParent}</span>
+                                <span className="workspace-picker-recent-parent">
+                                  {info.immediateParent}
+                                </span>
                               )}
                               {isCurrentWorkspace && (
-                                <Check size={11} weight="bold" className="workspace-picker-recent-check" aria-hidden="true" />
+                                <Check
+                                  size={11}
+                                  weight="bold"
+                                  className="workspace-picker-recent-check"
+                                  aria-hidden="true"
+                                />
                               )}
                             </button>
                           );
@@ -518,7 +598,10 @@ export function WorkspacePicker({
                         {breadcrumbs.map((crumb, index) => {
                           const isLast = index === breadcrumbs.length - 1;
                           return (
-                            <span className="workspace-picker-crumb-item" key={crumb.path}>
+                            <span
+                              className="workspace-picker-crumb-item"
+                              key={crumb.path}
+                            >
                               {index > 0 && (
                                 <CaretRight
                                   size={10}
@@ -628,7 +711,8 @@ export function WorkspacePicker({
                             disabled={loading || !trimmedQuery}
                             onClick={() => void browse(trimmedQuery)}
                           >
-                            跳转 <ArrowElbowDownLeft size={12} aria-hidden="true" />
+                            跳转{" "}
+                            <ArrowElbowDownLeft size={12} aria-hidden="true" />
                           </Button>
                         )}
                       </div>
@@ -648,7 +732,9 @@ export function WorkspacePicker({
                     <div
                       ref={dirListRef}
                       className={`workspace-picker-directories${
-                        !loading && filteredDirectories.length >= 4 ? " is-grid" : ""
+                        !loading && filteredDirectories.length >= 4
+                          ? " is-grid"
+                          : ""
                       }`}
                       aria-label="子目录"
                       aria-busy={loading}
@@ -679,7 +765,8 @@ export function WorkspacePicker({
                           if (currentIndex === -1) return;
                           event.preventDefault();
                           const delta =
-                            event.key === "ArrowDown" || event.key === "ArrowRight"
+                            event.key === "ArrowDown" ||
+                            event.key === "ArrowRight"
                               ? 1
                               : -1;
                           const nextIndex = currentIndex + delta;
@@ -693,7 +780,11 @@ export function WorkspacePicker({
                     >
                       {loading && (
                         <div className="workspace-picker-loading" role="status">
-                          <SpinnerGap size={20} className="workspace-picker-spinner" aria-hidden="true" />
+                          <SpinnerGap
+                            size={20}
+                            className="workspace-picker-spinner"
+                            aria-hidden="true"
+                          />
                           <span>正在读取目录…</span>
                         </div>
                       )}
@@ -706,19 +797,33 @@ export function WorkspacePicker({
                             onClick={() => void browse(directory.path)}
                             title={directory.path}
                           >
-                            <div className="workspace-picker-dir-icon" aria-hidden="true">
+                            <div
+                              className="workspace-picker-dir-icon"
+                              aria-hidden="true"
+                            >
                               <FolderOpen size={15} weight="duotone" />
                             </div>
-                            <span className="workspace-picker-dir-name">{directory.name}</span>
-                            <CaretRight size={13} className="workspace-picker-dir-arrow" aria-hidden="true" />
+                            <span className="workspace-picker-dir-name">
+                              {directory.name}
+                            </span>
+                            <CaretRight
+                              size={13}
+                              className="workspace-picker-dir-arrow"
+                              aria-hidden="true"
+                            />
                           </button>
                         ))}
                       {!loading && page && page.directories.length === 0 && (
                         <div className="workspace-picker-empty">
-                          <div className="workspace-picker-empty-icon" aria-hidden="true">
+                          <div
+                            className="workspace-picker-empty-icon"
+                            aria-hidden="true"
+                          >
                             <FolderDashed size={24} />
                           </div>
-                          <p className="workspace-picker-empty-text">当前目录下无子文件夹</p>
+                          <p className="workspace-picker-empty-text">
+                            当前目录下无子文件夹
+                          </p>
                           <p className="workspace-picker-empty-hint">
                             已到达最深层级，可直接点击下方“选择此目录”。
                           </p>
@@ -729,14 +834,18 @@ export function WorkspacePicker({
                         page.directories.length > 0 &&
                         filteredDirectories.length === 0 && (
                           <div className="workspace-picker-empty">
-                            <div className="workspace-picker-empty-icon" aria-hidden="true">
+                            <div
+                              className="workspace-picker-empty-icon"
+                              aria-hidden="true"
+                            >
                               <MagnifyingGlass size={22} />
                             </div>
                             <p className="workspace-picker-empty-text">
                               没有匹配“{trimmedQuery}”的子文件夹
                             </p>
                             <p className="workspace-picker-empty-hint">
-                              可尝试其他关键词，或粘贴完整绝对路径按 Enter 跳转。
+                              可尝试其他关键词，或粘贴完整绝对路径按 Enter
+                              跳转。
                             </p>
                           </div>
                         )}
@@ -746,7 +855,8 @@ export function WorkspacePicker({
                   {page?.truncated && (
                     <div className="workspace-picker-truncated-notice">
                       <p className="workspace-picker-helper">
-                        子目录较多，仅展示前 {page.directories.length} 项；可在上方搜索框过滤或直接输入路径跳转。
+                        子目录较多，仅展示前 {page.directories.length}{" "}
+                        项；可在上方搜索框过滤或直接输入路径跳转。
                       </p>
                     </div>
                   )}
@@ -778,9 +888,18 @@ export function WorkspacePicker({
               <div className="workspace-picker-selection-summary">
                 {canBrowse && page?.path ? (
                   <>
-                    <span className="workspace-picker-selection-label">将选定</span>
-                    <span className="workspace-picker-selection-target" title={page.path}>
-                      <FolderOpen size={13} weight="duotone" aria-hidden="true" />
+                    <span className="workspace-picker-selection-label">
+                      将选定
+                    </span>
+                    <span
+                      className="workspace-picker-selection-target"
+                      title={page.path}
+                    >
+                      <FolderOpen
+                        size={13}
+                        weight="duotone"
+                        aria-hidden="true"
+                      />
                       <strong>{currentDisplay.name}</strong>
                     </span>
                   </>

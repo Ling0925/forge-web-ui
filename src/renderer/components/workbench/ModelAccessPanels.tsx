@@ -26,11 +26,14 @@ import type { PublicProviderSource } from "@forge/core/shared/schemas";
 import { useWorkbench } from "../../state/workbench-context";
 import { configuredModelIds } from "../../state/composer-model";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
+import { Checkbox } from "../primitives/Checkbox";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
 import { Dialog } from "./Dialog";
 import "./model-access.css";
+import { IconButton } from "../primitives/IconButton";
 
 export type ProviderProtocol = NonNullable<PublicProviderSource["apiMode"]>;
 export type AccountQuota = Extract<
@@ -293,7 +296,9 @@ export function modelSelectionObject(selection: EditableModelSelection) {
     mode: selection.mode,
     // Keep explicit IDs when changing visibility; disabling a source is not
     // deleting its model configuration.
-    ...(selection.mode === "selected" || selection.models.length ? { models: [...selection.models] } : {}),
+    ...(selection.mode === "selected" || selection.models.length
+      ? { models: [...selection.models] }
+      : {}),
     ...(selection.manual.length ? { manual: [...selection.manual] } : {}),
     ...(cleanedOverrides ? { overrides: cleanedOverrides } : {}),
   };
@@ -757,8 +762,16 @@ export function ModelParameterEditor({
               aria-label={`模型 ${entry.id} 请求协议`}
               value={override?.apiMode ?? ""}
               disabled={disabled}
-              options={[{ value: "", label: "继承来源（别名优先继承实际模型）" }, ...protocolOptions]}
-              onChange={(event) => onChange({ apiMode: event.target.value === "" ? undefined : event.target.value as ProviderProtocol })}
+              options={[
+                { value: "", label: "继承来源（别名优先继承实际模型）" },
+                ...protocolOptions,
+              ]}
+              onValueChange={(value) =>
+                onChange({
+                  apiMode:
+                    value === "" ? undefined : (value as ProviderProtocol),
+                })
+              }
             />
           </div>
         </div>
@@ -1042,7 +1055,7 @@ export function PresetPicker({
             { value: "", label: "自定义" },
             ...presets.map((item) => ({ value: item.id, label: item.name })),
           ]}
-          onChange={(event) => onPreset(event.target.value)}
+          onValueChange={(value) => onPreset(value)}
         />
       </Field>
       {chosen?.regions?.length ? (
@@ -1057,7 +1070,7 @@ export function PresetPicker({
                 label: item.name,
               })),
             ]}
-            onChange={(event) => onRegion(event.target.value)}
+            onValueChange={(value) => onRegion(value)}
           />
         </Field>
       ) : null}
@@ -1211,7 +1224,9 @@ export function ModelSelectionEditor({
                   ...selection,
                   mode: value,
                   models:
-                    value === "selected" && selection.mode !== "selected" && selection.models.length === 0
+                    value === "selected" &&
+                    selection.mode !== "selected" &&
+                    selection.models.length === 0
                       ? configuredModelIds({ model, modelSelection: selection })
                       : selection.models,
                 })
@@ -1300,11 +1315,10 @@ export function ModelSelectionEditor({
                 >
                   <div className="model-access-model-row-main">
                     <label className="model-access-model-check">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedIds.includes(entry.id)}
                         disabled={disabled || selection.mode !== "selected"}
-                        onChange={() => toggle(entry.id)}
+                        onCheckedChange={() => toggle(entry.id)}
                       />
                       <span className="model-access-model-id">{entry.id}</span>
                     </label>
@@ -1332,15 +1346,12 @@ export function ModelSelectionEditor({
                         <CaretDown size={11} aria-hidden="true" />
                       </button>
                       {isManual && (
-                        <button
-                          type="button"
-                          className="model-access-icon-button"
-                          aria-label={`移除手工模型 ${entry.id}`}
+                        <IconButton
+                          label={`移除手工模型 ${entry.id}`}
+                          icon={<X size={14} aria-hidden="true" />}
                           disabled={disabled}
                           onClick={() => removeManual(entry.id)}
-                        >
-                          <X size={14} aria-hidden="true" />
-                        </button>
+                        />
                       )}
                     </div>
                   </div>
@@ -1437,17 +1448,14 @@ export function ModelSelectionEditor({
                   )
                 }
               />
-              <button
-                type="button"
-                className="model-access-icon-button"
-                aria-label="删除别名"
+              <IconButton
+                label="删除别名"
+                icon={<Trash size={14} aria-hidden="true" />}
                 disabled={disabled}
                 onClick={() =>
                   onAliases(aliases.filter((item) => item.id !== row.id))
                 }
-              >
-                <Trash size={14} aria-hidden="true" />
-              </button>
+              />
             </div>
           ))}
           <Button
@@ -1520,7 +1528,10 @@ export function SourceCardModelPanel({
     byId.set(defaultModelId, { id: defaultModelId, contextWindowTokens: null });
   }
 
-  const configuredIds = configuredModelIds({ model: defaultModelId, modelSelection: selection });
+  const configuredIds = configuredModelIds({
+    model: defaultModelId,
+    modelSelection: selection,
+  });
   const configuredSet = new Set(configuredIds);
 
   const configuredEntries = configuredIds.map(
@@ -1835,18 +1846,21 @@ export function SourceCardModelPanel({
           })}
         </div>
       ) : (
-        <div className="configured-models-empty">
-          <p>当前来源暂未配置任何模型卡片。</p>
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<Plus size={14} />}
-            disabled={disabled}
-            onClick={() => setPickerOpen(true)}
-          >
-            从模型目录选择模型进行配置
-          </Button>
-        </div>
+        <EmptyState
+          variant="inline"
+          title="当前来源暂未配置任何模型卡片"
+          action={
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={<Plus size={14} />}
+              disabled={disabled}
+              onClick={() => setPickerOpen(true)}
+            >
+              从模型目录选择模型进行配置
+            </Button>
+          }
+        />
       )}
     </div>
   );
@@ -1876,11 +1890,10 @@ export function ConnectionEditor({
             {connection.authHeader ? ` · ${connection.authHeader}` : ""}
           </span>
           <label className="model-access-check">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={connection.authEditing}
               disabled={disabled}
-              onChange={(event) => patch({ authEditing: event.target.checked })}
+              onCheckedChange={(checked) => patch({ authEditing: checked })}
             />
             修改鉴权
           </label>
@@ -1898,9 +1911,9 @@ export function ConnectionEditor({
                   { value: "header", label: "自定义请求头" },
                   { value: "none", label: "无" },
                 ]}
-                onChange={(event) =>
+                onValueChange={(value) =>
                   patch({
-                    authType: event.target.value as ConnectionDraft["authType"],
+                    authType: value as ConnectionDraft["authType"],
                   })
                 }
               />
@@ -1935,13 +1948,10 @@ export function ConnectionEditor({
               : "无"}
           </span>
           <label className="model-access-check">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={connection.headersEditing}
               disabled={disabled}
-              onChange={(event) =>
-                patch({ headersEditing: event.target.checked })
-              }
+              onCheckedChange={(checked) => patch({ headersEditing: checked })}
             />
             修改请求头
           </label>
@@ -1997,10 +2007,9 @@ export function ConnectionEditor({
                     })
                   }
                 />
-                <button
-                  type="button"
-                  className="model-access-icon-button"
-                  aria-label="删除请求头"
+                <IconButton
+                  label="删除请求头"
+                  icon={<Trash size={14} aria-hidden="true" />}
                   disabled={disabled}
                   onClick={() =>
                     patch({
@@ -2010,9 +2019,7 @@ export function ConnectionEditor({
                       ),
                     })
                   }
-                >
-                  <Trash size={14} aria-hidden="true" />
-                </button>
+                />
               </div>
             ))}
             <Button
@@ -2049,13 +2056,12 @@ export function ConnectionEditor({
                 : "无"}
           </span>
           <label className="model-access-check">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={connection.extraBodyEditing}
               disabled={disabled}
-              onChange={(event) => {
+              onCheckedChange={(checked) => {
                 setExtraBodyError("");
-                patch({ extraBodyEditing: event.target.checked });
+                patch({ extraBodyEditing: checked });
               }}
             />
             修改额外参数
@@ -2117,13 +2123,10 @@ export function ConnectionEditor({
                 : "无"}
           </span>
           <label className="model-access-check">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={connection.proxyEditing}
               disabled={disabled}
-              onChange={(event) =>
-                patch({ proxyEditing: event.target.checked })
-              }
+              onCheckedChange={(checked) => patch({ proxyEditing: checked })}
             />
             修改代理
           </label>
@@ -2148,13 +2151,12 @@ export function ConnectionEditor({
                 : "无"}
           </span>
           <label className="model-access-check">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={connection.vertexEditing}
               disabled={disabled}
-              onChange={(event) => {
+              onCheckedChange={(checked) => {
                 setVertexError("");
-                patch({ vertexEditing: event.target.checked });
+                patch({ vertexEditing: checked });
               }}
             />
             修改 Vertex
@@ -2372,13 +2374,12 @@ export function CredentialsEditor({
                 {statusLabel(credential.status)}
               </span>
               <label className="model-access-check">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={credential.enabled}
                   disabled={disabled}
                   aria-label={`启用凭据 ${credential.label}`}
-                  onChange={(event) =>
-                    update(credential.id, { enabled: event.target.checked })
+                  onCheckedChange={(checked) =>
+                    update(credential.id, { enabled: checked })
                   }
                 />
                 启用
@@ -2405,29 +2406,25 @@ export function CredentialsEditor({
                   />
                 </Field>
                 <label className="model-access-check">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={credential.clearKey}
                     disabled={disabled}
                     aria-label={`清除凭据密钥 ${credential.label}`}
-                    onChange={(event) =>
+                    onCheckedChange={(checked) =>
                       update(credential.id, {
-                        clearKey: event.target.checked,
-                        ...(event.target.checked ? { apiKey: "" } : {}),
+                        clearKey: checked,
+                        ...(checked ? { apiKey: "" } : {}),
                       })
                     }
                   />
                   清除密钥
                 </label>
-                <button
-                  type="button"
-                  className="model-access-icon-button"
-                  aria-label={`删除凭据 ${credential.label}`}
+                <IconButton
+                  label={`删除凭据 ${credential.label}`}
+                  icon={<Trash size={14} aria-hidden="true" />}
                   disabled={disabled}
                   onClick={() => remove(credential)}
-                >
-                  <Trash size={14} aria-hidden="true" />
-                </button>
+                />
               </div>
             ) : (
               <div className="model-access-credential-fields">
@@ -2441,15 +2438,12 @@ export function CredentialsEditor({
                 >
                   查询额度
                 </Button>
-                <button
-                  type="button"
-                  className="model-access-icon-button"
-                  aria-label={`删除账号 ${credential.label}`}
+                <IconButton
+                  label={`删除账号 ${credential.label}`}
+                  icon={<Trash size={14} aria-hidden="true" />}
                   disabled={disabled}
                   onClick={() => remove(credential)}
-                >
-                  <Trash size={14} aria-hidden="true" />
-                </button>
+                />
                 {quota[credential.id] && (
                   <QuotaView quota={quota[credential.id]!} />
                 )}
@@ -2579,8 +2573,8 @@ export function AccountLoginPanel({
             { value: "codex", label: "Codex" },
             { value: "copilot", label: "Copilot" },
           ]}
-          onChange={(event) =>
-            setPlatform(event.target.value === "copilot" ? "copilot" : "codex")
+          onValueChange={(value) =>
+            setPlatform(value === "copilot" ? "copilot" : "codex")
           }
         />
         <Button
@@ -2864,12 +2858,11 @@ export function ImportPanel({
                     className={`model-access-preview-row${isChecked ? " is-selected" : ""}${hasWarning ? " has-warning" : ""}`}
                     key={source.id}
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isChecked}
-                      onChange={(event) => {
+                      onCheckedChange={(checked) => {
                         const next = new Set(selected);
-                        if (event.target.checked) next.add(source.id);
+                        if (checked) next.add(source.id);
                         else next.delete(source.id);
                         setSelected(next);
                       }}
@@ -3065,12 +3058,15 @@ export function RouteGroupsPanel({
         </Button>
       </div>
       {groups.length === 0 ? (
-        <div className="model-access-route-empty">
-          <p className="model-access-status">无路由组。</p>
-          <span className="model-access-route-empty-hint">
-            添加路由组后，可在工作台模型选择器中直接选用虚拟路由池，实现跨来源自动故障转移与分流。
-          </span>
-        </div>
+        <EmptyState
+          variant="inline"
+          title="尚无路由组"
+          description={
+            sources.length
+              ? "添加路由组后，可在工作台模型选择器中直接选用虚拟路由池，实现跨来源自动故障转移与分流。"
+              : "路由组由多个模型来源组成，请先添加至少一个模型来源。"
+          }
+        />
       ) : (
         <ul className="model-access-route-list">
           {groups.map((group) => {
@@ -3209,10 +3205,10 @@ export function RouteGroupsPanel({
                     { value: "smart", label: "智能择优 (smart)" },
                     { value: "pace", label: "节流控制 (pace)" },
                   ]}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     setDraft({
                       ...draft,
-                      strategy: event.target.value as RouteGroup["strategy"],
+                      strategy: value as RouteGroup["strategy"],
                     })
                   }
                 />
@@ -3228,11 +3224,10 @@ export function RouteGroupsPanel({
                 }
               </span>
               <label className="model-access-check model-access-route-sticky">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={draft.sticky === true}
-                  onChange={(event) =>
-                    setDraft({ ...draft, sticky: event.target.checked })
+                  onCheckedChange={(checked) =>
+                    setDraft({ ...draft, sticky: checked })
                   }
                 />
                 <span>黏性会话（优先沿用上次成功节点）</span>
@@ -3297,22 +3292,20 @@ export function RouteGroupsPanel({
                           </div>
                         )}
                         <label className="model-access-check">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={member.enabled !== false}
                             aria-label="启用路由成员"
-                            onChange={(event) =>
+                            onCheckedChange={(checked) =>
                               patchMember(index, {
-                                enabled: event.target.checked,
+                                enabled: checked,
                               })
                             }
                           />
                           启用
                         </label>
-                        <button
-                          type="button"
-                          className="model-access-icon-button"
-                          aria-label="删除路由成员"
+                        <IconButton
+                          label="删除路由成员"
+                          icon={<Trash size={14} aria-hidden="true" />}
                           disabled={draft.members.length <= 1}
                           onClick={() =>
                             setDraft({
@@ -3322,9 +3315,7 @@ export function RouteGroupsPanel({
                               ),
                             })
                           }
-                        >
-                          <Trash size={14} aria-hidden="true" />
-                        </button>
+                        />
                       </div>
                     </div>
                     <div className="model-access-route-member-fields">
@@ -3340,9 +3331,9 @@ export function RouteGroupsPanel({
                               label: item.label,
                             })),
                           ]}
-                          onChange={(event) =>
+                          onValueChange={(value) =>
                             patchMember(index, {
-                              sourceId: event.target.value,
+                              sourceId: value,
                               model: "",
                               credentialId: undefined,
                             })
@@ -3381,9 +3372,9 @@ export function RouteGroupsPanel({
                               }),
                             ),
                           ]}
-                          onChange={(event) =>
+                          onValueChange={(value) =>
                             patchMember(index, {
-                              credentialId: event.target.value || undefined,
+                              credentialId: value || undefined,
                             })
                           }
                         />

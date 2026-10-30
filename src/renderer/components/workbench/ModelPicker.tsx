@@ -4,6 +4,7 @@ import { reasoningEffortSchema } from "@forge/core/shared/model-access";
 import { ModelCatalog, type ModelCatalogGroup } from "./ModelCatalog";
 // The composer needs these styles before the lazy-loaded Settings page opens.
 import "../../styles/settings-models.css";
+import { useDismiss } from "../primitives/useDismiss";
 
 const defaultEfforts = ["low", "medium", "high", "xhigh", "max"] as const;
 const formatEffort = (value: string | undefined) =>
@@ -46,9 +47,11 @@ export function ModelPicker(props: {
   // Keep the configured value even if discovery omits it; otherwise the slider
   // displays the first option and can overwrite the saved effort on mere blur.
   // The schema filters unknown levels and orders the remaining choices by effort.
-  const availableEfforts: readonly string[] = props.reasoning?.options ?? defaultEfforts;
+  const availableEfforts: readonly string[] =
+    props.reasoning?.options ?? defaultEfforts;
   const efforts = reasoningEffortSchema.options.filter(
-    (value) => value === props.reasoning?.value || availableEfforts.includes(value),
+    (value) =>
+      value === props.reasoning?.value || availableEfforts.includes(value),
   );
   const effortSignature = JSON.stringify(efforts);
   const effortIndex = efforts.findIndex(
@@ -61,7 +64,13 @@ export function ModelPicker(props: {
     if (props.reasoning?.disabled) return;
     setDraftEffort(Math.max(0, effortIndex));
     submittedEffort.current = null;
-  }, [effortIndex, effortSignature, props.value, props.sourceId, props.reasoning?.disabled]);
+  }, [
+    effortIndex,
+    effortSignature,
+    props.value,
+    props.sourceId,
+    props.reasoning?.disabled,
+  ]);
   const commitEffort = (index: number) => {
     const choice = efforts[index];
     if (
@@ -106,19 +115,7 @@ export function ModelPicker(props: {
         ?.focus();
     }
   }, [open, modelsOpen, props.hideSearch]);
-  useEffect(() => {
-    if (!open) return;
-    const outside = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        ref.current &&
-        !ref.current.contains(event.target)
-      )
-        close();
-    };
-    window.addEventListener("pointerdown", outside);
-    return () => window.removeEventListener("pointerdown", outside);
-  }, [open]);
+  useDismiss({ open, refs: [ref], onDismiss: close });
   return (
     <details
       ref={ref}

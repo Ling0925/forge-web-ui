@@ -280,30 +280,6 @@
   line-height: 1.5;
 }
 
-.model-access-icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border: 0;
-  border-radius: var(--radius-xs);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.model-access-icon-button:hover:not(:disabled) {
-  color: var(--text-primary);
-  background: var(--surface-hover);
-}
-
-.model-access-icon-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 .model-access-inline {
   display: flex;
   flex-wrap: wrap;
@@ -762,28 +738,6 @@
   color: var(--warning);
   font-size: var(--text-xs);
   line-height: 1.5;
-}
-
-.model-access-route-empty {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 18px;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--border-subtle);
-  background: var(--surface-soft);
-}
-
-.model-access-route-empty > .model-access-status {
-  margin: 0;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.model-access-route-empty-hint {
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-  line-height: 1.45;
 }
 
 .model-access-route-list {
@@ -1501,25 +1455,6 @@
   background: var(--error-bg);
   border-color: var(--error-border);
   color: var(--error);
-}
-
-.configured-models-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 20px;
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--border-subtle);
-  background: var(--canvas-bg);
-  text-align: center;
-}
-
-.configured-models-empty p {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
 }
 
 .provider-model-dot {

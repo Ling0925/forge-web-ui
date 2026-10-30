@@ -8,6 +8,7 @@ import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
 import { Input } from "../primitives/Input";
 import { Dialog } from "./Dialog";
+import { useDismiss } from "../primitives/useDismiss";
 
 export interface SessionActionsProps {
   readonly session?: SessionSummary;
@@ -45,36 +46,13 @@ export function SessionActions({
     onOpenChange?.(false);
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const targetNode = event.target as Node | null;
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(targetNode) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(targetNode)
-      ) {
-        closeMenu();
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeMenu();
-      }
-    };
-    const handleScroll = () => {
-      closeMenu();
-    };
-    window.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("scroll", handleScroll, true);
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [isOpen]);
+  useDismiss({
+    open: isOpen,
+    refs: [menuRef, triggerRef],
+    onDismiss: closeMenu,
+    closeOnEscape: true,
+    closeOnScroll: true,
+  });
 
   if (!target) return null;
 

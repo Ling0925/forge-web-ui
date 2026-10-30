@@ -3,6 +3,8 @@
 // defined anywhere in src/renderer (CSS declarations, or a "--name" key /
 // setProperty("--name") in TS/TSX for runtime-set properties).
 // An undefined property silently invalidates its declaration at runtime.
+// Properties injected at runtime by third-party primitives (Radix sets
+// --radix-* on its popper/content elements) are allowed by prefix.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +38,11 @@ for (const file of files) {
   });
 }
 
-const missing = [...uses.keys()].filter((name) => !defined.has(name)).sort();
+const RUNTIME_PREFIXES = ["--radix-"];
+const missing = [...uses.keys()]
+  .filter((name) => !defined.has(name))
+  .filter((name) => !RUNTIME_PREFIXES.some((prefix) => name.startsWith(prefix)))
+  .sort();
 if (missing.length === 0) {
   console.log(
     `check-css-vars: ${uses.size} custom properties referenced, all defined.`,

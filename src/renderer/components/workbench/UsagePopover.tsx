@@ -22,6 +22,7 @@ import {
 import { useWorkbench } from "../../state/workbench-context";
 import type { ActiveRunState } from "../../state/workbench-reducer";
 import "./usage-popover.css";
+import { useDismiss } from "../primitives/useDismiss";
 
 const percent = (value: number | undefined) =>
   value === undefined ? "—" : `${(value * 100).toFixed(1)}%`;
@@ -99,7 +100,10 @@ export function UsagePopover({
     isRunActive && !isCancelling && !isAwaiting && retryCount,
   );
   const isExecuting = Boolean(
-    isRunActive && !isCancelling && !isAwaiting && activeRun?.status === "running",
+    isRunActive &&
+      !isCancelling &&
+      !isAwaiting &&
+      activeRun?.status === "running",
   );
   const runStatusLabel = !isRunActive
     ? undefined
@@ -275,10 +279,7 @@ export function UsagePopover({
 
   const speedDetailSub = useMemo(() => {
     const parts: string[] = [];
-    if (
-      speedMetrics.requestCount > 1 &&
-      speedMetrics.peakTps !== undefined
-    ) {
+    if (speedMetrics.requestCount > 1 && speedMetrics.peakTps !== undefined) {
       parts.push(`峰值 ${speedMetrics.peakTps.toFixed(1)}`);
     }
     const dur = formatDuration(speedMetrics.durationMs);
@@ -290,19 +291,13 @@ export function UsagePopover({
     speedMetrics.durationMs,
   ]);
 
-  useEffect(() => {
-    if (!open) return;
-    const dismiss = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        ref.current &&
-        !ref.current.contains(event.target)
-      )
-        ref.current.open = false;
-    };
-    window.addEventListener("pointerdown", dismiss);
-    return () => window.removeEventListener("pointerdown", dismiss);
-  }, [open]);
+  useDismiss({
+    open,
+    refs: [ref],
+    onDismiss: () => {
+      if (ref.current) ref.current.open = false;
+    },
+  });
 
   return (
     <details

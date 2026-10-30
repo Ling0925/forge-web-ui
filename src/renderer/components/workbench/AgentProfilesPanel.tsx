@@ -24,11 +24,13 @@ import {
 } from "react";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
-import { SettingsSelect } from "../primitives/SettingsSelect";
+import { Select } from "../primitives/Select";
 import { SettingsToggleCard } from "../primitives/SettingsToggleCard";
 import { Textarea } from "../primitives/Textarea";
+import { useDismiss } from "../primitives/useDismiss";
 
 function isConflictError(error: string): boolean {
   return (
@@ -140,7 +142,11 @@ export function AgentProfilesPanel({
   const [mcpServersText, setMcpServersText] = useState("");
   const resetDraft = (profile: AgentProfileInput) => {
     setDraft(profile);
-    setMcpServersText(profile.tools.mode === "restricted" ? profile.tools.mcpServers.join(", ") : "");
+    setMcpServersText(
+      profile.tools.mode === "restricted"
+        ? profile.tools.mcpServers.join(", ")
+        : "",
+    );
     // Unlisted values are shown as manual below, without changing the binding.
     setIsManualInput(false);
   };
@@ -169,22 +175,14 @@ export function AgentProfilesPanel({
     templatePopoverRef.current
       ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
       ?.focus({ preventScroll: true });
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        !templateMenuRef.current?.contains(event.target)
-      ) {
-        setShowTemplateMenu(false);
-      }
-    };
-    window.addEventListener("pointerdown", handlePointerDown);
-    return () => window.removeEventListener("pointerdown", handlePointerDown);
   }, [showTemplateMenu]);
+  useDismiss({
+    open: showTemplateMenu,
+    refs: [templateMenuRef],
+    onDismiss: () => setShowTemplateMenu(false),
+  });
 
-  const handleTemplateMenuKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-  ) => {
+  const handleTemplateMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape" && showTemplateMenu) {
       event.preventDefault();
       event.stopPropagation();
@@ -231,24 +229,39 @@ export function AgentProfilesPanel({
   };
 
   const fixedModel = draft.model.mode === "fixed" ? draft.model : undefined;
-  const currentFixedSource = providerSources.find((s) => s.id === fixedModel?.providerSourceId);
+  const currentFixedSource = providerSources.find(
+    (s) => s.id === fixedModel?.providerSourceId,
+  );
   const availableModelIds = useMemo(
-    () => currentFixedSource ? selectableModelIds(currentFixedSource) : [],
+    () => (currentFixedSource ? selectableModelIds(currentFixedSource) : []),
     [currentFixedSource],
   );
-  const showManualModel = isManualInput || !availableModelIds.includes(fixedModel?.model ?? "");
+  const showManualModel =
+    isManualInput || !availableModelIds.includes(fixedModel?.model ?? "");
   const providerSourceOptions = [
-    ...(fixedModel?.providerSourceId && !currentFixedSource ? [{
-      value: fixedModel.providerSourceId,
-      label: `${fixedModel.providerSourceId}（未找到配置）`,
-      sub: "已保留原绑定来源",
-      disabled: true,
-    }] : []),
-    ...providerSources.map((s) => ({ value: s.id, label: s.label || s.id, sub: `来源 ID: ${s.id}` })),
+    ...(fixedModel?.providerSourceId && !currentFixedSource
+      ? [
+          {
+            value: fixedModel.providerSourceId,
+            label: `${fixedModel.providerSourceId}（未找到配置）`,
+            sub: "已保留原绑定来源",
+            disabled: true,
+          },
+        ]
+      : []),
+    ...providerSources.map((s) => ({
+      value: s.id,
+      label: s.label || s.id,
+      sub: `来源 ID: ${s.id}`,
+    })),
   ];
   const modelOptions = [
     ...availableModelIds.map((id) => ({ value: id, label: id })),
-    { value: "", label: "手动输入模型 ID…", sub: "自定义或未列入可选列表的精确模型 ID" },
+    {
+      value: "",
+      label: "手动输入模型 ID…",
+      sub: "自定义或未列入可选列表的精确模型 ID",
+    },
   ];
   // Only an explicit source change chooses a new default; opening an existing
   // profile or refreshing settings must never rewrite its saved model.
@@ -260,7 +273,10 @@ export function AgentProfilesPanel({
       model: {
         mode: "fixed",
         providerSourceId: sourceId,
-        model: source && models.includes(source.model) ? source.model : models[0] ?? "",
+        model:
+          source && models.includes(source.model)
+            ? source.model
+            : (models[0] ?? ""),
       },
     });
     setIsManualInput(false);
@@ -479,7 +495,7 @@ export function AgentProfilesPanel({
     }
 
     const savePayload = parseResult.data;
-    const expectedRevision = isNew ? 0 : originalProfile?.revision ?? 0;
+    const expectedRevision = isNew ? 0 : (originalProfile?.revision ?? 0);
 
     setBusy(true);
     try {
@@ -504,7 +520,9 @@ export function AgentProfilesPanel({
         } else {
           // Revisions are host-assigned, globally monotonic tokens, not +1 per ID.
           setStatusMessage(null);
-          setErrorMessage("服务端未返回已保存的角色，草稿已保留。请刷新配置确认结果，不要重复提交。");
+          setErrorMessage(
+            "服务端未返回已保存的角色，草稿已保留。请刷新配置确认结果，不要重复提交。",
+          );
           setConflictRevision(true);
           return;
         }
@@ -539,7 +557,8 @@ export function AgentProfilesPanel({
     setBusy(true);
     try {
       const latestSettings = await loadSettings();
-      if (!latestSettings) throw new Error("未能读取服务器配置，当前草稿已保留。");
+      if (!latestSettings)
+        throw new Error("未能读取服务器配置，当前草稿已保留。");
       if (latestSettings.agentProfiles) {
         const latest = latestSettings.agentProfiles.find(
           (p) => p.id === draft.id,
@@ -771,19 +790,21 @@ export function AgentProfilesPanel({
             label="模型模式"
             helper="选择继承主代理当前模型，或固定绑定特定的 Provider 来源与模型 ID。"
           >
-            <SettingsSelect
-              ariaLabel="模型模式选择"
+            <Select
+              aria-label="模型模式选择"
               value={draft.model.mode}
               options={MODEL_MODE_OPTIONS}
               disabled={busy}
-              onChange={(val) => {
+              onValueChange={(val) => {
                 if (val === draft.model.mode) return;
                 if (val === "inherit") {
                   setDraft({ ...draft, model: { mode: "inherit" } });
                   setIsManualInput(false);
                 } else {
-                  const preferredSource = providerSources.find((s) => s.id === state.settings?.activeSourceId)
-                    ?? providerSources[0];
+                  const preferredSource =
+                    providerSources.find(
+                      (s) => s.id === state.settings?.activeSourceId,
+                    ) ?? providerSources[0];
                   selectFixedSource(preferredSource?.id ?? "");
                 }
               }}
@@ -802,7 +823,8 @@ export function AgentProfilesPanel({
                 providerSources.length > 0 &&
                 !currentFixedSource && (
                   <p className="agent-help-callout" role="alert">
-                    绑定的 Provider 来源（{draft.model.providerSourceId}）未在当前已配置来源中找到，已保留原绑定。
+                    绑定的 Provider 来源（{draft.model.providerSourceId}
+                    ）未在当前已配置来源中找到，已保留原绑定。
                   </p>
                 )}
 
@@ -812,13 +834,14 @@ export function AgentProfilesPanel({
                 helper="必须为已配置的来源标识，只保存来源标识，不复制密钥。"
               >
                 {providerSources.length > 0 ? (
-                  <SettingsSelect
-                    ariaLabel="Provider 来源"
+                  <Select
+                    aria-label="Provider 来源"
                     value={draft.model.providerSourceId}
                     options={providerSourceOptions}
                     disabled={busy}
-                    onChange={(val) => {
-                      if (val !== fixedModel?.providerSourceId) selectFixedSource(val);
+                    onValueChange={(val) => {
+                      if (val !== fixedModel?.providerSourceId)
+                        selectFixedSource(val);
                     }}
                   />
                 ) : (
@@ -850,17 +873,22 @@ export function AgentProfilesPanel({
                   label="已配置模型"
                   helper="从当前 Provider 已配置的模型列表中直接选择，或选择手动输入精确 ID。"
                 >
-                  <SettingsSelect
-                    ariaLabel="智能体模型"
+                  <Select
+                    aria-label="智能体模型"
                     id="agent-select-model"
                     className="agent-model-select"
+                    contentClassName="agent-model-select-content"
                     value={showManualModel ? "" : draft.model.model}
                     options={modelOptions}
                     disabled={busy}
-                    onChange={(val) => {
+                    onValueChange={(val) => {
                       if (!fixedModel) return;
                       setIsManualInput(val === "");
-                      if (val) setDraft({ ...draft, model: { ...fixedModel, model: val } });
+                      if (val)
+                        setDraft({
+                          ...draft,
+                          model: { ...fixedModel, model: val },
+                        });
                     }}
                   />
                 </Field>
@@ -868,7 +896,9 @@ export function AgentProfilesPanel({
 
               {availableModelIds.length === 0 && currentFixedSource && (
                 <p className="agent-help-callout" role="note">
-                  该 Provider 来源未列出可用模型。可前往「模型连接」配置可选模型，或手动输入精确模型 ID。
+                  该 Provider
+                  来源未列出可用模型。可前往「模型连接」配置可选模型，或手动输入精确模型
+                  ID。
                 </p>
               )}
 
@@ -877,7 +907,9 @@ export function AgentProfilesPanel({
                 draft.model.model &&
                 !availableModelIds.includes(draft.model.model) && (
                   <p className="agent-help-callout" role="note">
-                    当前模型 ID（{draft.model.model}）未在来源已配置模型列表中。可保留此 ID，或从上方选择已配置模型。
+                    当前模型 ID（{draft.model.model}
+                    ）未在来源已配置模型列表中。可保留此
+                    ID，或从上方选择已配置模型。
                   </p>
                 )}
 
@@ -896,7 +928,10 @@ export function AgentProfilesPanel({
                         setIsManualInput(true);
                         setDraft({
                           ...draft,
-                          model: { ...draft.model, model: e.target.value.trim() },
+                          model: {
+                            ...draft.model,
+                            model: e.target.value.trim(),
+                          },
                         });
                       }
                     }}
@@ -917,12 +952,12 @@ export function AgentProfilesPanel({
             label="权限策略（主会话为上限）"
             helper="默认继承主会话；仅需额外限制角色时选择只读或逐次审批。"
           >
-            <SettingsSelect
-              ariaLabel="权限上限选择"
+            <Select
+              aria-label="权限上限选择"
               value={draft.permission}
               options={PERMISSION_OPTIONS}
               disabled={busy}
-              onChange={(val) =>
+              onValueChange={(val) =>
                 setDraft({
                   ...draft,
                   permission: val as "readonly" | "workspace" | "unrestricted",
@@ -947,12 +982,12 @@ export function AgentProfilesPanel({
             label="工作树隔离 (isolation)"
             helper="选择子代理的执行与写入目录隔离方式。"
           >
-            <SettingsSelect
-              ariaLabel="工作树隔离选择"
+            <Select
+              aria-label="工作树隔离选择"
               value={draft.isolation}
               options={ISOLATION_OPTIONS}
               disabled={busy}
-              onChange={(val) =>
+              onValueChange={(val) =>
                 setDraft({
                   ...draft,
                   isolation: val as "shared" | "worktree",
@@ -978,12 +1013,12 @@ export function AgentProfilesPanel({
             label="工具模式"
             helper="继承宿主工具或限定可用工具组列表。"
           >
-            <SettingsSelect
-              ariaLabel="工具模式选择"
+            <Select
+              aria-label="工具模式选择"
               value={draft.tools.mode}
               options={TOOLS_MODE_OPTIONS}
               disabled={busy}
-              onChange={(val) => {
+              onValueChange={(val) => {
                 setMcpServersText("");
                 if (val === "inherit") {
                   setDraft({ ...draft, tools: { mode: "inherit" } });
@@ -1071,11 +1106,7 @@ export function AgentProfilesPanel({
           >
             {busy ? "正在保存…" : "保存智能体角色"}
           </Button>
-          <Button
-            variant="ghost"
-            onClick={handleCancelEdit}
-            disabled={busy}
-          >
+          <Button variant="ghost" onClick={handleCancelEdit} disabled={busy}>
             取消
           </Button>
         </div>
@@ -1178,24 +1209,23 @@ export function AgentProfilesPanel({
       )}
 
       {profiles.length === 0 ? (
-        <div className="agent-empty-card">
-          <p className="agent-empty-hint">
-            尚未配置任何智能体角色。主代理在委派并行或专项任务时，将使用默认行为。你可以从预置模板快速添加角色：
-          </p>
-          <div className="agent-empty-template-buttons">
-            {agentProfileTemplates.map((tmpl) => (
-              <Button
-                key={tmpl.id}
-                size="sm"
-                variant="secondary"
-                onClick={() => handleStartCreate(tmpl)}
-                disabled={busy}
-              >
-                + {tmpl.name}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <EmptyState
+          variant="inline"
+          title="尚未配置任何智能体角色"
+          description="主代理在委派并行或专项任务时，将使用默认行为。你可以从预置模板快速添加角色："
+          action={agentProfileTemplates.map((tmpl) => (
+            <Button
+              key={tmpl.id}
+              size="sm"
+              variant="secondary"
+              icon={<Plus size={14} />}
+              onClick={() => handleStartCreate(tmpl)}
+              disabled={busy}
+            >
+              {tmpl.name}
+            </Button>
+          ))}
+        />
       ) : (
         <div className="agent-profiles-list">
           {profiles.map((profile) => {
@@ -1220,7 +1250,12 @@ export function AgentProfilesPanel({
                       {profile.enabled ? "已启用" : "已停用"}
                     </span>
                     <span className="agent-profile-badge">
-                      权限：{profile.permission === "unrestricted" ? "继承主会话" : profile.permission === "workspace" ? "逐次审批" : "只读"}
+                      权限：
+                      {profile.permission === "unrestricted"
+                        ? "继承主会话"
+                        : profile.permission === "workspace"
+                          ? "逐次审批"
+                          : "只读"}
                     </span>
                     <span className="agent-profile-badge">
                       隔离：{profile.isolation}

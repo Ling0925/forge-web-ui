@@ -27,6 +27,7 @@ import type {
 import { configuredModelIds } from "../../state/composer-model";
 import { compactTokens } from "../../state/session-usage";
 import type { ActiveRunState } from "../../state/workbench-reducer";
+import { Button } from "../primitives/Button";
 
 export interface ProviderNode3D {
   readonly id: string;
@@ -1612,15 +1613,15 @@ export function UsageOverview({
 
           <div className="usage-section-header-right">
             <div className="usage-3d-camera-actions">
-              <button
-                type="button"
-                className="usage-dashboard-btn"
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<ArrowsClockwise size={13} />}
                 onClick={resetCamera}
                 title="重置 3D 视角"
               >
-                <ArrowsClockwise size={13} />
-                <span>重置视角</span>
-              </button>
+                重置视角
+              </Button>
             </div>
           </div>
         </div>

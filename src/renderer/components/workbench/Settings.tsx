@@ -34,6 +34,7 @@ import {
 } from "../../state/settings-draft";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
@@ -271,7 +272,8 @@ const sections = [
     id: "connection",
     title: "模型连接",
     description: "连接你的模型服务，选择协议与默认模型。",
-    keywords: "API 端点 密钥 model reasoning 思考强度 默认思考等级 路由组 导入来源",
+    keywords:
+      "API 端点 密钥 model reasoning 思考强度 默认思考等级 路由组 导入来源",
     icon: Plugs,
   },
   {
@@ -292,7 +294,8 @@ const sections = [
     id: "agents",
     title: "智能体",
     description: "配置子代理角色、模型绑定与权限工具边界。",
-    keywords: "智能体 agent profile 角色 模板 探索 前端 后端 审查 隔离 worktree 工具组",
+    keywords:
+      "智能体 agent profile 角色 模板 探索 前端 后端 审查 隔离 worktree 工具组",
     icon: Users,
   },
   {
@@ -502,7 +505,7 @@ export function Settings() {
       <Select
         id={`setting-${name}`}
         value={draft[name]}
-        onChange={(e) => change(name, e.target.value)}
+        onValueChange={(value) => change(name, value)}
         options={options}
       />
     </Field>
@@ -673,9 +676,10 @@ export function Settings() {
             </p>
           )}
           {query && !matching.length && (
-            <div className="settings-empty">
-              没有找到相关设置，试试“模型”“token”或“权限”。
-            </div>
+            <EmptyState
+              variant="inline"
+              title="没有找到相关设置，试试“模型”“token”或“权限”。"
+            />
           )}
 
           <div hidden={!visible("connection")}>
@@ -811,7 +815,9 @@ export function Settings() {
                           >
                             <div
                               className={`settings-theme-preview preview-${theme.value}`}
-                              data-theme={theme.value === "dark" ? "dark" : "light"}
+                              data-theme={
+                                theme.value === "dark" ? "dark" : "light"
+                              }
                             >
                               <div className="preview-window-bar">
                                 <span className="window-dot" />
@@ -826,7 +832,9 @@ export function Settings() {
                                 </div>
                                 <div
                                   className="preview-main"
-                                  data-theme={theme.value === "light" ? undefined : "dark"}
+                                  data-theme={
+                                    theme.value === "light" ? undefined : "dark"
+                                  }
                                 >
                                   <div className="preview-bubble received" />
                                   <div className="preview-bubble sent" />
@@ -1211,7 +1219,8 @@ export function Settings() {
                                   自动触发阈值
                                 </span>
                                 <span>
-                                  默认在单次上下文达到模型窗口 80%（或手动上限）时自动压缩摘要
+                                  默认在单次上下文达到模型窗口
+                                  80%（或手动上限）时自动压缩摘要
                                 </span>
                               </div>
                               <div className="context-mechanism-item">
@@ -1277,13 +1286,11 @@ export function Settings() {
                       </div>
 
                       {!draft.modelContextWindows.length ? (
-                        <div className="context-windows-empty">
-                          <strong>尚未配置逐模型窗口覆盖</strong>
-                          <span>
-                            默认自动识别主流模型上下文窗口（未知模型按 300K
-                            tokens 估算，80% 压缩阈值约 240K）。若使用自建网关或自定义别名，可点击右上角“添加模型窗口”单独指定。
-                          </span>
-                        </div>
+                        <EmptyState
+                          variant="inline"
+                          title="尚未配置逐模型窗口覆盖"
+                          description="默认自动识别主流模型上下文窗口（未知模型按 300K tokens 估算，80% 压缩阈值约 240K）。若使用自建网关或自定义别名，可点击右上角“添加模型窗口”单独指定。"
+                        />
                       ) : (
                         <div className="context-window-list">
                           {draft.modelContextWindows.map((row, index) => {
@@ -1473,9 +1480,11 @@ export function Settings() {
                       和文件扩展名必须唯一；保存不安装服务。后续使用时会执行本机命令，请仅配置可信程序。
                     </p>
                     {!draft.lspServers.length && (
-                      <div className="settings-empty">
-                        尚未配置语言服务。添加已安装的语言服务器以启用代码诊断。
-                      </div>
+                      <EmptyState
+                        variant="inline"
+                        title="尚未配置语言服务"
+                        description="添加已安装的语言服务器以启用代码诊断。"
+                      />
                     )}
                     {draft.lspServers.map((row, index) => (
                       <article className="settings-entry" key={index}>
