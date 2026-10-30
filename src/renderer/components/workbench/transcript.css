@@ -625,3 +625,25 @@
     border-top-color: var(--border-subtle);
   }
 }
+
+/* Process narration: the model's "I'll check X first" lines between tool
+   calls are part of the work log, not the answer. They keep the reading rail
+   but step down one size and one ink level, and only the first one in a turn
+   carries the author row, so a turn reads as one reply instead of a stack of
+   mini-messages each with its own "Forge · 复制" header. */
+.wb-app .message-assistant.message-step .message-body {
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+  color: var(--text-secondary);
+}
+
+/* Inline approval: one card (the ApprovalPanel primitive) under a quiet label,
+   instead of a bordered frame wrapping a second bordered card. */
+.transcript-approval {
+  gap: var(--space-2);
+}
+.transcript-approval-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--warning);
+}

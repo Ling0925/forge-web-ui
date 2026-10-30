@@ -592,6 +592,9 @@ function renderTimelineEntry(
     expanded: Readonly<Record<string, boolean>>;
     toggle(id: string): void;
   },
+  // Intermediate narration inside a turn: rendered as quieter process text
+  // and, after the first one, without repeating the author row.
+  step?: { readonly showAuthor: boolean },
 ) {
   const { item, index } = entry;
   if (item.kind === "error" && item.historical) return null;
@@ -661,11 +664,11 @@ function renderTimelineEntry(
       <Fragment key={item.id}>
         {headers[index] && <StageHeader stage={headers[index]} />}
         <article
-          className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}`}
+          className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}${step && item.role === "assistant" ? " message-step" : ""}`}
           data-generation-id={item.generationId}
         >
           {item.role === "user" && <div className="message-header">你</div>}
-          {item.role === "assistant" && item.content && (
+          {item.role === "assistant" && item.content && step?.showAuthor !== false && (
             <div className="message-header message-author-row">
               <span>
                 {item.streaming
@@ -811,7 +814,7 @@ function ExecutionProcess({
           aria-hidden="true"
         />
         <Check size={13} aria-hidden="true" />
-        <span>done</span>
+        <span>已完成</span>
         {counts && (
           <>
             <span aria-hidden="true">·</span>
@@ -1032,8 +1035,20 @@ export const StoredTranscript = memo(function StoredTranscript({
                     execution={finalEntry ? execution : undefined}
                     counts={counts}
                   >
-                    {blocks.map((block) => {
+                    {blocks.map((block, blockIndex) => {
                       if (block.kind === "single") {
+                        // Every block before the turn's last one (or all of
+                        // them when the final answer is rendered separately)
+                        // is process narration, not the answer.
+                        const isStep =
+                          Boolean(finalEntry) ||
+                          blockIndex < blocks.length - 1;
+                        const firstAssistant = blocks.findIndex(
+                          (candidate) =>
+                            candidate.kind === "single" &&
+                            candidate.entry.item.kind === "message" &&
+                            candidate.entry.item.role === "assistant",
+                        );
                         return (
                           <Fragment key={block.entry.item.id}>
                             {renderTimelineEntry(
@@ -1043,6 +1058,13 @@ export const StoredTranscript = memo(function StoredTranscript({
                               phases,
                               timeline,
                               reasoningView,
+                              isStep
+                                ? {
+                                    showAuthor:
+                                      !finalEntry &&
+                                      blockIndex === firstAssistant,
+                                  }
+                                : undefined,
                             )}
                           </Fragment>
                         );
@@ -1093,33 +1115,18 @@ export const InlineApproval = memo(function InlineApproval({
   readonly hasQueued: boolean;
   readonly onDecide: (approved: boolean) => void;
 }) {
-  const command = request.command
-    ? // Command arrays are shown verbatim; a plain description is the fallback
-      // for approvals whose risk is not a literal argv.
-      JSON.stringify(request.command)
-    : request.description;
+  // ApprovalPanel joins argv for display; a plain description is the
+  // fallback for approvals whose risk is not a literal argv.
+  const command = request.command ?? request.description;
   return (
     <section
       className="transcript-approval wb-stack"
       aria-label="待批准执行"
       data-session-id={sessionId}
       data-approval-id={request.id}
-      style={{
-        // Styling owned by this component only: the workspace CSS file is not
-        // part of this change, so the card borrows contract tokens inline.
-        gap: "var(--space-3)",
-        padding: "var(--space-4)",
-        borderRadius: "var(--radius-card)",
-        border: "1px solid var(--warning-border)",
-        // The ApprovalPanel inside keeps its own warning surface; the outer
-        // frame is a quiet card so the pair reads as one inline unit.
-        background: "var(--surface-elevated)",
-      }}
     >
       <div className="transcript-approval-head wb-stack">
-        <strong style={{ fontSize: "var(--text-base)", fontWeight: 600 }}>
-          需要你的批准
-        </strong>
+        <strong className="transcript-approval-title">需要你的批准</strong>
         {request.childSessionId && (
           <span className="wb-muted">
             子代理审批 · {request.childSessionId}
