@@ -23,7 +23,7 @@ import type {
   ModelCatalogEntry,
 } from "@forge/core/shared/model-catalog";
 import type { PublicProviderSource } from "@forge/core/shared/schemas";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { configuredModelIds } from "../../state/composer-model";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
@@ -2951,7 +2951,13 @@ export function RouteGroupsPanel({
 }: {
   readonly catalogs: Readonly<Record<string, ModelCatalog>>;
 }) {
-  const { state, updateSettings } = useWorkbench();
+  const { updateSettings } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const sources = state.settings?.providerSources ?? [];
   const groups = state.settings?.routeGroups ?? [];
   const [draft, setDraft] = useState<RouteGroup | null>(null);

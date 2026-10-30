@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { OperationScope } from "../../state/operation-scope";
 import { hostCapabilities } from "../../web-host";
 import type { SessionSummary } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { Input } from "../primitives/Input";
 import { Dialog } from "./Dialog";
@@ -21,9 +21,21 @@ export function SessionActions({
   onOpenChange,
   onMouseEnter,
 }: SessionActionsProps = {}) {
-  const { state, selectSession, loadSessions, refreshActiveSession } =
-    useWorkbench();
-  const target = session ?? state.activeSnapshot;
+  const { selectSession, loadSessions, refreshActiveSession } =
+    useWorkbenchActions();
+  const { activeSnapshot, activeSessionId, runStatus } = useWorkbenchSelector(
+    ({ state }) => {
+      const snapshot = session ? null : state.activeSnapshot;
+      const id = session?.id ?? snapshot?.id;
+      return {
+        activeSnapshot: snapshot,
+        activeSessionId: state.activeSessionId,
+        runStatus: id ? state.activeRuns[id]?.status : undefined,
+      };
+    },
+    shallowEqual,
+  );
+  const target = session ?? activeSnapshot;
   const scope = useRef(new OperationScope());
   useEffect(() => {
     scope.current = new OperationScope();
@@ -60,9 +72,8 @@ export function SessionActions({
   const targetTitle = target.title;
   const isArchived = Boolean(target.archived);
 
-  const run = state.activeRuns[targetId];
   const locked =
-    busy || run?.status === "running" || run?.status === "awaiting_approval";
+    busy || runStatus === "running" || runStatus === "awaiting_approval";
 
   const toggleMenu = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -97,7 +108,7 @@ export function SessionActions({
       await operation(valid);
       if (!valid()) return;
       await loadSessions();
-      if (targetId === state.activeSessionId) {
+      if (targetId === activeSessionId) {
         await refreshActiveSession();
       }
     } catch (err) {

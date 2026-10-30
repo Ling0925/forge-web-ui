@@ -5,19 +5,21 @@ import {
   afterModalsClosed,
   findOpenModalDialog,
 } from "../../state/modal-shortcuts";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { Input } from "../primitives/Input";
 import { Dialog } from "./Dialog";
 
 export function CommandPalette() {
-  const {
-    state,
-    selectSession,
-    openSettings,
-    openNewSession,
-    refreshActiveSession,
-  } = useWorkbench();
+  const { selectSession, openSettings, openNewSession, refreshActiveSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      isSettingsOpen: state.isSettingsOpen,
+      sessions: state.sessions,
+    }),
+    shallowEqual,
+  );
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);

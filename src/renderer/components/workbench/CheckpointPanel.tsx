@@ -1,13 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CheckpointDto } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { CodeBlock } from "../primitives/CodeBlock";
 import { Dialog } from "./Dialog";
 
 export function CheckpointPanel() {
-  const { state, refreshActiveSession } = useWorkbench();
+  const { refreshActiveSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      running: Boolean(
+        state.activeSessionId &&
+          (state.activeRuns[state.activeSessionId]?.status === "running" ||
+            state.activeRuns[state.activeSessionId]?.status ===
+              "awaiting_approval" ||
+            state.activeSnapshot?.status === "running" ||
+            state.activeSnapshot?.status === "awaiting_approval"),
+      ),
+    }),
+    shallowEqual,
+  );
   const id = state.activeSessionId;
   const scope = useRef(new OperationScope());
   useEffect(() => {
@@ -56,12 +70,7 @@ export function CheckpointPanel() {
       if (valid()) setBusy(false);
     }
   };
-  const running =
-    id &&
-    (state.activeRuns[id]?.status === "running" ||
-      state.activeRuns[id]?.status === "awaiting_approval" ||
-      state.activeSnapshot?.status === "running" ||
-      state.activeSnapshot?.status === "awaiting_approval");
+  const running = id && state.running;
   return (
     <>
       {error && (

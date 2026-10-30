@@ -1,10 +1,17 @@
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { ForgeMark } from "../primitives/ForgeMark";
 
 export function Welcome() {
-  const { state, selectSession } = useWorkbench();
+  const { selectSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      isSessionsLoading: state.isSessionsLoading,
+      sessions: state.sessions,
+    }),
+    shallowEqual,
+  );
   const recent = state.sessions
     .filter((session) => isPrimarySession(session) && !session.archived)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))

@@ -10,7 +10,12 @@ import {
 } from "@phosphor-icons/react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { permissionLabels } from "../../state/permission-labels";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowArrayEqual,
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
 import { Button } from "../primitives/Button";
 import { DiffViewer, diffStats } from "../primitives/DiffViewer";
@@ -133,8 +138,44 @@ export function Inspector({
   const [sessionSubTab, setSessionSubTab] = useState<
     "overview" | "browser" | "resources"
   >("overview");
-  const { state, answerApproval, selectSession, refreshActiveSession, setMobileTab } =
-    useWorkbench();
+  const { answerApproval, selectSession, refreshActiveSession, setMobileTab } =
+    useWorkbenchActions();
+  // Run state is reduced to the fields the drawer renders, so streamed tokens
+  // (which replace the run object) do not re-render the whole inspector.
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      activeSnapshot: state.activeSnapshot,
+      isSnapshotLoading: state.isSnapshotLoading,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
+  const run = useWorkbenchSelector(({ state }) => {
+    const active = state.activeSessionId
+      ? state.activeRuns[state.activeSessionId]
+      : undefined;
+    return active
+      ? {
+          status: active.status,
+          permission: active.permission,
+          pendingApproval: active.pendingApproval,
+        }
+      : undefined;
+  }, shallowEqual);
+  const pendingApprovals = useWorkbenchSelector(
+    ({ state }) =>
+      Object.values(state.activeRuns)
+        .filter((r) => r.pendingApproval)
+        .map((r) => ({
+          sessionId: r.sessionId,
+          pendingApproval: r.pendingApproval,
+          isCancelling: r.isCancelling,
+          isSubmittingApproval: r.isSubmittingApproval,
+        })),
+    shallowArrayEqual,
+  );
   const paneRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (focusToken && focusToken > 0) paneRef.current?.focus();
@@ -144,9 +185,6 @@ export function Inspector({
     state.activeSnapshot?.id === state.activeSessionId
       ? state.activeSnapshot
       : null;
-  const run = state.activeSessionId
-    ? state.activeRuns[state.activeSessionId]
-    : undefined;
   const started = snapshot?.events
     .filter((e) => e.type === "run_started")
     .at(-1);
@@ -154,9 +192,6 @@ export function Inspector({
     !run &&
     (snapshot?.status === "running" ||
       snapshot?.status === "awaiting_approval");
-  const pendingApprovals = Object.values(state.activeRuns).filter(
-    (r) => r.pendingApproval,
-  );
   // Exactly one request can be the selected session's live head; the
   // Transcript already renders it in the reading flow, so the drawer only
   // annotates and links it instead of duplicating the buttons. `run` is

@@ -1,6 +1,6 @@
 import { ChatText, SidebarSimple } from "@phosphor-icons/react";
 import { type Ref, useEffect, useState } from "react";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { CommandPalette } from "./CommandPalette";
 
 interface WorkbenchHeaderProps {
@@ -19,7 +19,15 @@ export function WorkbenchHeader({
   pending,
   inspector,
 }: WorkbenchHeaderProps) {
-  const { state, setMobileSidebar } = useWorkbench();
+  const { setMobileSidebar } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeTitle: state.activeSnapshot?.title,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      mobileTab: state.mobileTab,
+    }),
+    shallowEqual,
+  );
   const [compact, setCompact] = useState(
     () => window.matchMedia("(max-width: 1000px)").matches,
   );
@@ -34,7 +42,7 @@ export function WorkbenchHeader({
     : !inspector.collapsed;
   const title = isNew
     ? "新会话"
-    : (state.activeSnapshot?.title ?? "Forge 工作台");
+    : (state.activeTitle ?? "Forge 工作台");
   return (
     <header className="workbench-task-header">
       <div className="wb-header-start">

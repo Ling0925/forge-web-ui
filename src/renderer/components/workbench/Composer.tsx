@@ -27,6 +27,7 @@ import type { ModelCatalog } from "@forge/core/shared/model-catalog";
 import { modelCatalogCache, modelCatalogKey } from "../../state/model-catalog-cache";
 import { composerEffortUpdate, composerModelMetadata, composerReasoningEffort, selectableModelIds } from "../../state/composer-model";
 import { useWorkbench } from "../../state/workbench-context";
+import { useWorkbenchActions } from "../../state/workbench-store";
 import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
 import { WorkspacePicker } from "./WorkspacePicker";
@@ -475,7 +476,7 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
         : providerSource && !providerSource.model
           ? "选择一个模型即可开始对话；来源会随模型自动切换。"
           : "连接模型后即可开始对话。";
-  const { dispatch, loadSessions } = useWorkbench();
+  const { dispatch, loadSessions } = useWorkbenchActions();
   const slash = useSlashCommands({
     prompt,
     draftId,

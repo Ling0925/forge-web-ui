@@ -32,7 +32,7 @@ import {
   buildSettingsUpdate,
   createSettingsDraft,
 } from "../../state/settings-draft";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
@@ -350,7 +350,14 @@ type TextKey = {
 }[keyof SettingsDraft];
 
 export function Settings() {
-  const { state, updateSettings, openSettings } = useWorkbench();
+  const { updateSettings, openSettings } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      isSettingsOpen: state.isSettingsOpen,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const initial = state.settings ?? defaultPublicSettings;
   const serviceStatus = modelServiceStatus(state.settings);
   const [original, setOriginal] = useState(initial);

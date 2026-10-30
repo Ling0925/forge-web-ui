@@ -13,7 +13,7 @@ import {
 import { useState } from "react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { modelServiceStatus } from "../../state/model-service-status";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
@@ -34,14 +34,18 @@ const DEFAULT_VISIBLE_COUNT = 10;
 const PAGE_SIZE = 10;
 
 export function Sidebar() {
-  const {
-    state,
-    openNewSession,
-    setMobileSidebar,
-    openSettings,
-    openUsageDashboard,
-    createSession,
-  } = useWorkbench();
+  const { openNewSession, setMobileSidebar, openSettings, openUsageDashboard, createSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      activeSnapshotModel: state.activeSnapshot?.model,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      isSessionsLoading: state.isSessionsLoading,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
 
   const serviceStatus = modelServiceStatus(state.settings);
   const [query, setQuery] = useState("");
@@ -113,7 +117,7 @@ export function Sidebar() {
       );
       const latest = allSessionsInWorkspace[0];
       const candidateModel =
-        latest?.model || state.activeSnapshot?.model || state.settings?.model;
+        latest?.model || state.activeSnapshotModel || state.settings?.model;
       const snapshot = await createSession({
         workspace,
         ...(candidateModel ? { model: candidateModel } : {}),

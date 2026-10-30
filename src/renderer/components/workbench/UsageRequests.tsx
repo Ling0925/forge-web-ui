@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import type { UsageRequest } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { type BadgeTone, ToneBadge } from "../primitives/StatusBadge";
 
@@ -55,7 +55,13 @@ export function UsageRequests({
 }: {
   readonly requests: readonly UsageRequest[];
 }) {
-  const { state, openUsageDashboard, selectSession } = useWorkbench();
+  const { openUsageDashboard, selectSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
   const pageCount = Math.max(1, Math.ceil(requests.length / pageSize));

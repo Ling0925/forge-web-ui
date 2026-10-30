@@ -607,13 +607,89 @@ function useController() {
     clearAlert: () => dispatch({ type: "SET_ALERT_ERROR", error: null }),
   };
 }
-const Context = createContext<ReturnType<typeof useController> | null>(null);
+export type WorkbenchController = ReturnType<typeof useController>;
+type FunctionKeys<T> = {
+  [K in keyof T]: T[K] extends (...args: never[]) => unknown ? K : never;
+}[keyof T];
+/** Every controller method, as a referentially stable object. */
+export type WorkbenchActions = Pick<
+  WorkbenchController,
+  FunctionKeys<WorkbenchController>
+>;
+
+/**
+ * External store over the latest controller value. Components that read it
+ * through `useWorkbenchSelector` only re-render when their selected slice
+ * changes, instead of on every reducer update (e.g. each streamed token).
+ */
+export interface WorkbenchStore {
+  readonly get: () => WorkbenchController;
+  readonly subscribe: (listener: () => void) => () => void;
+}
+function createWorkbenchStore(initial: WorkbenchController) {
+  let value = initial;
+  const listeners = new Set<() => void>();
+  return {
+    get: () => value,
+    set: (next: WorkbenchController) => {
+      value = next;
+    },
+    notify: () => {
+      for (const listener of listeners) listener();
+    },
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
+}
+function createStableActions(latest: {
+  readonly current: WorkbenchController;
+}): WorkbenchActions {
+  const actions: Record<string, unknown> = {};
+  for (const [key, member] of Object.entries(latest.current)) {
+    if (typeof member !== "function") continue;
+    actions[key] = (...args: unknown[]) =>
+      (
+        latest.current[key as keyof WorkbenchController] as (
+          ...params: unknown[]
+        ) => unknown
+      )(...args);
+  }
+  return actions as WorkbenchActions;
+}
+
+const Context = createContext<WorkbenchController | null>(null);
+export const WorkbenchStoreContext = createContext<WorkbenchStore | null>(null);
+export const WorkbenchActionsContext = createContext<WorkbenchActions | null>(
+  null,
+);
 export function WorkbenchProvider({
   children,
 }: { readonly children: ReactNode }) {
   const value = useController();
-  return <Context.Provider value={value}>{children}</Context.Provider>;
+  const latest = useRef(value);
+  latest.current = value;
+  const [store] = useState(() => createWorkbenchStore(value));
+  const [actions] = useState(() => createStableActions(latest));
+  // Publish during render so selector reads in this commit see the newest
+  // value; subscribers are notified after commit.
+  store.set(value);
+  useLayoutEffect(() => {
+    store.notify();
+  });
+  return (
+    <WorkbenchActionsContext.Provider value={actions}>
+      <WorkbenchStoreContext.Provider value={store}>
+        <Context.Provider value={value}>{children}</Context.Provider>
+      </WorkbenchStoreContext.Provider>
+    </WorkbenchActionsContext.Provider>
+  );
 }
+/**
+ * Full controller (state + actions). Re-renders on every state change; prefer
+ * `useWorkbenchSelector` / `useWorkbenchActions` from `./workbench-store`.
+ */
 export function useWorkbench() {
   const value = useContext(Context);
   if (!value) throw new Error("WorkbenchProvider required");

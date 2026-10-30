@@ -18,7 +18,7 @@ import {
   type PublicProviderSource,
   configureInputSchema,
 } from "@forge/core/shared/schemas";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { Checkbox } from "../primitives/Checkbox";
@@ -221,7 +221,15 @@ export function ProviderSources({
   readonly onBusy: (busy: boolean) => void;
   readonly active?: boolean;
 }) {
-  const { state, updateSettings, loadSettings } = useWorkbench();
+  const { updateSettings, loadSettings } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      isSettingsOpen: state.isSettingsOpen,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const settings = state.settings;
   const sources = useMemo<readonly PublicProviderSource[]>(
     () => settings?.providerSources ?? [],

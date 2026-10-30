@@ -27,7 +27,7 @@ import type {
 } from "../../shared-types";
 import { compactTokens } from "../../state/session-usage";
 import { ingestUsageStatsPricing } from "../../state/usage-pricing";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { Tabs } from "../primitives/Tabs";
 import { UsageOverview, renderUsageKpiGrid } from "./UsageOverview";
 import { UsageRequests } from "./UsageRequests";
@@ -188,7 +188,16 @@ const aggregateCostExplanation =
   "历史 Token 汇总按当前公开基础单价估算；缺少逐请求明细，未还原上下文阶梯价，不代表实际账单";
 
 export function UsageDashboard() {
-  const { state, openUsageDashboard, selectSession } = useWorkbench();
+  const { openUsageDashboard, selectSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeRuns: state.activeRuns,
+      isUsageDashboardOpen: state.isUsageDashboardOpen,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<UsageStatsDto | null>(null);
