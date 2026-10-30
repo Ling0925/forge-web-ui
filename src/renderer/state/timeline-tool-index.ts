@@ -30,15 +30,31 @@ function eventIndex(events: readonly AgentEvent[]) {
     if (event.type === "tool_started") {
       append(starts, identity(event.call.id), event);
       if (event.generationId)
-        append(starts, identity(event.call.id, event.generationId, event.callIndex), event);
+        append(
+          starts,
+          identity(event.call.id, event.generationId, event.callIndex),
+          event,
+        );
     } else if (event.type === "tool_finished") {
       append(finishes, identity(event.toolCallId), event);
       if (event.generationId)
-        append(finishes, identity(event.toolCallId, event.generationId, event.callIndex), event);
+        append(
+          finishes,
+          identity(event.toolCallId, event.generationId, event.callIndex),
+          event,
+        );
     }
   }
-  return (id: string, generationId?: string, callIndex?: number): ToolEvents => {
-    const key = identity(id, generationId, generationId ? callIndex : undefined);
+  return (
+    id: string,
+    generationId?: string,
+    callIndex?: number,
+  ): ToolEvents => {
+    const key = identity(
+      id,
+      generationId,
+      generationId ? callIndex : undefined,
+    );
     return { starts: starts.get(key) ?? [], finishes: finishes.get(key) ?? [] };
   };
 }
@@ -59,11 +75,17 @@ export function indexTimelineTools(
 ): ReadonlyMap<number, readonly ToolMatch[]> {
   const globalEvents = eventIndex(snapshot.events);
   const globalTotals = countCalls(snapshot.messages);
-  const scopes = turns.map(turn => turn.events.length ? {
-    events: eventIndex(turn.events),
-    totals: countCalls(snapshot.messages.slice(turn.messageStart, turn.messageEnd)),
-    seen: new Map<string, number>(),
-  } : undefined);
+  const scopes = turns.map((turn) =>
+    turn.events.length
+      ? {
+          events: eventIndex(turn.events),
+          totals: countCalls(
+            snapshot.messages.slice(turn.messageStart, turn.messageEnd),
+          ),
+          seen: new Map<string, number>(),
+        }
+      : undefined,
+  );
   const lastResults = new Map<string, number>();
   for (const [index, message] of snapshot.messages.entries())
     if (message.role === "tool") lastResults.set(message.tool_call_id, index);
@@ -76,26 +98,43 @@ export function indexTimelineTools(
     if (message.role !== "assistant") continue;
     const scope = scopes[turn];
     const calls = message.tool_calls ?? [];
-    matches.set(index, calls.map((call, callIndex): ToolMatch => {
-      const occurrence = occurrences.get(call.id) ?? 0;
-      occurrences.set(call.id, occurrence + 1);
-      const { starts, finishes } = (scope?.events ?? globalEvents)(
-        call.id, message.generationId, callIndex,
-      );
-      const total = (scope?.totals ?? globalTotals).get(call.id) ?? 1;
-      const localOccurrence = scope ? scope.seen.get(call.id) ?? 0 : occurrence;
-      const finalUnresolved = localOccurrence === total - 1 &&
-        (lastResults.get(call.id) ?? -1) <= index;
-      return {
-        start: message.generationId
-          ? starts.length === 1 ? starts[0] : undefined
-          : starts.length === total ? starts[localOccurrence]
-            : finalUnresolved && starts.length > finishes.length ? starts.at(-1) : undefined,
-        finish: message.generationId
-          ? finishes.length === 1 ? finishes[0] : undefined
-          : finishes.length === total ? finishes[localOccurrence] : undefined,
-      };
-    }));
+    matches.set(
+      index,
+      calls.map((call, callIndex): ToolMatch => {
+        const occurrence = occurrences.get(call.id) ?? 0;
+        occurrences.set(call.id, occurrence + 1);
+        const { starts, finishes } = (scope?.events ?? globalEvents)(
+          call.id,
+          message.generationId,
+          callIndex,
+        );
+        const total = (scope?.totals ?? globalTotals).get(call.id) ?? 1;
+        const localOccurrence = scope
+          ? (scope.seen.get(call.id) ?? 0)
+          : occurrence;
+        const finalUnresolved =
+          localOccurrence === total - 1 &&
+          (lastResults.get(call.id) ?? -1) <= index;
+        return {
+          start: message.generationId
+            ? starts.length === 1
+              ? starts[0]
+              : undefined
+            : starts.length === total
+              ? starts[localOccurrence]
+              : finalUnresolved && starts.length > finishes.length
+                ? starts.at(-1)
+                : undefined,
+          finish: message.generationId
+            ? finishes.length === 1
+              ? finishes[0]
+              : undefined
+            : finishes.length === total
+              ? finishes[localOccurrence]
+              : undefined,
+        };
+      }),
+    );
     // Legacy local occurrence counts prior messages, not sibling calls in this message.
     if (scope)
       for (const call of calls)

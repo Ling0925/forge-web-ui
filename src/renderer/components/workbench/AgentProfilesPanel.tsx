@@ -6,7 +6,6 @@ import {
   agentProfileTemplates,
   agentToolGroups,
 } from "@forge/core/shared/agent-profiles";
-import { selectableModelIds } from "../../state/composer-model";
 import {
   ArrowLeft,
   FloppyDisk,
@@ -22,6 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { selectableModelIds } from "../../state/composer-model";
 import {
   shallowEqual,
   useWorkbenchActions,

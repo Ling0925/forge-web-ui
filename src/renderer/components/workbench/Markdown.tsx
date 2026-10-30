@@ -1,11 +1,11 @@
+import { parseChartFence } from "@forge/core/shared/chart-spec";
+import { isHtmlLanguage } from "@forge/core/shared/html-preview";
+import { externalUrlSchema } from "@forge/core/shared/ipc";
 import { Component, type ReactNode, memo, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { isHtmlLanguage } from "@forge/core/shared/html-preview";
-import { externalUrlSchema } from "@forge/core/shared/ipc";
-import { parseChartFence } from "@forge/core/shared/chart-spec";
-import { CodeBlock } from "../primitives/CodeBlock";
 import { ChartCard } from "../charts/ChartCard";
+import { CodeBlock } from "../primitives/CodeBlock";
 
 // Bound parsing work, not displayed content. Large messages remain complete,
 // selectable plain text; source and persisted transcript are never truncated.
@@ -82,7 +82,8 @@ function components(highlight: boolean, enableCharts: boolean): Components {
       // flashes as an error. Invalid fences always fall back to the code block.
       if (enableCharts && highlight && language === "chart") {
         const validation = parseChartFence(code);
-        if (validation.ok) return <ChartCard spec={validation.spec} source={code} />;
+        if (validation.ok)
+          return <ChartCard spec={validation.spec} source={code} />;
       }
       return (
         <div className="markdown-code">

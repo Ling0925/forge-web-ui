@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { build } from "esbuild";
-import { chromium, type Browser } from "playwright";
+import { type Browser, chromium } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const executablePath = process.env.FORGE_BROWSER_EXECUTABLE;
@@ -13,7 +13,9 @@ interface AgentModelsTestState {
 
 interface AgentModelsTestController {
   state: { settings: any };
-  updateSettings: (input: any) => Promise<{ ok: boolean; settings?: any; error?: string }>;
+  updateSettings: (
+    input: any,
+  ) => Promise<{ ok: boolean; settings?: any; error?: string }>;
   loadSettings: () => Promise<any>;
 }
 
@@ -210,10 +212,17 @@ describe("Agent Profile Models Mounted Tests", () => {
     const page = await browser.newPage({
       viewport: { width: 390, height: 844 },
     });
-    page.on("pageerror", error => pageErrors.push(error.message));
-    const script = bundle.outputFiles?.find(file => file.path.endsWith(".js"))?.text;
-    const css = bundle.outputFiles?.find(file => file.path.endsWith(".css"))?.text;
-    if (!script || !css) throw new Error("The mounted test needs both the rendered component and its styles");
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    const script = bundle.outputFiles?.find((file) =>
+      file.path.endsWith(".js"),
+    )?.text;
+    const css = bundle.outputFiles?.find((file) =>
+      file.path.endsWith(".css"),
+    )?.text;
+    if (!script || !css)
+      throw new Error(
+        "The mounted test needs both the rendered component and its styles",
+      );
     await page.setContent(`
       <!DOCTYPE html>
       <html>
@@ -235,32 +244,49 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("directly selects a configured model and saves accurate source and model ID", async () => {
     const page = await setupPage();
     try {
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
       await page.locator("#agent-input-id").fill("agent-alpha");
       await page.locator("#agent-input-name").fill("Alpha 智能体");
 
       // Switch to fixed model
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
       // Should default to activeSourceId ("provider-a") and its default model ("alpha-primary")
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       expect(await modelTrigger.isVisible()).toBe(true);
       expect(await modelTrigger.innerText()).toContain("alpha-primary");
 
       // Select another configured model "alpha-extra"
       await modelTrigger.click();
-      await page.getByRole("option", { name: "alpha-extra", exact: true }).click();
+      await page
+        .getByRole("option", { name: "alpha-extra", exact: true })
+        .click();
       expect(await modelTrigger.innerText()).toContain("alpha-extra");
 
       // Precise ID text input should NOT be displayed when an available configured model is selected
-      expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
+      expect(
+        await page.getByLabel("精确模型 ID", { exact: true }).count(),
+      ).toBe(0);
 
       // Save
-      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
-      await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
+      await page
+        .getByRole("button", { name: "保存智能体角色", exact: true })
+        .click();
+      await expect
+        .poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty"))
+        .toBe("false");
 
-      const updateCalls = await page.evaluate(() => window.__agentModelsUpdateCalls);
+      const updateCalls = await page.evaluate(
+        () => window.__agentModelsUpdateCalls,
+      );
       const lastSave = updateCalls.at(-1)?.agent;
       expect(lastSave?.type).toBe("save");
       expect(lastSave?.profile?.model).toEqual({
@@ -276,21 +302,33 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("switches providers without leaking or retaining prior models", async () => {
     const page = await setupPage();
     try {
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
       await page.locator("#agent-input-id").fill("agent-cross-provider");
       await page.locator("#agent-input-name").fill("跨源测试");
 
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
       // On provider-a, select "shared-id"
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       await modelTrigger.click();
-      await page.getByRole("option", { name: "shared-id", exact: true }).click();
+      await page
+        .getByRole("option", { name: "shared-id", exact: true })
+        .click();
       expect(await modelTrigger.innerText()).toContain("shared-id");
 
       // Switch provider to provider-b
-      const providerTrigger = page.getByRole("combobox", { name: "Provider 来源", exact: true });
+      const providerTrigger = page.getByRole("combobox", {
+        name: "Provider 来源",
+        exact: true,
+      });
       await providerTrigger.click();
       await page.getByRole("option", { name: /Provider Beta/ }).click();
 
@@ -310,23 +348,48 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("respects modelSelection mode selected and none", async () => {
     const page = await setupPage();
     try {
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
       // Switch to provider-b which has mode: 'selected'
-      const providerTrigger = page.getByRole("combobox", { name: "Provider 来源", exact: true });
+      const providerTrigger = page.getByRole("combobox", {
+        name: "Provider 来源",
+        exact: true,
+      });
       await providerTrigger.click();
       await page.getByRole("option", { name: /Provider Beta/ }).click();
 
       // Open model dropdown and inspect available options
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       await modelTrigger.click();
       // Should show beta-primary, shared-id, and manual option
-      expect(await page.getByRole("option", { name: "beta-primary", exact: true }).isVisible()).toBe(true);
-      expect(await page.getByRole("option", { name: "shared-id", exact: true }).isVisible()).toBe(true);
+      expect(
+        await page
+          .getByRole("option", { name: "beta-primary", exact: true })
+          .isVisible(),
+      ).toBe(true);
+      expect(
+        await page
+          .getByRole("option", { name: "shared-id", exact: true })
+          .isVisible(),
+      ).toBe(true);
       // "beta-hidden-from-selected" was in manual but not in selection.models, so it must not be visible
-      expect(await page.getByRole("option", { name: "beta-hidden-from-selected", exact: true }).count()).toBe(0);
+      expect(
+        await page
+          .getByRole("option", {
+            name: "beta-hidden-from-selected",
+            exact: true,
+          })
+          .count(),
+      ).toBe(0);
       await page.keyboard.press("Escape");
 
       // Switch to provider-none which has mode: 'none'
@@ -350,7 +413,10 @@ describe("Agent Profile Models Mounted Tests", () => {
       await page.getByRole("button", { name: "编辑", exact: true }).click();
 
       // Check that model trigger shows "手动输入模型 ID…" or manual indication
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       expect(await modelTrigger.isVisible()).toBe(true);
       expect(await modelTrigger.innerText()).toContain("手动输入模型 ID");
 
@@ -360,14 +426,22 @@ describe("Agent Profile Models Mounted Tests", () => {
       expect(await manualInput.inputValue()).toBe("unlisted-legacy-99");
 
       // Notice should be present explaining unlisted model
-      expect(await page.getByText(/未在来源已配置模型列表中/).isVisible()).toBe(true);
+      expect(await page.getByText(/未在来源已配置模型列表中/).isVisible()).toBe(
+        true,
+      );
 
       // Only modify description and save
       await page.locator("#agent-input-desc").fill("更新描述但保留旧模型绑定");
-      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
-      await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
+      await page
+        .getByRole("button", { name: "保存智能体角色", exact: true })
+        .click();
+      await expect
+        .poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty"))
+        .toBe("false");
 
-      const updateCalls = await page.evaluate(() => window.__agentModelsUpdateCalls);
+      const updateCalls = await page.evaluate(
+        () => window.__agentModelsUpdateCalls,
+      );
       const lastSave = updateCalls.at(-1)?.agent;
       expect(lastSave?.profile?.model).toEqual({
         mode: "fixed",
@@ -382,14 +456,21 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("allows switching from manual mode back to configured model, and typing does not hide manual input", async () => {
     const page = await setupPage();
     try {
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
       await page.locator("#agent-input-id").fill("agent-manual-toggle");
       await page.locator("#agent-input-name").fill("手动切换测试");
 
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       await modelTrigger.click();
       await page.getByRole("option", { name: /手动输入模型 ID/ }).click();
 
@@ -405,10 +486,14 @@ describe("Agent Profile Models Mounted Tests", () => {
 
       // Now click the dropdown and choose a configured model "alpha-extra"
       await modelTrigger.click();
-      await page.getByRole("option", { name: "alpha-extra", exact: true }).click();
+      await page
+        .getByRole("option", { name: "alpha-extra", exact: true })
+        .click();
 
       // Manual input must disappear, and dropdown displays "alpha-extra"
-      expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
+      expect(
+        await page.getByLabel("精确模型 ID", { exact: true }).count(),
+      ).toBe(0);
       expect(await modelTrigger.innerText()).toContain("alpha-extra");
     } finally {
       await page.close();
@@ -426,24 +511,36 @@ describe("Agent Profile Models Mounted Tests", () => {
         }));
       });
 
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
       await page.locator("#agent-input-id").fill("agent-no-sources");
       await page.locator("#agent-input-name").fill("无源智能体");
 
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
       // Callout for no sources must be visible
-      expect(await page.getByText(/尚未配置任何模型服务来源/).isVisible()).toBe(true);
+      expect(await page.getByText(/尚未配置任何模型服务来源/).isVisible()).toBe(
+        true,
+      );
 
       // Manual inputs for source and model must be available
       await page.locator("#agent-input-source").fill("custom-src");
       await page.locator("#agent-input-model").fill("custom-model");
 
-      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
-      await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
+      await page
+        .getByRole("button", { name: "保存智能体角色", exact: true })
+        .click();
+      await expect
+        .poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty"))
+        .toBe("false");
 
-      const updateCalls = await page.evaluate(() => window.__agentModelsUpdateCalls);
+      const updateCalls = await page.evaluate(
+        () => window.__agentModelsUpdateCalls,
+      );
       const lastSave = updateCalls.at(-1)?.agent;
       expect(lastSave?.profile?.model).toEqual({
         mode: "fixed",
@@ -458,11 +555,18 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("pressing Escape in model dropdown closes menu without closing outer modal", async () => {
     const page = await setupPage();
     try {
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       await modelTrigger.click();
 
       // Dropdown popover is visible
@@ -475,7 +579,9 @@ describe("Agent Profile Models Mounted Tests", () => {
       expect(await page.getByRole("listbox").count()).toBe(0);
 
       // Outer modal should NOT have closed
-      const escapeClosed = await page.evaluate(() => window.__agentModelsEscapeModalClosed);
+      const escapeClosed = await page.evaluate(
+        () => window.__agentModelsEscapeModalClosed,
+      );
       expect(escapeClosed).toBe(false);
     } finally {
       await page.close();
@@ -485,33 +591,65 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("uses the active source's visible default and keeps the model when reselecting the same source or mode", async () => {
     const page = await setupPage();
     try {
-      await page.evaluate(() => window.__agentModelsSetSettings((prev: any) => ({
-        ...prev,
-        activeSourceId: "provider-b",
-        providerSources: prev.providerSources.map((source: any) => source.id === "provider-b"
-          ? { ...source, model: "hidden-default" } : source),
-      })));
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
-      const mode = page.getByRole("combobox", { name: "模型模式选择", exact: true });
+      await page.evaluate(() =>
+        window.__agentModelsSetSettings((prev: any) => ({
+          ...prev,
+          activeSourceId: "provider-b",
+          providerSources: prev.providerSources.map((source: any) =>
+            source.id === "provider-b"
+              ? { ...source, model: "hidden-default" }
+              : source,
+          ),
+        })),
+      );
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
+      const mode = page.getByRole("combobox", {
+        name: "模型模式选择",
+        exact: true,
+      });
       await mode.click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
-      const models = page.getByRole("combobox", { name: "智能体模型", exact: true });
-      const source = page.getByRole("combobox", { name: "Provider 来源", exact: true });
+      const models = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
+      const source = page.getByRole("combobox", {
+        name: "Provider 来源",
+        exact: true,
+      });
       expect(await source.textContent()).toContain("Provider Beta");
       expect(await models.textContent()).toContain("beta-primary");
       await models.click();
-      expect(await page.getByRole("option", { name: "hidden-default", exact: true }).count()).toBe(0);
-      await page.getByRole("option", { name: "shared-id", exact: true }).click();
+      expect(
+        await page
+          .getByRole("option", { name: "hidden-default", exact: true })
+          .count(),
+      ).toBe(0);
+      await page
+        .getByRole("option", { name: "shared-id", exact: true })
+        .click();
       await source.click();
       await page.getByRole("option", { name: /Provider Beta/ }).click();
       await mode.click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
       expect(await models.textContent()).toContain("shared-id");
-      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
-      await expect.poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
-      const saved = (await page.evaluate(() => window.__agentModelsUpdateCalls)).at(-1);
+      await page
+        .getByRole("button", { name: "保存智能体角色", exact: true })
+        .click();
+      await expect
+        .poll(() => page.locator("#dirty-indicator").getAttribute("data-dirty"))
+        .toBe("false");
+      const saved = (
+        await page.evaluate(() => window.__agentModelsUpdateCalls)
+      ).at(-1);
       expect(Object.keys(saved)).toEqual(["agent"]);
-      expect(saved.agent.profile.model).toEqual({ mode: "fixed", providerSourceId: "provider-b", model: "shared-id" });
+      expect(saved.agent.profile.model).toEqual({
+        mode: "fixed",
+        providerSourceId: "provider-b",
+        model: "shared-id",
+      });
     } finally {
       await page.close();
     }
@@ -520,20 +658,42 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("retains a missing source and legacy ID without allowing the missing option to clear the binding", async () => {
     const page = await setupPage();
     try {
-      await page.evaluate(() => window.__agentModelsSetSettings((prev: any) => ({
-        ...prev, providerSources: prev.providerSources.filter((source: any) => source.id !== "provider-a"),
-      })));
+      await page.evaluate(() =>
+        window.__agentModelsSetSettings((prev: any) => ({
+          ...prev,
+          providerSources: prev.providerSources.filter(
+            (source: any) => source.id !== "provider-a",
+          ),
+        })),
+      );
       await page.getByRole("button", { name: "编辑", exact: true }).click();
-      const source = page.getByRole("combobox", { name: "Provider 来源", exact: true });
+      const source = page.getByRole("combobox", {
+        name: "Provider 来源",
+        exact: true,
+      });
       expect(await source.textContent()).toContain("provider-a（未找到配置）");
-      expect(await page.getByLabel("精确模型 ID", { exact: true }).inputValue()).toBe("unlisted-legacy-99");
-      expect(await page.getByRole("alert").textContent()).toContain("已保留原绑定");
+      expect(
+        await page.getByLabel("精确模型 ID", { exact: true }).inputValue(),
+      ).toBe("unlisted-legacy-99");
+      expect(await page.getByRole("alert").textContent()).toContain(
+        "已保留原绑定",
+      );
       await source.click();
-      expect(await page.getByRole("option", { name: /provider-a（未找到配置）/ }).isDisabled()).toBe(true);
+      expect(
+        await page
+          .getByRole("option", { name: /provider-a（未找到配置）/ })
+          .isDisabled(),
+      ).toBe(true);
       await page.keyboard.press("Escape");
-      expect(await page.getByLabel("精确模型 ID", { exact: true }).inputValue()).toBe("unlisted-legacy-99");
-      expect(await page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
-      expect(await page.evaluate(() => window.__agentModelsUpdateCalls)).toEqual([]);
+      expect(
+        await page.getByLabel("精确模型 ID", { exact: true }).inputValue(),
+      ).toBe("unlisted-legacy-99");
+      expect(
+        await page.locator("#dirty-indicator").getAttribute("data-dirty"),
+      ).toBe("false");
+      expect(
+        await page.evaluate(() => window.__agentModelsUpdateCalls),
+      ).toEqual([]);
     } finally {
       await page.close();
     }
@@ -542,29 +702,57 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("preserves the draft if model visibility changes while editing and keeps manual typing stable", async () => {
     const page = await setupPage();
     try {
-      await page.evaluate(() => window.__agentModelsSetSettings((prev: any) => ({
-        ...prev, agentProfiles: prev.agentProfiles.map((profile: any) => ({
-          ...profile, model: { ...profile.model, model: "alpha-primary" },
+      await page.evaluate(() =>
+        window.__agentModelsSetSettings((prev: any) => ({
+          ...prev,
+          agentProfiles: prev.agentProfiles.map((profile: any) => ({
+            ...profile,
+            model: { ...profile.model, model: "alpha-primary" },
+          })),
         })),
-      })));
+      );
       await page.getByRole("button", { name: "编辑", exact: true }).click();
-      expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
-      await page.evaluate(() => window.__agentModelsSetSettings((prev: any) => ({
-        ...prev, providerSources: prev.providerSources.map((source: any) => source.id === "provider-a"
-          ? { ...source, modelSelection: { mode: "none" } } : source),
-      })));
+      expect(
+        await page.getByLabel("精确模型 ID", { exact: true }).count(),
+      ).toBe(0);
+      await page.evaluate(() =>
+        window.__agentModelsSetSettings((prev: any) => ({
+          ...prev,
+          providerSources: prev.providerSources.map((source: any) =>
+            source.id === "provider-a"
+              ? { ...source, modelSelection: { mode: "none" } }
+              : source,
+          ),
+        })),
+      );
       const manual = page.getByLabel("精确模型 ID", { exact: true });
       await manual.waitFor();
       expect(await manual.inputValue()).toBe("alpha-primary");
-      expect(await page.locator("#dirty-indicator").getAttribute("data-dirty")).toBe("false");
+      expect(
+        await page.locator("#dirty-indicator").getAttribute("data-dirty"),
+      ).toBe("false");
       await manual.fill("shared-id");
-      await page.evaluate(() => window.__agentModelsSetSettings((prev: any) => ({
-        ...prev, providerSources: prev.providerSources.map((source: any) => source.id === "provider-a"
-          ? { ...source, modelSelection: { mode: "all", models: ["alpha-primary", "shared-id"] } } : source),
-      })));
+      await page.evaluate(() =>
+        window.__agentModelsSetSettings((prev: any) => ({
+          ...prev,
+          providerSources: prev.providerSources.map((source: any) =>
+            source.id === "provider-a"
+              ? {
+                  ...source,
+                  modelSelection: {
+                    mode: "all",
+                    models: ["alpha-primary", "shared-id"],
+                  },
+                }
+              : source,
+          ),
+        })),
+      );
       expect(await manual.inputValue()).toBe("shared-id");
       expect(await manual.isVisible()).toBe(true);
-      expect(await page.evaluate(() => window.__agentModelsUpdateCalls)).toEqual([]);
+      expect(
+        await page.evaluate(() => window.__agentModelsUpdateCalls),
+      ).toEqual([]);
     } finally {
       await page.close();
     }
@@ -573,11 +761,15 @@ describe("Agent Profile Models Mounted Tests", () => {
   it("disables model controls when busy saving", async () => {
     const page = await setupPage();
     try {
-      await page.getByRole("button", { name: "新建智能体", exact: true }).click();
+      await page
+        .getByRole("button", { name: "新建智能体", exact: true })
+        .click();
       await page.locator("#agent-input-id").fill("agent-busy");
       await page.locator("#agent-input-name").fill("繁忙测试");
 
-      await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
+      await page
+        .getByRole("combobox", { name: "模型模式选择", exact: true })
+        .click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
 
       // Enable delay save
@@ -586,21 +778,33 @@ describe("Agent Profile Models Mounted Tests", () => {
       });
 
       // Click save
-      await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
-      await expect.poll(() => page.locator("#busy-indicator").getAttribute("data-busy")).toBe("true");
+      await page
+        .getByRole("button", { name: "保存智能体角色", exact: true })
+        .click();
+      await expect
+        .poll(() => page.locator("#busy-indicator").getAttribute("data-busy"))
+        .toBe("true");
 
       // Controls should be disabled
-      const modelTrigger = page.getByRole("combobox", { name: "智能体模型", exact: true });
+      const modelTrigger = page.getByRole("combobox", {
+        name: "智能体模型",
+        exact: true,
+      });
       expect(await modelTrigger.isDisabled()).toBe(true);
 
-      const providerTrigger = page.getByRole("combobox", { name: "Provider 来源", exact: true });
+      const providerTrigger = page.getByRole("combobox", {
+        name: "Provider 来源",
+        exact: true,
+      });
       expect(await providerTrigger.isDisabled()).toBe(true);
 
       // Resolve save
       await page.evaluate(() => {
         window.__agentModelsResolveSave?.();
       });
-      await expect.poll(() => page.locator("#busy-indicator").getAttribute("data-busy")).toBe("false");
+      await expect
+        .poll(() => page.locator("#busy-indicator").getAttribute("data-busy"))
+        .toBe("false");
       expect(await modelTrigger.isEnabled()).toBe(true);
     } finally {
       await page.close();

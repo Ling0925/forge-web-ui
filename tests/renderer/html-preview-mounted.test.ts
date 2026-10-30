@@ -1,9 +1,9 @@
 import { createServer } from "node:http";
 import { resolve } from "node:path";
+import { HTML_PREVIEW_CSP } from "@forge/core/shared/html-preview";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { HTML_PREVIEW_CSP } from "@forge/core/shared/html-preview";
 
 // The preview needs a real same-origin document URL: srcdoc/blob:/data: frames
 // are refused by the workbench CSP. This test therefore serves both the page

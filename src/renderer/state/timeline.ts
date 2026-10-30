@@ -1,15 +1,23 @@
 import { executionTurns } from "@forge/core/shared/execution";
 import type { ImageAttachment } from "@forge/core/shared/images";
-import type { ErrorInfo, FileChange, PublishedFile, SessionSnapshot, ToolCall } from "../shared-types";
+import type {
+  ErrorInfo,
+  FileChange,
+  PublishedFile,
+  SessionSnapshot,
+  ToolCall,
+} from "../shared-types";
 import { publishesPublishedFiles } from "./published-file-tools";
-import { retainedOutputs, type PendingOutput } from "./transcript-sync";
+import { decodeStoredToolResult } from "./stored-tool-result";
 import { draftPosition, mergeTranscriptDrafts } from "./timeline-drafts";
 import { indexTimelineTools } from "./timeline-tool-index";
-import { decodeStoredToolResult } from "./stored-tool-result";
+import { type PendingOutput, retainedOutputs } from "./transcript-sync";
 
 export type TimelineItem = {
-  readonly turn?: number | undefined; readonly step?: number | undefined;
-  readonly messageIndex?: number; readonly generationId?: string | undefined;
+  readonly turn?: number | undefined;
+  readonly step?: number | undefined;
+  readonly messageIndex?: number;
+  readonly generationId?: string | undefined;
 } & (
   | {
       readonly kind: "message";
@@ -21,7 +29,11 @@ export type TimelineItem = {
       readonly reasoning?: string;
       readonly reasoningTruncated?: boolean | undefined;
       readonly reasoningLive?: boolean;
-      readonly reasoningStatus?: "failed" | "cancelled" | "unconfirmed" | undefined;
+      readonly reasoningStatus?:
+        | "failed"
+        | "cancelled"
+        | "unconfirmed"
+        | undefined;
       readonly streaming?: boolean;
       readonly origin?: "agent_reconciliation";
       readonly incomplete?: boolean;
@@ -60,7 +72,8 @@ export type TimelineItem = {
       readonly toolCallId?: string;
       readonly timestamp: string;
       readonly historical?: boolean;
-    });
+    }
+);
 
 function isHookDiagnostic(
   status: string,
@@ -95,9 +108,14 @@ function insertOutputs(
   for (const output of outputs) {
     const index = draftPosition(result, output);
     result.splice(index, 0, {
-      kind: "message", id: output.id, role: "assistant", content: output.text,
-      generationId: output.generationId, messageIndex: output.afterMessage,
-      incomplete: true, truncated: output.truncated,
+      kind: "message",
+      id: output.id,
+      role: "assistant",
+      content: output.text,
+      generationId: output.generationId,
+      messageIndex: output.afterMessage,
+      incomplete: true,
+      truncated: output.truncated,
       ...(output.turn === undefined ? {} : { turn: output.turn }),
       ...(output.step === undefined ? {} : { step: output.step }),
     });
@@ -113,14 +131,23 @@ export function reduceTimeline(
   pendingReasoning: readonly PendingOutput[] = [],
 ): readonly TimelineItem[] {
   const cached = timelineCache.get(snapshot);
-  if (cached) return mergeTranscriptDrafts(cached, snapshot, pendingOutputs, pendingReasoning);
+  if (cached)
+    return mergeTranscriptDrafts(
+      cached,
+      snapshot,
+      pendingOutputs,
+      pendingReasoning,
+    );
   const items: TimelineItem[] = [];
   const messageOffset = snapshot.transcript?.messageOffset ?? 0;
   const eventOffset = snapshot.transcript?.eventOffset ?? 0;
   const turns = executionTurns(snapshot);
-  const positions = new Map<number, { readonly turn: number; readonly step?: number }>();
+  const positions = new Map<
+    number,
+    { readonly turn: number; readonly step?: number }
+  >();
   for (const turn of turns) {
-    const steps = turn.events.filter(event => event.type === "step_started");
+    const steps = turn.events.filter((event) => event.type === "step_started");
     let cursor = 0;
     let step: number | undefined;
     for (let index = turn.messageStart; index < turn.messageEnd; index++) {
@@ -130,14 +157,18 @@ export function reduceTimeline(
         step = start.step;
         cursor++;
       }
-      positions.set(index, { turn: turn.turn, ...(step === undefined ? {} : { step }) });
+      positions.set(index, {
+        turn: turn.turn,
+        ...(step === undefined ? {} : { step }),
+      });
     }
   }
   const pending = new Map<string, number[]>();
   const runStarts = snapshot.events.flatMap((event, index) =>
     event.type === "run_started" ? [index] : [],
   );
-  const alignedRuns = turns.length > 0 && turns.every(turn => turn.events.length > 0);
+  const alignedRuns =
+    turns.length > 0 && turns.every((turn) => turn.events.length > 0);
   let turn = -1;
   const placedErrors = new Set<number>();
   const placedDiagnostics = new Set<number>();
@@ -150,7 +181,8 @@ export function reduceTimeline(
         items.push({
           kind: "error",
           id: `error:${eventOffset + index}`,
-          message: event.error.message, error: event.error,
+          message: event.error.message,
+          error: event.error,
           timestamp: event.timestamp,
           ...(errorTurn === undefined ? {} : { turn: errorTurn }),
           ...(event.step === undefined ? {} : { step: event.step }),
@@ -166,10 +198,16 @@ export function reduceTimeline(
           hook: event.diagnostic.hook,
           hookId: event.diagnostic.id,
           status: event.diagnostic.status,
-          ...(event.diagnostic.reason !== undefined ? { reason: event.diagnostic.reason } : {}),
-          ...(event.diagnostic.exitCode !== undefined ? { exitCode: event.diagnostic.exitCode } : {}),
+          ...(event.diagnostic.reason !== undefined
+            ? { reason: event.diagnostic.reason }
+            : {}),
+          ...(event.diagnostic.exitCode !== undefined
+            ? { exitCode: event.diagnostic.exitCode }
+            : {}),
           durationMs: event.diagnostic.durationMs,
-          ...(event.toolCallId !== undefined ? { toolCallId: event.toolCallId } : {}),
+          ...(event.toolCallId !== undefined
+            ? { toolCallId: event.toolCallId }
+            : {}),
           timestamp: event.timestamp,
           ...(event.turn === undefined ? {} : { turn: event.turn }),
           ...(event.step === undefined ? {} : { step: event.step }),
@@ -196,13 +234,17 @@ export function reduceTimeline(
       // Internal child joins do not start a human turn or break pending results.
       if (message.role !== "user" || message.origin !== "agent_reconciliation")
         pending.clear();
-      if (message.role === "assistant" && (message.webSearches?.length || message.citations?.length)) {
+      if (
+        message.role === "assistant" &&
+        (message.webSearches?.length || message.citations?.length)
+      ) {
         if (message.webSearches?.length) {
           for (const [searchIndex, search] of message.webSearches.entries()) {
             const target =
               search.action === "search"
                 ? search.queries?.join("; ") || ""
-                : (search.action === "open_page" || (search.action as string) === "open_url")
+                : search.action === "open_page" ||
+                    (search.action as string) === "open_url"
                   ? search.url || ""
                   : [search.url, search.pattern].filter(Boolean).join(" · ");
             const status =
@@ -227,7 +269,9 @@ export function reduceTimeline(
                   arguments: JSON.stringify({
                     action: search.action,
                     query: target,
-                    ...(search.queries?.length ? { queries: search.queries } : {}),
+                    ...(search.queries?.length
+                      ? { queries: search.queries }
+                      : {}),
                     ...(search.url ? { url: search.url } : {}),
                     ...(search.pattern ? { pattern: search.pattern } : {}),
                   }),
@@ -238,7 +282,8 @@ export function reduceTimeline(
                 action: search.action,
                 target,
                 sources: search.sources ?? [],
-                ...(searchIndex === message.webSearches.length - 1 && message.citations?.length
+                ...(searchIndex === message.webSearches.length - 1 &&
+                message.citations?.length
                   ? { citations: message.citations }
                   : {}),
               }),
@@ -260,7 +305,10 @@ export function reduceTimeline(
                 name: "web_search",
                 arguments: JSON.stringify({
                   action: "search",
-                  query: message.citations.map((c) => c.title || c.url).slice(0, 3).join("; "),
+                  query: message.citations
+                    .map((c) => c.title || c.url)
+                    .slice(0, 3)
+                    .join("; "),
                 }),
               },
             },
@@ -275,23 +323,31 @@ export function reduceTimeline(
       }
       const shouldPushMessage = Boolean(
         message.content ||
-        (message.role === "user" && message.images?.length) ||
-        (message.role === "assistant" && message.reasoning)
+          (message.role === "user" && message.images?.length) ||
+          (message.role === "assistant" && message.reasoning),
       );
       if (shouldPushMessage)
         items.push({
           kind: "message",
-          id: message.role === "assistant" && message.generationId ? `generation:${message.generationId}` : `message:${messageOffset + index}`,
-          ...(message.role === "assistant" && message.generationId ? { generationId: message.generationId } : {}),
+          id:
+            message.role === "assistant" && message.generationId
+              ? `generation:${message.generationId}`
+              : `message:${messageOffset + index}`,
+          ...(message.role === "assistant" && message.generationId
+            ? { generationId: message.generationId }
+            : {}),
           messageIndex: messageOffset + index,
           ...positions.get(index),
           role: message.role,
           content: message.content ?? "",
-          ...(message.role === "user" && message.images?.length ? { images: message.images } : {}),
+          ...(message.role === "user" && message.images?.length
+            ? { images: message.images }
+            : {}),
           ...(message.role === "assistant" && message.reasoning
             ? { reasoning: message.reasoning }
             : {}),
-          ...(message.role === "assistant" && message.reasoning?.length === 131072
+          ...(message.role === "assistant" &&
+          message.reasoning?.length === 131072
             ? { reasoningTruncated: true }
             : {}),
           // Provider reasoning is display-only, separate from assistant prose.
@@ -308,7 +364,11 @@ export function reduceTimeline(
           pending.set(call.id, [...(pending.get(call.id) ?? []), items.length]);
           items.push({
             kind: "tool",
-            id: message.generationId ? `generation:${message.generationId}:tool:${callIndex}` : snapshot.transcript ? `tool:${call.id}:message:${messageOffset + index}` : `tool:${call.id}:${occurrence}`,
+            id: message.generationId
+              ? `generation:${message.generationId}:tool:${callIndex}`
+              : snapshot.transcript
+                ? `tool:${call.id}:message:${messageOffset + index}`
+                : `tool:${call.id}:${occurrence}`,
             generationId: message.generationId,
             messageIndex: messageOffset + index,
             ...positions.get(index),
@@ -325,7 +385,9 @@ export function reduceTimeline(
             ...(finish?.result.changes?.length
               ? { changes: finish.result.changes }
               : {}),
-            ...(finish?.result.files?.length && !finish.result.isError && publishesPublishedFiles(call.function.name)
+            ...(finish?.result.files?.length &&
+            !finish.result.isError &&
+            publishesPublishedFiles(call.function.name)
               ? { files: finish.result.files }
               : {}),
           });
@@ -334,7 +396,12 @@ export function reduceTimeline(
       const position = pending.get(message.tool_call_id)?.shift();
       const item = position === undefined ? undefined : items[position];
       if (item?.kind !== "tool" || position === undefined) continue;
-      const { output, changes, files, failed: storedFailure } = decodeStoredToolResult(message.content ?? "");
+      const {
+        output,
+        changes,
+        files,
+        failed: storedFailure,
+      } = decodeStoredToolResult(message.content ?? "");
       const failed = item.status === "failed" || storedFailure;
       const { files: _eventFiles, ...messageItem } = item;
       items[position] = {
@@ -342,7 +409,11 @@ export function reduceTimeline(
         output,
         status: failed ? "failed" : "completed",
         ...(changes?.length ? { changes } : {}),
-        ...(!failed && files?.length && publishesPublishedFiles(item.call.function.name) ? { files } : {}),
+        ...(!failed &&
+        files?.length &&
+        publishesPublishedFiles(item.call.function.name)
+          ? { files }
+          : {}),
       };
     }
   }
@@ -356,9 +427,12 @@ export function reduceTimeline(
       (event.turn === undefined ? historical : anchoredErrors).push({
         kind: "error",
         id: `error:${eventOffset + index}`,
-        message: event.error.message, error: event.error,
+        message: event.error.message,
+        error: event.error,
         timestamp: event.timestamp,
-        ...(event.turn === undefined ? { historical: true } : { turn: event.turn }),
+        ...(event.turn === undefined
+          ? { historical: true }
+          : { turn: event.turn }),
         ...(event.step === undefined ? {} : { step: event.step }),
       });
     } else if (
@@ -372,12 +446,20 @@ export function reduceTimeline(
         hook: event.diagnostic.hook,
         hookId: event.diagnostic.id,
         status: event.diagnostic.status,
-        ...(event.diagnostic.reason !== undefined ? { reason: event.diagnostic.reason } : {}),
-        ...(event.diagnostic.exitCode !== undefined ? { exitCode: event.diagnostic.exitCode } : {}),
+        ...(event.diagnostic.reason !== undefined
+          ? { reason: event.diagnostic.reason }
+          : {}),
+        ...(event.diagnostic.exitCode !== undefined
+          ? { exitCode: event.diagnostic.exitCode }
+          : {}),
         durationMs: event.diagnostic.durationMs,
-        ...(event.toolCallId !== undefined ? { toolCallId: event.toolCallId } : {}),
+        ...(event.toolCallId !== undefined
+          ? { toolCallId: event.toolCallId }
+          : {}),
         timestamp: event.timestamp,
-        ...(event.turn === undefined ? { historical: true } : { turn: event.turn }),
+        ...(event.turn === undefined
+          ? { historical: true }
+          : { turn: event.turn }),
         ...(event.step === undefined ? {} : { step: event.step }),
       });
     }
@@ -386,13 +468,17 @@ export function reduceTimeline(
   // Only the active run may have calls still in transit. Historical/orphan events
   // must not manufacture evidence after a saved final answer. Native messages
   // remain authoritative as soon as they arrive; match occurrences, not just IDs.
-  if (snapshot.status === "running" || snapshot.status === "awaiting_approval") {
+  if (
+    snapshot.status === "running" ||
+    snapshot.status === "awaiting_approval"
+  ) {
     const from = runStarts.at(-1) ?? -1;
     const currentMessages = alignedRuns
       ? snapshot.messages.slice(turns.at(-1)?.messageStart)
       : snapshot.messages;
     const represented = new Map<string, number>();
-    const key = (call: ToolCall, generationId?: string, callIndex?: number) => generationId ? `${generationId}:${callIndex}` : JSON.stringify(call);
+    const key = (call: ToolCall, generationId?: string, callIndex?: number) =>
+      generationId ? `${generationId}:${callIndex}` : JSON.stringify(call);
     for (const message of currentMessages)
       if (message.role === "assistant")
         for (const [callIndex, call] of (message.tool_calls ?? []).entries()) {
@@ -412,41 +498,69 @@ export function reduceTimeline(
           const occurrence = occurrences.get(event.call.id) ?? 0;
           occurrences.set(event.call.id, occurrence + 1);
           position = result.length;
-          result.push({ kind: "tool", id: event.generationId ? `generation:${event.generationId}:tool:${event.callIndex}` : `tool:${event.call.id}:${occurrence}`,
+          result.push({
+            kind: "tool",
+            id: event.generationId
+              ? `generation:${event.generationId}:tool:${event.callIndex}`
+              : `tool:${event.call.id}:${occurrence}`,
             generationId: event.generationId,
             ...(event.turn === undefined ? {} : { turn: event.turn }),
             ...(event.step === undefined ? {} : { step: event.step }),
-            call: event.call, status: "running", output: "",
-            ...toolTiming(event, undefined) });
+            call: event.call,
+            status: "running",
+            output: "",
+            ...toolTiming(event, undefined),
+          });
         }
         // Include represented starts as queue placeholders so their results can
         // never be consumed by a later same-ID live occurrence.
-        const occurrenceKey = event.generationId ? `${event.generationId}:${event.callIndex}` : event.call.id;
+        const occurrenceKey = event.generationId
+          ? `${event.generationId}:${event.callIndex}`
+          : event.call.id;
         const queue = open.get(occurrenceKey) ?? [];
         queue.push(position);
         open.set(occurrenceKey, queue);
       } else if (event.type === "tool_finished") {
-        const occurrenceKey = event.generationId ? `${event.generationId}:${event.callIndex}` : event.toolCallId;
+        const occurrenceKey = event.generationId
+          ? `${event.generationId}:${event.callIndex}`
+          : event.toolCallId;
         const position = open.get(occurrenceKey)?.shift();
         const item = position === undefined ? undefined : result[position];
-        if (position === undefined || item?.kind !== "tool" || item.call.id !== event.toolCallId) continue;
-        result[position] = { ...item, status: event.result.isError ? "failed" : "completed",
+        if (
+          position === undefined ||
+          item?.kind !== "tool" ||
+          item.call.id !== event.toolCallId
+        )
+          continue;
+        result[position] = {
+          ...item,
+          status: event.result.isError ? "failed" : "completed",
           output: event.result.content,
           ...(item.startedAt === undefined
             ? {}
             : toolTiming({ timestamp: item.startedAt }, event)),
-          ...(event.result.changes?.length ? { changes: event.result.changes } : {}),
-          ...(event.result.files?.length && !event.result.isError && publishesPublishedFiles(item.call.function.name)
+          ...(event.result.changes?.length
+            ? { changes: event.result.changes }
+            : {}),
+          ...(event.result.files?.length &&
+          !event.result.isError &&
+          publishesPublishedFiles(item.call.function.name)
             ? { files: event.result.files }
-            : {}) };
+            : {}),
+        };
       }
     }
   }
   for (const error of anchoredErrors) {
-    const last = result.findLastIndex(item => item.turn === error.turn);
+    const last = result.findLastIndex((item) => item.turn === error.turn);
     result.splice(last < 0 ? result.length : last + 1, 0, error);
   }
   const restored = insertOutputs(result, retainedOutputs(snapshot));
   timelineCache.set(snapshot, restored);
-  return mergeTranscriptDrafts(restored, snapshot, pendingOutputs, pendingReasoning);
+  return mergeTranscriptDrafts(
+    restored,
+    snapshot,
+    pendingOutputs,
+    pendingReasoning,
+  );
 }

@@ -5,7 +5,10 @@ import { expect, it } from "vitest";
 
 it("new conversation is inline, preserves drafts and retries in the same session before acceptance", async () => {
   const bundle = await build({
-    stdin: { resolveDir: resolve("."), loader: "tsx", contents: `
+    stdin: {
+      resolveDir: resolve("."),
+      loader: "tsx",
+      contents: `
       import React from 'react';
       import {createRoot} from 'react-dom/client';
       import {App} from './src/renderer/components/workbench/App';
@@ -32,16 +35,29 @@ it("new conversation is inline, preserves drafts and retries in the same session
           return {runId,sessionId:newId};},
       };
       createRoot(document.getElementById('root')).render(<App/>);
-    ` },
-    bundle: true, write: false, format: "iife", jsx: "automatic", loader: { ".css": "empty" }, define: { "process.env.NODE_ENV": '"development"' },
+    `,
+    },
+    bundle: true,
+    write: false,
+    format: "iife",
+    jsx: "automatic",
+    loader: { ".css": "empty" },
+    define: { "process.env.NODE_ENV": '"development"' },
   });
-  const browser = await chromium.launch({ headless: true, ...(process.env.FORGE_BROWSER_EXECUTABLE ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE } : {}) });
+  const browser = await chromium.launch({
+    headless: true,
+    ...(process.env.FORGE_BROWSER_EXECUTABLE
+      ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
+      : {}),
+  });
   try {
     const page = await browser.newPage();
     page.setDefaultTimeout(5000);
     const warnings: string[] = [];
     page.on("pageerror", (error) => warnings.push(error.message));
-    page.on("console", (message) => { if (message.type() === "error") warnings.push(message.text()); });
+    page.on("console", (message) => {
+      if (message.type() === "error") warnings.push(message.text());
+    });
     await page.setContent('<div id="root"></div>');
     await page.addScriptTag({ content: bundle.outputFiles[0]!.text });
     const fresh = page.getByRole("textbox", { name: "新会话消息" });
@@ -54,36 +70,74 @@ it("new conversation is inline, preserves drafts and retries in the same session
     await mode.click();
     await page.getByRole("menuitemradio", { name: /^Plan/ }).click();
     expect(await mode.getAttribute("title")).toBe("运行模式：Plan");
-    await page.locator(".session-item-main").filter({ hasText: "Existing conversation" }).click();
+    await page
+      .locator(".session-item-main")
+      .filter({ hasText: "Existing conversation" })
+      .click();
     expect(await mode.getAttribute("title")).toBe("运行模式：Build");
     const existing = page.getByRole("textbox", { name: "继续任务" });
     await existing.fill("existing draft");
     await page.getByRole("button", { name: "新建会话", exact: true }).click();
     expect(await fresh.inputValue()).toBe("new draft");
     expect(await mode.getAttribute("title")).toBe("运行模式：Plan");
-    expect(await fresh.evaluate((node) => node === document.activeElement)).toBe(true);
-    await page.locator(".session-item-main").filter({ hasText: "Existing conversation" }).click();
+    expect(
+      await fresh.evaluate((node) => node === document.activeElement),
+    ).toBe(true);
+    await page
+      .locator(".session-item-main")
+      .filter({ hasText: "Existing conversation" })
+      .click();
     expect(await existing.inputValue()).toBe("existing draft");
     await page.getByRole("button", { name: "新建会话", exact: true }).click();
     await page.getByRole("button", { name: "发送并开始会话" }).click();
-    await page.getByText("未能开始对话，草稿已保留。请检查错误详情后重试。", { exact: true }).waitFor();
+    await page
+      .getByText("未能开始对话，草稿已保留。请检查错误详情后重试。", {
+        exact: true,
+      })
+      .waitFor();
     expect(await fresh.inputValue()).toBe("new draft");
     expect(await mode.getAttribute("title")).toBe("运行模式：Plan");
-    expect(await page.evaluate(() => (window as unknown as { counts: { create: number } }).counts.create)).toBe(1);
+    expect(
+      await page.evaluate(
+        () =>
+          (window as unknown as { counts: { create: number } }).counts.create,
+      ),
+    ).toBe(1);
     await page.getByRole("button", { name: "发送并开始会话" }).click();
-    await page.getByRole("heading", { name: "New conversation", exact: true }).waitFor();
-    expect(await page.evaluate(() => (window as unknown as { counts: { create: number; start: number } }).counts)).toEqual({ create: 1, start: 2 });
+    await page
+      .getByRole("heading", { name: "New conversation", exact: true })
+      .waitFor();
+    expect(
+      await page.evaluate(
+        () =>
+          (window as unknown as { counts: { create: number; start: number } })
+            .counts,
+      ),
+    ).toEqual({ create: 1, start: 2 });
     expect(await mode.getAttribute("title")).toBe("运行模式：Plan");
-    expect(await page.evaluate(() => (window as unknown as { runInputs: { mode: string; permission: string }[] }).runInputs.map(({ mode, permission }) => ({ mode, permission })))).toEqual([
+    expect(
+      await page.evaluate(() =>
+        (
+          window as unknown as {
+            runInputs: { mode: string; permission: string }[];
+          }
+        ).runInputs.map(({ mode, permission }) => ({ mode, permission })),
+      ),
+    ).toEqual([
       { mode: "plan", permission: "readonly" },
       { mode: "plan", permission: "readonly" },
     ]);
     await page.getByRole("button", { name: "新建会话", exact: true }).click();
     expect(await fresh.inputValue()).toBe("");
     expect(await mode.getAttribute("title")).toBe("运行模式：Build");
-    await page.locator(".session-item-main").filter({ hasText: "New conversation" }).click();
+    await page
+      .locator(".session-item-main")
+      .filter({ hasText: "New conversation" })
+      .click();
     expect(await mode.getAttribute("title")).toBe("运行模式：Plan");
     expect(await page.locator("dialog[open]").count()).toBe(0);
     expect(warnings).toEqual([]);
-  } finally { await browser.close(); }
+  } finally {
+    await browser.close();
+  }
 }, 20000);

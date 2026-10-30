@@ -1,3 +1,9 @@
+import type { PublicProviderPreset } from "@forge/core/shared/model-access";
+import type { ModelCatalog } from "@forge/core/shared/model-catalog";
+import {
+  type PublicProviderSource,
+  configureInputSchema,
+} from "@forge/core/shared/schemas";
 import {
   ArrowClockwise,
   PencilSimple,
@@ -12,20 +18,14 @@ import {
   useRef,
   useState,
 } from "react";
-import type { PublicProviderPreset } from "@forge/core/shared/model-access";
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
-import {
-  type PublicProviderSource,
-  configureInputSchema,
-} from "@forge/core/shared/schemas";
 import {
   shallowEqual,
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
-import { EmptyState } from "../primitives/EmptyState";
 import { Checkbox } from "../primitives/Checkbox";
+import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";

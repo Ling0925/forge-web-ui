@@ -106,7 +106,12 @@ it("keeps a picked model paired with the source it came from", async () => {
       await page.locator(".composer-model-panel").textContent(),
     ).not.toMatch(/默认|default/);
     const sourceA = page.getByRole("group", { name: "Source A", exact: true });
-    expect(await page.locator(".model-catalog-option").filter({ hasText: "unconfigured" }).count()).toBe(0);
+    expect(
+      await page
+        .locator(".model-catalog-option")
+        .filter({ hasText: "unconfigured" })
+        .count(),
+    ).toBe(0);
     await sourceA.getByRole("button", { name: /a\/two/ }).click();
     await expect.poll(() => summary.getAttribute("title")).toContain("a/two");
     await expect

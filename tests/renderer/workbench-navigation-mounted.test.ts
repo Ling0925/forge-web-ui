@@ -120,7 +120,9 @@ it("unifies navigation and opens recent tasks without loading their histories up
         }, theme);
         if (width > 1000) {
           expect(
-            await page.getByRole("button", { name: "设置", exact: true }).count(),
+            await page
+              .getByRole("button", { name: "设置", exact: true })
+              .count(),
           ).toBe(1);
         }
         expect(await header.count()).toBe(1);
@@ -141,16 +143,14 @@ it("unifies navigation and opens recent tasks without loading their histories up
           await header.evaluate((el) => el.scrollWidth <= el.clientWidth),
         ).toBe(true);
         if (width <= 1000) {
-          const targets = await header
-            .locator("button")
-            .evaluateAll((nodes) =>
-              nodes
-                .filter((node) => node.getBoundingClientRect().width > 0)
-                .map((node) => ({
-                  width: node.getBoundingClientRect().width,
-                  height: node.getBoundingClientRect().height,
-                })),
-            );
+          const targets = await header.locator("button").evaluateAll((nodes) =>
+            nodes
+              .filter((node) => node.getBoundingClientRect().width > 0)
+              .map((node) => ({
+                width: node.getBoundingClientRect().width,
+                height: node.getBoundingClientRect().height,
+              })),
+          );
           expect(
             targets.every(
               (target) => target.width >= 44 && target.height >= 44,
@@ -168,13 +168,21 @@ it("unifies navigation and opens recent tasks without loading their histories up
     ).toBe(readCount);
     await page.setViewportSize({ width: 390, height: 500 });
     await page.locator(".welcome-task").last().scrollIntoViewIfNeeded();
-    expect(await page.locator(".wb-new-session-scroll").evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+    expect(
+      await page
+        .locator(".wb-new-session-scroll")
+        .evaluate((el) => el.scrollTop),
+    ).toBeGreaterThan(0);
     const shortComposer = await page.locator(".composer-fresh").boundingBox();
-    expect(shortComposer && shortComposer.y + shortComposer.height).toBeGreaterThanOrEqual(480);
+    expect(
+      shortComposer && shortComposer.y + shortComposer.height,
+    ).toBeGreaterThanOrEqual(480);
     expect((await header.boundingBox())?.y).toBe(0);
     await page.screenshot({ path: `${evidence}/home-390-short-scrolled.png` });
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.locator(".wb-new-session-scroll").evaluate(el => { el.scrollTop = 0; });
+    await page.locator(".wb-new-session-scroll").evaluate((el) => {
+      el.scrollTop = 0;
+    });
     await page.locator(".welcome-task").first().click();
     await expect
       .poll(() => header.locator("h1").innerText())
@@ -185,14 +193,22 @@ it("unifies navigation and opens recent tasks without loading their histories up
     ).toBe(readCount + 2);
     expect(await page.locator(".workbench-main").isVisible()).toBe(true);
     expect(await details.isVisible()).toBe(false);
-    expect((await page.locator(".workbench-inspector").boundingBox())?.y).toBe(0);
+    expect((await page.locator(".workbench-inspector").boundingBox())?.y).toBe(
+      0,
+    );
     await page.getByRole("button", { name: "收起详情", exact: true }).click();
     expect(await details.isVisible()).toBe(true);
-    expect(await details.evaluate(el => el === document.activeElement)).toBe(true);
+    expect(await details.evaluate((el) => el === document.activeElement)).toBe(
+      true,
+    );
     await page.setViewportSize({ width: 320, height: 900 });
-    expect(await header.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    expect(
+      await header.evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
     await page.getByRole("button", { name: "打开会话列表" }).click();
-    expect(await page.locator(".wb-session-actions").first().isVisible()).toBe(true);
+    expect(await page.locator(".wb-session-actions").first().isVisible()).toBe(
+      true,
+    );
     expect(await page.locator(".sidebar-logo img").isVisible()).toBe(true);
     await expect
       .poll(async () => (await page.locator(".sidebar-logo").boundingBox())?.x)
@@ -232,7 +248,9 @@ it("unifies navigation and opens recent tasks without loading their histories up
     expect(await page.locator(".wb-header-pending").isVisible()).toBe(true);
     await details.click();
     expect(
-      await page.locator(".workbench-inspector .wb-approval-row-inline").isVisible(),
+      await page
+        .locator(".workbench-inspector .wb-approval-row-inline")
+        .isVisible(),
     ).toBe(true);
     await page.getByRole("button", { name: "定位到消息流" }).click();
     expect(await page.locator(".workbench-main").isVisible()).toBe(true);

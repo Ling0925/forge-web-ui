@@ -31,7 +31,9 @@ function walk(value: unknown, path: string): string | undefined {
     return undefined;
   }
   if (value !== null && typeof value === "object") {
-    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, item] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
       if (FORBIDDEN_KEY.test(key))
         return `${path || "raw"} 含被禁止的键 “${key}”`;
       const error = walk(item, path ? `${path}.${key}` : key);
@@ -42,9 +44,7 @@ function walk(value: unknown, path: string): string | undefined {
 }
 
 /** Validate + normalize a raw passthrough option. Never throws. */
-export function sanitizeRawOption(
-  raw: ChartSpec["raw"],
-): SanitizeResult {
+export function sanitizeRawOption(raw: ChartSpec["raw"]): SanitizeResult {
   if (!raw) return { ok: false, error: "缺少 raw.option。" };
   const option = structuredClone(raw.option) as Record<string, unknown>;
   const error = walk(option, "raw.option");

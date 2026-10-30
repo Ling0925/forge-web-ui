@@ -13,12 +13,14 @@ import { expect, it } from "vitest";
 it.each([
   { domains: ["example.com", "*.trusted.example"] },
   { domains: ["*"] },
-])("manages the browser plugin with $domains without implicit checks", async ({ domains }) => {
-  const bundle = await build({
-    stdin: {
-      resolveDir: resolve("."),
-      loader: "tsx",
-      contents: `
+])(
+  "manages the browser plugin with $domains without implicit checks",
+  async ({ domains }) => {
+    const bundle = await build({
+      stdin: {
+        resolveDir: resolve("."),
+        loader: "tsx",
+        contents: `
         import { createRoot } from 'react-dom/client';
         import { PluginPanel } from './src/renderer/components/workbench/PluginPanel';
         import './src/renderer/styles/global.css';
@@ -78,126 +80,127 @@ it.each([
 
         createRoot(document.getElementById('root')).render(<PluginPanel />);
       `,
-    },
-    bundle: true,
-    write: false,
-    format: "iife",
-    jsx: "automatic",
-    outfile: "plugin.js",
-    loader: { ".woff2": "dataurl" },
-    define: { "process.env.NODE_ENV": '"development"' },
-  });
-  const javascript = bundle.outputFiles.find((file) =>
-    file.path.endsWith(".js"),
-  )?.text;
-  const css = bundle.outputFiles.find((file) =>
-    file.path.endsWith(".css"),
-  )?.text;
-  if (!javascript) throw new Error("missing plugin panel bundle");
-
-  const browser = await chromium.launch({
-    headless: true,
-    ...(process.env.FORGE_BROWSER_EXECUTABLE
-      ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
-      : {}),
-  });
-  try {
-    const page = await browser.newPage({
-      viewport: { width: 1024, height: 900 },
-    });
-    page.setDefaultTimeout(5000);
-    const errors: string[] = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    page.on("console", (message) => {
-      if (message.type() === "error") errors.push(message.text());
-    });
-    await page.setContent('<div id="root"></div>');
-    if (css) await page.addStyleTag({ content: css });
-    await page.addScriptTag({ content: javascript });
-
-    const calls = () =>
-      page.evaluate(() => Reflect.get(window, "calls")) as Promise<{
-        list: number;
-        check: number;
-        configure: number;
-        inputs: readonly unknown[];
-      }>;
-    const card = page.getByRole("article", {
-      name: "插件 Browser · agent-browser",
-    });
-    await expect.poll(() => card.isVisible()).toBe(true);
-    // Rendering alone must not probe dependencies.
-    expect(await calls()).toMatchObject({ list: 1, check: 0, configure: 0 });
-    await card.getByText("已禁用", { exact: true }).waitFor();
-    await card
-      .getByText(/插件已禁用。禁用不会启动、安装或下载任何组件/)
-      .waitFor();
-
-    // Declared capabilities, hostname limits and approval policy are explicit.
-    await card.getByText("本机进程", { exact: true }).waitFor();
-    await card.getByText("网络", { exact: true }).waitFor();
-    await card.getByText(/不绕过审批/).waitFor();
-    await card.getByText(/尚未允许任何域名/).waitFor();
-    await card.getByText(/不导入个人浏览器配置或持久登录态/).waitFor();
-
-    await card
-      .getByLabel("agent-browser 可执行路径")
-      .fill("/opt/bin/agent-browser");
-    await card
-      .getByLabel("允许访问的主机名")
-      .fill(domains.join("\n"));
-    await card.getByRole("button", { name: "保存配置", exact: true }).click();
-    await expect.poll(async () => (await calls()).configure).toBe(1);
-    expect((await calls()).inputs[0]).toEqual({
-      pluginId: "browser",
-      config: {
-        executablePath: "/opt/bin/agent-browser",
-        browserExecutablePath: "",
-        allowedDomains: domains,
       },
+      bundle: true,
+      write: false,
+      format: "iife",
+      jsx: "automatic",
+      outfile: "plugin.js",
+      loader: { ".woff2": "dataurl" },
+      define: { "process.env.NODE_ENV": '"development"' },
     });
-    await page
-      .getByText(/配置已保存。status=configured 只表示配置已持久化/)
-      .waitFor();
-    // Saving config is not a health check and still must not look ready.
-    expect((await calls()).check).toBe(0);
-    await card.getByText(/填写 \* 允许全部网站/).waitFor();
-    if (domains.includes("*"))
-      await card.getByText("全部网站（*）", { exact: true }).waitFor();
+    const javascript = bundle.outputFiles.find((file) =>
+      file.path.endsWith(".js"),
+    )?.text;
+    const css = bundle.outputFiles.find((file) =>
+      file.path.endsWith(".css"),
+    )?.text;
+    if (!javascript) throw new Error("missing plugin panel bundle");
 
-    await card.getByRole("button", { name: "启用插件", exact: true }).click();
-    await expect.poll(async () => (await calls()).configure).toBe(2);
-    expect((await calls()).inputs[1]).toEqual({
-      pluginId: "browser",
-      enabled: true,
+    const browser = await chromium.launch({
+      headless: true,
+      ...(process.env.FORGE_BROWSER_EXECUTABLE
+        ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
+        : {}),
     });
-    await card.getByText("已配置 · 未检查", { exact: true }).waitFor();
-    await card.getByText(/未执行依赖检查前不能视为 ready/).waitFor();
-    expect((await calls()).check).toBe(0);
+    try {
+      const page = await browser.newPage({
+        viewport: { width: 1024, height: 900 },
+      });
+      page.setDefaultTimeout(5000);
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("console", (message) => {
+        if (message.type() === "error") errors.push(message.text());
+      });
+      await page.setContent('<div id="root"></div>');
+      if (css) await page.addStyleTag({ content: css });
+      await page.addScriptTag({ content: javascript });
 
-    // Only the explicit button probes health.
-    await card
-      .getByRole("button", { name: "检查依赖健康", exact: true })
-      .click();
-    await expect.poll(async () => (await calls()).check).toBe(1);
-    await card.getByText(/依赖检查通过/).waitFor();
-    await card.getByText(/不代表 Chrome 能启动或已获得站点访问权限/).waitFor();
+      const calls = () =>
+        page.evaluate(() => Reflect.get(window, "calls")) as Promise<{
+          list: number;
+          check: number;
+          configure: number;
+          inputs: readonly unknown[];
+        }>;
+      const card = page.getByRole("article", {
+        name: "插件 Browser · agent-browser",
+      });
+      await expect.poll(() => card.isVisible()).toBe(true);
+      // Rendering alone must not probe dependencies.
+      expect(await calls()).toMatchObject({ list: 1, check: 0, configure: 0 });
+      await card.getByText("已禁用", { exact: true }).waitFor();
+      await card
+        .getByText(/插件已禁用。禁用不会启动、安装或下载任何组件/)
+        .waitFor();
 
-    // Configuration validation errors surface; the host is not called.
-    await card.getByLabel("agent-browser 可执行路径").fill("   ");
-    await card.getByRole("button", { name: "保存配置", exact: true }).click();
-    await card.getByText(/配置未通过 Core schema 校验/).waitFor();
-    expect((await calls()).configure).toBe(2);
+      // Declared capabilities, hostname limits and approval policy are explicit.
+      await card.getByText("本机进程", { exact: true }).waitFor();
+      await card.getByText("网络", { exact: true }).waitFor();
+      await card.getByText(/不绕过审批/).waitFor();
+      await card.getByText(/尚未允许任何域名/).waitFor();
+      await card.getByText(/不导入个人浏览器配置或持久登录态/).waitFor();
 
-    expect(errors).toEqual([]);
-    // No persistence surfaces exist: the panel keeps configuration in memory and
-    // only hands it to Core through configurePlugin.
-    expect(await page.evaluate(() => "records" in window)).toBe(true);
-    expect(
-      await page.evaluate(() => document.querySelectorAll("script").length),
-    ).toBe(1);
-    expect(page.url()).toBe("about:blank");
-  } finally {
-    await browser.close();
-  }
-});
+      await card
+        .getByLabel("agent-browser 可执行路径")
+        .fill("/opt/bin/agent-browser");
+      await card.getByLabel("允许访问的主机名").fill(domains.join("\n"));
+      await card.getByRole("button", { name: "保存配置", exact: true }).click();
+      await expect.poll(async () => (await calls()).configure).toBe(1);
+      expect((await calls()).inputs[0]).toEqual({
+        pluginId: "browser",
+        config: {
+          executablePath: "/opt/bin/agent-browser",
+          browserExecutablePath: "",
+          allowedDomains: domains,
+        },
+      });
+      await page
+        .getByText(/配置已保存。status=configured 只表示配置已持久化/)
+        .waitFor();
+      // Saving config is not a health check and still must not look ready.
+      expect((await calls()).check).toBe(0);
+      await card.getByText(/填写 \* 允许全部网站/).waitFor();
+      if (domains.includes("*"))
+        await card.getByText("全部网站（*）", { exact: true }).waitFor();
+
+      await card.getByRole("button", { name: "启用插件", exact: true }).click();
+      await expect.poll(async () => (await calls()).configure).toBe(2);
+      expect((await calls()).inputs[1]).toEqual({
+        pluginId: "browser",
+        enabled: true,
+      });
+      await card.getByText("已配置 · 未检查", { exact: true }).waitFor();
+      await card.getByText(/未执行依赖检查前不能视为 ready/).waitFor();
+      expect((await calls()).check).toBe(0);
+
+      // Only the explicit button probes health.
+      await card
+        .getByRole("button", { name: "检查依赖健康", exact: true })
+        .click();
+      await expect.poll(async () => (await calls()).check).toBe(1);
+      await card.getByText(/依赖检查通过/).waitFor();
+      await card
+        .getByText(/不代表 Chrome 能启动或已获得站点访问权限/)
+        .waitFor();
+
+      // Configuration validation errors surface; the host is not called.
+      await card.getByLabel("agent-browser 可执行路径").fill("   ");
+      await card.getByRole("button", { name: "保存配置", exact: true }).click();
+      await card.getByText(/配置未通过 Core schema 校验/).waitFor();
+      expect((await calls()).configure).toBe(2);
+
+      expect(errors).toEqual([]);
+      // No persistence surfaces exist: the panel keeps configuration in memory and
+      // only hands it to Core through configurePlugin.
+      expect(await page.evaluate(() => "records" in window)).toBe(true);
+      expect(
+        await page.evaluate(() => document.querySelectorAll("script").length),
+      ).toBe(1);
+      expect(page.url()).toBe("about:blank");
+    } finally {
+      await browser.close();
+    }
+  },
+);

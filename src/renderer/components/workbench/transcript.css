@@ -369,7 +369,8 @@
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  transition: background-color var(--transition-fast), color
+    var(--transition-fast), border-color var(--transition-fast);
 }
 
 .transcript-turn-toggle:hover {
@@ -407,7 +408,8 @@
   text-align: left;
   cursor: pointer;
   user-select: none;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color
+    var(--transition-fast), color var(--transition-fast);
 }
 
 .transcript-turn-collapsed-bar:hover {
@@ -477,7 +479,8 @@
   font-variant-numeric: tabular-nums;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color var(--transition-fast), color
+    var(--transition-fast);
 }
 
 .transcript-execution-summary:hover {
@@ -564,10 +567,8 @@
   background: transparent;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast),
-    color var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color
+    var(--transition-fast), color var(--transition-fast);
 }
 
 .transcript-history-button:hover {

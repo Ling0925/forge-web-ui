@@ -137,8 +137,12 @@ describe("Sub-agent in Conversation / Transcript Mounted Verification", () => {
       define: { "process.env.NODE_ENV": '"development"' },
     });
 
-    const js = bundle.outputFiles.find((file) => file.path.endsWith(".js"))?.text;
-    const css = bundle.outputFiles.find((file) => file.path.endsWith(".css"))?.text;
+    const js = bundle.outputFiles.find((file) =>
+      file.path.endsWith(".js"),
+    )?.text;
+    const css = bundle.outputFiles.find((file) =>
+      file.path.endsWith(".css"),
+    )?.text;
     if (!js) throw new Error("Missing js bundle");
 
     await page.setContent('<div id="root"></div>');
@@ -151,7 +155,9 @@ describe("Sub-agent in Conversation / Transcript Mounted Verification", () => {
     expect(await spawnRoleBadge.textContent()).toContain("frontend-specialist");
     expect(await spawnRoleBadge.textContent()).toContain("v2");
     const spawnModelChip = page.locator(".test-spawn .agent-model-chip");
-    expect(await spawnModelChip.textContent()).toContain("cn:deepseek-v4.1-flash");
+    expect(await spawnModelChip.textContent()).toContain(
+      "cn:deepseek-v4.1-flash",
+    );
     const spawnSessionBtn = page.locator(".test-spawn .agent-session-link-btn");
     expect(await spawnSessionBtn.textContent()).toContain("子会话 #sess-chi");
 
@@ -162,37 +168,63 @@ describe("Sub-agent in Conversation / Transcript Mounted Verification", () => {
     // Card 1: running
     const card1 = waitCards.nth(0);
     expect(await card1.locator(".child-index-badge").textContent()).toBe("#1");
-    expect(await card1.locator(".child-status-badge").textContent()).toContain("执行中");
+    expect(await card1.locator(".child-status-badge").textContent()).toContain(
+      "执行中",
+    );
     expect(await card1.locator(".agent-live-dot").isVisible()).toBe(true);
-    expect(await card1.locator(".agent-role-badge").textContent()).toContain("frontend-specialist");
-    expect(await card1.locator(".agent-id-link-btn").textContent()).toContain("优化视觉规范");
-    expect(await card1.locator(".agent-usage-tag").textContent()).toContain("1.2k 入 / 450 出");
+    expect(await card1.locator(".agent-role-badge").textContent()).toContain(
+      "frontend-specialist",
+    );
+    expect(await card1.locator(".agent-id-link-btn").textContent()).toContain(
+      "优化视觉规范",
+    );
+    expect(await card1.locator(".agent-usage-tag").textContent()).toContain(
+      "1.2k 入 / 450 出",
+    );
 
     // Card 2: completed with markdown
     const card2 = waitCards.nth(1);
     expect(await card2.locator(".child-index-badge").textContent()).toBe("#2");
-    expect(await card2.locator(".child-status-badge").textContent()).toContain("已完成");
-    expect(await card2.locator(".agent-summary-content h3").textContent()).toBe("审查通过");
+    expect(await card2.locator(".child-status-badge").textContent()).toContain(
+      "已完成",
+    );
+    expect(await card2.locator(".agent-summary-content h3").textContent()).toBe(
+      "审查通过",
+    );
 
     // Verify Tabular Nums CSS property
     const cardUsageTag = card1.locator(".agent-usage-tag");
     const fontVariant = await cardUsageTag.evaluate((el) =>
-      getComputedStyle(el).getPropertyValue("font-variant-numeric")
+      getComputedStyle(el).getPropertyValue("font-variant-numeric"),
     );
     expect(fontVariant).toContain("tabular-nums");
 
     // 3. Verify answer_advisor presentation
     const answerView = page.locator(".test-answer .agent-advisor-answer-view");
     expect(await answerView.isVisible()).toBe(true);
-    expect(await answerView.locator(".agent-id-chip").textContent()).toContain("咨询请求 #req-advi");
-    expect(await answerView.locator(".child-status-badge").textContent()).toContain("主代理已答复");
-    expect(await answerView.locator(".agent-message-box .agent-message-content").textContent()).toContain("采用 2.5px 状态语义边条与 CSS 变量");
-    expect(await answerView.locator(".agent-instruction-box").textContent()).toContain("继续运行聚焦测试");
+    expect(await answerView.locator(".agent-id-chip").textContent()).toContain(
+      "咨询请求 #req-advi",
+    );
+    expect(
+      await answerView.locator(".child-status-badge").textContent(),
+    ).toContain("主代理已答复");
+    expect(
+      await answerView
+        .locator(".agent-message-box .agent-message-content")
+        .textContent(),
+    ).toContain("采用 2.5px 状态语义边条与 CSS 变量");
+    expect(
+      await answerView.locator(".agent-instruction-box").textContent(),
+    ).toContain("继续运行聚焦测试");
 
     // 4. Verify list_agent_profiles presentation
     const profileItem = page.locator(".test-profiles .agent-profile-item-card");
     expect(await profileItem.isVisible()).toBe(true);
-    expect(await profileItem.locator(".agent-role-badge").textContent()).toContain("探索专家");
-    expect(await profileItem.locator(".agent-profile-desc").textContent()).toContain("负责只读调研和代码探索");
+    expect(
+      await profileItem.locator(".agent-role-badge").textContent(),
+    ).toContain("探索专家");
+    expect(
+      await profileItem.locator(".agent-profile-desc").textContent(),
+    ).toContain("负责只读调研和代码探索");
   });
 });

@@ -2,14 +2,14 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { build } from "esbuild";
-import react from "@vitejs/plugin-react";
-import { chromium } from "playwright";
-import { createServer as createViteServer } from "vite";
-import { expect, it } from "vitest";
 import { createHarness } from "@forge/core/core/harness";
 import { type RunEvent, runEventSchema } from "@forge/core/shared/ipc";
 import { createWebHost } from "@forge/core/web/server";
+import react from "@vitejs/plugin-react";
+import { build } from "esbuild";
+import { chromium } from "playwright";
+import { createServer as createViteServer } from "vite";
+import { expect, it } from "vitest";
 
 it("pushes progress to the browser alongside Vite HMR without HTTP polling", async () => {
   const reservation = createServer();
@@ -21,7 +21,9 @@ it("pushes progress to the browser alongside Vite HMR without HTTP polling", asy
   const directory = await mkdtemp(join(tmpdir(), "forge-ws-browser-"));
   let hold = false;
   let release = () => {};
-  const gate = new Promise<void>((done) => { release = done; });
+  const gate = new Promise<void>((done) => {
+    release = done;
+  });
   const service = await createHarness({
     stateDir: join(directory, "state"),
     providerFactory: () => ({
@@ -101,7 +103,8 @@ it("pushes progress to the browser alongside Vite HMR without HTTP polling", asy
       window.WebSocket = class extends Native {
         constructor(url: string | URL, protocols?: string | string[]) {
           super(url, protocols);
-          if (String(url).includes("/api/events")) Reflect.set(window, "testEventSocket", this);
+          if (String(url).includes("/api/events"))
+            Reflect.set(window, "testEventSocket", this);
         }
       };
     });
@@ -162,44 +165,96 @@ it("pushes progress to the browser alongside Vite HMR without HTTP polling", asy
     hold = true;
     events.length = 0;
     const running = await page.evaluate(async (workspace) => {
-      const session = await window.forge.createSession({ workspace, model: "fixture" });
-      return window.forge.startRun({ sessionId: session.id, prompt: "survive refresh", permission: "readonly" });
+      const session = await window.forge.createSession({
+        workspace,
+        model: "fixture",
+      });
+      return window.forge.startRun({
+        sessionId: session.id,
+        prompt: "survive refresh",
+        permission: "readonly",
+      });
     }, directory);
-    await expect.poll(() => events.some((event) => event.event.type === "text_delta")).toBe(true);
+    await expect
+      .poll(() => events.some((event) => event.event.type === "text_delta"))
+      .toBe(true);
     const other = await page.context().newPage();
     const otherEvents: RunEvent[] = [];
-    other.on("pageerror", error => errors.push(error.message));
-    await other.exposeFunction("recordEvent", (raw: unknown) => otherEvents.push(runEventSchema.parse(raw)));
+    other.on("pageerror", (error) => errors.push(error.message));
+    await other.exposeFunction("recordEvent", (raw: unknown) =>
+      otherEvents.push(runEventSchema.parse(raw)),
+    );
     await other.goto(`${web.origin}/probe`);
-    await other.waitForFunction(() => Reflect.get(window, "probeReady") === true);
-    expect((await page.evaluate(() => window.forge.getSettings())).isConfigured).toBe(true);
-    expect((await other.evaluate(() => window.forge.getSettings())).isConfigured).toBe(true);
+    await other.waitForFunction(
+      () => Reflect.get(window, "probeReady") === true,
+    );
+    expect(
+      (await page.evaluate(() => window.forge.getSettings())).isConfigured,
+    ).toBe(true);
+    expect(
+      (await other.evaluate(() => window.forge.getSettings())).isConfigured,
+    ).toBe(true);
     let blockedResumes = 0;
-    await page.route("**/api/connection", route => {
+    await page.route("**/api/connection", (route) => {
       blockedResumes++;
       return route.abort("internetdisconnected");
     });
-    const socketCount = sockets.filter(url => url.includes("/api/events")).length;
+    const socketCount = sockets.filter((url) =>
+      url.includes("/api/events"),
+    ).length;
     await page.evaluate(() => Reflect.get(window, "testEventSocket").close());
     await expect.poll(() => blockedResumes).toBeGreaterThan(0);
-    expect((await other.evaluate(sessionId => window.forge.getSession(sessionId), running.sessionId)).status).toBe("running");
+    expect(
+      (
+        await other.evaluate(
+          (sessionId) => window.forge.getSession(sessionId),
+          running.sessionId,
+        )
+      ).status,
+    ).toBe("running");
     await page.unroute("**/api/connection");
     await page.evaluate(() => {
       window.dispatchEvent(new Event("online"));
       window.dispatchEvent(new Event("pageshow"));
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    await expect.poll(() => sockets.filter(url => url.includes("/api/events")).length).toBe(socketCount + 1);
-    await expect.poll(() => page.locator("body > [role=status]").textContent()).toContain("已连接");
+    await expect
+      .poll(() => sockets.filter((url) => url.includes("/api/events")).length)
+      .toBe(socketCount + 1);
+    await expect
+      .poll(() => page.locator("body > [role=status]").textContent())
+      .toContain("已连接");
     expect(await page.locator("body > [role=status]").isHidden()).toBe(true);
-    expect(events.filter(event => event.event.type === "text_delta")).toHaveLength(1);
-    expect(events.some(event => event.event.type === "run_finished")).toBe(false);
+    expect(
+      events.filter((event) => event.event.type === "text_delta"),
+    ).toHaveLength(1);
+    expect(events.some((event) => event.event.type === "run_finished")).toBe(
+      false,
+    );
     events.length = 0;
     await page.reload();
-    await page.waitForFunction(() => Reflect.get(window, "probeReady") === true);
-    await expect.poll(() => events.some((event) => event.runId === running.runId && event.event.type === "text_delta" && event.event.text === "progress 0\n")).toBe(true);
-    expect(events.some((event) => event.runId === running.runId && event.event.type === "run_started")).toBe(true);
-    expect(events.some((event) => event.event.type === "run_finished")).toBe(false);
+    await page.waitForFunction(
+      () => Reflect.get(window, "probeReady") === true,
+    );
+    await expect
+      .poll(() =>
+        events.some(
+          (event) =>
+            event.runId === running.runId &&
+            event.event.type === "text_delta" &&
+            event.event.text === "progress 0\n",
+        ),
+      )
+      .toBe(true);
+    expect(
+      events.some(
+        (event) =>
+          event.runId === running.runId && event.event.type === "run_started",
+      ),
+    ).toBe(true);
+    expect(events.some((event) => event.event.type === "run_finished")).toBe(
+      false,
+    );
     await page.goto(`${web.origin}/workbench`);
     await page.locator(".welcome-task").first().click();
     await page.getByRole("button", { name: "取消", exact: true }).waitFor();
@@ -209,40 +264,86 @@ it("pushes progress to the browser alongside Vite HMR without HTTP polling", asy
     await page.getByRole("button", { name: "取消", exact: true }).waitFor();
     await page.getByText("progress 0", { exact: true }).waitFor();
     release();
-    await page.getByRole("button", { name: "取消", exact: true }).waitFor({ state: "hidden" });
-    await page.locator("p").filter({ hasText: /^fixture finished$/ }).waitFor();
-    await expect.poll(() => otherEvents.some(event => event.event.type === "run_finished")).toBe(true);
-    expect(otherEvents.filter(event => event.event.type === "text_delta").map(event => event.event.type === "text_delta" ? event.event.text : "")).toEqual(Array.from({ length: 5 }, (_, i) => `progress ${i}\n`));
-    const snapshot = await page.evaluate((sessionId) => window.forge.getSession(sessionId), running.sessionId);
-    const deltaResponse = page.waitForResponse(async response => {
+    await page
+      .getByRole("button", { name: "取消", exact: true })
+      .waitFor({ state: "hidden" });
+    await page
+      .locator("p")
+      .filter({ hasText: /^fixture finished$/ })
+      .waitFor();
+    await expect
+      .poll(() =>
+        otherEvents.some((event) => event.event.type === "run_finished"),
+      )
+      .toBe(true);
+    expect(
+      otherEvents
+        .filter((event) => event.event.type === "text_delta")
+        .map((event) =>
+          event.event.type === "text_delta" ? event.event.text : "",
+        ),
+    ).toEqual(Array.from({ length: 5 }, (_, i) => `progress ${i}\n`));
+    const snapshot = await page.evaluate(
+      (sessionId) => window.forge.getSession(sessionId),
+      running.sessionId,
+    );
+    const deltaResponse = page.waitForResponse(async (response) => {
       if (!response.url().endsWith("/api/rpc")) return false;
       const value = await response.json();
-      return value.method === "getSession" && Boolean(value.result?.sessionDelta);
+      return (
+        value.method === "getSession" && Boolean(value.result?.sessionDelta)
+      );
     });
-    const cachedSnapshot = await page.evaluate((sessionId) => window.forge.getSession(sessionId), running.sessionId);
+    const cachedSnapshot = await page.evaluate(
+      (sessionId) => window.forge.getSession(sessionId),
+      running.sessionId,
+    );
     const delta = await (await deltaResponse).json();
     expect(delta.result.sessionDelta.snapshot.messages).toEqual([]);
     expect(cachedSnapshot.messages).toEqual(snapshot.messages);
     const sessionButtons = page.locator(".session-item-main");
     await sessionButtons.nth(1).click();
-    await page.locator("p").filter({ hasText: /^fixture$/ }).waitFor();
+    await page
+      .locator("p")
+      .filter({ hasText: /^fixture$/ })
+      .waitFor();
     let resumeRead = () => {};
-    const pausedRead = new Promise<void>(resolve => { resumeRead = resolve; });
-    await page.route("**/api/rpc", async route => {
+    const pausedRead = new Promise<void>((resolve) => {
+      resumeRead = resolve;
+    });
+    await page.route("**/api/rpc", async (route) => {
       const input = route.request().postDataJSON();
-      if (input.method === "getSession" && input.sessionId === running.sessionId) await pausedRead;
+      if (
+        input.method === "getSession" &&
+        input.sessionId === running.sessionId
+      )
+        await pausedRead;
       await route.continue();
     });
     try {
       await sessionButtons.nth(0).click();
-      await page.locator("p").filter({ hasText: /^survive refresh$/ }).waitFor();
-      expect(await page.getByText("正在读取会话…", { exact: true }).count()).toBe(0);
-      expect(await page.locator("p").filter({ hasText: /^fixture finished$/ }).count()).toBe(1);
+      await page
+        .locator("p")
+        .filter({ hasText: /^survive refresh$/ })
+        .waitFor();
+      expect(
+        await page.getByText("正在读取会话…", { exact: true }).count(),
+      ).toBe(0);
+      expect(
+        await page
+          .locator("p")
+          .filter({ hasText: /^fixture finished$/ })
+          .count(),
+      ).toBe(1);
     } finally {
       resumeRead();
       await page.unrouteAll({ behavior: "wait" });
     }
-    expect(snapshot.messages.some((message) => message.content === "fixture finished")).toBe(true);
+    expect(
+      snapshot.messages.some(
+        (message) => message.content === "fixture finished",
+      ),
+    ).toBe(true);
     expect(errors).toEqual([]);
   } finally {
     release();

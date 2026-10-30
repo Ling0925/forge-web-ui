@@ -1,30 +1,30 @@
-import { CaretRight, WarningCircle } from "@phosphor-icons/react";
 import { chartFenceBody, parseChartFence } from "@forge/core/shared/chart-spec";
-import { DiffViewer } from "../DiffViewer";
+import { CaretRight, WarningCircle } from "@phosphor-icons/react";
 import { ChartCard } from "../../charts/ChartCard";
-import { type ToolDisclosureProps } from "./types";
-import { ToolCopyButton, SectionHead } from "./common";
-import { PlanView } from "./plans";
+import { DiffViewer } from "../DiffViewer";
 import {
+  AdvisorCallView,
+  AnswerAdvisorView,
+  ListAgentProfilesView,
+  ResolveAgentView,
+  SendAgentMessageView,
   type SpawnAgentParams,
   SpawnAgentView,
-  parseWaitAgentsResult,
   WaitAgentsView,
-  SendAgentMessageView,
-  ResolveAgentView,
-  AnswerAdvisorView,
-  AdvisorCallView,
-  ListAgentProfilesView,
+  parseWaitAgentsResult,
 } from "./agents";
 import {
+  CommandConsole,
   type CommandTaskItem,
   CommandTaskListView,
-  CommandConsole,
 } from "./commands";
-import { ValueRows, parseParams, ParameterFields } from "./values";
-import { ReadFileResultView, ListFilesResultView } from "./files";
-import { WebSearchResultView } from "./web-search";
+import { SectionHead, ToolCopyButton } from "./common";
+import { ListFilesResultView, ReadFileResultView } from "./files";
 import type { ToolDisclosureModel } from "./model";
+import { PlanView } from "./plans";
+import { type ToolDisclosureProps } from "./types";
+import { ParameterFields, ValueRows, parseParams } from "./values";
+import { WebSearchResultView } from "./web-search";
 
 export function ToolDisclosureContent({
   props,

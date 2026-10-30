@@ -1,8 +1,8 @@
 import { resolve } from "node:path";
+import { defaultPublicSettings } from "@forge/core/shared/schemas";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { defaultPublicSettings } from "@forge/core/shared/schemas";
 
 /**
  * Browser regression coverage for the composer's model metadata pipeline.
@@ -152,7 +152,10 @@ const fixtureSnapshot = (
   changes: [],
 });
 
-const fixtureSummary = (id: string, status: "completed" | "running" | "awaiting_approval") => ({
+const fixtureSummary = (
+  id: string,
+  status: "completed" | "running" | "awaiting_approval",
+) => ({
   version: 1,
   id,
   title: id,
@@ -352,10 +355,14 @@ const openComposer = async (config: TestConfig) => {
       ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
       : {}),
   });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 900 },
+  });
   page.setDefaultTimeout(5000);
   const pageErrors: string[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error.stack ?? error.message));
+  page.on("pageerror", (error) =>
+    pageErrors.push(error.stack ?? error.message),
+  );
   await page.route("https://forge.test/**", (route) =>
     route.fulfill({
       contentType: "text/html",
@@ -382,12 +389,11 @@ const openComposer = async (config: TestConfig) => {
       `${error instanceof Error ? error.message : String(error)}\n${pageErrors.join("\n")}`,
     );
   }
-  await page.waitForFunction(
-    () =>
-      Boolean(
-        (window as unknown as { __wb?: { state?: { settings?: unknown } } })
-          .__wb?.state?.settings,
-      ),
+  await page.waitForFunction(() =>
+    Boolean(
+      (window as unknown as { __wb?: { state?: { settings?: unknown } } }).__wb
+        ?.state?.settings,
+    ),
   );
   return { browser, page };
 };
@@ -408,7 +414,9 @@ const pickModel = async (
   if ((await page.locator(".model-catalog").count()) === 0)
     await page.getByRole("button", { name: /^选择模型：/ }).click();
   const group = page.getByRole("group", { name: sourceLabel, exact: true });
-  await group.getByRole("button", { name: new RegExp(modelId.replace("/", "\\/")) }).click();
+  await group
+    .getByRole("button", { name: new RegExp(modelId.replace("/", "\\/")) })
+    .click();
 };
 
 it("reads complete catalog metadata for the active source and follows source selection", async () => {
@@ -421,32 +429,45 @@ it("reads complete catalog metadata for the active source and follows source sel
     reasoningEfforts: ["low", "medium", "high"],
   });
   const { browser, page } = await openComposer({
-    settings: settings([
-      source("a", "Source A"),
-      source("b", "Source B"),
-    ]),
+    settings: settings([source("a", "Source A"), source("b", "Source B")]),
     catalogs: { a: [a], b: [b] },
   });
   try {
     // The composer must use modelAccess rather than the legacy ID-only bridge.
-    await expect.poll(() => page.evaluate(() => window.__access.length)).toBeGreaterThan(0);
+    await expect
+      .poll(() => page.evaluate(() => window.__access.length))
+      .toBeGreaterThan(0);
     expect(await page.evaluate(() => window.__listModels.length)).toBe(0);
 
     // A fresh composer has no usage events, but the selected source/model still
     // exposes its catalog window.
     await expect.poll(() => title(page)).toContain("Source A");
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("128K");
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("128K");
 
     // Global modelContextWindows is the highest-priority immediate override.
-    await page.evaluate(() => window.__saveGlobalSettings({ modelContextWindows: { "shared/model": 96000 } }));
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("96K");
-    await page.evaluate(() => window.__saveGlobalSettings({ modelContextWindows: {} }));
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("128K");
+    await page.evaluate(() =>
+      window.__saveGlobalSettings({
+        modelContextWindows: { "shared/model": 96000 },
+      }),
+    );
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("96K");
+    await page.evaluate(() =>
+      window.__saveGlobalSettings({ modelContextWindows: {} }),
+    );
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("128K");
 
     // The same model ID under source B must use B's catalog window, not A's.
     await pickModel(page, "Source B", "shared/model");
     await expect.poll(() => title(page)).toContain("Source B");
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("250K");
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("250K");
   } finally {
     await browser.close();
   }
@@ -483,7 +504,11 @@ it("updates a mounted composer from source overrides by revision and ignores sta
     const input = page.locator("textarea.composer-textarea");
     await input.fill("mounted draft");
     await expect
-      .poll(() => page.evaluate(() => window.__access.filter((item) => item.sourceId === "a").length))
+      .poll(() =>
+        page.evaluate(
+          () => window.__access.filter((item) => item.sourceId === "a").length,
+        ),
+      )
       .toBeGreaterThan(0);
 
     // Save a source override while the first (stale) catalog request is still
@@ -493,14 +518,20 @@ it("updates a mounted composer from source overrides by revision and ignores sta
         "shared/model": { contextWindowTokens: 64000, maxOutputTokens: 4096 },
       }),
     );
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("64K");
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("64K");
     expect(await input.inputValue()).toBe("mounted draft");
 
     // Let the old revision's delayed response resolve. It must not replace the
     // revision-2 catalog or resurrect the old ID-only cache.
     await page.evaluate(() => window.__releaseCatalog());
-    await expect.poll(() => page.evaluate(() => window.__delayedCatalogReturned)).toBe(true);
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("64K");
+    await expect
+      .poll(() => page.evaluate(() => window.__delayedCatalogReturned))
+      .toBe(true);
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("64K");
     await page.locator(".composer-model-summary").click();
     await page.getByRole("button", { name: /^选择模型：/ }).click();
     const text = await page.locator(".model-catalog-list").innerText();
@@ -512,7 +543,9 @@ it("updates a mounted composer from source overrides by revision and ignores sta
     // Clearing the source override returns to the current catalog value. A
     // stale revision must not have overwritten that catalog in the meantime.
     await page.evaluate(() => window.__saveSourceOverrides({}));
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("128K");
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("128K");
     expect(await input.inputValue()).toBe("mounted draft");
   } finally {
     await browser.close();
@@ -551,25 +584,27 @@ it("limits reasoning choices to model metadata and saves only the selected model
   try {
     // Source/model override > alias target override > global settings.
     await expect.poll(() => title(page)).toContain("思考：high");
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("64K");
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("64K");
     const input = page.locator("textarea.composer-textarea");
     await input.fill("reasoning draft");
 
     await page.locator(".composer-model-summary").click();
     const slider = page.getByRole("slider", { name: "思考等级", exact: true });
     await slider.waitFor();
-    expect(await page.locator(".effort-slider-labels > span").allTextContents()).toEqual([
-      "low",
-      "medium",
-      "high",
-    ]);
+    expect(
+      await page.locator(".effort-slider-labels > span").allTextContents(),
+    ).toEqual(["low", "medium", "high"]);
     expect(await slider.getAttribute("max")).toBe("2");
     expect(await slider.getAttribute("aria-valuetext")).toBe("high");
 
     // Saving a level updates only this source/model's override. The existing
     // window/output fields and the alias target's override remain intact.
     await slider.press("Home");
-    await expect.poll(() => page.evaluate(() => window.__updates.length)).toBe(1);
+    await expect
+      .poll(() => page.evaluate(() => window.__updates.length))
+      .toBe(1);
     await expect.poll(() => title(page)).toContain("思考：low");
     const update = await page.evaluate(() => window.__updates[0]);
     if (!update) throw new Error("Expected a source/model effort update");
@@ -578,26 +613,39 @@ it("limits reasoning choices to model metadata and saves only the selected model
       expectedRevision: 1,
       source: { id: "a" },
     });
-    expect(update.source.source.modelSelection.overrides["shared/model"]).toEqual({
+    expect(
+      update.source.source.modelSelection.overrides["shared/model"],
+    ).toEqual({
       contextWindowTokens: 64000,
       maxOutputTokens: 4096,
       reasoningEffort: "low",
     });
-    expect(update.source.source.modelSelection.overrides["upstream/model"]).toEqual({
+    expect(
+      update.source.source.modelSelection.overrides["upstream/model"],
+    ).toEqual({
       reasoningEffort: "medium",
     });
     expect(await input.inputValue()).toBe("reasoning draft");
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("64K");
+    await expect
+      .poll(async () => (await footer(page).innerText()).trim())
+      .toBe("64K");
 
     // Removing the selected model override falls back to the alias target's
     // override, not the global setting.
-    await page.evaluate(() => window.__saveSourceOverrides({ "upstream/model": { reasoningEffort: "medium" } }));
+    await page.evaluate(() =>
+      window.__saveSourceOverrides({
+        "upstream/model": { reasoningEffort: "medium" },
+      }),
+    );
     await expect.poll(() => title(page)).toContain("思考：medium");
     if ((await page.locator(".composer-model-panel").count()) === 0)
       await page.locator(".composer-model-summary").click();
     if ((await page.locator(".model-catalog").count()) > 0)
       await page.getByRole("button", { name: "返回模型设置" }).click();
-    const panelSlider = page.getByRole("slider", { name: "思考等级", exact: true });
+    const panelSlider = page.getByRole("slider", {
+      name: "思考等级",
+      exact: true,
+    });
     await panelSlider.waitFor();
     expect(await panelSlider.getAttribute("aria-valuetext")).toBe("medium");
 
@@ -611,40 +659,78 @@ it("limits reasoning choices to model metadata and saves only the selected model
   }
 }, 30000);
 
-it.each(["default", "none", "minimal", "xhigh", "max"] as const)("shows configured effort %s even when the catalog omits it, without rewriting it on blur", async (effort) => {
-  const label = effort === "max" ? "MAX" : effort;
-  const { browser, page } = await openComposer({
-    settings: settings([source("a", "Source A", {
-      modelSelection: { mode: "all", overrides: { "shared/model": { reasoningEffort: effort } } },
-    })], { reasoningEffort: "high" }),
-    catalogs: { a: [entry("shared/model", 128000, { reasoningEfforts: ["low", "medium", "high"] })] },
-  });
-  try {
-    await expect.poll(() => title(page)).toContain(`思考：${label}`);
-    await page.locator(".composer-model-summary").click();
-    const slider = page.getByRole("slider", { name: "思考等级", exact: true });
-    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe(label);
-    expect(await page.locator(".effort-slider-heading output").textContent()).toBe(label);
-    expect(await page.locator(".effort-slider-labels [data-active=true]").textContent()).toBe(label);
-    await slider.focus();
-    await page.locator("textarea.composer-textarea").click();
-    expect(await page.evaluate(() => window.__updates)).toEqual([]);
-    expect(await title(page)).toContain(`思考：${label}`);
-  } finally {
-    await browser.close();
-  }
-}, 30000);
+it.each(["default", "none", "minimal", "xhigh", "max"] as const)(
+  "shows configured effort %s even when the catalog omits it, without rewriting it on blur",
+  async (effort) => {
+    const label = effort === "max" ? "MAX" : effort;
+    const { browser, page } = await openComposer({
+      settings: settings(
+        [
+          source("a", "Source A", {
+            modelSelection: {
+              mode: "all",
+              overrides: { "shared/model": { reasoningEffort: effort } },
+            },
+          }),
+        ],
+        { reasoningEffort: "high" },
+      ),
+      catalogs: {
+        a: [
+          entry("shared/model", 128000, {
+            reasoningEfforts: ["low", "medium", "high"],
+          }),
+        ],
+      },
+    });
+    try {
+      await expect.poll(() => title(page)).toContain(`思考：${label}`);
+      await page.locator(".composer-model-summary").click();
+      const slider = page.getByRole("slider", {
+        name: "思考等级",
+        exact: true,
+      });
+      await expect
+        .poll(() => slider.getAttribute("aria-valuetext"))
+        .toBe(label);
+      expect(
+        await page.locator(".effort-slider-heading output").textContent(),
+      ).toBe(label);
+      expect(
+        await page
+          .locator(".effort-slider-labels [data-active=true]")
+          .textContent(),
+      ).toBe(label);
+      await slider.focus();
+      await page.locator("textarea.composer-textarea").click();
+      expect(await page.evaluate(() => window.__updates)).toEqual([]);
+      expect(await title(page)).toContain(`思考：${label}`);
+    } finally {
+      await browser.close();
+    }
+  },
+  30000,
+);
 
 it("follows configured efforts across sources and settings revisions even outside advertised choices", async () => {
   const { browser, page } = await openComposer({
-    settings: settings([
-      source("a", "Source A", {
-        modelSelection: { mode: "all", overrides: { "shared/model": { reasoningEffort: "max" } } },
-      }),
-      source("b", "Source B", {
-        modelSelection: { mode: "all", overrides: { "shared/model": { reasoningEffort: "minimal" } } },
-      }),
-    ], { reasoningEffort: "high" }),
+    settings: settings(
+      [
+        source("a", "Source A", {
+          modelSelection: {
+            mode: "all",
+            overrides: { "shared/model": { reasoningEffort: "max" } },
+          },
+        }),
+        source("b", "Source B", {
+          modelSelection: {
+            mode: "all",
+            overrides: { "shared/model": { reasoningEffort: "minimal" } },
+          },
+        }),
+      ],
+      { reasoningEffort: "high" },
+    ),
     catalogs: {
       a: [entry("shared/model", 128000, { reasoningEfforts: ["low", "high"] })],
       b: [entry("shared/model", 128000, { reasoningEfforts: ["low", "high"] })],
@@ -654,17 +740,29 @@ it("follows configured efforts across sources and settings revisions even outsid
     await expect.poll(() => title(page)).toContain("思考：MAX");
     await pickModel(page, "Source B", "shared/model");
     const slider = page.getByRole("slider", { name: "思考等级", exact: true });
-    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("minimal");
+    await expect
+      .poll(() => slider.getAttribute("aria-valuetext"))
+      .toBe("minimal");
     expect(await title(page)).toContain("思考：minimal");
 
-    await page.evaluate(() => window.__saveSourceOverrides({ "shared/model": { reasoningEffort: "none" } }));
+    await page.evaluate(() =>
+      window.__saveSourceOverrides({
+        "shared/model": { reasoningEffort: "none" },
+      }),
+    );
     expect(await title(page)).toContain("思考：minimal");
     await pickModel(page, "Source A", "shared/model");
     await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("none");
 
     // Both values have the first index; an unchanged index must not keep an old label.
-    await page.evaluate(() => window.__saveSourceOverrides({ "shared/model": { reasoningEffort: "minimal" } }));
-    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("minimal");
+    await page.evaluate(() =>
+      window.__saveSourceOverrides({
+        "shared/model": { reasoningEffort: "minimal" },
+      }),
+    );
+    await expect
+      .poll(() => slider.getAttribute("aria-valuetext"))
+      .toBe("minimal");
     await page.evaluate(() => window.__saveSourceOverrides({}));
     await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("high");
     expect(await title(page)).toContain("思考：high");
@@ -678,9 +776,14 @@ it("does not revive a historical override after clearing an unknown model's curr
   const idle = fixtureSnapshot("idle-session", "completed");
   const { browser, page } = await openComposer({
     isNew: false,
-    settings: settings([source("a", "Source A", {
-      modelSelection: { mode: "all", overrides: { "shared/model": { contextWindowTokens: 256000 } } },
-    })]),
+    settings: settings([
+      source("a", "Source A", {
+        modelSelection: {
+          mode: "all",
+          overrides: { "shared/model": { contextWindowTokens: 256000 } },
+        },
+      }),
+    ]),
     catalogs: { a: [entry("shared/model", null)] },
     sessions: [fixtureSummary("idle-session", "completed")],
     snapshots: { "idle-session": idle },
@@ -692,67 +795,109 @@ it("does not revive a historical override after clearing an unknown model's curr
     // The host's unknown-model fallback is 300K, not this event's old 50K.
     await expect.poll(() => footer(page).innerText()).toBe("300K");
     await page.locator(".composer-usage > summary").click();
-    await expect.poll(() => page.locator(".usage-panel").innerText()).toContain("12K");
-    expect(await page.evaluate(() => window.__served["idle-session"].events[0].usage.windowTokens)).toBe(50000);
+    await expect
+      .poll(() => page.locator(".usage-panel").innerText())
+      .toContain("12K");
+    expect(
+      await page.evaluate(
+        () => window.__served["idle-session"].events[0].usage.windowTokens,
+      ),
+    ).toBe(50000);
   } finally {
     await browser.close();
   }
 }, 30000);
 
-it.each(["running", "awaiting_approval"] as const)("keeps captured windows and usage totals for %s fixtures while idle views follow current metadata", async (activeStatus) => {
-  const idle = fixtureSnapshot("idle-session", "completed");
-  const running = fixtureSnapshot("running-session", activeStatus);
-  const { browser, page } = await openComposer({
-    isNew: false,
-    settings: settings(
-      [
-        source("a", "Source A", {
-          modelSelection: {
-            mode: "all",
-            overrides: { "shared/model": { contextWindowTokens: 64000 } },
-          },
-        }),
-        source("b", "Source B"),
+it.each(["running", "awaiting_approval"] as const)(
+  "keeps captured windows and usage totals for %s fixtures while idle views follow current metadata",
+  async (activeStatus) => {
+    const idle = fixtureSnapshot("idle-session", "completed");
+    const running = fixtureSnapshot("running-session", activeStatus);
+    const { browser, page } = await openComposer({
+      isNew: false,
+      settings: settings(
+        [
+          source("a", "Source A", {
+            modelSelection: {
+              mode: "all",
+              overrides: { "shared/model": { contextWindowTokens: 64000 } },
+            },
+          }),
+          source("b", "Source B"),
+        ],
+        { modelContextWindows: {} },
+      ),
+      catalogs: {
+        a: [entry("shared/model", 128000)],
+        b: [entry("shared/model", 250000)],
+      },
+      sessions: [
+        fixtureSummary("idle-session", "completed"),
+        fixtureSummary("running-session", activeStatus),
       ],
-      { modelContextWindows: {} },
-    ),
-    catalogs: { a: [entry("shared/model", 128000)], b: [entry("shared/model", 250000)] },
-    sessions: [fixtureSummary("idle-session", "completed"), fixtureSummary("running-session", activeStatus)],
-    snapshots: { "idle-session": idle, "running-session": running },
-  });
-  try {
-    // Historical idle view follows the current source window, not the window
-    // captured in its old event.
-    await page.evaluate(() => window.__selectSession("idle-session"));
-    await expect.poll(() => title(page)).toContain("shared/model");
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("64K");
-    await page.locator(".composer-usage > summary").click();
-    await expect.poll(() => page.locator(".usage-panel").innerText()).toContain("12K");
-    const servedIdle = await page.evaluate(() => JSON.stringify(window.__served["idle-session"]));
-    await page.keyboard.press("Escape");
+      snapshots: { "idle-session": idle, "running-session": running },
+    });
+    try {
+      // Historical idle view follows the current source window, not the window
+      // captured in its old event.
+      await page.evaluate(() => window.__selectSession("idle-session"));
+      await expect.poll(() => title(page)).toContain("shared/model");
+      await expect
+        .poll(async () => (await footer(page).innerText()).trim())
+        .toBe("64K");
+      await page.locator(".composer-usage > summary").click();
+      await expect
+        .poll(() => page.locator(".usage-panel").innerText())
+        .toContain("12K");
+      const servedIdle = await page.evaluate(() =>
+        JSON.stringify(window.__served["idle-session"]),
+      );
+      await page.keyboard.press("Escape");
 
-    // An active run keeps the captured event window even when source metadata
-    // changes underneath it.
-    await page.evaluate(() => window.__selectSession("running-session"));
-    await expect.poll(() => title(page)).toContain("shared/model");
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("50K");
-    await page.locator(".composer-usage > summary").click();
-    await expect.poll(() => page.locator(".usage-panel").innerText()).toContain("12K");
-    await page.keyboard.press("Escape");
-    await page.evaluate(() => window.__saveSourceOverrides({ "shared/model": { contextWindowTokens: 96000 } }));
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("50K");
-    expect(await page.evaluate(() => JSON.stringify(window.__served["running-session"]))).toContain(
-      '"windowTokens":50000',
-    );
+      // An active run keeps the captured event window even when source metadata
+      // changes underneath it.
+      await page.evaluate(() => window.__selectSession("running-session"));
+      await expect.poll(() => title(page)).toContain("shared/model");
+      await expect
+        .poll(async () => (await footer(page).innerText()).trim())
+        .toBe("50K");
+      await page.locator(".composer-usage > summary").click();
+      await expect
+        .poll(() => page.locator(".usage-panel").innerText())
+        .toContain("12K");
+      await page.keyboard.press("Escape");
+      await page.evaluate(() =>
+        window.__saveSourceOverrides({
+          "shared/model": { contextWindowTokens: 96000 },
+        }),
+      );
+      await expect
+        .poll(async () => (await footer(page).innerText()).trim())
+        .toBe("50K");
+      expect(
+        await page.evaluate(() =>
+          JSON.stringify(window.__served["running-session"]),
+        ),
+      ).toContain('"windowTokens":50000');
 
-    // Returning to the idle fixture applies the new current window, while the
-    // captured usage totals and fixture events remain unchanged.
-    await page.evaluate(() => window.__selectSession("idle-session"));
-    await expect.poll(async () => (await footer(page).innerText()).trim()).toBe("96K");
-    await page.locator(".composer-usage > summary").click();
-    await expect.poll(() => page.locator(".usage-panel").innerText()).toContain("12K");
-    expect(await page.evaluate(() => JSON.stringify(window.__served["idle-session"]))).toBe(servedIdle);
-  } finally {
-    await browser.close();
-  }
-}, 30000);
+      // Returning to the idle fixture applies the new current window, while the
+      // captured usage totals and fixture events remain unchanged.
+      await page.evaluate(() => window.__selectSession("idle-session"));
+      await expect
+        .poll(async () => (await footer(page).innerText()).trim())
+        .toBe("96K");
+      await page.locator(".composer-usage > summary").click();
+      await expect
+        .poll(() => page.locator(".usage-panel").innerText())
+        .toContain("12K");
+      expect(
+        await page.evaluate(() =>
+          JSON.stringify(window.__served["idle-session"]),
+        ),
+      ).toBe(servedIdle);
+    } finally {
+      await browser.close();
+    }
+  },
+  30000,
+);

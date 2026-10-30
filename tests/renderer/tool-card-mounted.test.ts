@@ -185,10 +185,18 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
     expect(await params.getAttribute("open")).toBeNull();
     await params.locator("summary").click();
     expect(
-      await page.locator('.tool-disclosure[aria-label="工具调用：read_file"] .tool-details').count(),
+      await page
+        .locator(
+          '.tool-disclosure[aria-label="工具调用：read_file"] .tool-details',
+        )
+        .count(),
     ).toBe(0);
     expect(
-      await page.locator('.tool-disclosure[aria-label="工具调用：read_file"] .tool-debug').count(),
+      await page
+        .locator(
+          '.tool-disclosure[aria-label="工具调用：read_file"] .tool-debug',
+        )
+        .count(),
     ).toBe(0);
     expect(
       await page.locator(".live-tool .tool-disclosure-target").innerText(),
@@ -293,7 +301,9 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
       const appended = surface.locator('[data-tool="append_file"]');
       expect(await appended.getAttribute("data-expanded")).toBe("true");
       expect(await appended.innerText()).toContain("追加文件");
-      expect((await appended.locator(".diff-line-added").allInnerTexts()).join("\n")).toContain("export const next = 2;");
+      expect(
+        (await appended.locator(".diff-line-added").allInnerTexts()).join("\n"),
+      ).toContain("export const next = 2;");
       await appended.locator(".tool-disclosure-header").click();
       await expect.poll(() => appended.locator(".diff-viewer").count()).toBe(0);
       await appended.locator(".tool-disclosure-header").click();
@@ -324,7 +334,12 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
           document.documentElement.dataset.theme = theme;
           window.scrollTo(0, 0);
         }, theme);
-        await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+        await page.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => resolve()),
+            ),
+        );
         await page.screenshot({
           path: resolve(captureDirectory, `tools-390-${theme}.png`),
           fullPage: true,
@@ -471,7 +486,12 @@ it("mounts the redesigned tool card: decoded console, failure banner, touch targ
           document.documentElement.dataset.theme = theme;
           window.scrollTo(0, 0);
         }, theme);
-        await desktopPage.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+        await desktopPage.evaluate(
+          () =>
+            new Promise<void>((resolve) =>
+              requestAnimationFrame(() => resolve()),
+            ),
+        );
         await desktopPage.screenshot({
           path: resolve(captureDirectory, `tools-1280-${theme}.png`),
           fullPage: true,

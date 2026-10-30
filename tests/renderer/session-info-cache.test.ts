@@ -1,6 +1,6 @@
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 import { expect, it, vi } from "vitest";
 import { createSessionInfoCache } from "../../src/renderer/state/session-info-cache";
-import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 
 const snapshot = sessionSnapshotSchema.parse({
   version: 1,

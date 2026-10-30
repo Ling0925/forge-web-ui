@@ -3,7 +3,10 @@ import { sanitizeRawOption } from "../../src/renderer/components/charts/sanitize
 
 describe("sanitizeRawOption", () => {
   it("passes through clean options and clones them", () => {
-    const option = { series: [{ type: "graph", data: [1, 2] }], backgroundColor: "#fff" };
+    const option = {
+      series: [{ type: "graph", data: [1, 2] }],
+      backgroundColor: "#fff",
+    };
     const result = sanitizeRawOption({ option });
     expect(result.ok).toBe(true);
     expect(result.option).toEqual(option);
@@ -16,11 +19,13 @@ describe("sanitizeRawOption", () => {
         option: { tooltip: { formatter: "<img src=x onerror=alert(1)>" } },
       }).ok,
     ).toBe(false);
+    expect(sanitizeRawOption({ option: { title: { text: "a < b" } } }).ok).toBe(
+      false,
+    );
     expect(
-      sanitizeRawOption({ option: { title: { text: "a < b" } } }).ok,
-    ).toBe(false);
-    expect(
-      sanitizeRawOption({ option: { series: [{ data: ["javascript:alert(1)"] }] } }).ok,
+      sanitizeRawOption({
+        option: { series: [{ data: ["javascript:alert(1)"] }] },
+      }).ok,
     ).toBe(false);
   });
 
@@ -31,7 +36,9 @@ describe("sanitizeRawOption", () => {
     ).toBe(false);
     expect(sanitizeRawOption({ option: { onClick: "x" } }).ok).toBe(false);
     expect(
-      sanitizeRawOption({ option: { series: [{ formatter: "ok", constructor: 1 }] } }).ok,
+      sanitizeRawOption({
+        option: { series: [{ formatter: "ok", constructor: 1 }] },
+      }).ok,
     ).toBe(false);
   });
 
@@ -40,7 +47,9 @@ describe("sanitizeRawOption", () => {
       option: { tooltip: { appendToBody: true, trigger: "item" } },
     });
     expect(result.ok).toBe(true);
-    expect((result.option?.["tooltip"] as Record<string, unknown>)["appendToBody"]).toBe(false);
+    expect(
+      (result.option?.["tooltip"] as Record<string, unknown>)["appendToBody"],
+    ).toBe(false);
   });
 
   it("rejects a missing option object", () => {

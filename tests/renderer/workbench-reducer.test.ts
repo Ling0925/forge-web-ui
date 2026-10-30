@@ -25,58 +25,161 @@ const snapshot: SessionSnapshot = {
 };
 describe("workbench authority", () => {
   it("resets only the failed live attempt and keeps earlier unsynchronized output", () => {
-    const previous = { id: "prior", text: "prior completed response", afterMessage: 0, truncated: false };
-    let state: WorkbenchState = { ...initialWorkbenchState, activeSessionId: sessionA, activeSnapshot: snapshot,
-      activeRuns: { [sessionA]: { sessionId: sessionA, runId: runA, status: "running" as const,
-        streamingText: "failed text", streamingReasoning: "failed thought", streamingTruncated: true,
-        reasoningTruncated: true, pendingOutputs: [previous], pendingReasoning: [previous] } } };
+    const previous = {
+      id: "prior",
+      text: "prior completed response",
+      afterMessage: 0,
+      truncated: false,
+    };
+    let state: WorkbenchState = {
+      ...initialWorkbenchState,
+      activeSessionId: sessionA,
+      activeSnapshot: snapshot,
+      activeRuns: {
+        [sessionA]: {
+          sessionId: sessionA,
+          runId: runA,
+          status: "running" as const,
+          streamingText: "failed text",
+          streamingReasoning: "failed thought",
+          streamingTruncated: true,
+          reasoningTruncated: true,
+          pendingOutputs: [previous],
+          pendingReasoning: [previous],
+        },
+      },
+    };
     const timestamp = "2026-01-01T00:00:02.000Z";
-    state = workbenchReducer(state, { type: "RUN_EVENT_RECEIVED", event: { runId: runA, event: { type: "retry_reset", sessionId: sessionA, timestamp } } });
+    state = workbenchReducer(state, {
+      type: "RUN_EVENT_RECEIVED",
+      event: {
+        runId: runA,
+        event: { type: "retry_reset", sessionId: sessionA, timestamp },
+      },
+    });
     expect(state.activeRuns[sessionA]?.streamingText).toBe("");
     expect(state.activeRuns[sessionA]?.streamingReasoning).toBe("");
     expect(state.activeRuns[sessionA]?.pendingOutputs).toEqual([previous]);
     expect(state.activeRuns[sessionA]?.pendingReasoning).toEqual([previous]);
     expect(state.activeSnapshot).toBe(snapshot);
-    state = workbenchReducer(state, { type: "RUN_EVENT_RECEIVED", event: { runId: runA, event: { type: "provider_retry", attempt: 2, maxAttempts: 5, reason: "protocol", sessionId: sessionA, timestamp } } });
+    state = workbenchReducer(state, {
+      type: "RUN_EVENT_RECEIVED",
+      event: {
+        runId: runA,
+        event: {
+          type: "provider_retry",
+          attempt: 2,
+          maxAttempts: 5,
+          reason: "protocol",
+          sessionId: sessionA,
+          timestamp,
+        },
+      },
+    });
     expect(state.activeRuns[sessionA]?.providerRetry).toBe(2);
     expect(state.activeSnapshot?.messages).toBe(snapshot.messages);
     expect(state.activeSnapshot?.events).toEqual([
-      { type: "provider_retry", attempt: 2, maxAttempts: 5, reason: "protocol", sessionId: sessionA, timestamp },
+      {
+        type: "provider_retry",
+        attempt: 2,
+        maxAttempts: 5,
+        reason: "protocol",
+        sessionId: sessionA,
+        timestamp,
+      },
     ]);
   });
   it("restores cached history immediately when switching back and accepts background updates", () => {
-    let state = workbenchReducer(initialWorkbenchState, { type: "SELECT_SESSION", sessionId: sessionA });
+    let state = workbenchReducer(initialWorkbenchState, {
+      type: "SELECT_SESSION",
+      sessionId: sessionA,
+    });
     state = workbenchReducer(state, { type: "SET_ACTIVE_SNAPSHOT", snapshot });
-    state = workbenchReducer(state, { type: "SELECT_SESSION", sessionId: sessionB });
-    const updated: SessionSnapshot = { ...snapshot, messages: [{ role: "assistant", content: "new output" }] };
-    state = workbenchReducer(state, { type: "SET_ACTIVE_SNAPSHOT", snapshot: updated });
+    state = workbenchReducer(state, {
+      type: "SELECT_SESSION",
+      sessionId: sessionB,
+    });
+    const updated: SessionSnapshot = {
+      ...snapshot,
+      messages: [{ role: "assistant", content: "new output" }],
+    };
+    state = workbenchReducer(state, {
+      type: "SET_ACTIVE_SNAPSHOT",
+      snapshot: updated,
+    });
     expect(state.activeSessionId).toBe(sessionB);
     expect(state.activeSnapshot).toBeNull();
-    state = workbenchReducer(state, { type: "SELECT_SESSION", sessionId: sessionA });
+    state = workbenchReducer(state, {
+      type: "SELECT_SESSION",
+      sessionId: sessionA,
+    });
     expect(state.isSnapshotLoading).toBe(false);
     expect(state.activeSnapshot?.messages).toEqual(updated.messages);
   });
   it("replaces cached messages when a newer persisted revision shortens history", () => {
-    let state = workbenchReducer(initialWorkbenchState, { type: "SELECT_SESSION", sessionId: sessionA });
-    state = workbenchReducer(state, { type: "SET_ACTIVE_SNAPSHOT", snapshot: {
-      ...snapshot, messages: [{ role: "user", content: "old history" }],
-    } });
-    state = workbenchReducer(state, { type: "SELECT_SESSION", sessionId: sessionB });
-    state = workbenchReducer(state, { type: "SET_ACTIVE_SNAPSHOT", snapshot: {
-      ...snapshot, updatedAt: "2026-01-01T00:00:02.000Z", messages: [],
-    } });
-    state = workbenchReducer(state, { type: "SELECT_SESSION", sessionId: sessionA });
+    let state = workbenchReducer(initialWorkbenchState, {
+      type: "SELECT_SESSION",
+      sessionId: sessionA,
+    });
+    state = workbenchReducer(state, {
+      type: "SET_ACTIVE_SNAPSHOT",
+      snapshot: {
+        ...snapshot,
+        messages: [{ role: "user", content: "old history" }],
+      },
+    });
+    state = workbenchReducer(state, {
+      type: "SELECT_SESSION",
+      sessionId: sessionB,
+    });
+    state = workbenchReducer(state, {
+      type: "SET_ACTIVE_SNAPSHOT",
+      snapshot: {
+        ...snapshot,
+        updatedAt: "2026-01-01T00:00:02.000Z",
+        messages: [],
+      },
+    });
+    state = workbenchReducer(state, {
+      type: "SELECT_SESSION",
+      sessionId: sessionA,
+    });
     expect(state.activeSnapshot?.messages).toEqual([]);
   });
   it("updates live permission and clears only root pending approvals", () => {
-    const root = { id: "root", sessionId: sessionA, toolCallId: "tool", toolName: "run_command", description: "test" };
+    const root = {
+      id: "root",
+      sessionId: sessionA,
+      toolCallId: "tool",
+      toolName: "run_command",
+      description: "test",
+    };
     const child = { ...root, id: "child", childSessionId: sessionB };
-    const state = { ...initialWorkbenchState, activeRuns: { [sessionA]: {
-      sessionId: sessionA, runId: runA, status: "awaiting_approval" as const, streamingText: "", pendingApproval: root, approvalQueue: [root, child],
-    } } };
-    const next = workbenchReducer(state, { type: "RUN_EVENT_RECEIVED", event: { runId: runA, event: {
-      type: "permission_changed", sessionId: sessionA, timestamp: snapshot.updatedAt, permission: "unrestricted",
-    } } });
+    const state = {
+      ...initialWorkbenchState,
+      activeRuns: {
+        [sessionA]: {
+          sessionId: sessionA,
+          runId: runA,
+          status: "awaiting_approval" as const,
+          streamingText: "",
+          pendingApproval: root,
+          approvalQueue: [root, child],
+        },
+      },
+    };
+    const next = workbenchReducer(state, {
+      type: "RUN_EVENT_RECEIVED",
+      event: {
+        runId: runA,
+        event: {
+          type: "permission_changed",
+          sessionId: sessionA,
+          timestamp: snapshot.updatedAt,
+          permission: "unrestricted",
+        },
+      },
+    });
     expect(next.activeRuns[sessionA]?.permission).toBe("unrestricted");
     expect(next.activeRuns[sessionA]?.approvalQueue).toEqual([child]);
     expect(next.activeRuns[sessionA]?.pendingApproval).toEqual(child);
@@ -316,7 +419,10 @@ describe("inline new conversation navigation", () => {
     });
     expect(closed.isSettingsOpen).toBe(false);
     expect(closed.isNewSessionOpen).toBe(true);
-    const selected = workbenchReducer(closed, { type: "SELECT_SESSION", sessionId: sessionA });
+    const selected = workbenchReducer(closed, {
+      type: "SELECT_SESSION",
+      sessionId: sessionA,
+    });
     expect(selected.isNewSessionOpen).toBe(false);
     expect(selected.mobileTab).toBe("task");
   });
@@ -336,20 +442,52 @@ describe("inline new conversation navigation", () => {
 describe("advisor_update event handling", () => {
   it("keeps the Core coordination ID distinct from the host transport run ID", () => {
     const rootRunId = "55555555-5555-4555-8555-555555555555";
-    const started = { type: "run_started" as const, sessionId: sessionA,
-      timestamp: "2026-01-01T00:00:00.000Z", model: "model", permission: "readonly" as const };
-    let state = workbenchReducer(initialWorkbenchState, { type: "RUN_EVENT_RECEIVED", event: {
-      runId: runA, event: { ...started, budget: {
-        rootRunId, rootSessionId: sessionA, maxToolCalls: null, timeoutMs: null,
-        startedAt: started.timestamp, deadlineAt: null, consumed: 0, reserved: 0, remaining: null,
-        stopReason: null, sessions: [], usage: { basis: "reported", reportedRequests: 0, missingRequests: 0,
-          promptTokens: 0, completionTokens: 0, totalTokens: 0, cachedPromptTokens: 0, complete: true },
-      } },
-    } });
+    const started = {
+      type: "run_started" as const,
+      sessionId: sessionA,
+      timestamp: "2026-01-01T00:00:00.000Z",
+      model: "model",
+      permission: "readonly" as const,
+    };
+    let state = workbenchReducer(initialWorkbenchState, {
+      type: "RUN_EVENT_RECEIVED",
+      event: {
+        runId: runA,
+        event: {
+          ...started,
+          budget: {
+            rootRunId,
+            rootSessionId: sessionA,
+            maxToolCalls: null,
+            timeoutMs: null,
+            startedAt: started.timestamp,
+            deadlineAt: null,
+            consumed: 0,
+            reserved: 0,
+            remaining: null,
+            stopReason: null,
+            sessions: [],
+            usage: {
+              basis: "reported",
+              reportedRequests: 0,
+              missingRequests: 0,
+              promptTokens: 0,
+              completionTokens: 0,
+              totalTokens: 0,
+              cachedPromptTokens: 0,
+              complete: true,
+            },
+          },
+        },
+      },
+    });
     expect(state.activeRuns[sessionA]?.runId).toBe(runA);
     expect(state.activeRuns[sessionA]?.rootRunId).toBe(rootRunId);
     // An old host without coordination metadata must not inherit a previous identity.
-    state = workbenchReducer(state, { type: "RUN_EVENT_RECEIVED", event: { runId: runA, event: started } });
+    state = workbenchReducer(state, {
+      type: "RUN_EVENT_RECEIVED",
+      event: { runId: runA, event: started },
+    });
     expect(state.activeRuns[sessionA]?.rootRunId).toBeUndefined();
   });
   const req1 = {
@@ -385,7 +523,9 @@ describe("advisor_update event handling", () => {
       },
     });
     expect(state.activeSnapshot?.advisorRequests).toEqual([req1]);
-    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests).toEqual([req1]);
+    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests).toEqual([
+      req1,
+    ]);
     expect(state.sessions[0]?.updatedAt).toBe("2026-01-01T00:00:01.000Z");
   });
   it("replaces existing advisor request by ID idempotently without duplicates", () => {
@@ -400,7 +540,12 @@ describe("advisor_update event handling", () => {
       ...initialWorkbenchState,
       activeSessionId: sessionA,
       activeSnapshot: { ...snapshot, advisorRequests: [req1] },
-      snapshotCache: { [sessionA]: { snapshot: { ...snapshot, advisorRequests: [req1] }, persistedAt: null } },
+      snapshotCache: {
+        [sessionA]: {
+          snapshot: { ...snapshot, advisorRequests: [req1] },
+          persistedAt: null,
+        },
+      },
     };
     state = workbenchReducer(state, {
       type: "RUN_EVENT_RECEIVED",
@@ -416,7 +561,11 @@ describe("advisor_update event handling", () => {
     });
     expect(state.activeSnapshot?.advisorRequests?.length).toBe(1);
     expect(state.activeSnapshot?.advisorRequests?.[0]).toEqual(answeredReq);
-    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests?.length).toBe(1);
-    expect(state.snapshotCache[sessionA]?.snapshot.advisorRequests?.[0]).toEqual(answeredReq);
+    expect(
+      state.snapshotCache[sessionA]?.snapshot.advisorRequests?.length,
+    ).toBe(1);
+    expect(
+      state.snapshotCache[sessionA]?.snapshot.advisorRequests?.[0],
+    ).toEqual(answeredReq);
   });
 });

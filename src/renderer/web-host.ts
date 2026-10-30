@@ -1,17 +1,23 @@
-import { z } from "zod";
 import { createTransportBridge } from "@forge/core/shared/bridge";
 import { coreBuildInfo } from "@forge/core/shared/build-info";
-import { versionNotice } from "./version-notice";
 import { htmlPreviewResponseSchema } from "@forge/core/shared/html-preview";
-import { lanStatusSchema, type ForgeLanBridge } from "@forge/core/shared/lan";
 import {
   externalUrlSchema,
   rpcResponseSchema,
   runEventSchema,
 } from "@forge/core/shared/ipc";
+import { type ForgeLanBridge, lanStatusSchema } from "@forge/core/shared/lan";
 import type { SessionSnapshot } from "@forge/core/shared/schemas";
-import { workspaceBrowseRequestSchema, workspaceDirectoryPageSchema } from "@forge/core/shared/workspaces";
-import { applySessionDelta, sessionDeltaSchema } from "@forge/core/shared/session-delta";
+import {
+  applySessionDelta,
+  sessionDeltaSchema,
+} from "@forge/core/shared/session-delta";
+import {
+  workspaceBrowseRequestSchema,
+  workspaceDirectoryPageSchema,
+} from "@forge/core/shared/workspaces";
+import { z } from "zod";
+import { versionNotice } from "./version-notice";
 
 const handshakeSchema = z.object({
   workspace: z.string(),
@@ -50,7 +56,14 @@ export async function installWebHost(): Promise<void> {
   let connecting = false;
   let socketGeneration = 0;
   let cleanupForeground = () => {};
-  const snapshots = new Map<string, { readonly revision: string; readonly snapshot: SessionSnapshot; readonly size: number }>();
+  const snapshots = new Map<
+    string,
+    {
+      readonly revision: string;
+      readonly snapshot: SessionSnapshot;
+      readonly size: number;
+    }
+  >();
   const fail = (message: string) => {
     if (stopped) return;
     stopped = true;
@@ -66,7 +79,12 @@ export async function installWebHost(): Promise<void> {
     status.style.background = "var(--error-bg)";
     status.style.display = "";
   };
-  async function post(path: string, input: unknown, timeout = 125_000, sessionId?: string): Promise<unknown> {
+  async function post(
+    path: string,
+    input: unknown,
+    timeout = 125_000,
+    sessionId?: string,
+  ): Promise<unknown> {
     if (stopped)
       throw new Error("Web connection stopped. Reload to reconnect.");
     const cached = sessionId ? snapshots.get(sessionId) : undefined;
@@ -92,21 +110,47 @@ export async function installWebHost(): Promise<void> {
       versionWarning = versionNotice(response.headers, coreBuildInfo?.id);
     let value: unknown = await response.json();
     if (sessionId) {
-      const delta = z.object({ id: z.string(), ok: z.literal(true), method: z.literal("getSession"),
-        result: z.object({ sessionDelta: sessionDeltaSchema }) }).safeParse(value);
+      const delta = z
+        .object({
+          id: z.string(),
+          ok: z.literal(true),
+          method: z.literal("getSession"),
+          result: z.object({ sessionDelta: sessionDeltaSchema }),
+        })
+        .safeParse(value);
       if (delta.success) {
         if (!cached) throw new Error("Missing session cache base");
-        value = { ...delta.data, result: applySessionDelta(cached.snapshot, cached.revision, delta.data.result.sessionDelta) };
+        value = {
+          ...delta.data,
+          result: applySessionDelta(
+            cached.snapshot,
+            cached.revision,
+            delta.data.result.sessionDelta,
+          ),
+        };
       }
       // Only cache validated results. The shared bridge owns public diagnostics;
       // throwing raw Zod issues here would bypass them and expose payload fields.
       const parsed = rpcResponseSchema.safeParse(value);
       const result = parsed.success ? parsed.data : undefined;
       const revision = response.headers.get("X-Forge-Snapshot");
-      const requestId = typeof input === "object" && input !== null && "id" in input ? input.id : undefined;
-      if (result?.ok && result.id === requestId && result.method === "getSession" && result.result.id === sessionId && revision) {
+      const requestId =
+        typeof input === "object" && input !== null && "id" in input
+          ? input.id
+          : undefined;
+      if (
+        result?.ok &&
+        result.id === requestId &&
+        result.method === "getSession" &&
+        result.result.id === sessionId &&
+        revision
+      ) {
         snapshots.delete(sessionId);
-        snapshots.set(sessionId, { revision, snapshot: result.result, size: JSON.stringify(result.result).length });
+        snapshots.set(sessionId, {
+          revision,
+          snapshot: result.result,
+          size: JSON.stringify(result.result).length,
+        });
         let size = 0;
         let count = 0;
         for (const [id, entry] of [...snapshots].reverse()) {
@@ -124,7 +168,13 @@ export async function installWebHost(): Promise<void> {
     let cursor = handshake.cursor;
     let receive: (raw: unknown) => void = () => {};
     const bridge = createTransportBridge({
-      request: (input) => post("/api/rpc", input, 125_000, input.method === "getSession" ? input.sessionId : undefined),
+      request: (input) =>
+        post(
+          "/api/rpc",
+          input,
+          125_000,
+          input.method === "getSession" ? input.sessionId : undefined,
+        ),
       onEvent: (listener) => {
         receive = listener;
       },
@@ -141,10 +191,13 @@ export async function installWebHost(): Promise<void> {
         status.textContent = "连接中断，正在自动重连…任务继续在后台运行。";
         status.style.background = "var(--warning-bg)";
         status.style.display = "";
-        retryTimer = setTimeout(() => {
-          retryTimer = undefined;
-          void connect(true);
-        }, Math.min(10_000, 500 * 2 ** Math.min(failures++, 5)));
+        retryTimer = setTimeout(
+          () => {
+            retryTimer = undefined;
+            void connect(true);
+          },
+          Math.min(10_000, 500 * 2 ** Math.min(failures++, 5)),
+        );
       };
       const connect = async (resume: boolean) => {
         if (stopped || connecting) return;
@@ -152,11 +205,14 @@ export async function installWebHost(): Promise<void> {
         const generation = ++socketGeneration;
         try {
           if (resume) {
-            const state = z.object({ resumable: z.boolean() }).parse(
-              await post("/api/connection", { cursor }, 10_000),
-            );
+            const state = z
+              .object({ resumable: z.boolean() })
+              .parse(await post("/api/connection", { cursor }, 10_000));
             if (stopped || generation !== socketGeneration) return;
-            if (!state.resumable) { location.reload(); return; }
+            if (!state.resumable) {
+              location.reload();
+              return;
+            }
           }
           if (stopped || generation !== socketGeneration) return;
           const url = new URL("/api/events", location.href);
@@ -183,13 +239,15 @@ export async function installWebHost(): Promise<void> {
             }
             retry();
           };
-          socket.onclose = event => disconnect(event.code);
+          socket.onclose = (event) => disconnect(event.code);
           socket.onerror = () => disconnect();
-          socket.onmessage = message => {
-            if (stopped || disconnected || generation !== socketGeneration) return;
+          socket.onmessage = (message) => {
+            if (stopped || disconnected || generation !== socketGeneration)
+              return;
             try {
               const batch = batchSchema.parse(JSON.parse(message.data));
-              if (batch.cursor !== cursor + batch.events.length) throw new Error("Event sequence gap");
+              if (batch.cursor !== cursor + batch.events.length)
+                throw new Error("Event sequence gap");
               for (const event of batch.events) {
                 receive(event);
                 cursor++;
@@ -203,7 +261,9 @@ export async function installWebHost(): Promise<void> {
               status.style.background = "var(--warning-bg)";
               status.style.display = versionWarning ? "" : "none";
               ready();
-            } catch { disconnect(); }
+            } catch {
+              disconnect();
+            }
           };
         } catch {
           if (generation !== socketGeneration) {
@@ -251,13 +311,19 @@ export async function installWebHost(): Promise<void> {
       value: Object.freeze({
         canControl: false,
         status: async () => {
-          z.object({ url: z.string().url(), workspace: z.string() }).parse(await post("/api/pairing", {}));
+          z.object({ url: z.string().url(), workspace: z.string() }).parse(
+            await post("/api/pairing", {}),
+          );
           // The API may be behind a separate Web gateway. Share the browser's
           // public address, never Core's private loopback endpoint.
           return lanStatusSchema.parse({ url: location.origin, addresses: [] });
         },
-        start: async () => { throw new Error("请在桌面端或服务器启动局域网服务。"); },
-        stop: async () => { throw new Error("请在桌面端或服务器停止局域网服务。"); },
+        start: async () => {
+          throw new Error("请在桌面端或服务器启动局域网服务。");
+        },
+        stop: async () => {
+          throw new Error("请在桌面端或服务器停止局域网服务。");
+        },
       } satisfies ForgeLanBridge),
     });
     Object.defineProperty(window, "forge", {
@@ -265,11 +331,18 @@ export async function installWebHost(): Promise<void> {
         ...bridge,
         restrictWorkspace: handshake.restrictWorkspace,
         chooseWorkspace: async () => handshake.workspace,
-        ...(!handshake.restrictWorkspace ? {
-          browseWorkspaces: async (path?: string) => workspaceDirectoryPageSchema.parse(
-            await post("/api/workspaces/browse", workspaceBrowseRequestSchema.parse({ path }), 10_000),
-          ),
-        } : {}),
+        ...(!handshake.restrictWorkspace
+          ? {
+              browseWorkspaces: async (path?: string) =>
+                workspaceDirectoryPageSchema.parse(
+                  await post(
+                    "/api/workspaces/browse",
+                    workspaceBrowseRequestSchema.parse({ path }),
+                    10_000,
+                  ),
+                ),
+            }
+          : {}),
         openExternal: async (value: string) => {
           window.open(
             externalUrlSchema.parse(value),

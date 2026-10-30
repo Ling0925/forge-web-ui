@@ -1,15 +1,3 @@
-import {
-  ArrowClockwise,
-  ArrowCounterClockwise,
-  CaretDown,
-  FloppyDisk,
-  Plugs,
-  Plus,
-  SlidersHorizontal,
-  Trash,
-  X,
-} from "@phosphor-icons/react";
-import { useEffect, useId, useRef, useState } from "react";
 import type {
   ModelAccessRequest,
   ModelAccessResult,
@@ -24,14 +12,26 @@ import type {
 } from "@forge/core/shared/model-catalog";
 import type { PublicProviderSource } from "@forge/core/shared/schemas";
 import {
+  ArrowClockwise,
+  ArrowCounterClockwise,
+  CaretDown,
+  FloppyDisk,
+  Plugs,
+  Plus,
+  SlidersHorizontal,
+  Trash,
+  X,
+} from "@phosphor-icons/react";
+import { useEffect, useId, useRef, useState } from "react";
+import { configuredModelIds } from "../../state/composer-model";
+import {
   shallowEqual,
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
-import { configuredModelIds } from "../../state/composer-model";
 import { Button } from "../primitives/Button";
-import { EmptyState } from "../primitives/EmptyState";
 import { Checkbox } from "../primitives/Checkbox";
+import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";

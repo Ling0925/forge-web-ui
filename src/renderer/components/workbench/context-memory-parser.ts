@@ -141,7 +141,11 @@ function formatReadableToolEnvelope(raw: string): string {
   if (!trimmed.startsWith("{")) return trimmed;
   try {
     const parsed: unknown = JSON.parse(trimmed);
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
       return trimmed;
     }
     const obj = parsed as Record<string, unknown>;
@@ -252,20 +256,25 @@ export function resolveMessageByRef(
   return extractReadableMessageFromRecord(message);
 }
 
-export function extractReadableMessageText(
-  raw: string,
-): { readonly roleLabel?: string | undefined; readonly text: string } {
+export function extractReadableMessageText(raw: string): {
+  readonly roleLabel?: string | undefined;
+  readonly text: string;
+} {
   const trimmed = raw.trim();
   if (!trimmed) return { text: "" };
 
   if (trimmed.startsWith("{")) {
     try {
       const parsed: unknown = JSON.parse(trimmed);
-      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+      if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        !Array.isArray(parsed)
+      ) {
         const record = parsed as Record<string, unknown>;
         const role =
           typeof record.role === "string"
-            ? ROLE_LABELS[record.role] ?? record.role
+            ? (ROLE_LABELS[record.role] ?? record.role)
             : undefined;
         if (typeof record.excerpt === "string") {
           const inner = extractReadableMessageText(record.excerpt);
@@ -284,7 +293,11 @@ export function extractReadableMessageText(
         if (Array.isArray(record.tool_calls) && record.tool_calls.length > 0) {
           const names = record.tool_calls
             .map((call) => {
-              if (typeof call === "object" && call !== null && "function" in call) {
+              if (
+                typeof call === "object" &&
+                call !== null &&
+                "function" in call
+              ) {
                 const fn = (call as { function?: { name?: unknown } }).function;
                 return typeof fn?.name === "string" ? fn.name : null;
               }
@@ -303,7 +316,7 @@ export function extractReadableMessageText(
     } catch {
       const roleMatch = trimmed.match(/"role":"([^"]+)"/);
       const role = roleMatch?.[1]
-        ? ROLE_LABELS[roleMatch[1]] ?? roleMatch[1]
+        ? (ROLE_LABELS[roleMatch[1]] ?? roleMatch[1])
         : undefined;
       const excerptMatch = trimmed.match(/"excerpt":"((?:\\.|[^"\\])*)/);
       if (excerptMatch?.[1]) {
@@ -358,7 +371,11 @@ export function extractReadablePlan(
 
   try {
     const parsed: unknown = JSON.parse(trimmed);
-    if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
       const obj = parsed as Record<string, unknown>;
       const title =
         typeof obj.title === "string" && obj.title.trim()
@@ -438,7 +455,7 @@ function parseExcerptObject(value: unknown): MemoryExcerptBlock | undefined {
   const roleLabel =
     extracted.roleLabel ??
     (typeof obj.role === "string"
-      ? ROLE_LABELS[obj.role] ?? obj.role
+      ? (ROLE_LABELS[obj.role] ?? obj.role)
       : undefined);
   if (!extracted.text.trim()) return undefined;
   return {
@@ -505,8 +522,9 @@ function salvageTruncatedWorkingState(
     const startIdx = jsonCandidate.indexOf(keyMarker);
     if (startIdx === -1) continue;
     const afterStart = jsonCandidate.slice(startIdx + keyMarker.length);
-    const nextSectionIndices = WORKING_STATE_SECTIONS.map(({ key: otherKey }) =>
-      otherKey === key ? -1 : afterStart.indexOf(`"${otherKey}":[`),
+    const nextSectionIndices = WORKING_STATE_SECTIONS.map(
+      ({ key: otherKey }) =>
+        otherKey === key ? -1 : afterStart.indexOf(`"${otherKey}":[`),
     ).filter((idx) => idx !== -1);
     const sectionSlice =
       nextSectionIndices.length > 0
@@ -518,9 +536,9 @@ function salvageTruncatedWorkingState(
     for (const match of sectionSlice.matchAll(itemRegex)) {
       const text = unescapeJsonStringFragment(match[1] ?? "").trim();
       if (!text) continue;
-      const refs = Array.from((match[2] ?? "").matchAll(/"(m\d+)"/g)).map(
-        (m) => m[1] ?? "",
-      ).filter(Boolean);
+      const refs = Array.from((match[2] ?? "").matchAll(/"(m\d+)"/g))
+        .map((m) => m[1] ?? "")
+        .filter(Boolean);
       items.push({ text, refs });
     }
     if (items.length === 0) {

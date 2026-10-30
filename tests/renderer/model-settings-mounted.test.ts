@@ -114,9 +114,13 @@ it("model search requires selection and settings retain drafts and save once", a
     ).toBe(true);
     await openCatalog();
     expect(await search.inputValue()).toBe("");
-    expect(await page.evaluate(() => Reflect.get(window, "modelReads"))).toBe(1);
+    expect(await page.evaluate(() => Reflect.get(window, "modelReads"))).toBe(
+      1,
+    );
     await page.getByRole("button", { name: "刷新模型目录" }).click();
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "modelReads"))).toBe(2);
+    await expect
+      .poll(() => page.evaluate(() => Reflect.get(window, "modelReads")))
+      .toBe(2);
     expect(
       await page.locator(".model-catalog-option[aria-pressed]").count(),
     ).toBe(2);
@@ -129,29 +133,57 @@ it("model search requires selection and settings retain drafts and save once", a
     await search.press("Escape");
     expect(await page.locator("details[open]").count()).toBe(1);
     expect(await page.locator(".model-catalog").count()).toBe(0);
-    expect(await page.getByRole("button", { name: /^选择模型：/ }).evaluate(node => node === document.activeElement)).toBe(true);
+    expect(
+      await page
+        .getByRole("button", { name: /^选择模型：/ })
+        .evaluate((node) => node === document.activeElement),
+    ).toBe(true);
     await page.keyboard.press("Escape");
     expect(await page.locator("details[open]").count()).toBe(0);
     await page.getByRole("button", { name: "打开设置" }).click();
     await page.getByRole("button", { name: "执行与权限", exact: true }).click();
     expect(await page.getByLabel("最大轮次", { exact: true }).count()).toBe(0);
-    expect(await page.getByLabel("工具调用预算", { exact: true }).count()).toBe(0);
-    expect(await page.getByText(/工具调用次数、子代理累计次数与任务总时长均不限/).count()).toBe(1);
-    await page.getByLabel("请求空闲超时（毫秒）", { exact: true }).fill("13000");
+    expect(await page.getByLabel("工具调用预算", { exact: true }).count()).toBe(
+      0,
+    );
+    expect(
+      await page
+        .getByText(/工具调用次数、子代理累计次数与任务总时长均不限/)
+        .count(),
+    ).toBe(1);
+    await page
+      .getByLabel("请求空闲超时（毫秒）", { exact: true })
+      .fill("13000");
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "打开设置" }).click();
-    expect(await page.getByLabel("请求空闲超时（毫秒）", { exact: true }).inputValue()).toBe("13000");
+    expect(
+      await page
+        .getByLabel("请求空闲超时（毫秒）", { exact: true })
+        .inputValue(),
+    ).toBe("13000");
     await page.getByRole("button", { name: "放弃未保存修改" }).click();
-    expect(await page.getByLabel("请求空闲超时（毫秒）", { exact: true }).inputValue()).toBe("60000");
-    await page.getByLabel("请求空闲超时（毫秒）", { exact: true }).fill("12000");
+    expect(
+      await page
+        .getByLabel("请求空闲超时（毫秒）", { exact: true })
+        .inputValue(),
+    ).toBe("60000");
+    await page
+      .getByLabel("请求空闲超时（毫秒）", { exact: true })
+      .fill("12000");
     await page.getByRole("button", { name: "保存设置", exact: true }).click();
     await page.keyboard.press("Escape");
     expect(await page.locator(".settings-page").count()).toBe(1);
-    await page.getByText("设置已保存。执行配置用于新的运行；当前运行不会被中断。").waitFor();
+    await page
+      .getByText("设置已保存。执行配置用于新的运行；当前运行不会被中断。")
+      .waitFor();
     expect(await page.locator("#saves").innerText()).toBe("1");
     await page.getByRole("button", { name: "返回工作台" }).click();
     await page.getByRole("button", { name: "打开设置" }).click();
-    expect(await page.getByLabel("请求空闲超时（毫秒）", { exact: true }).inputValue()).toBe("12000");
+    expect(
+      await page
+        .getByLabel("请求空闲超时（毫秒）", { exact: true })
+        .inputValue(),
+    ).toBe("12000");
     await page.getByRole("button", { name: "模型连接", exact: true }).click();
     await page.getByRole("button", { name: "添加来源" }).click();
     expect(await page.getByLabel("来源名称", { exact: true }).count()).toBe(1);

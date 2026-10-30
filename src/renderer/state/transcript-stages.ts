@@ -18,8 +18,12 @@ export function transcriptStages(timeline: readonly TimelineItem[]) {
   const headers: (TranscriptStage | null)[] = [];
   let turn: number | undefined;
   for (const item of timeline) {
-    if (item.kind === "message" && item.role === "user" && !item.origin &&
-        (item.turn === undefined || item.turn !== turn)) {
+    if (
+      item.kind === "message" &&
+      item.role === "user" &&
+      !item.origin &&
+      (item.turn === undefined || item.turn !== turn)
+    ) {
       turn = item.turn;
       current = { id: current.id + 1, title: null };
       announced = false;
@@ -41,12 +45,18 @@ export function transcriptStages(timeline: readonly TimelineItem[]) {
       const result = taskPlanSchema.safeParse(JSON.parse(item.output));
       if (!result.success) continue;
       const total = result.data.steps.length;
-      const completed = result.data.steps.filter((step) => step.status === "completed").length;
-      const inProgressSteps = result.data.steps.filter((step) => step.status === "in_progress");
+      const completed = result.data.steps.filter(
+        (step) => step.status === "completed",
+      ).length;
+      const inProgressSteps = result.data.steps.filter(
+        (step) => step.status === "in_progress",
+      );
       const inProgress = inProgressSteps[0];
       const title =
         inProgress?.step ??
-        (completed === total ? (result.data.title || "全部步骤已完成") : (result.data.explanation || result.data.title || "计划步骤"));
+        (completed === total
+          ? result.data.title || "全部步骤已完成"
+          : result.data.explanation || result.data.title || "计划步骤");
       const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
       if (title !== current.title || completed !== current.completed) {
         current = {
@@ -68,7 +78,9 @@ export function transcriptStages(timeline: readonly TimelineItem[]) {
   return { phases, headers, current, announced };
 }
 
-export function phaseMarkers(timeline: readonly TimelineItem[]): readonly number[] {
+export function phaseMarkers(
+  timeline: readonly TimelineItem[],
+): readonly number[] {
   return transcriptStages(timeline).phases;
 }
 

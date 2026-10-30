@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import { contextDisplayLabel } from "@forge/core/shared/context-display";
 import {
   budgetUsage,
@@ -6,6 +5,7 @@ import {
   resolveContextWindow,
 } from "@forge/core/shared/context-usage";
 import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentEvent, SessionSnapshot } from "../../shared-types";
 import { composerModelMetadata } from "../../state/composer-model";
 import { persistentUsageCache } from "../../state/persistent-usage-cache";

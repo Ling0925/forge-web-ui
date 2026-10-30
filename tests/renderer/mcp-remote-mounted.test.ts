@@ -190,7 +190,10 @@ describe("McpPanel mounted browser integration", () => {
         .locator("#mcp-server-url")
         .fill("https://weather.example.com/mcp");
       const secretToken = "Bearer ultra-secret-jwt-token-999";
-      await chooseOption(page.locator("#mcp-server-auth-type"), "authorization");
+      await chooseOption(
+        page.locator("#mcp-server-auth-type"),
+        "authorization",
+      );
       await page.locator("#mcp-server-auth").fill(secretToken);
 
       // Submit registration
@@ -305,7 +308,10 @@ describe("McpPanel mounted browser integration", () => {
         await page.evaluate(() => Reflect.get(window, "registered").length),
       ).toBe(2);
       await page.locator("#mcp-server-header-name").fill("x-api-key");
-      await chooseOption(page.locator("#mcp-server-auth-type"), "authorization");
+      await chooseOption(
+        page.locator("#mcp-server-auth-type"),
+        "authorization",
+      );
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
       await chooseOption(page.locator("#mcp-server-auth-type"), "api-key");
       await page.locator("#mcp-server-auth").fill(exaKey);

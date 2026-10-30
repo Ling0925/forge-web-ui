@@ -1,12 +1,15 @@
+import { mcpRegisterDtoSchema } from "@forge/core/shared/ipc";
+import {
+  type SessionSnapshot,
+  sessionIdSchema,
+} from "@forge/core/shared/schemas";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { mcpRegisterDtoSchema } from "@forge/core/shared/ipc";
-import { sessionIdSchema, type SessionSnapshot } from "@forge/core/shared/schemas";
-import { reduceTimeline } from "../../src/renderer/state/timeline";
-import { shouldRefreshTranscript } from "../../src/renderer/state/refresh-events";
 import { ToolDisclosure } from "../../src/renderer/components/primitives/ToolDisclosure";
 import { StoredTranscript } from "../../src/renderer/components/workbench/Transcript";
+import { shouldRefreshTranscript } from "../../src/renderer/state/refresh-events";
+import { reduceTimeline } from "../../src/renderer/state/timeline";
 
 const id = sessionIdSchema.parse("22222222-2222-4222-8222-222222222222");
 
@@ -190,7 +193,9 @@ describe("tool_hook diagnostics in timeline and refresh events", () => {
     };
 
     const timeline = reduceTimeline(snapshot);
-    const diagnostics = timeline.filter((item) => item.kind === "hook_diagnostic");
+    const diagnostics = timeline.filter(
+      (item) => item.kind === "hook_diagnostic",
+    );
 
     expect(diagnostics).toHaveLength(2);
     expect(diagnostics[0]).toMatchObject({
@@ -248,7 +253,9 @@ describe("tool_hook diagnostics in timeline and refresh events", () => {
     };
 
     const timeline = reduceTimeline(legacySnapshot);
-    expect(timeline.filter((item) => item.kind === "hook_diagnostic")).toHaveLength(0);
+    expect(
+      timeline.filter((item) => item.kind === "hook_diagnostic"),
+    ).toHaveLength(0);
     expect(timeline.filter((item) => item.kind === "message")).toHaveLength(2);
   });
 
@@ -307,7 +314,9 @@ describe("tool_hook diagnostics in timeline and refresh events", () => {
       ],
     };
 
-    const html = renderToStaticMarkup(createElement(StoredTranscript, { snapshot: hookSnapshot }));
+    const html = renderToStaticMarkup(
+      createElement(StoredTranscript, { snapshot: hookSnapshot }),
+    );
     expect(html).toContain('class="hook-diagnostic-badge"');
     expect(html).toContain('data-status="denied"');
     expect(html).toContain("Hook security-gate (beforeTool) 拒绝执行");

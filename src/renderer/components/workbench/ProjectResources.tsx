@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import type { ProjectContextDto } from "@forge/core/shared/ipc";
+import { useEffect, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import {
   shallowEqual,

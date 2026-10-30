@@ -108,7 +108,10 @@ it("composer grows to six lines and requires explicit submission for multiline d
     const slider = page.getByRole("slider", { name: "思考等级", exact: true });
     const setSlider = async (val: string) => {
       await slider.evaluate((node: HTMLInputElement, value: string) => {
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+        const setter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          "value",
+        )?.set;
         setter?.call(node, value);
         node.dispatchEvent(new Event("input", { bubbles: true }));
       }, val);
@@ -125,7 +128,11 @@ it("composer grows to six lines and requires explicit submission for multiline d
     await input.press("Enter");
     expect(await calls()).toBe("1");
     await page.getByRole("button", { name: "保存等级", exact: true }).click();
-    await expect.poll(() => page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("MAX");
+    await expect
+      .poll(() =>
+        page.locator(".model-effort-meter").getAttribute("aria-label"),
+      )
+      .toContain("MAX");
     await trigger.click();
     await setSlider("3");
     expect(await slider.getAttribute("aria-valuetext")).toBe("xhigh");
@@ -135,12 +142,18 @@ it("composer grows to six lines and requires explicit submission for multiline d
     await expect
       .poll(() => page.getByRole("alert").innerText())
       .toBe("思考等级保存失败，请重试。");
-    expect(await page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("MAX");
+    expect(
+      await page.locator(".model-effort-meter").getAttribute("aria-label"),
+    ).toContain("MAX");
     await trigger.click();
     await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("MAX");
     await slider.press("Home");
     await page.getByRole("button", { name: "保存等级", exact: true }).click();
-    await expect.poll(() => page.locator(".model-effort-meter").getAttribute("aria-label")).toContain("low");
+    await expect
+      .poll(() =>
+        page.locator(".model-effort-meter").getAttribute("aria-label"),
+      )
+      .toContain("low");
     await input.fill("one");
     await input.press("Shift+Enter");
     await input.press("Enter");
@@ -212,7 +225,10 @@ it("composer grows to six lines and requires explicit submission for multiline d
       expect(panelBounds.x).toBeGreaterThanOrEqual(0);
       expect(panelBounds.y).toBeGreaterThanOrEqual(0);
       expect(panelBounds.x + panelBounds.width).toBeLessThanOrEqual(width);
-      const sliderInPanel = page.getByRole("slider", { name: "思考等级", exact: true });
+      const sliderInPanel = page.getByRole("slider", {
+        name: "思考等级",
+        exact: true,
+      });
       expect(
         await sliderInPanel.evaluate((node) => {
           const rect = node.getBoundingClientRect();
@@ -226,7 +242,9 @@ it("composer grows to six lines and requires explicit submission for multiline d
       ).toBe(true);
       await page.screenshot({ path: `/tmp/forge-effort-${width}.png` });
       await page.keyboard.press("Escape");
-      expect(await page.locator(".composer-model-picker").getAttribute("open")).toBe(null);
+      expect(
+        await page.locator(".composer-model-picker").getAttribute("open"),
+      ).toBe(null);
       await input.fill("animation check");
       await page.evaluate(async () => {
         await Promise.all(
@@ -274,7 +292,9 @@ it("composer grows to six lines and requires explicit submission for multiline d
       expect(await track.getAttribute("data-run-status")).toBe("正在执行");
       const speed = page.locator(".usage-speed-chip");
       await expect.poll(() => speed.innerText()).toBe("20.0 tok/s");
-      expect(await page.locator(".composer-toolbar .composer-output-speed").count()).toBe(0);
+      expect(
+        await page.locator(".composer-toolbar .composer-output-speed").count(),
+      ).toBe(0);
       const speedBounds = await speed.boundingBox();
       expect(speedBounds?.x).toBeGreaterThanOrEqual(0);
       expect(speedBounds!.x + speedBounds!.width).toBeLessThanOrEqual(width);
@@ -339,7 +359,9 @@ it("composer grows to six lines and requires explicit submission for multiline d
       expect(await speed.innerText()).toBe("20.0 tok/s");
       await page.getByRole("button", { name: "完成运行", exact: true }).click();
       await expect.poll(() => action.getAttribute("aria-label")).toBe("运行");
-      await expect.poll(async () => (await action.boundingBox())?.y).toBe(initial.y);
+      await expect
+        .poll(async () => (await action.boundingBox())?.y)
+        .toBe(initial.y);
       expect(await action.boundingBox()).toEqual(initial);
       await expect.poll(() => track.getAttribute("data-run-status")).toBe(null);
     }

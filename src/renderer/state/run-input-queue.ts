@@ -1,9 +1,16 @@
 import { ForgeError } from "@forge/core/shared/errors";
+import {
+  type RunInput,
+  type SessionId,
+  runInputSchema,
+} from "@forge/core/shared/schemas";
 import { z } from "zod";
-import { type RunInput, type SessionId, runInputSchema } from "@forge/core/shared/schemas";
 
 export class RunInputQueue {
-  private readonly sessions = new Map<SessionId, { items: RunInput[]; paused: boolean }>();
+  private readonly sessions = new Map<
+    SessionId,
+    { items: RunInput[]; paused: boolean }
+  >();
   private readonly keys = new WeakMap<RunInput, string>();
   private nextKey = 0;
 
@@ -15,7 +22,9 @@ export class RunInputQueue {
     }
     return queue;
   }
-  snapshot(): readonly RunInput[] { return [...this.sessions.values()].flatMap(queue => queue.items); }
+  snapshot(): readonly RunInput[] {
+    return [...this.sessions.values()].flatMap((queue) => queue.items);
+  }
 
   keyOf(input: RunInput): string {
     let key = this.keys.get(input);
@@ -28,13 +37,33 @@ export class RunInputQueue {
 
   add(raw: RunInput): RunInput {
     const input = runInputSchema.parse(raw);
-    const all = [...this.sessions.values()].flatMap(queue => queue.items);
+    const all = [...this.sessions.values()].flatMap((queue) => queue.items);
     const bytes = new TextEncoder();
-    if (all.length >= 1000 || all.reduce((size, item) => size + bytes.encode(item.prompt).length, bytes.encode(input.prompt).length) > 1000000)
+    if (
+      all.length >= 1000 ||
+      all.reduce(
+        (size, item) => size + bytes.encode(item.prompt).length,
+        bytes.encode(input.prompt).length,
+      ) > 1000000
+    )
       throw new ForgeError("invalid_input", "待发队列已满，草稿已保留。");
-    if ([...all, input].reduce((size, item) => size + (item.images ?? []).reduce((sum, image) => sum + image.dataUrl.length, 0), 0) > 16 * 1024 * 1024)
+    if (
+      [...all, input].reduce(
+        (size, item) =>
+          size +
+          (item.images ?? []).reduce(
+            (sum, image) => sum + image.dataUrl.length,
+            0,
+          ),
+        0,
+      ) >
+      16 * 1024 * 1024
+    )
       throw new ForgeError("invalid_input", "待发图片过多，草稿已保留。");
-    const queue = this.sessions.get(input.sessionId) ?? { items: [], paused: false };
+    const queue = this.sessions.get(input.sessionId) ?? {
+      items: [],
+      paused: false,
+    };
     this.keyOf(input);
     queue.items.push(input);
     this.sessions.set(input.sessionId, queue);
@@ -59,10 +88,12 @@ export class RunInputQueue {
     const current = queue?.items[index];
     if (!queue || !current) return undefined;
     const next = runInputSchema.parse({ ...current, prompt });
-    const all = [...this.sessions.values()].flatMap(q => q.items);
+    const all = [...this.sessions.values()].flatMap((q) => q.items);
     const bytes = new TextEncoder();
     const totalBytes = all.reduce(
-      (size, item) => size + bytes.encode(item === current ? next.prompt : item.prompt).length,
+      (size, item) =>
+        size +
+        bytes.encode(item === current ? next.prompt : item.prompt).length,
       0,
     );
     if (totalBytes > 1000000) {
@@ -91,15 +122,29 @@ export class RunInputQueue {
     queue.items.splice(toIndex, 0, moved);
     return true;
   }
-  items(id: SessionId): readonly RunInput[] { return this.sessions.get(id)?.items ?? []; }
-  isPaused(id: SessionId): boolean { return this.sessions.get(id)?.paused ?? false; }
-  peek(id: SessionId): RunInput | undefined { return this.isPaused(id) ? undefined : this.items(id)[0]; }
+  items(id: SessionId): readonly RunInput[] {
+    return this.sessions.get(id)?.items ?? [];
+  }
+  isPaused(id: SessionId): boolean {
+    return this.sessions.get(id)?.paused ?? false;
+  }
+  peek(id: SessionId): RunInput | undefined {
+    return this.isPaused(id) ? undefined : this.items(id)[0];
+  }
   consume(input: RunInput): void {
     const queue = this.sessions.get(input.sessionId);
     if (queue?.items[0] === input) queue.items.shift();
     if (queue?.items.length === 0) this.sessions.delete(input.sessionId);
   }
-  pause(id: SessionId): void { const queue = this.sessions.get(id); if (queue) queue.paused = true; }
-  resume(id: SessionId): void { const queue = this.sessions.get(id); if (queue) queue.paused = false; }
-  clear(id: SessionId): void { this.sessions.delete(id); }
+  pause(id: SessionId): void {
+    const queue = this.sessions.get(id);
+    if (queue) queue.paused = true;
+  }
+  resume(id: SessionId): void {
+    const queue = this.sessions.get(id);
+    if (queue) queue.paused = false;
+  }
+  clear(id: SessionId): void {
+    this.sessions.delete(id);
+  }
 }

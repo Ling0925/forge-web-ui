@@ -85,12 +85,20 @@ describe("plugin configuration state", () => {
     const { draft, error } = browserConfigDraft({ allowedDomains: ["*"] });
     expect(error).toBe("");
     expect(draft.allowedDomains).toBe("*");
-    const saved = browserConfigFromDraft({ ...draft, allowedDomains: " *\n* " });
+    const saved = browserConfigFromDraft({
+      ...draft,
+      allowedDomains: " *\n* ",
+    });
     expect(saved.error).toBe("");
     expect(saved.config.allowedDomains).toEqual(["*"]);
     expect(configDraftDirty(draft, saved.config)).toBe(false);
-    expect(browserConfigFromDraft({ ...draft, allowedDomains: "" }).config.allowedDomains).toEqual([]);
-    expect(browserConfigFromDraft({ ...draft, allowedDomains: "**" }).error).toContain("allowedDomains");
+    expect(
+      browserConfigFromDraft({ ...draft, allowedDomains: "" }).config
+        .allowedDomains,
+    ).toEqual([]);
+    expect(
+      browserConfigFromDraft({ ...draft, allowedDomains: "**" }).error,
+    ).toContain("allowedDomains");
   });
 
   it("surfaces Core schema rejections instead of silently replacing a draft", () => {

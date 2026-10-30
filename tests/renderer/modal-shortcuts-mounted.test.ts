@@ -120,17 +120,21 @@ it("mounted global modal shortcuts never stack dialogs and keep toggle, handoff 
 
     const openLabels = () =>
       page.evaluate(() =>
-        Array.from(document.querySelectorAll('dialog[open], .settings-page:not([hidden])')).map((dialog) =>
-          dialog.getAttribute("aria-label"),
-        ),
+        Array.from(
+          document.querySelectorAll(
+            "dialog[open], .settings-page:not([hidden])",
+          ),
+        ).map((dialog) => dialog.getAttribute("aria-label")),
       );
     // Wait for the expected dialogs to open, then keep the window a few React
     // frames to catch any late stacking before asserting the exact set.
     const expectOpen = async (labels: string[]) => {
       await page.waitForFunction((expected: string[]) => {
-        const open = Array.from(document.querySelectorAll('dialog[open], .settings-page:not([hidden])')).map(
-          (dialog) => dialog.getAttribute("aria-label"),
-        );
+        const open = Array.from(
+          document.querySelectorAll(
+            "dialog[open], .settings-page:not([hidden])",
+          ),
+        ).map((dialog) => dialog.getAttribute("aria-label"));
         return (
           open.length === expected.length &&
           expected.every((label) => open.includes(label))
@@ -185,7 +189,9 @@ it("mounted global modal shortcuts never stack dialogs and keep toggle, handoff 
     await expectOpen([]);
     await pressMod("n");
     await expectOpen([]);
-    expect(await page.getByRole("form", { name: "新会话输入" }).isVisible()).toBe(true);
+    expect(
+      await page.getByRole("form", { name: "新会话输入" }).isVisible(),
+    ).toBe(true);
     await pressMod("k");
     await expectOpen([PALETTE]);
     await page.keyboard.press("Escape");
@@ -213,8 +219,14 @@ it("mounted global modal shortcuts never stack dialogs and keep toggle, handoff 
     await expectOpen([PALETTE]);
     await page.getByRole("button", { name: NEW_TASK, exact: true }).click();
     await expectOpen([]);
-    expect(await page.getByRole("form", { name: "新会话输入" }).isVisible()).toBe(true);
-    expect(await page.locator("#new-prompt").evaluate((node) => node === document.activeElement)).toBe(true);
+    expect(
+      await page.getByRole("form", { name: "新会话输入" }).isVisible(),
+    ).toBe(true);
+    expect(
+      await page
+        .locator("#new-prompt")
+        .evaluate((node) => node === document.activeElement),
+    ).toBe(true);
 
     // 5. A local native panel dialog (same Dialog as MCP / restore / rename)
     //    blocks every global modal shortcut until dismissed.
