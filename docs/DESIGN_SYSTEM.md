@@ -480,14 +480,16 @@ DOM 与 CSS：
 
 | 组件 | 用途 | 生产环境使用 |
 | :--- | :--- | :--- |
-| `Button` | 按钮 | **34 处** |
-| `IconButton` | 图标按钮（强制 `aria-label` + `title`） | **0 处（仅 showcase）** |
+| `Button` | 按钮（`sm` 24 / `md` 28 / `lg` 32） | 约 180 处 / 30 个文件 |
+| `IconButton` | 图标按钮（强制 `aria-label` + `title`；`active`、附加子元素） | 约 20 处 / 7 个文件 |
 | `Field` / `Input` / `Textarea` | 表单字段 | 9 处 |
-| `Select` | **原生 `<select>` 封装** | 5 个文件 |
-| `SettingsSelect` | 自定义无障碍下拉 | 6 处 |
+| `Select` | 自定义无障碍下拉（Radix Select，`select.css`），替代原生 `<select>` 与已删除的 `SettingsSelect` | 约 20 处 / 6 个文件 |
+| `Checkbox` | 复选框（Radix Checkbox，`checkbox.css`），替代裸 `<input type="checkbox">` | 约 12 处 / 2 个文件 |
 | `SettingsToggleCard` | 开关卡片 | 2 处 |
-| `EmptyState` / `ErrorState` | 空 / 错状态 | 2 / 3 处 |
-| `StatusBadge` | 状态徽章 | 3 处 |
+| `EmptyState` / `ErrorState` | 空 / 错状态；`EmptyState` 有 `default` / `inline`（设置页虚线卡）/ `compact`（侧栏、详情栏、看板） | 约 28 / 3 处 |
+| `StatusBadge` / `ToneBadge` | 运行状态徽章 / 任意语义色徽章（`tone`、`mono`） | 约 16 / 10 处 |
+| `Tag` | 元信息标签（计数、模型名、策略；`tone`、`mono`） | 约 25 处 / 6 个文件 |
+| `useDismiss` | 弹层外部点击 / Escape / 滚动关闭的 hook | 7 个文件 |
 | `Tabs` | 分段控件 | 2 处 |
 | `ToolDisclosure` | 工具调用折叠卡 | 3 处 |
 | `CodeBlock` / `DiffViewer` | 代码 / 差异 | 2 / 2 处 |
@@ -495,7 +497,7 @@ DOM 与 CSS：
 | `Collapsible` | 折叠动画 | 3 处 |
 | `Dialog`（在 workbench/） | 原生 `<dialog>` 封装 | 8 处 |
 
-**注意 `IconButton` 在生产代码里一次都没用**——生产使用的是 `.wb-icon-btn`（`app.css:1434-1470`）加十来种自制按钮类。`IconButton` 的 `label` 强制约束因此没有惠及真实界面。
+`.wb-icon-btn` 与 `.settings-select-*`（`SettingsSelect`）已删除：工作台顶栏、侧栏、会话操作与输入区队列的图标按钮都走 `IconButton`，下拉都走 `Select`。仍有部分自制按钮类（如 `.composer-queue-steer-btn`、`.inspector-head-btn`）待迁移。
 
 ### 6.2 卡片：同一个对象，六种处理
 
@@ -544,7 +546,7 @@ DOM 与 CSS：
 
 | 状态 | 变体数 | 现状 |
 | :--- | ---: | :--- |
-| 空 | ~10 | 标准 `EmptyState`（440px，48px 图标）、对话区 22px 特大号、详情栏虚线卡、设置页实线卡、侧栏裸文本、看板居中文本… |
+| 空 | 3 | `EmptyState` 的 `default`（440px，48px 图标）、`inline`（设置页虚线卡）、`compact`（侧栏、详情栏、工作区选择器、看板）；对话区特大号仍为独立实现 |
 | 错 | ~7 | `ErrorState` 卡、`.form-error` 行内、`.provider-error`、`.usage-error-banner`、诊断徽章、分页 pill、**无样式的 `.composer-error`** |
 | 载 | 10 种 spinner keyframe | `btn-spin`、`badge-spin`、`tool-spin`、`tool-live-spin`、`agent-spin`、`usage-spin`、`workspace-picker-spin`、`html-preview-spin`、`image-attachment-spin`、`transcript-history-spin` |
 
@@ -552,7 +554,7 @@ DOM 与 CSS：
 
 **约定**：
 
-- 空状态用「主说明 + 次级引导」，容器按区域选择：详情栏用虚线卡（`surface-soft` + dashed），列表类用 `EmptyState`，不要用裸 `<p>`。
+- 空状态用「主说明 + 次级引导」（`title` + `description`），一律用 `EmptyState`，按区域选 `variant`：整块区域 `default`、设置页列表 `inline`、侧栏 / 详情栏 / 图表卡片 `compact`。不要用裸 `<p>` 或手写 `*-empty` 容器；加载中文案不是空状态，保持纯文本。
 - 错误文案只说**发生了什么 + 下一步**，不道歉、不模糊。
 - 加载用 `--font-mono` 的静态文本或统一 spinner，不要新增第 11 种。
 
@@ -560,8 +562,8 @@ DOM 与 CSS：
 
 | 控件 | 现状 | 规范要求 |
 | :--- | :--- | :--- |
-| 下拉 | 原生 `<select>` 通过 `Select` 用在 5 个文件；`SettingsSelect` 6 处；`ComposerDropdown` 2 处 | **禁止原生**，全部用自定义下拉 |
-| 复选 | **14 处裸 `<input type="checkbox">`**（`ModelAccessPanels.tsx` 13、`ProviderSources.tsx` 1），仅用 `accent-color` 着色 | 用 `.settings-toggle-card` 或自定义开关 |
+| 下拉 | `Select`（Radix）约 20 处；`ComposerDropdown` 2 处；`Composer.tsx` 仍有 2 个视觉隐藏的原生 `<select>` 作为推理等级的读屏/键盘后备 | **禁止新增原生**，全部用 `Select` |
+| 复选 | 裸 `<input type="checkbox">` 已清零，统一 `Checkbox`（Radix） | 用 `Checkbox` 或 `SettingsToggleCard` |
 | 内联样式 | 97 处 `style={{…}}` | 除计算宽度/偏移外禁止 |
 
 ### 6.6 按钮
@@ -569,14 +571,14 @@ DOM 与 CSS：
 | 类 | 高度 | 圆角 | 字号 |
 | :--- | ---: | ---: | ---: |
 | `.btn` | 28（`min-height`） | 6 | 14 |
-| `.btn-sm` | 28 | 6 | 12 |
-| `.btn-md` | 28 | 6 | 14 |
-| `.btn-lg` | 44 | 6 | 15 |
+| `.btn-sm` | 24（`--control-height-sm`） | 6 | 12 |
+| `.btn-md` | 28（`--control-height`） | 6 | 14 |
+| `.btn-lg` | 32（`--control-height-lg`） | 6 | 15 |
 | `.btn-icon` | 28 | 6 | — |
-| `.btn-icon.btn-sm` | **36** | 6 | — |
-| `.btn-icon.btn-lg` | 44 | 6 | — |
+| `.btn-icon.btn-sm` | 24 | 6 | — |
+| `.btn-icon.btn-lg` | 32 | 6 | — |
 
-**尺寸 API 已失效**：`--control-height` 被压到 28px 后，`.btn-sm` 与 `.btn-md` 完全同高；而 `.btn-icon.btn-sm` 是 36px，比默认 `.btn-icon`（28）还大。`size` 属性目前不表达任何东西。
+尺寸阶梯直接取自 `tokens.css` 的 `--control-height-*`；`≤768px` 下 `.btn` / `.btn-icon` 仍由 `--touch-min-target` 兜底 44px。`IconButton` 的 `active` 产生 `.btn-icon.is-active`（`--surface-selected` 底）。
 
 变体：`primary`（`--run-bg` 近黑）、`secondary`（`--surface-soft`）、`ghost`（透明）、`danger`（`--error-bg` 底 + `--error` 字）。
 
@@ -654,7 +656,7 @@ DOM 与 CSS：
 
 ### 8.4 其他
 
-- **图标按钮**：`aria-label` 覆盖良好（全库 241 处），但 `IconButton` 原语未被使用，保障是散落的约定而非强制。
+- **图标按钮**：`aria-label` 覆盖良好；工作台主要图标按钮已迁到 `IconButton`（`label` 必填，自动带 `title`），其余自制按钮仍靠约定。
 - **触摸目标**：`--touch-min-target: 44px` 在 `≤768px` 与 `pointer: coarse` 下应用；但 `.session-action-btn` 在粗指针下只有 28px。
 - **弹窗**：`Dialog` 与 `HtmlPreview` 使用原生 `<dialog>`（焦点陷阱与 Escape 由浏览器提供）。**用量看板是例外**：`role="dialog" aria-modal="true"` 但只是普通 `div`，没有焦点陷阱，`App.tsx:93-94` 的 `inert` 只覆盖设置页，不覆盖看板——Tab 会走进背后的工作台。
 - **`aria-live`**：10 处 `role="status"`、41 处 `role="alert"`。**没有任何瞬态通知层**（无 toast），因此复制、保存等短反馈只能靠图标切换或行内文本。
