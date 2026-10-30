@@ -3,16 +3,16 @@
   overflow-y: auto;
   margin: 0 0 8px;
   padding: 6px;
-  border: 1px solid var(--border, #8886);
-  border-radius: 12px;
-  background: var(--surface, inherit);
-  font-size: 13px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--surface-elevated);
+  font-size: var(--text-sm);
 }
 .composer-slash-menu [role="option"] {
   display: flex;
   gap: 12px;
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 .composer-slash-menu [aria-selected="true"],
@@ -20,4 +20,4 @@
 .composer-slash-menu strong { min-width: 95px; }
 .composer-slash-menu span { overflow-wrap: anywhere; opacity: 0.8; }
 .composer-slash-menu small { display: block; padding: 6px 10px; opacity: 0.6; }
-.composer-slash-message { display: block; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 35vh; overflow: auto; font-size: 12px; padding: 8px; }
+.composer-slash-message { display: block; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 35vh; overflow: auto; font-size: var(--text-xs); padding: 8px; }

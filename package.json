@@ -14,9 +14,12 @@
     "serve": "node scripts/serve.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
+    "lint:css": "stylelint \"src/**/*.css\"",
+    "check:css-vars": "node scripts/check-css-vars.mjs",
     "format": "biome check --write .",
     "test": "vitest run",
-    "test:browser": "vitest run tests/web-smoke-browser.test.ts tests/web-dev-browser.test.ts"
+    "test:browser": "vitest run tests/web-smoke-browser.test.ts tests/web-dev-browser.test.ts",
+    "check": "pnpm typecheck && pnpm lint && pnpm lint:css && pnpm check:css-vars"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",
@@ -40,6 +43,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "esbuild": "^0.25.3",
     "playwright": "^1.51.1",
+    "stylelint": "^16.26.1",
     "typescript": "^5.8.3",
     "vite": "^8.3.4",
     "vitest": "^3.1.2"

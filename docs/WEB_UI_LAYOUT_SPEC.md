@@ -10,12 +10,12 @@
 
 Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石墨暗色（Graphite Dark）」** 工作台美学，克制、温润、高信息密度，强调长时阅读与多任务协作的秩序感。
 
-### 1.1 样式文件优先级（严禁只看 `tokens.css`）
+### 1.1 样式文件分工
 
-生产入口由 [main.tsx](../src/renderer/main.tsx) 按顺序装配样式，**最终视觉效果以工作台主题覆盖后的计算值为准**：
+生产入口由 [main.tsx](../src/renderer/main.tsx) 按顺序装配样式。Token 只有一个来源：刻度在 `tokens.css`，颜色在 `workspace-theme.css`，两者不再互相覆盖：
 
-1. [tokens.css](../src/renderer/styles/tokens.css)：定义字体栈、字号阶梯、4px 间距刻度、圆角刻度，以及基础语义状态色（`--success`、`--warning`、`--error`）。
-2. [workspace-theme.css](../src/renderer/styles/workspace-theme.css)：**工作台最终生效的主题覆盖**，将背景、文字、边框、主强调色（`--accent`）及控件高度覆盖为暖纸/石墨体系。
+1. [tokens.css](../src/renderer/styles/tokens.css)：字体栈、字号阶梯（`--text-2xs` 11px 起）、行高、4px 间距刻度、圆角刻度（`--radius-2xs` … `--radius-full`）、布局尺寸与动效时长。不放任何颜色。
+2. [workspace-theme.css](../src/renderer/styles/workspace-theme.css)：唯一的颜色来源（浅色 / 深色两套：表面、五级墨色、边框、主强调、焦点、状态色、阴影、图表色），其后是工作台级的组件覆盖规则。
 3. [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 与 [app.css](../src/renderer/components/workbench/app.css)：负责主框架、侧栏紧凑密度与响应式断点。
 4. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现。
 
@@ -25,16 +25,17 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 修改样式时**必须使用 CSS 变量或基于变量的 `color-mix()`**，严禁硬编码脱离主题的十六进制/RGB 颜色。
 
-### 2.1 主强调色 vs 完成/成功色（严禁误用 `--accent-sage`）
+### 2.1 主强调色 vs 完成/成功色
 
 | 语义场景 | 必须使用的 Token | 浅色实际值 | 深色实际值 | 严禁使用的错误写法 |
 | :--- | :--- | :--- | :--- | :--- |
-| **主强调 / 进行中 / 激活 / 焦点** | `var(--accent)`、`var(--accent-subtle)` | `#a54f35`（赤陶色） | `#dc9477`（暖赤陶） | 严禁使用蓝色 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
-| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#226d40`（森林鼠尾草绿） | `#34d399`（柔翠绿） | **严禁使用 `var(--accent-sage)`**（在工作台主题中它等于赤陶色！）；严禁硬编码刺眼亮绿 `#16a34a` |
+| **主强调 / 进行中 / 激活** | `var(--accent)`、`var(--accent-soft)`、`var(--on-accent)` | `#a54f35`（赤陶色） | `#dc9477`（暖赤陶） | 严禁使用蓝色 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
+| **键盘焦点 / 输入聚焦** | `var(--focus-ring)`、`var(--focus-halo)` | `#4a4740`（中性墨） | `#cfcbc1` | 不要用 `--accent` 做焦点色，赤陶与错误红同色系，聚焦会像报错 |
+| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#226d40`（森林鼠尾草绿） | `#34d399`（柔翠绿） | 严禁硬编码刺眼亮绿 `#16a34a` |
 | **警告 / 待确认 / 队列提示** | `var(--warning)`、`var(--warning-bg)`、`var(--warning-border)` | `#975a06` | `#fbbf24` | 严禁使用无对比度的纯黄 `#ffff00` |
-| **错误 / 失败 / 危险操作** | `var(--error)` 或 `var(--danger)`、`var(--error-bg)` | `#b82420` / `#c84b31` | `#f87171` / `#e06c53` | 严禁使用纯红 `#ff0000` |
+| **错误 / 失败 / 危险操作** | `var(--error)`、`var(--error-bg)`、`var(--error-border)` | `#b82420` | `#f87171` | 严禁使用纯红 `#ff0000`；`--danger` 已移除 |
 
-> **关键陷阱说明**：`workspace-theme.css` 将 `--accent-sage` 重映射为了赤陶主色（`#a54f35` / `#dc9477`）。如果你需要「绿色」来表示步骤完成、任务成功或连接正常，**只能使用 `var(--success)` 或 `color-mix(in srgb, var(--success, #226d40) XX%, transparent)`**。
+> 旧的 `--accent-sage`（名为绿、值为赤陶）已移除。需要「绿色」表示步骤完成、任务成功或连接正常时，使用 `var(--success)` 或 `color-mix(in srgb, var(--success) XX%, transparent)`；token 均全局定义，`var()` 不需要写十六进制 fallback。
 
 ### 2.2 严禁出现原生蓝（Off-Brand Blue）与脏渐变
 
@@ -126,7 +127,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
     - 右侧 `.plan-step-row` 包含等宽两位序号（`01`、`02`）、步骤文本及进行中步骤的暖色高亮底框与 `当前步骤` 标签。
   - **历史计划（`.inspector-plan-history-card`）**：在 `Plan` 视图底部以结构化折叠卡片展示，`<summary>` 左侧展示 `计划 N` 徽章与标题，右侧展示完成进度胶囊；展开内容中步骤列表与 Markdown 说明之间用虚线分隔。
 - **子任务区域（`SubAgentsPanel` / `SubAgentActivity`）**：
-  - 每张子任务卡（`.child-session-card`）左侧带 `2.5px` 语义状态边条（运行中 `--accent`、已完成 `--success`、失败/中断 `--danger`）。
+  - 每张子任务卡（`.child-session-card`）左侧带 `2.5px` 语义状态边条（运行中 `--accent`、已完成 `--success`、失败/中断 `--error`）。
   - 头部包含 `#1` 等宽序号徽章、带外链图标的单行可点击标题按钮、智能体角色徽章（`.child-role-badge`）、等待答疑胶囊（`.child-advisor-pill`，仅在父运行活跃且 `run_started.budget.rootRunId` 与请求 `parentRunId` 匹配时为动态脉冲；这是 Core 协调身份，不能与 Web 传输 `runId` 比较，历史或缺失活跃运行身份时显示不可控制状态）、语义状态徽章及运行中取消按钮。
   - 内容区展示模型胶囊、Token 消耗、更新时间、职责范围（Ownership）、最新报告摘要，以及带脉冲圆点的实时进展和可折叠过程记录。
   - 查看子会话时，上下文卡片（`.inspector-agent-profile-card`）展示完整智能体角色快照（名称、ID、权限上限、工作树隔离、模型策略、工具策略）。
@@ -165,7 +166,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 每次完成界面或样式修改后，必须在真实浏览器（Playwright Chromium）与聚焦测试中完成以下核对：
 
-1. **色彩合规**：检查是否误用 `--accent-sage` 表示绿色、是否混入 `#16a34a` 亮绿或 `rgba(59, 130, 246, ...)` 蓝色、是否有红绿直接渐变。
+1. **色彩与刻度合规**：运行 `pnpm lint:css`（禁止字面 px 字号/圆角与旧蓝绿色板）和 `pnpm check:css-vars`（禁止引用未定义的变量）；人工确认无红绿直接渐变。
 2. **控件合规**：检查是否引入了原生 `<select>`、裸 `<input type="checkbox">`、无表面对比的同色卡片堆叠或冗余的 3 层边框套娃。
 3. **极端文本防崩**：检查长工作区路径、长模型名、多段费用/TPS 公式下，`<dl>` 标签列是否保持 `nowrap` 不竖排、卡片是否无水平溢出。
 4. **聚焦测试与构建**：

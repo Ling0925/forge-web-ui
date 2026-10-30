@@ -12,7 +12,7 @@
 
 完整规范见 [`docs/WEB_UI_LAYOUT_SPEC.md`](docs/WEB_UI_LAYOUT_SPEC.md)，修改时必须遵守以下核心红线：
 
-- **主题与色彩 Token**：最终生效的是 `workspace-theme.css` 的暖纸墨色（浅色 `#faf9f6`）/ 石墨暗色（深色 `#171716`）与赤陶主色（`--accent: #a54f35` / `#dc9477`）。**注意 `--accent-sage` 在工作台主题中已被重映射为赤陶色**，表示「已完成 / 成功 / 缓存命中」等绿色语义时**必须使用 `var(--success)`**（浅色 `#226d40`、深色 `#34d399`），严禁硬编码 Tailwind 亮绿 `#16a34a` 或任何蓝色（`#3b82f6`、`#2563eb`、`rgba(59, 130, 246, ...)`），严禁使用红绿跨色相渐变。
+- **主题与色彩 Token**：颜色只在 `src/renderer/styles/workspace-theme.css` 定义（浅色暖纸 `#faf9f6` / 深色石墨 `#171716`，赤陶主色 `--accent: #a54f35` / `#dc9477`）；字号、间距、圆角、布局、动效刻度只在 `tokens.css` 定义。组件只引用语义 token：主强调用 `var(--accent)` / `var(--accent-soft)`，成功语义用 `var(--success)`，错误用 `var(--error)`，焦点用 `var(--focus-ring)` / `var(--focus-halo)`（中性墨色，不与错误色混淆）。`--accent-sage`、`--danger` 已移除，不要再引入。严禁硬编码 Tailwind 亮绿 `#16a34a` 或任何蓝色（`#3b82f6`、`#2563eb`、`rgba(59, 130, 246, ...)`），严禁红绿跨色相渐变。字号与圆角禁止写字面 px，使用 `--text-*` / `--radius-*`。提交前运行 `pnpm lint:css` 与 `pnpm check:css-vars`。
 - **禁止原生简陋控件与边框套娃**：严禁新增原生 `<select>` 或裸 `<input type="checkbox">`，统一使用工作台自定义无障碍下拉组件（如 `SettingsSelect`、`ComposerDropdown`）与开关卡片（`.settings-toggle-card`）。父子容器交替使用 `--surface-elevated` 与 `--surface-soft`，设置页与详情栏严禁 3 层以上无意义边框套娃；空状态统一使用虚线引导卡片。
 - **防挤压与高度稳定**：`<dl>` 键值列表必须使用 `grid-template-columns: auto minmax(0, 1fr)` 并为 `<dt>` 设置 `white-space: nowrap`，严禁让右侧长公式把左侧标签挤成单字竖排；执行态动画合成在底部上下文进度条上，严禁在输入框上方动态增删文字提示行导致布局跳动。
 

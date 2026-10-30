@@ -160,7 +160,7 @@ export async function ensureUsageModelPrices(
   if (inflightFetch) return inflightFetch;
   inflightFetch = (async () => {
     try {
-      const res = await window.forge.getUsageStats(
+      const res = await window.forge.getUsageStats?.(
         cleaned.length > 0 ? { models: cleaned } : undefined,
       );
       if (res && res.pricing?.state !== "unavailable") {

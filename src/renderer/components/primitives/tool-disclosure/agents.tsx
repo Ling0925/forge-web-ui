@@ -11,14 +11,16 @@ import {
   ShieldCheck,
   WarningCircle,
 } from "@phosphor-icons/react";
+import type { SessionId } from "../../../shared-types";
 import { useWorkbench } from "../../../state/workbench-context";
 import { Markdown } from "../../workbench/Markdown";
 import { ToolCopyButton } from "./common";
 
 function useSessionSelect(): ((sessionId: string) => Promise<void>) | undefined {
   try {
-    const wb = useWorkbench();
-    return wb?.selectSession;
+    const { selectSession } = useWorkbench();
+    // Child-session ids arrive from tool payloads as plain strings.
+    return (sessionId) => selectSession(sessionId as SessionId);
   } catch {
     return undefined;
   }

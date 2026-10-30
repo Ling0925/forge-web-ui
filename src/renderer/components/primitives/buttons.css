@@ -164,7 +164,7 @@
   .btn-spinner {
     animation: none;
     border-color: currentColor;
-    border-radius: 2px;
+    border-radius: var(--radius-2xs);
   }
 }
 

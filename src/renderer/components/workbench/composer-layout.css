@@ -1,7 +1,7 @@
 .wb-app .composer-split .composer-input-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   align-items: end;
   width: 100%;
 }
@@ -37,7 +37,7 @@
   min-width: 44px;
   min-height: 44px;
   padding: 0;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -103,7 +103,7 @@
   min-height: 44px;
   padding: 0 12px;
   gap: 5px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   display: inline-flex;
@@ -113,15 +113,15 @@
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn {
-  background: color-mix(in srgb, var(--accent, #a54f35) 12%, var(--surface-elevated));
-  border: 1px solid color-mix(in srgb, var(--accent, #a54f35) 36%, var(--border-control));
-  color: var(--accent, #a54f35);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-elevated));
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border-control));
+  color: var(--accent);
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent, #a54f35) 20%, var(--surface-elevated));
-  border-color: var(--accent, #a54f35);
-  color: var(--accent, #a54f35);
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-elevated));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn:disabled {
@@ -138,7 +138,7 @@
   .wb-app .composer-split .composer-submit-col .composer-queue-btn {
     min-width: 54px;
     padding: 0 9px;
-    font-size: 12px;
+    font-size: var(--text-xs);
     gap: 4px;
   }
 }
@@ -147,7 +147,7 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   width: 100%;
   min-width: 0;
 }
@@ -156,7 +156,7 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: var(--space-1, 4px);
+  gap: var(--space-1);
 }
 
 .wb-app .composer-split .composer-toolbar-end {
@@ -189,10 +189,10 @@
   width: auto;
   max-width: 100%;
   min-width: 0;
-  height: var(--touch-min-target, 44px);
+  height: var(--touch-min-target);
   /* Matches the prompt field's 15px so the composer reads as one typographic
      system from the text you type to the model you type it with. */
-  font-size: var(--text-md, 15px);
+  font-size: var(--text-md);
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -206,15 +206,15 @@
 }
 
 .wb-app .composer-split .composer-model-source-area {
-  padding: var(--space-2, 8px) var(--space-3, 12px);
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
+  gap: var(--space-1);
 }
 
 .wb-app .composer-split .composer-model-source-label {
-  font-size: var(--text-xs, 12px);
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
@@ -238,7 +238,7 @@
 
 .wb-app .composer-split .composer-submit-col .btn,
 .wb-app .composer-split .composer-toolbar .composer-dropdown-trigger {
-  border-radius: var(--radius-composer, 12px);
+  border-radius: var(--radius-composer);
 }
 
 .wb-app .composer-split .composer-toolbar svg {

@@ -18,7 +18,7 @@
   gap: 6px;
   padding: 6px 8px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   background: var(--surface-soft);
   box-shadow: none;
   min-width: 0;
@@ -28,8 +28,8 @@
 
 .wb-app .composer-status.composer-queue.is-paused,
 .composer-queue.is-paused {
-  border-color: color-mix(in srgb, var(--warning, #d97706) 35%, var(--border-subtle));
-  background: color-mix(in srgb, var(--warning, #d97706) 5%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--warning) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--warning) 5%, var(--surface-soft));
 }
 
 .composer-queue-header {
@@ -56,10 +56,10 @@
   align-items: center;
   height: 22px;
   padding: 0 8px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--text-secondary);
   line-height: 1;
@@ -69,12 +69,12 @@
 }
 
 .composer-queue.is-paused .composer-queue-title {
-  color: var(--warning, #d97706);
-  border-color: color-mix(in srgb, var(--warning, #d97706) 35%, var(--border-subtle));
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 35%, var(--border-subtle));
 }
 
 .composer-queue-tip {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -97,12 +97,12 @@
   background: transparent;
   padding: 2px 8px;
   height: 22px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
@@ -115,14 +115,14 @@
 }
 
 .composer-queue-link-btn.is-primary {
-  background: color-mix(in srgb, var(--accent-sage, #2f6f5e) 14%, var(--surface-elevated));
-  border-color: color-mix(in srgb, var(--accent-sage, #2f6f5e) 35%, var(--border-subtle));
-  color: var(--accent-sage, #2f6f5e);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+  color: var(--accent);
 }
 
 .composer-queue-link-btn.is-primary:hover {
-  background: color-mix(in srgb, var(--accent-sage, #2f6f5e) 22%, var(--surface-elevated));
-  border-color: var(--accent-sage, #2f6f5e);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-elevated));
+  border-color: var(--accent);
 }
 
 .composer-queue-link-btn.is-danger:hover {
@@ -150,7 +150,7 @@
   gap: 7px;
   min-height: 30px;
   padding: 3px 6px 3px 8px;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
   min-width: 0;
@@ -179,14 +179,14 @@
 }
 
 .composer-queue-item.is-drag-over {
-  border-color: var(--accent, var(--border-hover));
+  border-color: var(--accent);
   background: var(--surface-hover);
-  box-shadow: 0 0 0 1px var(--accent, var(--border-hover));
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .composer-queue-item.is-editing {
   width: 100%;
-  border-radius: var(--radius-md, 8px);
+  border-radius: var(--radius-md);
   padding: 4px 6px;
   background: var(--surface-elevated);
   border-color: var(--border-control);
@@ -224,12 +224,12 @@
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   line-height: 1;
 }
@@ -238,7 +238,7 @@
   flex: 1 1 auto;
   min-width: 0;
   color: var(--text-primary);
-  font-size: var(--text-xs, 12px);
+  font-size: var(--text-xs);
   line-height: 1.4;
   white-space: pre-line;
   display: -webkit-box;
@@ -258,17 +258,17 @@
 
 .composer-queue-steer-btn {
   appearance: none;
-  border: 1px solid color-mix(in srgb, var(--accent, #a54f35) 32%, var(--border-subtle));
-  background: color-mix(in srgb, var(--accent, #a54f35) 10%, var(--surface-soft));
-  color: var(--accent, #a54f35);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
+  color: var(--accent);
   height: 22px;
   padding: 0 7px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
   gap: 3px;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -277,8 +277,8 @@
 }
 
 .composer-queue-steer-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent, #a54f35) 18%, var(--surface-soft));
-  border-color: var(--accent, #a54f35);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-soft));
+  border-color: var(--accent);
 }
 
 .composer-queue-steer-btn:disabled {
@@ -293,7 +293,7 @@
   color: var(--text-secondary);
   width: 22px;
   height: 22px;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -346,11 +346,11 @@
   min-width: 0;
   appearance: none;
   border: 1px solid var(--border-control);
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   background: var(--canvas-bg);
   color: var(--text-primary);
   font: inherit;
-  font-size: var(--text-xs, 12px);
+  font-size: var(--text-xs);
   line-height: 1.4;
   padding: 3px 6px;
   resize: none;

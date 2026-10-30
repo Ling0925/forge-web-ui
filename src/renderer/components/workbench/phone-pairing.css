@@ -45,7 +45,7 @@
   padding: 2px 10px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
-  background-color: var(--surface-sunken, var(--sidebar-bg));
+  background-color: var(--sidebar-bg);
   color: var(--text-secondary);
   font-size: var(--text-2xs);
   line-height: var(--leading-2xs);
@@ -53,8 +53,8 @@
 }
 
 .phone-pairing-badge.is-live {
-  border-color: color-mix(in srgb, var(--accent, #3b825b) 45%, transparent);
-  color: var(--accent, #3b825b);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
 }
 
 .phone-pairing-notes {
@@ -70,7 +70,7 @@
 }
 
 .phone-pairing-notes li::marker {
-  color: var(--text-tertiary, var(--text-secondary));
+  color: var(--text-tertiary);
 }
 
 .phone-pairing-form {
@@ -110,9 +110,9 @@
 }
 
 .phone-pairing-error {
-  border: 1px solid color-mix(in srgb, var(--danger, #b4423a) 40%, transparent);
-  background-color: color-mix(in srgb, var(--danger, #b4423a) 8%, transparent);
-  color: var(--danger, #b4423a);
+  border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
+  background-color: color-mix(in srgb, var(--error) 8%, transparent);
+  color: var(--error);
 }
 
 .phone-pairing-notice {
@@ -171,7 +171,7 @@
   padding: 6px 10px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background-color: var(--surface-sunken, var(--sidebar-bg));
+  background-color: var(--sidebar-bg);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -183,7 +183,7 @@
 }
 
 .phone-pairing-url-field:focus {
-  outline: 2px solid var(--focus-ring, var(--accent, #3b825b));
+  outline: 2px solid var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
 }
 
