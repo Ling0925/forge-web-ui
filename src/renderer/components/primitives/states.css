@@ -80,6 +80,31 @@
   margin-top: var(--space-1);
 }
 
+/* Compact：侧栏、详情面板、图表卡片等小区域内的空状态 */
+.empty-state-compact {
+  max-width: none;
+  padding: var(--space-4) var(--space-3);
+  gap: var(--space-2);
+}
+
+.empty-state-compact .empty-state-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.empty-state-compact .empty-state-title {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: var(--leading-sm);
+  color: var(--text-secondary);
+}
+
+.empty-state-compact .empty-state-description {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-muted);
+}
+
 /* Error State */
 .error-state {
   display: flex;

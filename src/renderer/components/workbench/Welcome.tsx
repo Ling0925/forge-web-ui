@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
 import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { ForgeMark } from "../primitives/ForgeMark";
 
 export function Welcome() {
@@ -63,11 +64,15 @@ export function Welcome() {
               ))}
             </ul>
           ) : (
-            <p className="welcome-empty">
-              {state.isSessionsLoading
-                ? "正在读取最近任务…"
-                : "还没有历史任务，从下方开始。"}
-            </p>
+            state.isSessionsLoading ? (
+              <p className="welcome-empty">正在读取最近任务…</p>
+            ) : (
+              <EmptyState
+                variant="compact"
+                className="welcome-empty"
+                title="还没有历史任务，从下方开始。"
+              />
+            )
           )}
         </section>
       </section>

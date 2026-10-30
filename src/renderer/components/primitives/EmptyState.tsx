@@ -13,9 +13,10 @@ export interface EmptyStateProps {
   readonly className?: string;
   /**
    * `default`：居中、带图标，用于整块区域为空；
-   * `inline`：左对齐的虚线卡片，用于设置页列表/分组内的空状态。
+   * `inline`：左对齐的虚线卡片，用于设置页列表/分组内的空状态；
+   * `compact`：无边框、弱化文字，用于侧栏、详情面板、图表卡片等小区域。
    */
-  readonly variant?: "default" | "inline";
+  readonly variant?: "default" | "inline" | "compact";
 }
 
 export function EmptyState({
@@ -29,6 +30,7 @@ export function EmptyState({
   variant = "default",
 }: EmptyStateProps) {
   const showIcon = variant === "default" || icon !== undefined;
+  const Title = variant === "compact" ? "p" : "h3";
   return (
     <section
       className={`empty-state empty-state-${variant} ${className}`.trim()}
@@ -40,7 +42,7 @@ export function EmptyState({
         </div>
       )}
       <div className="empty-state-body">
-        <h3 className="empty-state-title">{title}</h3>
+        <Title className="empty-state-title">{title}</Title>
         {description && (
           <p className="empty-state-description">{description}</p>
         )}

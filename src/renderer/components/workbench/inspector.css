@@ -974,18 +974,7 @@
   padding: 8px 10px;
 }
 
-.wb-inspector .inspector-plan-empty-title {
-  margin: 0;
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
 
-.wb-inspector .inspector-plan-empty-hint {
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-  line-height: 1.4;
-}
 
 .wb-inspector .inspector-plan-history-section {
   padding-top: 6px;
@@ -1210,18 +1199,7 @@
   text-align: center;
 }
 
-.wb-inspector .inspector-subagents-empty-title {
-  font-size: var(--text-2xs);
-  font-weight: 500;
-  color: var(--text-secondary) !important;
-}
 
-.wb-inspector .inspector-subagents-empty-hint {
-  font-size: var(--text-2xs) !important;
-  color: var(--text-muted) !important;
-  line-height: 1.4;
-  max-width: 280px;
-}
 
 .wb-app .wb-inspector .agent-card,
 .wb-app .wb-inspector .wb-child-row,

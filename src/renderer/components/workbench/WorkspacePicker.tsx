@@ -26,6 +26,7 @@ import {
   type WorkspaceDirectoryPage,
 } from "@forge/core/shared/workspaces";
 import { hostCapabilities } from "../../web-host";
+import { EmptyState } from "../primitives/EmptyState";
 import { Button } from "../primitives/Button";
 import "./workspace-picker.css";
 import { useDismiss } from "../primitives/useDismiss";
@@ -814,40 +815,25 @@ export function WorkspacePicker({
                           </button>
                         ))}
                       {!loading && page && page.directories.length === 0 && (
-                        <div className="workspace-picker-empty">
-                          <div
-                            className="workspace-picker-empty-icon"
-                            aria-hidden="true"
-                          >
-                            <FolderDashed size={24} />
-                          </div>
-                          <p className="workspace-picker-empty-text">
-                            当前目录下无子文件夹
-                          </p>
-                          <p className="workspace-picker-empty-hint">
-                            已到达最深层级，可直接点击下方“选择此目录”。
-                          </p>
-                        </div>
+                        <EmptyState
+                          variant="compact"
+                          className="workspace-picker-empty"
+                          icon={<FolderDashed size={22} />}
+                          title="当前目录下无子文件夹"
+                          description="已到达最深层级，可直接点击下方“选择此目录”。"
+                        />
                       )}
                       {!loading &&
                         page &&
                         page.directories.length > 0 &&
                         filteredDirectories.length === 0 && (
-                          <div className="workspace-picker-empty">
-                            <div
-                              className="workspace-picker-empty-icon"
-                              aria-hidden="true"
-                            >
-                              <MagnifyingGlass size={22} />
-                            </div>
-                            <p className="workspace-picker-empty-text">
-                              没有匹配“{trimmedQuery}”的子文件夹
-                            </p>
-                            <p className="workspace-picker-empty-hint">
-                              可尝试其他关键词，或粘贴完整绝对路径按 Enter
-                              跳转。
-                            </p>
-                          </div>
+                          <EmptyState
+                            variant="compact"
+                            className="workspace-picker-empty"
+                            icon={<MagnifyingGlass size={22} />}
+                            title={`没有匹配“${trimmedQuery}”的子文件夹`}
+                            description="可尝试其他关键词，或粘贴完整绝对路径按 Enter 跳转。"
+                          />
                         )}
                     </div>
                   </div>

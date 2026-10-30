@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import type { UsageRequest } from "../../shared-types";
 import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { Button } from "../primitives/Button";
 import { type BadgeTone, ToneBadge } from "../primitives/StatusBadge";
 
@@ -144,7 +145,13 @@ export function UsageRequests({
   }, [requests]);
 
   if (requests.length === 0) {
-    return <div className="usage-empty-state">暂无请求记录</div>;
+    return (
+      <EmptyState
+        variant="compact"
+        className="usage-empty-state"
+        title="暂无请求记录"
+      />
+    );
   }
 
   const totalCount = requests.length;

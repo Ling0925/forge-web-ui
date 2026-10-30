@@ -16,6 +16,7 @@ import {
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
 import { Button } from "../primitives/Button";
 import { DiffViewer, diffStats } from "../primitives/DiffViewer";
@@ -318,11 +319,15 @@ export function Inspector({
           </section>
         )}
         {!snapshot ? (
-          <p className="wb-muted inspector-empty">
-            {state.isSnapshotLoading
-              ? "正在读取执行记录…"
-              : "选择一个会话，查看执行详情"}
-          </p>
+          state.isSnapshotLoading ? (
+            <p className="wb-muted inspector-empty">正在读取执行记录…</p>
+          ) : (
+            <EmptyState
+              variant="compact"
+              className="inspector-empty"
+              title="选择一个会话，查看执行详情"
+            />
+          )
         ) : (
           <Tabs
             className="inspector-tabs"
@@ -546,9 +551,11 @@ export function Inspector({
                             })}
                           </div>
                         ) : (
-                          <div className="inspector-empty-card">
-                            <p className="wb-muted">本会话尚无直接文件变更</p>
-                          </div>
+                          <EmptyState
+                            variant="compact"
+                            className="inspector-empty-card"
+                            title="本会话尚无直接文件变更"
+                          />
                         )}
                       </section>
                       <details open className="wb-disclosure">

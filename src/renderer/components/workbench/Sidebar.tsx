@@ -15,6 +15,7 @@ import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
 import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { modelServiceStatus } from "../../state/model-service-status";
+import { EmptyState } from "../primitives/EmptyState";
 import { IconButton } from "../primitives/IconButton";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
@@ -203,9 +204,9 @@ export function Sidebar() {
         {state.isSessionsLoading && sessions.length === 0 ? (
           <p className="wb-muted sidebar-empty">正在加载会话...</p>
         ) : sessions.length === 0 ? (
-          <p className="wb-muted sidebar-empty">暂无历史任务</p>
+          <EmptyState variant="compact" className="sidebar-empty" title="暂无历史任务" />
         ) : groups.length === 0 ? (
-          <p className="wb-muted sidebar-empty">没有匹配的任务</p>
+          <EmptyState variant="compact" className="sidebar-empty" title="没有匹配的任务" />
         ) : (
           groups.map((group) => {
             // A live search must reveal its matches, so collapse state is held

@@ -28,6 +28,7 @@ import type {
 import { compactTokens } from "../../state/session-usage";
 import { ingestUsageStatsPricing } from "../../state/usage-pricing";
 import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { Tabs } from "../primitives/Tabs";
 import { UsageOverview, renderUsageKpiGrid } from "./UsageOverview";
 import { UsageRequests } from "./UsageRequests";
@@ -973,9 +974,7 @@ export function UsageDashboard() {
                     </div>
 
                     {data.daily.length === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>当前时间段无每日消耗记录</p>
-                      </div>
+                      <EmptyState variant="compact" className="usage-empty-state" title="当前时间段无每日消耗记录" />
                     ) : (
                       <div className="usage-daily-chart-container">
                         <div className="usage-chart-yaxis" aria-hidden="true">
@@ -1124,9 +1123,7 @@ export function UsageDashboard() {
                     </div>
 
                     {compositionTotal === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>暂无 Token 构成数据</p>
-                      </div>
+                      <EmptyState variant="compact" className="usage-empty-state" title="暂无 Token 构成数据" />
                     ) : (
                       <div className="usage-donut-layout">
                         <div className="usage-donut-visual">
@@ -1269,9 +1266,7 @@ export function UsageDashboard() {
                     </div>
 
                     {data.models.length === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>暂无模型使用记录</p>
-                      </div>
+                      <EmptyState variant="compact" className="usage-empty-state" title="暂无模型使用记录" />
                     ) : (
                       <div className="usage-models-list">
                         {data.models.map((m) => {
@@ -1405,9 +1400,7 @@ export function UsageDashboard() {
                     </div>
 
                     {requestAnalytics.modelPerfList.length === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>暂无请求级速度与耗时记录</p>
-                      </div>
+                      <EmptyState variant="compact" className="usage-empty-state" title="暂无请求级速度与耗时记录" />
                     ) : (
                       <div className="usage-speed-list">
                         {requestAnalytics.modelPerfList.map((perf) => {
@@ -1635,9 +1628,7 @@ export function UsageDashboard() {
                   </div>
 
                   {data.topSessions.length === 0 ? (
-                    <div className="usage-empty-state">
-                      <p>所选条件下暂无会话数据</p>
-                    </div>
+                    <EmptyState variant="compact" className="usage-empty-state" title="所选条件下暂无会话数据" />
                   ) : (
                     <div className="usage-table-wrapper">
                       <table className="usage-table">
