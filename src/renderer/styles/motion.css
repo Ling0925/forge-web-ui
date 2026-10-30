@@ -194,8 +194,7 @@
 }
 
 /* 5. Interactive controls hover/pressed feedback & composer focus-within */
-.btn:not(:disabled),
-.wb-icon-btn:not(:disabled) {
+.btn:not(:disabled) {
   transition:
     background-color var(--motion-duration-fast) ease,
     border-color var(--motion-duration-fast) ease,
@@ -204,8 +203,7 @@
     transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
-.btn:active:not(:disabled),
-.wb-icon-btn:active:not(:disabled) {
+.btn:active:not(:disabled) {
   transform: scale(0.97);
 }
 
@@ -410,7 +408,6 @@
   }
 
   .btn:active:not(:disabled),
-  .wb-icon-btn:active:not(:disabled),
   .composer-run:active:not(:disabled),
   .session-item:active,
   .tab-btn:active:not(:disabled) {

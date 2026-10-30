@@ -223,17 +223,17 @@ export function Inspector({
         </div>
         <div className="inspector-head-actions">
           {onRequestCollapse && (
-            <button
-              type="button"
-              className="wb-icon-btn wb-inspector-close"
+            <Button
+              size="sm"
+              className="wb-inspector-close"
               aria-label="收起详情"
               title="收起详情"
+              icon={<SidebarSimple size={14} className="wb-inspector-close-icon" />}
               onClick={onRequestCollapse}
             >
-              <SidebarSimple size={14} className="wb-inspector-close-icon" />
               <span className="wb-inspector-close-label">收起</span>
               <CaretRight size={11} weight="bold" className="wb-inspector-close-caret" />
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -30,6 +30,7 @@ import { useWorkbench } from "../../state/workbench-context";
 import { useWorkbenchActions } from "../../state/workbench-store";
 import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
+import { IconButton } from "../primitives/IconButton";
 import { WorkspacePicker } from "./WorkspacePicker";
 import { ComposerDropdown } from "./ComposerDropdown";
 import { ModelPicker } from "./ModelPicker";
@@ -1058,25 +1059,23 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
                           }}
                         />
                         <div className="composer-queue-item-btns">
-                          <button
-                            type="button"
+                          <IconButton
+                            size="sm"
                             className="composer-queue-icon-btn is-confirm"
-                            aria-label={`保存第 ${index + 1} 条待发消息`}
+                            label={`保存第 ${index + 1} 条待发消息`}
                             title="保存 (Enter)"
                             disabled={!editingQueueText.trim() && imageCount === 0}
                             onClick={() => saveQueueEdit(index, item)}
-                          >
-                            <Check size={13} weight="bold" aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
+                            icon={<Check size={13} weight="bold" />}
+                          />
+                          <IconButton
+                            size="sm"
                             className="composer-queue-icon-btn"
-                            aria-label="取消编辑"
+                            label="取消编辑"
                             title="取消编辑 (Esc)"
                             onClick={cancelQueueEdit}
-                          >
-                            <X size={13} aria-hidden="true" />
-                          </button>
+                            icon={<X size={13} />}
+                          />
                         </div>
                       </div>
                     ) : (
@@ -1113,24 +1112,22 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
                               <span>插话</span>
                             </button>
                           )}
-                          <button
-                            type="button"
+                          <IconButton
+                            size="sm"
                             className="composer-queue-icon-btn"
-                            aria-label={`编辑第 ${index + 1} 条待发消息`}
+                            label={`编辑第 ${index + 1} 条待发消息`}
                             title="编辑"
                             onClick={() => startQueueEdit(item)}
-                          >
-                            <PencilSimple size={13} aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
+                            icon={<PencilSimple size={13} />}
+                          />
+                          <IconButton
+                            size="sm"
                             className="composer-queue-icon-btn is-danger"
-                            aria-label={`取消第 ${index + 1} 条待发消息`}
+                            label={`取消第 ${index + 1} 条待发消息`}
                             title="取消此条待发消息"
                             onClick={() => removeQueuedInput?.(index)}
-                          >
-                            <X size={13} aria-hidden="true" />
-                          </button>
+                            icon={<X size={13} />}
+                          />
                         </div>
                       </>
                     )}

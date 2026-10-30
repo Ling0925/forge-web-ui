@@ -29,8 +29,8 @@
 
 /* Sizes */
 .btn-sm {
-  min-height: 28px;
-  height: 28px;
+  min-height: var(--control-height-sm);
+  height: var(--control-height-sm);
   padding: 0 var(--space-2);
   font-size: var(--text-xs);
   line-height: var(--leading-xs);
@@ -45,8 +45,8 @@
 }
 
 .btn-lg {
-  min-height: 44px;
-  height: 44px;
+  min-height: var(--control-height-lg);
+  height: var(--control-height-lg);
   padding: 0 var(--space-4);
   font-size: var(--text-md);
   line-height: var(--leading-md);
@@ -177,10 +177,8 @@
 }
 
 .btn-icon.btn-sm {
-  width: 24px;
-  min-width: 24px;
-  height: 24px;
-  min-height: 24px;
+  width: var(--control-height-sm);
+  min-width: var(--control-height-sm);
 }
 
 /* 图标按钮的 ghost 变体：默认次级色，悬停提亮（与工作台图标按钮一致） */
@@ -193,9 +191,14 @@
 }
 
 .btn-icon.btn-lg {
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
+  width: var(--control-height-lg);
+  min-width: var(--control-height-lg);
+}
+
+/* Toggle state (menu open / panel expanded). */
+.btn-icon.is-active {
+  background-color: var(--surface-selected);
+  color: var(--text-primary);
 }
 
 @media (max-width: 768px) {

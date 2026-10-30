@@ -5,6 +5,7 @@ import { OperationScope } from "../../state/operation-scope";
 import { hostCapabilities } from "../../web-host";
 import type { SessionSummary } from "../../shared-types";
 import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import { IconButton } from "../primitives/IconButton";
 import { Button } from "../primitives/Button";
 import { Input } from "../primitives/Input";
 import { Dialog } from "./Dialog";
@@ -144,18 +145,19 @@ export function SessionActions({
       onClick={(e) => e.stopPropagation()}
       onMouseEnter={onMouseEnter}
     >
-      <button
+      <IconButton
         ref={triggerRef}
-        type="button"
-        className={`wb-icon-btn session-action-btn${isOpen ? " is-active" : ""}`}
-        aria-label="会话操作"
+        size="sm"
+        className="session-action-btn"
+        active={isOpen}
+        label="会话操作"
         aria-expanded={isOpen}
         title={locked ? "会话操作（运行中暂不可用）" : "会话操作"}
+        icon={<DotsThreeVertical size={15} weight="bold" />}
         onClick={toggleMenu}
       >
-        <DotsThreeVertical size={15} weight="bold" />
         {renaming && <span className="wb-dirty-dot" aria-hidden="true" />}
-      </button>
+      </IconButton>
 
       {isOpen &&
         createPortal(

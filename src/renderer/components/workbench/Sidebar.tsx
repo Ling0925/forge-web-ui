@@ -15,6 +15,7 @@ import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
 import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { modelServiceStatus } from "../../state/model-service-status";
+import { IconButton } from "../primitives/IconButton";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
 
@@ -166,15 +167,12 @@ export function Sidebar() {
               <Plus size={15} weight="bold" />
               <span>新任务</span>
             </button>
-            <button
-              type="button"
-              className="wb-icon-btn sidebar-mobile-close"
+            <IconButton
+              className="sidebar-mobile-close"
+              label="关闭侧边栏"
+              icon={<X size={15} weight="bold" />}
               onClick={() => setMobileSidebar(false)}
-              aria-label="关闭侧边栏"
-              title="关闭侧边栏"
-            >
-              <X size={15} weight="bold" />
-            </button>
+            />
           </div>
         </div>
       </div>

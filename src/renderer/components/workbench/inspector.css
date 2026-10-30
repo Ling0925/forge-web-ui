@@ -66,29 +66,8 @@
 }
 
 .wb-inspector .wb-inspector-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: auto;
-  min-width: 0;
-  height: 26px;
-  padding: 0 8px;
-  border-radius: var(--radius-sm);
+  gap: var(--space-1);
   color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-soft);
-  font-size: var(--text-2xs);
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.wb-inspector .wb-inspector-close:hover {
-  color: var(--text-primary);
-  background: var(--surface-hover);
-  border-color: var(--border-control);
 }
 
 .wb-inspector .wb-inspector-close-icon,

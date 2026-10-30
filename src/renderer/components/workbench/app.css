@@ -554,16 +554,6 @@
   }
   .sidebar-mobile-close {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-  }
-  .sidebar-mobile-close:hover {
-    background-color: var(--surface-hover);
-    color: var(--text-primary);
   }
   .session-item-main {
     min-height: 38px;
@@ -1431,43 +1421,6 @@
   }
 }
 
-.wb-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: var(--icon-size);
-  min-width: var(--icon-size);
-  height: var(--icon-size);
-  min-height: var(--icon-size);
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  line-height: 1;
-  border-radius: var(--radius-quiet);
-  cursor: pointer;
-}
-.wb-icon-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
-}
-.wb-icon-btn:active {
-  background: var(--active-bg);
-}
-.wb-icon-btn:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
-}
-.wb-icon-btn:disabled {
-  color: var(--text-disabled);
-  cursor: not-allowed;
-}
-
-.wb-icon-btn.is-active {
-  background: var(--surface-selected);
-}
 .wb-approval-pill,
 .wb-approval-count {
   color: var(--warning);
@@ -1627,7 +1580,6 @@
   }
 }
 @media (max-width: 768px) {
-  .wb-icon-btn,
   .wb-overflow > summary {
     min-width: var(--icon-size-touch);
     min-height: var(--icon-size-touch);
