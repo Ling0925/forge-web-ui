@@ -91,6 +91,12 @@
 .welcome-empty {
   padding-block: var(--space-3);
 }
+/* 与「最近任务」列表左对齐，而非 EmptyState 默认的居中。 */
+.empty-state.welcome-empty {
+  align-items: flex-start;
+  text-align: left;
+  padding-inline: 0;
+}
 .wb-new-session-intro h2 {
   margin: 0 0 8px;
   font-size: clamp(24px, 2.8vw, 32px);
