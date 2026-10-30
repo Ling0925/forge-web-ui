@@ -27,7 +27,11 @@ import type {
 } from "../../shared-types";
 import { compactTokens } from "../../state/session-usage";
 import { ingestUsageStatsPricing } from "../../state/usage-pricing";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { EmptyState } from "../primitives/EmptyState";
 import { Tabs } from "../primitives/Tabs";
 import { renderUsageKpiGrid } from "./UsageKpiGrid";
@@ -976,7 +980,11 @@ export function UsageDashboard() {
                     </div>
 
                     {data.daily.length === 0 ? (
-                      <EmptyState variant="compact" className="usage-empty-state" title="当前时间段无每日消耗记录" />
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="当前时间段无每日消耗记录"
+                      />
                     ) : (
                       <div className="usage-daily-chart-container">
                         <div className="usage-chart-yaxis" aria-hidden="true">
@@ -1119,13 +1127,15 @@ export function UsageDashboard() {
                         <Database size={15} />
                         Token 结构与缓存效率
                       </span>
-                      <Tag>
-                        缓存率 {percent(data.averageCacheRate)}
-                      </Tag>
+                      <Tag>缓存率 {percent(data.averageCacheRate)}</Tag>
                     </div>
 
                     {compositionTotal === 0 ? (
-                      <EmptyState variant="compact" className="usage-empty-state" title="暂无 Token 构成数据" />
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="暂无 Token 构成数据"
+                      />
                     ) : (
                       <div className="usage-donut-layout">
                         <div className="usage-donut-visual">
@@ -1262,13 +1272,15 @@ export function UsageDashboard() {
                         <Cpu size={15} />
                         模型消耗分布
                       </span>
-                      <Tag>
-                        {data.models.length} 个模型
-                      </Tag>
+                      <Tag>{data.models.length} 个模型</Tag>
                     </div>
 
                     {data.models.length === 0 ? (
-                      <EmptyState variant="compact" className="usage-empty-state" title="暂无模型使用记录" />
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="暂无模型使用记录"
+                      />
                     ) : (
                       <div className="usage-models-list">
                         {data.models.map((m) => {
@@ -1396,13 +1408,15 @@ export function UsageDashboard() {
                         <Lightning size={15} />
                         模型速度与耗时对比
                       </span>
-                      <Tag>
-                        {requestAnalytics.modelPerfList.length} 个模型
-                      </Tag>
+                      <Tag>{requestAnalytics.modelPerfList.length} 个模型</Tag>
                     </div>
 
                     {requestAnalytics.modelPerfList.length === 0 ? (
-                      <EmptyState variant="compact" className="usage-empty-state" title="暂无请求级速度与耗时记录" />
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="暂无请求级速度与耗时记录"
+                      />
                     ) : (
                       <div className="usage-speed-list">
                         {requestAnalytics.modelPerfList.map((perf) => {
@@ -1624,13 +1638,15 @@ export function UsageDashboard() {
                       <Lightning size={15} />
                       消耗排名前列的会话
                     </span>
-                    <Tag>
-                      Top {data.topSessions.length}
-                    </Tag>
+                    <Tag>Top {data.topSessions.length}</Tag>
                   </div>
 
                   {data.topSessions.length === 0 ? (
-                    <EmptyState variant="compact" className="usage-empty-state" title="所选条件下暂无会话数据" />
+                    <EmptyState
+                      variant="compact"
+                      className="usage-empty-state"
+                      title="所选条件下暂无会话数据"
+                    />
                   ) : (
                     <div className="usage-table-wrapper">
                       <table className="usage-table">
@@ -1729,9 +1745,7 @@ export function UsageDashboard() {
                         <ArrowsClockwise size={15} />
                         来源调用统计
                       </span>
-                      <Tag>
-                        {data.routes.length} 条
-                      </Tag>
+                      <Tag>{data.routes.length} 条</Tag>
                     </div>
 
                     <div className="usage-table-wrapper">

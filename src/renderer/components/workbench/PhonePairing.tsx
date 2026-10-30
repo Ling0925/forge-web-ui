@@ -3,7 +3,11 @@ import { CopySimple, WarningCircle } from "@phosphor-icons/react";
 import * as QRCode from "qrcode";
 import { useEffect, useId, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
@@ -28,7 +32,8 @@ export function PhonePairing() {
   const { chooseWorkspace } = useWorkbenchActions();
   const state = useWorkbenchSelector(
     ({ state }) => ({
-      defaultWorkspace: state.activeSnapshot?.workspace ?? state.sessions?.[0]?.workspace ?? "",
+      defaultWorkspace:
+        state.activeSnapshot?.workspace ?? state.sessions?.[0]?.workspace ?? "",
     }),
     shallowEqual,
   );

@@ -1039,9 +1039,7 @@ export function UsageOverview({
             <div className="usage-3d-sidebar-block">
               <div className="usage-3d-sidebar-head">
                 <span>当前活跃能量通道 (会话 & 子代理)</span>
-                <Tag>
-                  {activeConduits.length} 条
-                </Tag>
+                <Tag>{activeConduits.length} 条</Tag>
               </div>
 
               {activeConduits.length === 0 ? (

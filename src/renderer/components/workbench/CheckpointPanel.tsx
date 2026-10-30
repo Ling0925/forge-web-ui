@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CheckpointDto } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { CodeBlock } from "../primitives/CodeBlock";
 import { Dialog } from "./Dialog";

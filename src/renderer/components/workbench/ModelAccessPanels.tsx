@@ -23,7 +23,11 @@ import type {
   ModelCatalogEntry,
 } from "@forge/core/shared/model-catalog";
 import type { PublicProviderSource } from "@forge/core/shared/schemas";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { configuredModelIds } from "../../state/composer-model";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
@@ -2640,9 +2644,7 @@ export function AccountLoginPanel({
           {login.account?.user && (
             <span className="model-access-status">{login.account.user}</span>
           )}
-          {login.account?.plan && (
-            <Tag>{login.account.plan}</Tag>
-          )}
+          {login.account?.plan && <Tag>{login.account.plan}</Tag>}
         </div>
       )}
       {error && (
@@ -2880,12 +2882,8 @@ export function ImportPanel({
                       )}
                     </div>
                     <div className="model-access-preview-badges">
-                      <Tag>
-                        {source.model || "未指定模型"}
-                      </Tag>
-                      <Tag>
-                        {source.credentialCount} 凭据
-                      </Tag>
+                      <Tag>{source.model || "未指定模型"}</Tag>
+                      <Tag>{source.credentialCount} 凭据</Tag>
                       {source.warnings.map((warning) => (
                         <span
                           className="model-access-status is-error model-access-preview-warning"
@@ -3089,15 +3087,10 @@ export function RouteGroupsPanel({
                       aria-hidden="true"
                     />
                     <strong>{group.label}</strong>
-                    <Tag
-                      tone="accent"
-                      title={strategyMeta.desc}
-                    >
+                    <Tag tone="accent" title={strategyMeta.desc}>
                       {strategyMeta.badge} · {group.strategy}
                     </Tag>
-                    {group.sticky && (
-                      <Tag tone="success">黏性</Tag>
-                    )}
+                    {group.sticky && <Tag tone="success">黏性</Tag>}
                     <span className="model-access-status">
                       {group.members.length} 个成员
                     </span>

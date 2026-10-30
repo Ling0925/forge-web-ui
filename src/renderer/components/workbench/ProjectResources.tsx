@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { ProjectContextDto } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
-import { shallowEqual, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { McpPanel } from "./McpPanel";
 

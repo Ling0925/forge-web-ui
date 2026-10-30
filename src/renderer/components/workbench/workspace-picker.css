@@ -692,9 +692,6 @@ button.workspace-picker-crumb:focus-visible {
   gap: 4px;
 }
 
-
-
-
 /* Restricted / Non-browsable Info Box */
 .workspace-picker-restricted-box {
   padding: 12px 14px;

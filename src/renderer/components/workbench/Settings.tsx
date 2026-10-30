@@ -32,7 +32,11 @@ import {
   buildSettingsUpdate,
   createSettingsDraft,
 } from "../../state/settings-draft";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
@@ -888,9 +892,7 @@ export function Settings() {
                           <div className="execution-panel-title-wrap">
                             <div className="execution-panel-title-row">
                               <h3>默认权限</h3>
-                              <Tag tone="muted">
-                                新建运行策略
-                              </Tag>
+                              <Tag tone="muted">新建运行策略</Tag>
                             </div>
                             <p>
                               为新建会话与后续发起的运行设定默认安全边界；切换默认策略不会自动提升当前正在运行的任务权限。
@@ -1037,9 +1039,7 @@ export function Settings() {
                                 <div className="execution-panel-title-wrap">
                                   <div className="execution-panel-title-row">
                                     <h3>请求空闲超时</h3>
-                                    <Tag tone="muted">
-                                      流式保活阈值
-                                    </Tag>
+                                    <Tag tone="muted">流式保活阈值</Tag>
                                   </div>
                                   <p>
                                     限制单次模型请求在流式输出期间的最大静默等待时间；只中断单次请求的空闲，不限制任务总时长。
@@ -1161,9 +1161,7 @@ export function Settings() {
                                 <div className="execution-panel-title-wrap">
                                   <div className="execution-panel-title-row">
                                     <h3>上下文压缩预算</h3>
-                                    <Tag tone="muted">
-                                      自动摘要与检索
-                                    </Tag>
+                                    <Tag tone="muted">自动摘要与检索</Tag>
                                   </div>
                                   <p>
                                     自动压缩保留可检索的原始历史。压缩影响后续请求，不会删除聊天或清零累计用量。

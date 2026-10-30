@@ -1,8 +1,12 @@
 import { Fragment, useMemo, useState } from "react";
 import type { UsageRequest } from "../../shared-types";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
-import { EmptyState } from "../primitives/EmptyState";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 import { type BadgeTone, ToneBadge } from "../primitives/StatusBadge";
 import { Tag } from "../primitives/Tag";
 

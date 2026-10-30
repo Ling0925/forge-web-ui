@@ -974,8 +974,6 @@
   padding: 8px 10px;
 }
 
-
-
 .wb-inspector .inspector-plan-history-section {
   padding-top: 6px;
   border-top: 1px solid var(--border-subtle);
@@ -1198,8 +1196,6 @@
   background: var(--surface-soft);
   text-align: center;
 }
-
-
 
 .wb-app .wb-inspector .agent-card,
 .wb-app .wb-inspector .wb-child-row,

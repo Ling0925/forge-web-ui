@@ -102,8 +102,6 @@
   overflow-wrap: anywhere;
 }
 
-
-
 .provider-source-protocol {
   flex-shrink: 0;
   color: var(--text-muted);

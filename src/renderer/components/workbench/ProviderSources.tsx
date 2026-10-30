@@ -18,7 +18,11 @@ import {
   type PublicProviderSource,
   configureInputSchema,
 } from "@forge/core/shared/schemas";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { Checkbox } from "../primitives/Checkbox";
@@ -1050,9 +1054,7 @@ export function ProviderSources({
                           {isDefault && (
                             <span className="provider-current">默认</span>
                           )}
-                          <Tag>
-                            {item.credentials?.length ?? 1} 凭据
-                          </Tag>
+                          <Tag>{item.credentials?.length ?? 1} 凭据</Tag>
                           <Tag tone="muted">
                             {item.hasApiKey ? "已保存密钥" : "无密钥"}
                           </Tag>
@@ -1062,9 +1064,7 @@ export function ProviderSources({
                             </Tag>
                           )}
                           {meta?.stale && catalog && catalog.length > 0 && (
-                            <Tag tone="warning">
-                              已过期
-                            </Tag>
+                            <Tag tone="warning">已过期</Tag>
                           )}
                         </span>
                         <span className="provider-source-protocol">

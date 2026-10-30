@@ -4,7 +4,11 @@ import { createPortal } from "react-dom";
 import { OperationScope } from "../../state/operation-scope";
 import { hostCapabilities } from "../../web-host";
 import type { SessionSummary } from "../../shared-types";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { IconButton } from "../primitives/IconButton";
 import { Button } from "../primitives/Button";
 import { Input } from "../primitives/Input";
