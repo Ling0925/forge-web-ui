@@ -1,10 +1,18 @@
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { ForgeMark } from "../primitives/ForgeMark";
 
 export function Welcome() {
-  const { state, selectSession } = useWorkbench();
+  const { selectSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      isSessionsLoading: state.isSessionsLoading,
+      sessions: state.sessions,
+    }),
+    shallowEqual,
+  );
   const recent = state.sessions
     .filter((session) => isPrimarySession(session) && !session.archived)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
@@ -56,11 +64,15 @@ export function Welcome() {
               ))}
             </ul>
           ) : (
-            <p className="welcome-empty">
-              {state.isSessionsLoading
-                ? "正在读取最近任务…"
-                : "还没有历史任务，从下方开始。"}
-            </p>
+            state.isSessionsLoading ? (
+              <p className="welcome-empty">正在读取最近任务…</p>
+            ) : (
+              <EmptyState
+                variant="compact"
+                className="welcome-empty"
+                title="还没有历史任务，从下方开始。"
+              />
+            )
           )}
         </section>
       </section>

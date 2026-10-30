@@ -27,13 +27,20 @@ import type {
 } from "../../shared-types";
 import { compactTokens } from "../../state/session-usage";
 import { ingestUsageStatsPricing } from "../../state/usage-pricing";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { Tabs } from "../primitives/Tabs";
-import { UsageOverview, renderUsageKpiGrid } from "./UsageOverview";
+import { renderUsageKpiGrid } from "./UsageKpiGrid";
+import { UsageOverview } from "./UsageOverview";
 import { UsageRequests } from "./UsageRequests";
 import "./usage-dashboard.css";
 import { Button } from "../primitives/Button";
 import { IconButton } from "../primitives/IconButton";
+import { Tag } from "../primitives/Tag";
 import { useDismiss } from "../primitives/useDismiss";
 
 const usageTabs = [
@@ -188,7 +195,16 @@ const aggregateCostExplanation =
   "历史 Token 汇总按当前公开基础单价估算；缺少逐请求明细，未还原上下文阶梯价，不代表实际账单";
 
 export function UsageDashboard() {
-  const { state, openUsageDashboard, selectSession } = useWorkbench();
+  const { openUsageDashboard, selectSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeRuns: state.activeRuns,
+      isUsageDashboardOpen: state.isUsageDashboardOpen,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<UsageStatsDto | null>(null);
@@ -964,9 +980,11 @@ export function UsageDashboard() {
                     </div>
 
                     {data.daily.length === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>当前时间段无每日消耗记录</p>
-                      </div>
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="当前时间段无每日消耗记录"
+                      />
                     ) : (
                       <div className="usage-daily-chart-container">
                         <div className="usage-chart-yaxis" aria-hidden="true">
@@ -1109,15 +1127,15 @@ export function UsageDashboard() {
                         <Database size={15} />
                         Token 结构与缓存效率
                       </span>
-                      <span className="usage-kpi-badge">
-                        缓存率 {percent(data.averageCacheRate)}
-                      </span>
+                      <Tag>缓存率 {percent(data.averageCacheRate)}</Tag>
                     </div>
 
                     {compositionTotal === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>暂无 Token 构成数据</p>
-                      </div>
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="暂无 Token 构成数据"
+                      />
                     ) : (
                       <div className="usage-donut-layout">
                         <div className="usage-donut-visual">
@@ -1254,15 +1272,15 @@ export function UsageDashboard() {
                         <Cpu size={15} />
                         模型消耗分布
                       </span>
-                      <span className="usage-kpi-badge">
-                        {data.models.length} 个模型
-                      </span>
+                      <Tag>{data.models.length} 个模型</Tag>
                     </div>
 
                     {data.models.length === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>暂无模型使用记录</p>
-                      </div>
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="暂无模型使用记录"
+                      />
                     ) : (
                       <div className="usage-models-list">
                         {data.models.map((m) => {
@@ -1390,15 +1408,15 @@ export function UsageDashboard() {
                         <Lightning size={15} />
                         模型速度与耗时对比
                       </span>
-                      <span className="usage-kpi-badge">
-                        {requestAnalytics.modelPerfList.length} 个模型
-                      </span>
+                      <Tag>{requestAnalytics.modelPerfList.length} 个模型</Tag>
                     </div>
 
                     {requestAnalytics.modelPerfList.length === 0 ? (
-                      <div className="usage-empty-state">
-                        <p>暂无请求级速度与耗时记录</p>
-                      </div>
+                      <EmptyState
+                        variant="compact"
+                        className="usage-empty-state"
+                        title="暂无请求级速度与耗时记录"
+                      />
                     ) : (
                       <div className="usage-speed-list">
                         {requestAnalytics.modelPerfList.map((perf) => {
@@ -1620,15 +1638,15 @@ export function UsageDashboard() {
                       <Lightning size={15} />
                       消耗排名前列的会话
                     </span>
-                    <span className="usage-kpi-badge">
-                      Top {data.topSessions.length}
-                    </span>
+                    <Tag>Top {data.topSessions.length}</Tag>
                   </div>
 
                   {data.topSessions.length === 0 ? (
-                    <div className="usage-empty-state">
-                      <p>所选条件下暂无会话数据</p>
-                    </div>
+                    <EmptyState
+                      variant="compact"
+                      className="usage-empty-state"
+                      title="所选条件下暂无会话数据"
+                    />
                   ) : (
                     <div className="usage-table-wrapper">
                       <table className="usage-table">
@@ -1727,9 +1745,7 @@ export function UsageDashboard() {
                         <ArrowsClockwise size={15} />
                         来源调用统计
                       </span>
-                      <span className="usage-kpi-badge">
-                        {data.routes.length} 条
-                      </span>
+                      <Tag>{data.routes.length} 条</Tag>
                     </div>
 
                     <div className="usage-table-wrapper">

@@ -18,13 +18,18 @@ import {
   type PublicProviderSource,
   configureInputSchema,
 } from "@forge/core/shared/schemas";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { Checkbox } from "../primitives/Checkbox";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
+import { Tag } from "../primitives/Tag";
 import { Dialog } from "./Dialog";
 import {
   type AccessDraft,
@@ -221,7 +226,15 @@ export function ProviderSources({
   readonly onBusy: (busy: boolean) => void;
   readonly active?: boolean;
 }) {
-  const { state, updateSettings, loadSettings } = useWorkbench();
+  const { updateSettings, loadSettings } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      isSettingsOpen: state.isSettingsOpen,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const settings = state.settings;
   const sources = useMemo<readonly PublicProviderSource[]>(
     () => settings?.providerSources ?? [],
@@ -1041,21 +1054,17 @@ export function ProviderSources({
                           {isDefault && (
                             <span className="provider-current">默认</span>
                           )}
-                          <span className="provider-tag">
-                            {item.credentials?.length ?? 1} 凭据
-                          </span>
-                          <span className="provider-tag is-muted">
+                          <Tag>{item.credentials?.length ?? 1} 凭据</Tag>
+                          <Tag tone="muted">
                             {item.hasApiKey ? "已保存密钥" : "无密钥"}
-                          </span>
+                          </Tag>
                           {overrideCount > 0 && (
-                            <span className="provider-tag is-customized">
+                            <Tag tone="accent">
                               已定制 {overrideCount} 个模型
-                            </span>
+                            </Tag>
                           )}
                           {meta?.stale && catalog && catalog.length > 0 && (
-                            <span className="provider-tag is-stale">
-                              已过期
-                            </span>
+                            <Tag tone="warning">已过期</Tag>
                           )}
                         </span>
                         <span className="provider-source-protocol">

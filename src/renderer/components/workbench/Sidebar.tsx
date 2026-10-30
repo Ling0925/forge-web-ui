@@ -13,8 +13,10 @@ import {
 import { useState } from "react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
+import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { modelServiceStatus } from "../../state/model-service-status";
+import { EmptyState } from "../primitives/EmptyState";
+import { IconButton } from "../primitives/IconButton";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
 
@@ -34,14 +36,18 @@ const DEFAULT_VISIBLE_COUNT = 10;
 const PAGE_SIZE = 10;
 
 export function Sidebar() {
-  const {
-    state,
-    openNewSession,
-    setMobileSidebar,
-    openSettings,
-    openUsageDashboard,
-    createSession,
-  } = useWorkbench();
+  const { openNewSession, setMobileSidebar, openSettings, openUsageDashboard, createSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      activeSnapshotModel: state.activeSnapshot?.model,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      isSessionsLoading: state.isSessionsLoading,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
 
   const serviceStatus = modelServiceStatus(state.settings);
   const [query, setQuery] = useState("");
@@ -113,7 +119,7 @@ export function Sidebar() {
       );
       const latest = allSessionsInWorkspace[0];
       const candidateModel =
-        latest?.model || state.activeSnapshot?.model || state.settings?.model;
+        latest?.model || state.activeSnapshotModel || state.settings?.model;
       const snapshot = await createSession({
         workspace,
         ...(candidateModel ? { model: candidateModel } : {}),
@@ -162,15 +168,12 @@ export function Sidebar() {
               <Plus size={15} weight="bold" />
               <span>新任务</span>
             </button>
-            <button
-              type="button"
-              className="wb-icon-btn sidebar-mobile-close"
+            <IconButton
+              className="sidebar-mobile-close"
+              label="关闭侧边栏"
+              icon={<X size={15} weight="bold" />}
               onClick={() => setMobileSidebar(false)}
-              aria-label="关闭侧边栏"
-              title="关闭侧边栏"
-            >
-              <X size={15} weight="bold" />
-            </button>
+            />
           </div>
         </div>
       </div>
@@ -201,9 +204,9 @@ export function Sidebar() {
         {state.isSessionsLoading && sessions.length === 0 ? (
           <p className="wb-muted sidebar-empty">正在加载会话...</p>
         ) : sessions.length === 0 ? (
-          <p className="wb-muted sidebar-empty">暂无历史任务</p>
+          <EmptyState variant="compact" className="sidebar-empty" title="暂无历史任务" />
         ) : groups.length === 0 ? (
-          <p className="wb-muted sidebar-empty">没有匹配的任务</p>
+          <EmptyState variant="compact" className="sidebar-empty" title="没有匹配的任务" />
         ) : (
           groups.map((group) => {
             // A live search must reveal its matches, so collapse state is held

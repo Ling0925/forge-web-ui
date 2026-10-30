@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import "./buttons.css";
 
 export interface IconButtonProps
@@ -8,6 +8,11 @@ export interface IconButtonProps
   readonly variant?: "secondary" | "ghost" | "danger";
   readonly size?: "sm" | "md" | "lg";
   readonly loading?: boolean;
+  /** Visual state for toggles (menu open, panel expanded). */
+  readonly active?: boolean;
+  /** Extra adornments after the icon, e.g. a count badge or a responsive label. */
+  readonly children?: ReactNode;
+  readonly ref?: Ref<HTMLButtonElement>;
 }
 
 export function IconButton({
@@ -16,8 +21,10 @@ export function IconButton({
   variant = "ghost",
   size = "md",
   loading = false,
+  active = false,
   disabled = false,
   className = "",
+  children,
   type = "button",
   ...rest
 }: IconButtonProps) {
@@ -26,6 +33,7 @@ export function IconButton({
     "btn-icon",
     `btn-${variant}`,
     `btn-${size}`,
+    active ? "is-active" : "",
     className,
   ]
     .filter(Boolean)
@@ -50,6 +58,7 @@ export function IconButton({
           {icon}
         </span>
       )}
+      {children}
     </button>
   );
 }

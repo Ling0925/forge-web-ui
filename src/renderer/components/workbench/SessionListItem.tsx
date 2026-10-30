@@ -3,7 +3,11 @@ import { createPortal } from "react-dom";
 import type { SessionSummary } from "../../shared-types";
 import { readSessionInfo } from "../../state/session-info-cache";
 import { seedSessionUsage } from "../../state/session-usage";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { SessionActions } from "./SessionActions";
 
 const labels: Readonly<Record<string, string>> = {
@@ -19,14 +23,18 @@ const labels: Readonly<Record<string, string>> = {
 export function SessionListItem({
   session,
 }: { readonly session: SessionSummary }) {
-  const { state, selectSession, setMobileSidebar } = useWorkbench();
-  const run = state.activeRuns[session.id];
-  const pending = Boolean(run?.pendingApproval);
-  const status = pending
-    ? "awaiting_approval"
-    : (run?.status ?? session.status);
-  const active =
-    !state.isNewSessionOpen && session.id === state.activeSessionId;
+  const { selectSession, setMobileSidebar } = useWorkbenchActions();
+  // Select only what the row shows so streamed tokens for this session (which
+  // replace its run object) do not re-render every row.
+  const { pending, runStatus, active } = useWorkbenchSelector(({ state }) => {
+    const run = state.activeRuns[session.id];
+    return {
+      pending: Boolean(run?.pendingApproval),
+      runStatus: run?.status,
+      active: !state.isNewSessionOpen && session.id === state.activeSessionId,
+    };
+  }, shallowEqual);
+  const status = pending ? "awaiting_approval" : (runStatus ?? session.status);
   const [open, setOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [info, setInfo] = useState({ tokens: "读取中…", model: session.model });

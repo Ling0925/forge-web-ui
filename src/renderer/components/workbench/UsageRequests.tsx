@@ -1,8 +1,14 @@
 import { Fragment, useMemo, useState } from "react";
 import type { UsageRequest } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 import { type BadgeTone, ToneBadge } from "../primitives/StatusBadge";
+import { Tag } from "../primitives/Tag";
 
 const pageSize = 50;
 
@@ -55,7 +61,13 @@ export function UsageRequests({
 }: {
   readonly requests: readonly UsageRequest[];
 }) {
-  const { state, openUsageDashboard, selectSession } = useWorkbench();
+  const { openUsageDashboard, selectSession } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const [page, setPage] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
   const pageCount = Math.max(1, Math.ceil(requests.length / pageSize));
@@ -138,7 +150,13 @@ export function UsageRequests({
   }, [requests]);
 
   if (requests.length === 0) {
-    return <div className="usage-empty-state">暂无请求记录</div>;
+    return (
+      <EmptyState
+        variant="compact"
+        className="usage-empty-state"
+        title="暂无请求记录"
+      />
+    );
   }
 
   const totalCount = requests.length;
@@ -253,7 +271,7 @@ export function UsageRequests({
         <div className="usage-section-header">
           <div className="usage-section-title-group">
             <span className="usage-section-title">请求明细记录</span>
-            <span className="usage-kpi-badge">{requests.length} 条</span>
+            <Tag>{requests.length} 条</Tag>
           </div>
           {pageCount > 1 && (
             <nav className="usage-request-pagination" aria-label="请求记录分页">

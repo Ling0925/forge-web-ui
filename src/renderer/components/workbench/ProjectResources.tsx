@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import type { ProjectContextDto } from "@forge/core/shared/ipc";
 import { OperationScope } from "../../state/operation-scope";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { McpPanel } from "./McpPanel";
 
 export function ProjectResources() {
-  const { state } = useWorkbench();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+    }),
+    shallowEqual,
+  );
   const id = state.activeSessionId;
   const scope = useRef(new OperationScope());
   useEffect(() => {

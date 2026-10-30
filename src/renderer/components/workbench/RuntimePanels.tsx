@@ -23,6 +23,7 @@ import {
   type TaskPlan,
 } from "@forge/core/shared/schemas";
 import { sessionPlans } from "@forge/core/shared/plans";
+import { EmptyState } from "../primitives/EmptyState";
 import { Button } from "../primitives/Button";
 import { StatusBadge, ToneBadge } from "../primitives/StatusBadge";
 import {
@@ -213,14 +214,12 @@ export function PlanProgressPanel({
           <PlanSteps plan={currentPlan} />
         </div>
       ) : (
-        <div className="inspector-plan-empty">
-          <p className="wb-muted inspector-plan-empty-title">
-            尚无已保存计划。使用 Plan 模式请求只读规划。
-          </p>
-          <span className="inspector-plan-empty-hint">
-            执行过程中创建的任务步骤与完成进度将在此实时同步
-          </span>
-        </div>
+        <EmptyState
+          variant="compact"
+          className="inspector-plan-empty"
+          title="尚无已保存计划。使用 Plan 模式请求只读规划。"
+          description="执行过程中创建的任务步骤与完成进度将在此实时同步"
+        />
       )}
     </section>
   );
@@ -272,22 +271,20 @@ export function PlanDocumentPanel({
               <Markdown source={currentPlan.explanation} />
             </div>
           ) : (
-            <div className="inspector-plan-empty is-compact">
-              <p className="wb-muted inspector-plan-empty-title">
-                当前计划未附带详细说明文档。
-              </p>
-            </div>
+            <EmptyState
+              variant="compact"
+              className="inspector-plan-empty is-compact"
+              title="当前计划未附带详细说明文档。"
+            />
           )}
         </div>
       ) : (
-        <div className="inspector-plan-empty">
-          <p className="wb-muted inspector-plan-empty-title">
-            尚无已保存计划。使用 Plan 模式请求只读规划。
-          </p>
-          <span className="inspector-plan-empty-hint">
-            在对话中切换至 Plan 模式即可生成只读方案说明与分步计划
-          </span>
-        </div>
+        <EmptyState
+          variant="compact"
+          className="inspector-plan-empty"
+          title="尚无已保存计划。使用 Plan 模式请求只读规划。"
+          description="在对话中切换至 Plan 模式即可生成只读方案说明与分步计划"
+        />
       )}
       {historical.length > 0 && (
         <div className="inspector-plan-history-section wb-stack">
@@ -716,14 +713,12 @@ export function SubAgentsPanel() {
           })}
         </div>
       ) : (
-        <div className="inspector-subagents-empty">
-          <p className="wb-muted inspector-subagents-empty-title">
-            没有已保存的子任务
-          </p>
-          <p className="inspector-subagents-empty-hint">
-            主代理委派并行或专项任务时，子代理的实时进度与最终报告会在此展示。
-          </p>
-        </div>
+        <EmptyState
+          variant="compact"
+          className="inspector-subagents-empty"
+          title="没有已保存的子任务"
+          description="主代理委派并行或专项任务时，子代理的实时进度与最终报告会在此展示。"
+        />
       )}
 
       {snapshot.advisorRequests && snapshot.advisorRequests.length > 0 && (

@@ -10,7 +10,13 @@ import {
 } from "@phosphor-icons/react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { permissionLabels } from "../../state/permission-labels";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowArrayEqual,
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
+import { EmptyState } from "../primitives/EmptyState";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
 import { Button } from "../primitives/Button";
 import { DiffViewer, diffStats } from "../primitives/DiffViewer";
@@ -133,8 +139,44 @@ export function Inspector({
   const [sessionSubTab, setSessionSubTab] = useState<
     "overview" | "browser" | "resources"
   >("overview");
-  const { state, answerApproval, selectSession, refreshActiveSession, setMobileTab } =
-    useWorkbench();
+  const { answerApproval, selectSession, refreshActiveSession, setMobileTab } =
+    useWorkbenchActions();
+  // Run state is reduced to the fields the drawer renders, so streamed tokens
+  // (which replace the run object) do not re-render the whole inspector.
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      activeSnapshot: state.activeSnapshot,
+      isSnapshotLoading: state.isSnapshotLoading,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
+  const run = useWorkbenchSelector(({ state }) => {
+    const active = state.activeSessionId
+      ? state.activeRuns[state.activeSessionId]
+      : undefined;
+    return active
+      ? {
+          status: active.status,
+          permission: active.permission,
+          pendingApproval: active.pendingApproval,
+        }
+      : undefined;
+  }, shallowEqual);
+  const pendingApprovals = useWorkbenchSelector(
+    ({ state }) =>
+      Object.values(state.activeRuns)
+        .filter((r) => r.pendingApproval)
+        .map((r) => ({
+          sessionId: r.sessionId,
+          pendingApproval: r.pendingApproval,
+          isCancelling: r.isCancelling,
+          isSubmittingApproval: r.isSubmittingApproval,
+        })),
+    shallowArrayEqual,
+  );
   const paneRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (focusToken && focusToken > 0) paneRef.current?.focus();
@@ -144,9 +186,6 @@ export function Inspector({
     state.activeSnapshot?.id === state.activeSessionId
       ? state.activeSnapshot
       : null;
-  const run = state.activeSessionId
-    ? state.activeRuns[state.activeSessionId]
-    : undefined;
   const started = snapshot?.events
     .filter((e) => e.type === "run_started")
     .at(-1);
@@ -154,9 +193,6 @@ export function Inspector({
     !run &&
     (snapshot?.status === "running" ||
       snapshot?.status === "awaiting_approval");
-  const pendingApprovals = Object.values(state.activeRuns).filter(
-    (r) => r.pendingApproval,
-  );
   // Exactly one request can be the selected session's live head; the
   // Transcript already renders it in the reading flow, so the drawer only
   // annotates and links it instead of duplicating the buttons. `run` is
@@ -188,17 +224,17 @@ export function Inspector({
         </div>
         <div className="inspector-head-actions">
           {onRequestCollapse && (
-            <button
-              type="button"
-              className="wb-icon-btn wb-inspector-close"
+            <Button
+              size="sm"
+              className="wb-inspector-close"
               aria-label="收起详情"
               title="收起详情"
+              icon={<SidebarSimple size={14} className="wb-inspector-close-icon" />}
               onClick={onRequestCollapse}
             >
-              <SidebarSimple size={14} className="wb-inspector-close-icon" />
               <span className="wb-inspector-close-label">收起</span>
               <CaretRight size={11} weight="bold" className="wb-inspector-close-caret" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -283,11 +319,15 @@ export function Inspector({
           </section>
         )}
         {!snapshot ? (
-          <p className="wb-muted inspector-empty">
-            {state.isSnapshotLoading
-              ? "正在读取执行记录…"
-              : "选择一个会话，查看执行详情"}
-          </p>
+          state.isSnapshotLoading ? (
+            <p className="wb-muted inspector-empty">正在读取执行记录…</p>
+          ) : (
+            <EmptyState
+              variant="compact"
+              className="inspector-empty"
+              title="选择一个会话，查看执行详情"
+            />
+          )
         ) : (
           <Tabs
             className="inspector-tabs"
@@ -511,9 +551,11 @@ export function Inspector({
                             })}
                           </div>
                         ) : (
-                          <div className="inspector-empty-card">
-                            <p className="wb-muted">本会话尚无直接文件变更</p>
-                          </div>
+                          <EmptyState
+                            variant="compact"
+                            className="inspector-empty-card"
+                            title="本会话尚无直接文件变更"
+                          />
                         )}
                       </section>
                       <details open className="wb-disclosure">

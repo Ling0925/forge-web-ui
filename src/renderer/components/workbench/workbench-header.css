@@ -45,7 +45,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.wb-app .wb-header-actions .wb-icon-btn,
 .wb-app .wb-header-actions .btn-icon {
   width: var(--control-height-lg);
   min-width: var(--control-height-lg);
@@ -174,7 +173,6 @@
   .wb-app .sidebar-mobile-close {
     display: inline-flex;
   }
-  .wb-app .workbench-task-header .wb-icon-btn,
   .wb-app .workbench-task-header .btn-icon,
   .wb-app .workbench-task-header .command-palette-trigger {
     width: var(--touch-min-target);

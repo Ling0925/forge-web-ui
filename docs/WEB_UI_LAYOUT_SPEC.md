@@ -86,7 +86,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ### 4.1 表单与选择器（严禁使用浏览器原生 `<select>` 与裸复选框）
 
-- **禁止原生 `<select>`**：原生下拉菜单会弹出操作系统级菜单，完全脱离工作台主题与字体。所有下拉选择必须使用工作台自定义无障碍下拉组件（如 `SettingsSelect`：`.settings-select-trigger` + `.settings-select-popover` + `.settings-select-option`，或底部栏 `ComposerDropdown`），并支持：
+- **禁止原生 `<select>`**：原生下拉菜单会弹出操作系统级菜单，完全脱离工作台主题与字体。所有下拉选择必须使用 `components/primitives/Select.tsx`（基于 Radix Select：触发器 `role="combobox"`、选项 `role="option"`，样式在 `select.css`），或底部栏 `ComposerDropdown`；复选框同理使用 `Checkbox`（Radix，`checkbox.css`）。二者均支持：
   - `role="listbox"` / `role="option"` 与 `aria-expanded`
   - 当前选中项勾选标记与可选副标题/描述
   - 点击外部关闭、`Escape` 关闭（且不误关外层 Modal）、方向键导航
@@ -146,7 +146,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
     - 提供角色列表、一键新建、从预置模板添加（探索/前端/后端/代码审查）、编辑、复制、启停与带安全二次确认的删除。
     - 字段包含 ID、名称、简要描述、适用场景（whenToUse）、系统指令（instructions）、模型绑定（继承主模型或绑定已配置 Provider 来源与精确模型 ID，禁止虚构 fallback）、权限策略（默认“继承主会话权限”，存储为 unrestricted 上限；readonly 为额外只读限制，workspace 明示“工作区逐次审批”，旧配置不自动放宽；明确提示权限绝不突破主会话）、工作树隔离（shared/worktree，明确提示非 OS 沙箱）、工具组限定策略（inherit/restricted）及 MCP 白名单。
     - 固定模型优先通过「已配置模型」下拉选择，复用 `selectableModelIds` 与所选来源的 `modelSelection` 可见性规则；模型与来源必须成对保存。仅在显式选择手动、无可选模型或保留旧未列出绑定时显示 ID 输入，不得要求用户重复录入已有模型。切换来源重新选择新来源可选值，读取已有配置则保留原绑定，不按远端目录或主模型静默回退。
-    - 具备版本冲突保护（保留草稿，提供拉取最新配置与放弃修改选项）、未保存草稿全局离开拦截（分类切换、搜索、关闭防护）、保存繁忙态锁定保护，以及旧配置缺省兼容。禁止使用原生 select 与裸 checkbox，采用全键盘与读屏支持的 `SettingsSelect` 与 `SettingsToggleCard`。
+    - 具备版本冲突保护（保留草稿，提供拉取最新配置与放弃修改选项）、未保存草稿全局离开拦截（分类切换、搜索、关闭防护）、保存繁忙态锁定保护，以及旧配置缺省兼容。禁止使用原生 select 与裸 checkbox，采用全键盘与读屏支持的 `Select`、`Checkbox` 与 `SettingsToggleCard`。
 
 ---
 

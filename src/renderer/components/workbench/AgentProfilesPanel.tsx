@@ -22,7 +22,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
@@ -124,7 +128,13 @@ export function AgentProfilesPanel({
   readonly onDirtyChange?: ((dirty: boolean) => void) | undefined;
   readonly onBusyChange?: ((busy: boolean) => void) | undefined;
 }) {
-  const { state, updateSettings, loadSettings } = useWorkbench();
+  const { updateSettings, loadSettings } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
   const profiles = useMemo(
     () => state.settings?.agentProfiles ?? [],
     [state.settings?.agentProfiles],

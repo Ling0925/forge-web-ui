@@ -501,19 +501,6 @@
 }
 
 .session-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  min-height: 22px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--surface-hover);
-  color: var(--text-muted);
-  cursor: pointer;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-fast), color var(--transition-fast),
@@ -536,8 +523,6 @@
 .session-action-btn:hover,
 .session-action-btn.is-active {
   opacity: 1;
-  color: var(--text-primary);
-  background-color: var(--surface-active);
 }
 
 @media (pointer: coarse) {
@@ -547,6 +532,8 @@
   .session-action-btn {
     opacity: 0.75;
     pointer-events: auto;
+  }
+  .btn-icon.session-action-btn {
     width: 28px;
     height: 28px;
     min-width: 28px;

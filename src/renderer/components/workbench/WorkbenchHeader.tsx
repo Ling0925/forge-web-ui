@@ -1,6 +1,11 @@
 import { ChatText, SidebarSimple } from "@phosphor-icons/react";
 import { type Ref, useEffect, useState } from "react";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
+import { IconButton } from "../primitives/IconButton";
 import { CommandPalette } from "./CommandPalette";
 
 interface WorkbenchHeaderProps {
@@ -19,7 +24,15 @@ export function WorkbenchHeader({
   pending,
   inspector,
 }: WorkbenchHeaderProps) {
-  const { state, setMobileSidebar } = useWorkbench();
+  const { setMobileSidebar } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeTitle: state.activeSnapshot?.title,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      mobileTab: state.mobileTab,
+    }),
+    shallowEqual,
+  );
   const [compact, setCompact] = useState(
     () => window.matchMedia("(max-width: 1000px)").matches,
   );
@@ -32,22 +45,18 @@ export function WorkbenchHeader({
   const expanded = compact
     ? state.mobileTab === "inspector"
     : !inspector.collapsed;
-  const title = isNew
-    ? "新会话"
-    : (state.activeSnapshot?.title ?? "Forge 工作台");
+  const title = isNew ? "新会话" : (state.activeTitle ?? "Forge 工作台");
   return (
     <header className="workbench-task-header">
       <div className="wb-header-start">
-        <button
-          type="button"
-          className="wb-icon-btn wb-drawer-toggle"
-          aria-label="打开会话列表"
-          aria-expanded={state.isMobileSidebarOpen}
+        <IconButton
+          className="wb-drawer-toggle"
+          label="打开会话列表"
           title="会话列表"
+          aria-expanded={state.isMobileSidebarOpen}
+          icon={<SidebarSimple size={18} />}
           onClick={() => setMobileSidebar(!state.isMobileSidebarOpen)}
-        >
-          <SidebarSimple size={18} />
-        </button>
+        />
         <CommandPalette />
       </div>
       <div className="wb-header-title">
@@ -64,20 +73,20 @@ export function WorkbenchHeader({
             待批准 {pending}
           </button>
         )}
-        <button
-          type="button"
+        <IconButton
           ref={inspector.toggleRef}
-          className={`wb-icon-btn wb-details-toggle${expanded ? " is-active" : ""}`}
+          className="wb-details-toggle"
+          active={expanded}
           aria-expanded={expanded}
-          aria-label={`${expanded ? "收起详情，返回任务" : "展开详情"}${pending > 0 ? `，待批准 ${pending} 项` : ""}`}
+          label={`${expanded ? "收起详情，返回任务" : "展开详情"}${pending > 0 ? `，待批准 ${pending} 项` : ""}`}
           title={expanded ? "返回任务" : "执行详情"}
+          icon={<SidebarSimple size={16} className="wb-details-icon" />}
           onClick={() => {
             setMobileSidebar(false);
             if (expanded) inspector.close();
             else inspector.reveal();
           }}
         >
-          <SidebarSimple size={16} className="wb-details-icon" />
           <ChatText size={18} className="wb-return-icon" />
           <span className="wb-details-label">详情</span>
           {pending > 0 && (
@@ -88,7 +97,7 @@ export function WorkbenchHeader({
               {pending}
             </span>
           )}
-        </button>
+        </IconButton>
       </div>
     </header>
   );

@@ -12,13 +12,13 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import type { SessionId } from "../../../shared-types";
-import { useWorkbench } from "../../../state/workbench-context";
+import { useWorkbenchActions } from "../../../state/workbench-store";
 import { Markdown } from "../../workbench/Markdown";
 import { ToolCopyButton } from "./common";
 
 function useSessionSelect(): ((sessionId: string) => Promise<void>) | undefined {
   try {
-    const { selectSession } = useWorkbench();
+    const { selectSession } = useWorkbenchActions();
     // Child-session ids arrive from tool payloads as plain strings.
     return (sessionId) => selectSession(sessionId as SessionId);
   } catch {
