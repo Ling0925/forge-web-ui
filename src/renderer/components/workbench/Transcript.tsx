@@ -668,18 +668,20 @@ function renderTimelineEntry(
           data-generation-id={item.generationId}
         >
           {item.role === "user" && <div className="message-header">你</div>}
-          {item.role === "assistant" && item.content && step?.showAuthor !== false && (
-            <div className="message-header message-author-row">
-              <span>
-                {item.streaming
-                  ? "Forge · 实时草稿"
-                  : item.incomplete
-                    ? "Forge · 未完成回复"
-                    : "Forge"}
-              </span>
-              {item.content && <MessageCopyButton text={item.content} />}
-            </div>
-          )}
+          {item.role === "assistant" &&
+            item.content &&
+            step?.showAuthor !== false && (
+              <div className="message-header message-author-row">
+                <span>
+                  {item.streaming
+                    ? "Forge · 实时草稿"
+                    : item.incomplete
+                      ? "Forge · 未完成回复"
+                      : "Forge"}
+                </span>
+                {item.content && <MessageCopyButton text={item.content} />}
+              </div>
+            )}
           {item.role === "user" && item.images && item.images.length > 0 && (
             <ImageAttachments key={snapshot.id} images={item.images} />
           )}
@@ -1041,8 +1043,7 @@ export const StoredTranscript = memo(function StoredTranscript({
                         // them when the final answer is rendered separately)
                         // is process narration, not the answer.
                         const isStep =
-                          Boolean(finalEntry) ||
-                          blockIndex < blocks.length - 1;
+                          Boolean(finalEntry) || blockIndex < blocks.length - 1;
                         const firstAssistant = blocks.findIndex(
                           (candidate) =>
                             candidate.kind === "single" &&

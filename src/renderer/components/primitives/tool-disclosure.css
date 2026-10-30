@@ -51,10 +51,6 @@
      instead of clipping its own second line. */
   min-height: 28px;
   padding: 2px var(--space-2);
-  /* Hang the hover surface outside the rail so the icon, not the padding,
-     lines up with the prose left edge. */
-  width: calc(100% + 2 * var(--space-2));
-  margin-inline: calc(-1 * var(--space-2));
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background-color: transparent;
