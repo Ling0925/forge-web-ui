@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { type Browser, chromium } from "playwright";
 import { expect, it } from "vitest";
 import { freePort, launch } from "./fixtures/web-process";
+import { chooseOption } from "./renderer/select-helpers";
 
 it("registers API keys through the built UI and Core, authenticates both transports, and hides credentials", async () => {
   const directory = await mkdtemp(join(tmpdir(), "forge-mcp-browser-"));
@@ -67,7 +68,7 @@ it("registers API keys through the built UI and Core, authenticates both transpo
     await page.keyboard.press("Control+,");
     await page.getByRole("button", { name: /MCP 扩展/ }).click();
     await page.getByRole("button", { name: "注册服务器" }).click();
-    await page.locator("#mcp-server-transport").selectOption("http");
+    await chooseOption(page.locator("#mcp-server-transport"), "http");
     await page.locator("#mcp-server-id").fill("exa-remote");
     await page.locator("#mcp-server-name").fill("Exa credential fixture");
     await page.locator("#mcp-server-url").fill(`http://127.0.0.1:${address.port}/mcp`);

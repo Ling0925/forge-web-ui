@@ -311,8 +311,10 @@ describe("Agent Profiles Mounted Tests", () => {
         return await page.evaluate(() => window.getSettingsCalls);
       }).toBe(1);
 
-      // 8. Test SettingsSelect Escape keydown
-      const selectTrigger = page.getByRole("button", { name: /模型模式选择/ });
+      // 8. Test Select Escape keydown
+      // Radix marks content outside the open listbox aria-hidden, so address the
+      // trigger by attribute rather than by role while it is open.
+      const selectTrigger = page.locator('[role="combobox"][aria-label="模型模式选择"]');
       await selectTrigger.click();
       expect(await selectTrigger.getAttribute("aria-expanded")).toBe("true");
       expect(await page.getByRole("listbox", { name: /模型模式选择/ }).count()).toBe(1);
@@ -338,7 +340,7 @@ describe("Agent Profiles Mounted Tests", () => {
       expect(await servers.inputValue()).toBe("github, memory");
       await selectTrigger.click();
       await page.getByRole("option", { name: /固定绑定模型/ }).click();
-      await page.getByRole("button", { name: "智能体模型", exact: true }).click();
+      await page.getByRole("combobox", { name: "智能体模型", exact: true }).click();
       await page.getByRole("option", { name: /手动输入模型 ID/ }).click();
       await page.getByLabel("精确模型 ID", { exact: true }).fill("ag/gemini-3.8-flash");
       await page.locator("#agent-input-instructions").fill("长".repeat(9000));
@@ -377,7 +379,7 @@ describe("Agent Profiles Mounted Tests", () => {
         await page.getByRole("button", { name: "从模板添加", exact: true }).click();
         await page.getByRole("menuitem", { name: kind === "frontend" ? /前端设计与实现/ : /后端实现/ }).click();
       }
-      const permission = page.getByRole("button", { name: "权限上限选择", exact: true });
+      const permission = page.getByRole("combobox", { name: "权限上限选择", exact: true });
       expect(await permission.textContent()).toContain("继承主会话权限");
       expect(await page.getByRole("note").filter({ hasText: "当前角色仍需逐次用户审批" }).count()).toBe(0);
       await page.getByRole("button", { name: "保存智能体角色", exact: true }).click();
@@ -395,7 +397,7 @@ describe("Agent Profiles Mounted Tests", () => {
     const page = await setupPage();
     try {
       await page.getByRole("button", { name: "编辑", exact: true }).click();
-      const permission = page.getByRole("button", { name: "权限上限选择", exact: true });
+      const permission = page.getByRole("combobox", { name: "权限上限选择", exact: true });
       expect(await permission.textContent()).toContain("只读");
       expect(await page.evaluate(() => window.updateCalls)).toEqual([]);
       await page.getByRole("button", { name: "返回列表", exact: true }).click();

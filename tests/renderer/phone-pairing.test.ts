@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { chooseOption, selectValue } from "./select-helpers";
 
 // Mounts the real component (real CSS, real qrcode data URLs) against a fake
 // `window.forgeLan` bridge, so the panel's state machine is exercised rather
@@ -95,10 +96,10 @@ it("pairs over LAN explicitly, shows the QR url, and never replays failed action
       page.evaluate(() => Reflect.get(window, "lanCalls") as { action: string }[]);
     // Only a read happened on mount: nothing listens before the explicit click.
     expect(await calls()).toEqual([{ action: "status" }]);
-    expect(await page.getByLabel("LAN 地址").inputValue()).toBe("192.168.1.24");
+    expect(await selectValue(page.getByLabel("LAN 地址"))).toBe("192.168.1.24");
     expect(await page.getByLabel("端口").inputValue()).toBe("41234");
     expect(await page.getByLabel("服务器工作区").inputValue()).toBe("/srv/forge-demo");
-    await page.getByLabel("LAN 地址").selectOption("10.0.0.7");
+    await chooseOption(page.getByLabel("LAN 地址"), "10.0.0.7");
     expect(await page.locator(".phone-pairing-qr").count()).toBe(0);
 
     // A failed publish reports once, keeps the form, and is not retried.

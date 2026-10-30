@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { chooseOption, selectValue } from "./select-helpers";
 
 it("imports sources, manages routes and credentials, logs in and reads quota", async () => {
   const bundle = await build({
@@ -194,9 +195,9 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     // Route members keep the exact source/model/credential triple.
     await page.getByRole("button", { name: "编辑路由组" }).click();
     await page.getByRole("dialog", { name: "编辑路由组" }).waitFor();
-    expect(await page.locator("#route-source-0").inputValue()).toBe("a");
+    expect(await selectValue(page.locator("#route-source-0"))).toBe("a");
     expect(await page.locator("#route-model-0").inputValue()).toBe("a/one");
-    expect(await page.locator("#route-credential-0").inputValue()).toBe(
+    expect(await selectValue(page.locator("#route-credential-0"))).toBe(
       "default",
     );
     await page.locator("#route-model-0").fill("a/two");
@@ -216,9 +217,9 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     await page.getByRole("button", { name: "添加路由组" }).click();
     await page.getByRole("dialog", { name: "添加路由组" }).waitFor();
     await page.getByLabel("名称", { exact: true }).fill("路由 B");
-    await page.locator("#route-source-0").selectOption("a");
+    await chooseOption(page.locator("#route-source-0"), "a");
     await page.locator("#route-model-0").fill("a/one");
-    await page.locator("#route-credential-0").selectOption("codex-1");
+    await chooseOption(page.locator("#route-credential-0"), "codex-1");
     await page.getByRole("button", { name: "保存路由组" }).click();
     await expect
       .poll(async () =>
@@ -273,9 +274,10 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
         .getByRole("textbox", { name: "凭据密钥 默认", exact: true })
         .inputValue(),
     ).toBe("");
-    await page
-      .getByRole("combobox", { name: "账号平台" })
-      .selectOption("copilot");
+    await chooseOption(
+      page.getByRole("combobox", { name: "账号平台" }),
+      "copilot",
+    );
     await page.getByRole("button", { name: "开始登录" }).click();
     await expect
       .poll(async () =>
@@ -381,13 +383,13 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     ).toContain("codex-2");
 
     await page.getByRole("button", { name: "添加来源" }).click();
-    await page.getByLabel("预设", { exact: true }).selectOption("google");
-    expect(await page.getByLabel("协议", { exact: true }).inputValue()).toBe("gemini");
+    await chooseOption(page.getByLabel("预设", { exact: true }), "google");
+    expect(await selectValue(page.getByLabel("协议", { exact: true }))).toBe("gemini");
     expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("https://generativelanguage.googleapis.com/v1beta");
-    await page.getByLabel("预设", { exact: true }).selectOption("azure");
+    await chooseOption(page.getByLabel("预设", { exact: true }), "azure");
     expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("");
-    await page.getByLabel("预设", { exact: true }).selectOption("bedrock");
-    await page.getByLabel("Region", { exact: true }).selectOption("eu-central-1");
+    await chooseOption(page.getByLabel("预设", { exact: true }), "bedrock");
+    await chooseOption(page.getByLabel("Region", { exact: true }), "eu-central-1");
     expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1");
     const captureDir = process.env.FORGE_MODEL_ACCESS_CAPTURE_DIR;
     if (captureDir) {

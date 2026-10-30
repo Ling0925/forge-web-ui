@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { selectValue } from "./select-helpers";
 
 it("settings page saves real fields, retains failed drafts and fits desktop/mobile themes", async () => {
   const bundle = await build({ stdin: { resolveDir: resolve("."), loader: "tsx", contents: `
@@ -62,8 +63,12 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
       .getByRole('group', { name: '全局默认思考等级快捷选择' })
       .getByRole('button', { name: /medium/ })
       .click();
-    expect(await page.getByLabel('默认思考强度').inputValue()).toBe('medium');
-    await page.getByLabel('默认思考强度').selectOption('high');
+    expect(await selectValue(page.getByLabel('默认思考强度'))).toBe('medium');
+    await page
+      .getByRole('group', { name: '全局默认思考等级快捷选择' })
+      .getByRole('button', { name: /^high/ })
+      .click();
+    expect(await selectValue(page.getByLabel('默认思考强度'))).toBe('high');
     await nav('执行与权限').click();
     await page
       .getByRole('group', { name: '权限策略选择' })
@@ -74,7 +79,7 @@ it("settings page saves real fields, retains failed drafts and fits desktop/mobi
       .getByRole('group', { name: '权限策略选择' })
       .getByRole('button', { name: /只读模式/ })
       .click();
-    expect(await page.getByLabel('默认权限').inputValue()).toBe('readonly');
+    expect(await selectValue(page.getByLabel('默认权限'))).toBe('readonly');
     await page
       .getByRole('group', { name: '空闲超时快捷档位' })
       .getByRole('button', { name: /2 分钟/ })

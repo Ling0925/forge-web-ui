@@ -267,7 +267,7 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
         expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
         await page.screenshot({ path: `${screenshotDir}/settings-agent-editor-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
 
-        const modelPicker = page.getByRole("button", { name: "智能体模型", exact: true });
+        const modelPicker = page.getByRole("combobox", { name: "智能体模型", exact: true });
         expect(await modelPicker.textContent()).toContain("long-model-id-");
         expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);
         await modelPicker.click();
@@ -277,7 +277,7 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
         expect(modelBounds).not.toBeNull();
         expect(modelBounds!.x).toBeGreaterThanOrEqual(0);
         expect(modelBounds!.x + modelBounds!.width).toBeLessThanOrEqual(width);
-        const selectedModelLabel = modelMenu.locator('[aria-selected="true"] .settings-select-option-label');
+        const selectedModelLabel = modelMenu.locator('[data-state="checked"] .forge-select-item-label');
         expect(await selectedModelLabel.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
         expect(await selectedModelLabel.evaluate(element => getComputedStyle(element).fontFamily)).toContain("monospace");
         expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
@@ -296,7 +296,7 @@ describe("Agent Collaboration Visual & Responsive Verification", () => {
         await page.screenshot({ path: `${screenshotDir}/settings-agent-manual-${width}-${theme}.png`, fullPage: true, animations: "disabled" });
 
         // Permission policy must remain readable at both widths and preserve legacy caps.
-        const permissionPicker = page.getByRole("button", { name: "权限上限选择", exact: true });
+        const permissionPicker = page.getByRole("combobox", { name: "权限上限选择", exact: true });
         expect(await permissionPicker.textContent()).toContain("工作区逐次审批");
         const permissionWarning = page.getByRole("note").filter({ hasText: "当前角色仍需逐次用户审批" });
         await permissionWarning.scrollIntoViewIfNeeded();

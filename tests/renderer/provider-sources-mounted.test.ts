@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { chooseOption, selectValue } from "./select-helpers";
 
 it("adds sources from presets, keeps drafts, reports stale catalogs and cancels tests", async () => {
   const bundle = await build({
@@ -160,21 +161,22 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     // the URL in sync while custom entry remains available.
     await page.getByRole("button", { name: "添加来源" }).click();
     await page.getByRole("dialog", { name: "添加来源", exact: true }).waitFor();
-    await page.getByLabel("预设", { exact: true }).selectOption("openai");
-    expect(await page.getByLabel("协议", { exact: true }).inputValue()).toBe(
+    await chooseOption(page.getByLabel("预设", { exact: true }), "openai");
+    expect(await selectValue(page.getByLabel("协议", { exact: true }))).toBe(
       "chat-completions",
     );
     expect(
       await page.getByLabel("API 地址", { exact: true }).inputValue(),
     ).toBe("https://api.openai.com/v1");
-    await page.getByLabel("协议", { exact: true }).selectOption("anthropic");
+    await chooseOption(page.getByLabel("协议", { exact: true }), "anthropic");
     expect(
       await page.getByLabel("API 地址", { exact: true }).inputValue(),
     ).toBe("https://api.anthropic.com");
-    await page.getByLabel("区域", { exact: true }).selectOption("cn");
-    await page
-      .getByLabel("协议", { exact: true })
-      .selectOption("chat-completions");
+    await chooseOption(page.getByLabel("区域", { exact: true }), "cn");
+    await chooseOption(
+      page.getByLabel("协议", { exact: true }),
+      "chat-completions",
+    );
     expect(
       await page.getByLabel("API 地址", { exact: true }).inputValue(),
     ).toBe("https://cn.openai.test/v1");
