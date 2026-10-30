@@ -32,6 +32,9 @@ import { Tabs } from "../primitives/Tabs";
 import { UsageOverview, renderUsageKpiGrid } from "./UsageOverview";
 import { UsageRequests } from "./UsageRequests";
 import "./usage-dashboard.css";
+import { Button } from "../primitives/Button";
+import { IconButton } from "../primitives/IconButton";
+import { useDismiss } from "../primitives/useDismiss";
 
 const usageTabs = [
   { id: "usage-overview", label: "概览" },
@@ -220,17 +223,12 @@ export function UsageDashboard() {
     wsMenuRef.current
       ?.querySelector<HTMLButtonElement>('[aria-selected="true"]')
       ?.focus();
-    const dismiss = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        !wsDropdownRef.current?.contains(event.target)
-      ) {
-        setWsDropdownOpen(false);
-      }
-    };
-    window.addEventListener("pointerdown", dismiss);
-    return () => window.removeEventListener("pointerdown", dismiss);
   }, [wsDropdownOpen]);
+  useDismiss({
+    open: wsDropdownOpen,
+    refs: [wsDropdownRef],
+    onDismiss: () => setWsDropdownOpen(false),
+  });
 
   const fetchStats = useCallback(
     async (refreshPrices = false) => {
@@ -790,27 +788,26 @@ export function UsageDashboard() {
                 </span>
               )}
               {/* Refresh */}
-              <button
-                type="button"
-                className={`usage-dashboard-btn usage-dashboard-btn-icon ${loading ? "refreshing" : ""}`}
+              <IconButton
+                label="刷新统计数据"
+                icon={<ArrowsClockwise size={15} />}
+                variant="secondary"
+                className={
+                  loading ? "usage-refresh-btn refreshing" : "usage-refresh-btn"
+                }
                 onClick={() => void fetchStats(true)}
                 title="刷新统计数据"
-                aria-label="刷新统计数据"
                 disabled={loading}
-              >
-                <ArrowsClockwise size={15} />
-              </button>
+              />
 
               {/* Close */}
-              <button
-                type="button"
-                className="usage-dashboard-btn usage-dashboard-btn-icon"
+              <IconButton
+                label="关闭看板"
+                icon={<X size={15} />}
+                variant="secondary"
                 onClick={() => openUsageDashboard(false)}
                 title="关闭看板 (Esc)"
-                aria-label="关闭看板"
-              >
-                <X size={15} />
-              </button>
+              />
             </div>
           </div>
         </header>
@@ -821,13 +818,12 @@ export function UsageDashboard() {
             {error && (
               <div className="usage-empty-state usage-error-banner">
                 <p>{error}</p>
-                <button
-                  type="button"
-                  className="usage-dashboard-btn"
+                <Button
+                  variant="secondary"
                   onClick={() => void fetchStats(true)}
                 >
                   重试
-                </button>
+                </Button>
               </div>
             )}
 

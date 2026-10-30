@@ -436,8 +436,8 @@ export function McpPanel({ showHeader = true }: { showHeader?: boolean } = {}) {
               name="transport"
               options={TRANSPORT_OPTIONS}
               value={transport}
-              onChange={(e) => {
-                setTransport(e.target.value as McpTransportType);
+              onValueChange={(value) => {
+                setTransport(value as McpTransportType);
                 setAuthorization("");
                 setEnvValue("");
                 setEnvName("");
@@ -608,8 +608,8 @@ export function McpPanel({ showHeader = true }: { showHeader?: boolean } = {}) {
                     },
                   ]}
                   value={authType}
-                  onChange={(e) => {
-                    setAuthType(e.target.value);
+                  onValueChange={(value) => {
+                    setAuthType(value);
                     setAuthorization("");
                     setFieldErrors({});
                   }}

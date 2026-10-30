@@ -3,6 +3,7 @@ import { build } from "esbuild";
 import { chromium, type Page } from "playwright";
 import { expect, it } from "vitest";
 import { defaultPublicSettings } from "@forge/core/shared/schemas";
+import { chooseOption, selectValue, optionValues } from "./select-helpers";
 
 /**
  * Browser regressions for the configured-model picker and the per-model
@@ -638,14 +639,12 @@ it("saves added, protocol-overridden and removed models across a remount", async
     const existingProtocol = protocolSelect(page, "a/existing");
     await existingProtocol.waitFor();
     expect(
-      await existingProtocol
-        .locator("option")
-        .evaluateAll((options) => options.map((option) => option.getAttribute("value"))),
+      await optionValues(existingProtocol),
     ).toEqual(["", "chat-completions", "responses", "anthropic", "gemini"]);
 
     // A protocol override coexists with existing request fields and leaves the
     // source protocol plus every other model override untouched.
-    await existingProtocol.selectOption("anthropic");
+    await chooseOption(existingProtocol, "anthropic");
     const update1 = await saveSourceModels(page, "源 A");
     expect(sourceFields(update1)).toMatchObject({
       id: "a",
@@ -686,7 +685,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
 
     // Adding a model with no parameters saves a minimal manual entry.
     await addConfiguredModel(page, "源 A", "a/upstream");
-    await protocolSelect(page, "a/upstream").selectOption("responses");
+    await chooseOption(protocolSelect(page, "a/upstream"), "responses");
     const update2 = await saveSourceModels(page, "源 A");
     const saved2 = sourceFields(update2);
     expect(saved2?.modelSelection.mode).toBe("selected");
@@ -717,17 +716,17 @@ it("saves added, protocol-overridden and removed models across a remount", async
     await remount(page);
     await modelCard(page, "a/existing").waitFor();
     await expect
-      .poll(() => protocolSelect(page, "a/upstream").inputValue())
+      .poll(() => selectValue(protocolSelect(page, "a/upstream")))
       .toBe("responses");
     await expect
-      .poll(() => protocolSelect(page, "a/existing").inputValue())
+      .poll(() => selectValue(protocolSelect(page, "a/existing")))
       .toBe("anthropic");
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).toContain("a/upstream");
     await closeModelPanel(page);
 
     // Inheritance removes only apiMode; the minimal manual entry remains.
-    await protocolSelect(page, "a/upstream").selectOption("");
+    await chooseOption(protocolSelect(page, "a/upstream"), "");
     const update3 = await saveSourceModels(page, "源 A");
     const saved3 = sourceFields(update3);
     expect(saved3?.modelSelection.overrides?.["a/upstream"]).toBeUndefined();
@@ -747,14 +746,14 @@ it("saves added, protocol-overridden and removed models across a remount", async
     await remount(page);
     await modelCard(page, "a/upstream").waitFor();
     await expect
-      .poll(() => protocolSelect(page, "a/upstream").inputValue())
+      .poll(() => selectValue(protocolSelect(page, "a/upstream")))
       .toBe("");
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).toContain("a/upstream");
     await closeModelPanel(page);
 
     // Removal clears manual, selected models and a fresh override together.
-    await protocolSelect(page, "a/upstream").selectOption("gemini");
+    await chooseOption(protocolSelect(page, "a/upstream"), "gemini");
     await page
       .getByRole("button", {
         name: "移除模型 a/upstream 配置卡片",
@@ -815,12 +814,12 @@ it("edits a model protocol at a phone viewport without settings content overflow
   try {
     const select = protocolSelect(page, "a/mobile");
     await select.waitFor();
-    await select.selectOption("gemini");
+    await chooseOption(select, "gemini");
     const update = await saveSourceModels(page, "源 A");
     expect(sourceFields(update)?.modelSelection.overrides?.["a/mobile"]).toEqual(
       { maxOutputTokens: 2048, apiMode: "gemini" },
     );
-    await expect.poll(() => select.inputValue()).toBe("gemini");
+    await expect.poll(() => selectValue(select)).toBe("gemini");
     const overflow = await page.evaluate(() => {
       const root = document.querySelector<HTMLElement>(".provider-sources");
       const rect = root?.getBoundingClientRect();

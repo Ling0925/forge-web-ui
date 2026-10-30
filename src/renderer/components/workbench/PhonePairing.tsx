@@ -268,7 +268,7 @@ export function PhonePairing() {
             <Select
               id="pairing-host"
               value={host}
-              onChange={(event) => setHost(event.target.value)}
+              onValueChange={(value) => setHost(value)}
               placeholder="选择可用的 IPv4 地址"
               options={addresses.map((value) => ({ value, label: value }))}
               disabled={busy || !addresses.length}

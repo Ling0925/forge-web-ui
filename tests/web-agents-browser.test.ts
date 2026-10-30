@@ -37,7 +37,7 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     expect(await templateTrigger.evaluate(element => element === document.activeElement)).toBe(true);
     await page.getByRole("region", { name: "智能体角色配置", exact: true }).waitFor();
     await page.getByRole("button", { name: "新建智能体", exact: true }).click();
-    const permissionPicker = page.getByRole("button", { name: "权限上限选择", exact: true });
+    const permissionPicker = page.getByRole("combobox", { name: "权限上限选择", exact: true });
     expect(await permissionPicker.textContent()).toContain("继承主会话权限");
     await page.getByLabel("智能体 ID", { exact: true }).fill("ui-integration");
     await page.getByLabel("智能体名称", { exact: true }).fill("  界面创建角色  ");
@@ -53,9 +53,9 @@ it("persists role edits and renders real advisor requests, replies and reloads",
       expect(await page.getByLabel("智能体名称", { exact: true }).inputValue()).toBe("  界面创建角色  ");
     }
     // Choose a saved model without entering its ID; persist the source/model pair via real Core.
-    await page.getByRole("button", { name: "模型模式选择", exact: true }).click();
+    await page.getByRole("combobox", { name: "模型模式选择", exact: true }).click();
     await page.getByRole("option", { name: /固定绑定模型/ }).click();
-    const modelPicker = page.getByRole("button", { name: "智能体模型", exact: true });
+    const modelPicker = page.getByRole("combobox", { name: "智能体模型", exact: true });
     await modelPicker.click();
     await page.getByRole("option", { name: "fixture/alternate", exact: true }).click();
     expect(await page.getByLabel("精确模型 ID", { exact: true }).count()).toBe(0);

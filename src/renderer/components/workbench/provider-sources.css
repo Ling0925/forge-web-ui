@@ -165,8 +165,7 @@
 }
 
 /* Empty hints & status feedback */
-.provider-hint,
-.provider-empty {
+.provider-hint {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--text-secondary);
@@ -354,12 +353,6 @@
   font-weight: 500;
 }
 
-.provider-catalog .provider-empty {
-  padding: var(--space-4);
-  text-align: center;
-  color: var(--text-muted);
-}
-
 .provider-feedback {
   display: block;
   margin: 0;
@@ -456,12 +449,7 @@
   align-items: center;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--accent) 42%,
-      var(--border-subtle)
-    );
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border-subtle));
   background: var(--surface-selected);
   color: var(--text-primary);
   font-size: var(--text-2xs);
@@ -506,8 +494,8 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease,
-    color 120ms ease, box-shadow 120ms ease;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms
+    ease, box-shadow 120ms ease;
 }
 
 .provider-inference-option:hover:not(:disabled) {
@@ -518,14 +506,9 @@
 
 .provider-inference-option.is-active {
   background: var(--surface-selected);
-  border-color: color-mix(
-    in srgb,
-    var(--accent) 55%,
-    var(--border-subtle)
-  );
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-subtle));
   color: var(--text-primary);
-  box-shadow: 0 0 0 1px
-    color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .provider-inference-option-top {

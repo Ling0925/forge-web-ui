@@ -1,0 +1,45 @@
+.forge-checkbox {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  color: var(--on-accent);
+  background-color: var(--surface-control);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-2xs);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color
+    var(--transition-fast);
+}
+
+.forge-checkbox:hover:not(:disabled) {
+  border-color: var(--focus-ring);
+}
+
+.forge-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--focus-halo);
+  border-color: var(--focus-ring);
+}
+
+.forge-checkbox[data-state="checked"] {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.forge-checkbox:disabled {
+  background-color: var(--neutral-2);
+  border-color: var(--border-subtle);
+  cursor: not-allowed;
+}
+
+.forge-checkbox[data-state="checked"]:disabled {
+  color: var(--text-disabled);
+}
+
+.forge-checkbox-indicator {
+  display: inline-flex;
+}

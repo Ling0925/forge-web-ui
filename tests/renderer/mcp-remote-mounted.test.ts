@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
+import { chooseOption, selectValue } from "./select-helpers";
 
 describe("McpPanel mounted browser integration", () => {
   it("supports remote registration, preserves stdio compatibility, and never persists or echoes secrets", async () => {
@@ -168,7 +169,7 @@ describe("McpPanel mounted browser integration", () => {
       await page.getByRole("heading", { name: "注册 MCP 服务器" }).waitFor();
 
       // Default transport is stdio: command and args inputs are present, URL input is NOT
-      expect(await page.locator("#mcp-server-transport").inputValue()).toBe(
+      expect(await selectValue(page.locator("#mcp-server-transport"))).toBe(
         "stdio",
       );
       expect(await page.locator("#mcp-server-command").isVisible()).toBe(true);
@@ -176,7 +177,7 @@ describe("McpPanel mounted browser integration", () => {
       expect(await page.locator("#mcp-server-url").count()).toBe(0);
 
       // 3. Switch to Streamable HTTP
-      await page.locator("#mcp-server-transport").selectOption("http");
+      await chooseOption(page.locator("#mcp-server-transport"), "http");
       expect(await page.locator("#mcp-server-command").count()).toBe(0);
       expect(await page.locator("#mcp-server-args").count()).toBe(0);
       expect(await page.locator("#mcp-server-url").isVisible()).toBe(true);
@@ -189,7 +190,7 @@ describe("McpPanel mounted browser integration", () => {
         .locator("#mcp-server-url")
         .fill("https://weather.example.com/mcp");
       const secretToken = "Bearer ultra-secret-jwt-token-999";
-      await page.locator("#mcp-server-auth-type").selectOption("authorization");
+      await chooseOption(page.locator("#mcp-server-auth-type"), "authorization");
       await page.locator("#mcp-server-auth").fill(secretToken);
 
       // Submit registration
@@ -228,12 +229,12 @@ describe("McpPanel mounted browser integration", () => {
 
       // Re-open registration dialog and ensure secret draft is cleared
       await page.getByRole("button", { name: "注册服务器" }).click();
-      await page.locator("#mcp-server-transport").selectOption("http");
+      await chooseOption(page.locator("#mcp-server-transport"), "http");
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
       expect(await page.locator("#mcp-server-url").inputValue()).toBe("");
 
       // 4. Test stdio registration preserves legacy shape without transport/url/headers
-      await page.locator("#mcp-server-transport").selectOption("stdio");
+      await chooseOption(page.locator("#mcp-server-transport"), "stdio");
       await page.locator("#mcp-server-id").fill("custom-stdio");
       await page.locator("#mcp-server-name").fill("Custom Stdio");
       await page.locator("#mcp-server-command").fill("deno");
@@ -285,7 +286,7 @@ describe("McpPanel mounted browser integration", () => {
       }
 
       await page.getByRole("button", { name: "注册服务器" }).click();
-      await page.locator("#mcp-server-transport").selectOption("http");
+      await chooseOption(page.locator("#mcp-server-transport"), "http");
       await page.locator("#mcp-server-id").fill("exa-remote");
       await page.locator("#mcp-server-name").fill("Exa Search");
       await page.locator("#mcp-server-url").fill("https://mcp.exa.ai/mcp");
@@ -304,9 +305,9 @@ describe("McpPanel mounted browser integration", () => {
         await page.evaluate(() => Reflect.get(window, "registered").length),
       ).toBe(2);
       await page.locator("#mcp-server-header-name").fill("x-api-key");
-      await page.locator("#mcp-server-auth-type").selectOption("authorization");
+      await chooseOption(page.locator("#mcp-server-auth-type"), "authorization");
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
-      await page.locator("#mcp-server-auth-type").selectOption("api-key");
+      await chooseOption(page.locator("#mcp-server-auth-type"), "api-key");
       await page.locator("#mcp-server-auth").fill(exaKey);
 
       await page.getByRole("button", { name: "注册（默认禁用）" }).click();
@@ -371,11 +372,11 @@ describe("McpPanel mounted browser integration", () => {
       await page.getByRole("button", { name: "关闭面板" }).click();
       await page.getByRole("button", { name: "注册服务器" }).click();
       expect(await page.locator("#mcp-server-env-value").inputValue()).toBe("");
-      await page.locator("#mcp-server-transport").selectOption("http");
+      await chooseOption(page.locator("#mcp-server-transport"), "http");
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
       await page.locator("#mcp-server-auth").fill(exaKey);
-      await page.locator("#mcp-server-transport").selectOption("stdio");
-      await page.locator("#mcp-server-transport").selectOption("http");
+      await chooseOption(page.locator("#mcp-server-transport"), "stdio");
+      await chooseOption(page.locator("#mcp-server-transport"), "http");
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
     } finally {
       await browser.close();

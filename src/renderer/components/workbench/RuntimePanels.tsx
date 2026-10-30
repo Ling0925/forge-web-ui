@@ -16,10 +16,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import { sessionUsage } from "../../state/session-usage";
 import { useWorkbench } from "../../state/workbench-context";
-import { parseSessionId, type Message, type SessionSnapshot, type TaskPlan } from "@forge/core/shared/schemas";
+import {
+  parseSessionId,
+  type Message,
+  type SessionSnapshot,
+  type TaskPlan,
+} from "@forge/core/shared/schemas";
 import { sessionPlans } from "@forge/core/shared/plans";
 import { Button } from "../primitives/Button";
-import { StatusBadge } from "../primitives/StatusBadge";
+import { StatusBadge, ToneBadge } from "../primitives/StatusBadge";
 import {
   type MemoryExcerptBlock,
   type MemoryPlanSummary,
@@ -32,8 +37,12 @@ import { Markdown } from "./Markdown";
 import { SubAgentActivity } from "./SubAgentActivity";
 
 function planProgress(plan: TaskPlan) {
-  const completed = plan.steps.filter((step) => step.status === "completed").length;
-  const inProgress = plan.steps.filter((step) => step.status === "in_progress").length;
+  const completed = plan.steps.filter(
+    (step) => step.status === "completed",
+  ).length;
+  const inProgress = plan.steps.filter(
+    (step) => step.status === "in_progress",
+  ).length;
   const pending = plan.steps.filter((step) => step.status === "pending").length;
   const total = plan.steps.length;
   const tone: "completed" | "active" | "pending" =
@@ -43,11 +52,7 @@ function planProgress(plan: TaskPlan) {
         ? "active"
         : "pending";
   const label =
-    tone === "completed"
-      ? "已完成"
-      : tone === "active"
-        ? "进行中"
-        : "待处理";
+    tone === "completed" ? "已完成" : tone === "active" ? "进行中" : "待处理";
   return { completed, inProgress, pending, total, label, tone };
 }
 
@@ -84,15 +89,20 @@ function PlanSteps({ plan }: { readonly plan: TaskPlan }) {
   );
 }
 
-function resolveDisplayPlans(snapshot: Pick<SessionSnapshot, "plan" | "plans">) {
+function resolveDisplayPlans(
+  snapshot: Pick<SessionSnapshot, "plan" | "plans">,
+) {
   const plans = sessionPlans(snapshot);
   const currentId = snapshot.plan ? (snapshot.plan.id ?? "legacy") : null;
-  const current = currentId ? (plans.find((plan) => plan.id === currentId) ?? null) : null;
+  const current = currentId
+    ? (plans.find((plan) => plan.id === currentId) ?? null)
+    : null;
   const historical = currentId
     ? plans.filter((plan) => plan.id !== currentId)
     : plans.slice(0, -1);
   const currentPlan =
-    current ?? (currentId === null && plans.length ? (plans.at(-1) ?? null) : null);
+    current ??
+    (currentId === null && plans.length ? (plans.at(-1) ?? null) : null);
   const currentProgress = currentPlan ? planProgress(currentPlan) : null;
   const percent =
     currentProgress && currentProgress.total > 0
@@ -112,6 +122,12 @@ function resolveDisplayPlans(snapshot: Pick<SessionSnapshot, "plan" | "plans">) 
   };
 }
 
+const PLAN_TONE = {
+  completed: "success",
+  active: "accent",
+  pending: "neutral",
+} as const;
+
 export function PlanProgressPanel({
   snapshot,
 }: {
@@ -126,13 +142,22 @@ export function PlanProgressPanel({
     <section className="wb-stack inspector-section inspector-plan-section inspector-plan-progress-panel">
       <div className="inspector-card-header inspector-plan-header">
         <div className="inspector-title-row">
-          <ListChecks size={14} weight="bold" className="inspector-title-icon" />
+          <ListChecks
+            size={14}
+            weight="bold"
+            className="inspector-title-icon"
+          />
           <h3>计划进度</h3>
         </div>
         {currentProgress && (
-          <span className={`inspector-plan-badge is-${currentProgress.tone}`}>
-            {currentProgress.completed}/{currentProgress.total} · {currentProgress.label}
-          </span>
+          <ToneBadge
+            tone={PLAN_TONE[currentProgress.tone]}
+            mono
+            className={`inspector-plan-badge is-${currentProgress.tone}`}
+          >
+            {currentProgress.completed}/{currentProgress.total} ·{" "}
+            {currentProgress.label}
+          </ToneBadge>
         )}
       </div>
       {currentPlan && currentProgress ? (
@@ -145,7 +170,9 @@ export function PlanProgressPanel({
                   {currentPlan.title ?? "原有计划"}
                 </strong>
               </div>
-              <span className={`inspector-plan-percent is-${currentProgress.tone}`}>
+              <span
+                className={`inspector-plan-percent is-${currentProgress.tone}`}
+              >
                 {percent}%
               </span>
             </div>
@@ -163,7 +190,9 @@ export function PlanProgressPanel({
               {activePercent > 0 && (
                 <div
                   className="inspector-plan-progress-active"
-                  style={{ width: `${Math.min(100 - percent, activePercent)}%` }}
+                  style={{
+                    width: `${Math.min(100 - percent, activePercent)}%`,
+                  }}
                 />
               )}
             </div>
@@ -213,9 +242,14 @@ export function PlanDocumentPanel({
           <h3>Plan 规划</h3>
         </div>
         {currentProgress && (
-          <span className={`inspector-plan-badge is-${currentProgress.tone}`}>
-            {currentProgress.completed}/{currentProgress.total} · {currentProgress.label}
-          </span>
+          <ToneBadge
+            tone={PLAN_TONE[currentProgress.tone]}
+            mono
+            className={`inspector-plan-badge is-${currentProgress.tone}`}
+          >
+            {currentProgress.completed}/{currentProgress.total} ·{" "}
+            {currentProgress.label}
+          </ToneBadge>
         )}
       </div>
       {currentPlan && currentProgress ? (
@@ -282,21 +316,29 @@ export function PlanDocumentPanel({
                       <span className="inspector-plan-history-index">
                         计划 {index}
                       </span>
-                      <span className="inspector-plan-history-sep" aria-hidden="true">
+                      <span
+                        className="inspector-plan-history-sep"
+                        aria-hidden="true"
+                      >
                         ·
                       </span>
                       <span className="inspector-plan-history-name">
                         {plan.title ?? "原有计划"}
                       </span>
                     </span>
-                    <span
+                    <ToneBadge
+                      tone={PLAN_TONE[progress.tone]}
+                      mono
                       className={`inspector-plan-history-status is-${progress.tone}`}
                     >
-                      <span className="inspector-plan-history-sep" aria-hidden="true">
+                      <span
+                        className="inspector-plan-history-sep"
+                        aria-hidden="true"
+                      >
                         ·{" "}
                       </span>
                       {progress.completed}/{progress.total} {progress.label}
-                    </span>
+                    </ToneBadge>
                   </summary>
                   <div className="wb-disclosure-body inspector-plan-history-body">
                     <PlanSteps plan={plan} />
@@ -367,17 +409,23 @@ export function SubAgentsPanel() {
 
   if (!snapshot) return null;
   const parentId = snapshot.parentSessionId;
-  const sortedChildren = [...state.sessions.filter(
-    (session) => session.parentSessionId === snapshot.id,
-  )]
+  const sortedChildren = [
+    ...state.sessions.filter(
+      (session) => session.parentSessionId === snapshot.id,
+    ),
+  ]
     // Keep cards in creation order: finishing a task must not move the
     // conversation someone is reading to another place in the list.
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+    .sort(
+      (a, b) =>
+        a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id),
+    );
   const updates = snapshot.events.filter(
     (event) => event.type === "agent_update",
   );
   const runningCount = sortedChildren.filter(
-    (child) => child.status === "running" || child.status === "awaiting_approval",
+    (child) =>
+      child.status === "running" || child.status === "awaiting_approval",
   ).length;
   const completedCount = sortedChildren.filter(
     (child) => child.status === "completed",
@@ -407,7 +455,9 @@ export function SubAgentsPanel() {
         <div className="inspector-title-row">
           <GitBranch size={14} weight="bold" className="inspector-title-icon" />
           <h3>子任务</h3>
-          <span className="inspector-subagents-count">{sortedChildren.length}</span>
+          <span className="inspector-subagents-count">
+            {sortedChildren.length}
+          </span>
         </div>
         <div className="inspector-subagents-header-actions">
           {sortedChildren.length > 0 && (
@@ -449,19 +499,31 @@ export function SubAgentsPanel() {
             <div className="inspector-subagent-meta-list">
               {parentId && (
                 <div className="inspector-subagent-meta-item">
-                  <span className="inspector-subagent-meta-label">所属父会话</span>
-                  <code className="inspector-subagent-meta-code">{parentId}</code>
+                  <span className="inspector-subagent-meta-label">
+                    所属父会话
+                  </span>
+                  <code className="inspector-subagent-meta-code">
+                    {parentId}
+                  </code>
                 </div>
               )}
               {snapshot.ownership && (
                 <p className="inspector-ownership-tag">
-                  <Target size={12} weight="bold" className="inspector-ownership-icon" />
+                  <Target
+                    size={12}
+                    weight="bold"
+                    className="inspector-ownership-icon"
+                  />
                   <span>负责范围：{snapshot.ownership}</span>
                 </p>
               )}
               {snapshot.agentWorktree && (
                 <p className="inspector-ownership-tag">
-                  <FolderSimple size={12} weight="bold" className="inspector-ownership-icon" />
+                  <FolderSimple
+                    size={12}
+                    weight="bold"
+                    className="inspector-ownership-icon"
+                  />
                   <span>
                     工作树：<code>{snapshot.agentWorktree.worktree}</code>
                   </span>
@@ -472,7 +534,9 @@ export function SubAgentsPanel() {
           {snapshot.agentProfile && (
             <div className="inspector-agent-profile-card">
               <div className="inspector-agent-profile-header">
-                <span className="inspector-agent-profile-tag">智能体角色快照</span>
+                <span className="inspector-agent-profile-tag">
+                  智能体角色快照
+                </span>
                 <strong className="inspector-agent-profile-name">
                   {snapshot.agentProfile.name}
                 </strong>
@@ -506,19 +570,28 @@ export function SubAgentsPanel() {
                       : snapshot.agentProfile.tools.groups.join(", ")}
                   </code>
                 </span>
-                {snapshot.agentProfile.tools.mode === "restricted" && snapshot.agentProfile.tools.groups.includes("mcp") && (
-                  <span className="inspector-agent-spec-item">
-                    MCP：<code>{snapshot.agentProfile.tools.mcpServers.join(", ") || "未授权服务器"}</code>
-                  </span>
-                )}
+                {snapshot.agentProfile.tools.mode === "restricted" &&
+                  snapshot.agentProfile.tools.groups.includes("mcp") && (
+                    <span className="inspector-agent-spec-item">
+                      MCP：
+                      <code>
+                        {snapshot.agentProfile.tools.mcpServers.join(", ") ||
+                          "未授权服务器"}
+                      </code>
+                    </span>
+                  )}
                 <span className="inspector-agent-spec-item">
                   配置版本：<code>{snapshot.agentProfile.revision}</code>
                 </span>
               </div>
               <details className="inspector-agent-profile-details">
                 <summary>角色指令与适用场景</summary>
-                <p className="inspector-agent-profile-desc">{snapshot.agentProfile.whenToUse}</p>
-                <p className="advisor-context-text">{snapshot.agentProfile.instructions}</p>
+                <p className="inspector-agent-profile-desc">
+                  {snapshot.agentProfile.whenToUse}
+                </p>
+                <p className="advisor-context-text">
+                  {snapshot.agentProfile.instructions}
+                </p>
               </details>
             </div>
           )}
@@ -553,7 +626,8 @@ export function SubAgentsPanel() {
               child.agentProfileName ||
               state.snapshotCache?.[child.id]?.snapshot?.agentProfile?.name;
             const childAdvisorReq = snapshot.advisorRequests?.find(
-              (req) => req.childSessionId === child.id && req.status === "pending",
+              (req) =>
+                req.childSessionId === child.id && req.status === "pending",
             );
             const isChildAdvisorLive =
               Boolean(childAdvisorReq) &&
@@ -577,7 +651,11 @@ export function SubAgentsPanel() {
                       onClick={() => void selectSession(child.id)}
                     >
                       <span className="child-title-clamp">{child.title}</span>
-                      <ArrowSquareOut size={12} weight="bold" className="child-title-icon" />
+                      <ArrowSquareOut
+                        size={12}
+                        weight="bold"
+                        className="child-title-icon"
+                      />
                     </Button>
                     <div className="child-card-badges">
                       {roleName && (
@@ -628,7 +706,9 @@ export function SubAgentsPanel() {
                   child={child}
                   cached={state.snapshotCache?.[child.id]?.snapshot}
                   progress={state.agentProgress?.[child.id]}
-                  update={updates.findLast(update => update.childSessionId === child.id)}
+                  update={updates.findLast(
+                    (update) => update.childSessionId === child.id,
+                  )}
                   onOpen={selectSession}
                 />
               </article>
@@ -637,7 +717,9 @@ export function SubAgentsPanel() {
         </div>
       ) : (
         <div className="inspector-subagents-empty">
-          <p className="wb-muted inspector-subagents-empty-title">没有已保存的子任务</p>
+          <p className="wb-muted inspector-subagents-empty-title">
+            没有已保存的子任务
+          </p>
           <p className="inspector-subagents-empty-hint">
             主代理委派并行或专项任务时，子代理的实时进度与最终报告会在此展示。
           </p>
@@ -648,7 +730,11 @@ export function SubAgentsPanel() {
         <div className="inspector-advisor-section wb-stack">
           <div className="inspector-advisor-header">
             <div className="inspector-title-row">
-              <Question size={14} weight="bold" className="inspector-title-icon" />
+              <Question
+                size={14}
+                weight="bold"
+                className="inspector-title-icon"
+              />
               <h4>答疑与协调 (Advisor)</h4>
               <span className="inspector-subagents-count">
                 {snapshot.advisorRequests.length}
@@ -683,38 +769,70 @@ export function SubAgentsPanel() {
                     <div className="inspector-advisor-card-badges">
                       {req.status === "pending" ? (
                         isReqLive ? (
-                          <span className="advisor-badge is-pending">
-                            <span className="advisor-live-dot" aria-hidden="true" />
+                          <ToneBadge
+                            tone="warning"
+                            className="advisor-badge is-pending"
+                          >
+                            <span
+                              className="advisor-live-dot"
+                              aria-hidden="true"
+                            />
                             等待主代理答复
-                          </span>
+                          </ToneBadge>
                         ) : (
-                          <span className="advisor-badge is-interrupted">
+                          <ToneBadge
+                            tone="muted"
+                            className="advisor-badge is-interrupted"
+                          >
                             已中断（主代理未运行或属于历史运行，不可控制）
-                          </span>
+                          </ToneBadge>
                         )
                       ) : req.status === "answered" ? (
                         req.deliveredAt ? (
-                          <span className="advisor-badge is-delivered">
+                          <ToneBadge
+                            tone="success"
+                            className="advisor-badge is-delivered"
+                          >
                             已答复并投递
-                          </span>
+                          </ToneBadge>
                         ) : (
-                          <span className="advisor-badge is-answered">
+                          <ToneBadge
+                            tone="success"
+                            className="advisor-badge is-answered"
+                          >
                             已答复（等待子代理接收）
-                          </span>
+                          </ToneBadge>
                         )
                       ) : req.status === "cancelled" ? (
-                        <span className="advisor-badge is-cancelled">已取消</span>
+                        <ToneBadge
+                          tone="muted"
+                          className="advisor-badge is-cancelled"
+                        >
+                          已取消
+                        </ToneBadge>
                       ) : req.status === "expired" ? (
-                        <span className="advisor-badge is-expired">已超时</span>
+                        <ToneBadge
+                          tone="muted"
+                          className="advisor-badge is-expired"
+                        >
+                          已超时
+                        </ToneBadge>
                       ) : (
-                        <span className="advisor-badge is-interrupted">已中断</span>
+                        <ToneBadge
+                          tone="muted"
+                          className="advisor-badge is-interrupted"
+                        >
+                          已中断
+                        </ToneBadge>
                       )}
 
                       <Button
                         size="sm"
                         variant="ghost"
                         className="advisor-child-link-btn"
-                        onClick={() => void selectSession(parseSessionId(req.childSessionId))}
+                        onClick={() =>
+                          void selectSession(parseSessionId(req.childSessionId))
+                        }
                         title={`前往子任务：${childLabel}`}
                       >
                         子任务：{childLabel}
@@ -737,7 +855,9 @@ export function SubAgentsPanel() {
 
                   <div className="inspector-advisor-field">
                     <span className="advisor-field-label">问题：</span>
-                    <strong className="advisor-question-text">{req.question}</strong>
+                    <strong className="advisor-question-text">
+                      {req.question}
+                    </strong>
                   </div>
 
                   {req.context && (
@@ -772,12 +892,16 @@ export function SubAgentsPanel() {
                   {req.status === "answered" && req.answer && (
                     <div className="advisor-answer-box">
                       <div className="advisor-answer-header">
-                        <span className="advisor-field-label">主代理答复：</span>
+                        <span className="advisor-field-label">
+                          主代理答复：
+                        </span>
                       </div>
                       <div className="advisor-answer-text">{req.answer}</div>
                       {req.nextInstruction && (
                         <div className="advisor-next-instruction">
-                          <span className="advisor-field-label">下一步指令：</span>
+                          <span className="advisor-field-label">
+                            下一步指令：
+                          </span>
                           <span>{req.nextInstruction}</span>
                         </div>
                       )}
@@ -806,7 +930,9 @@ export function SubAgentsPanel() {
           </div>
         </div>
       )}
-      {controlMessage && <output className="inspector-control-output">{controlMessage}</output>}
+      {controlMessage && (
+        <output className="inspector-control-output">{controlMessage}</output>
+      )}
       {error && (
         <p role="alert" className="form-error">
           {error}
@@ -993,12 +1119,7 @@ function WorkingStateItemRow({
             </button>
           </div>
           <div className="inspector-memory-block-body">
-            <Markdown
-              source={
-                resolvedRefMessage?.text ??
-                item.text
-              }
-            />
+            <Markdown source={resolvedRefMessage?.text ?? item.text} />
           </div>
         </div>
       )}
@@ -1132,7 +1253,8 @@ export function ContextMemoryView({
                 <WorkingStateItemRow
                   key={`${section.key}:${idx}`}
                   item={item}
-                  messages={messages} messageOffset={messageOffset}
+                  messages={messages}
+                  messageOffset={messageOffset}
                 />
               ))}
             </ul>
@@ -1165,21 +1287,24 @@ export function ContextMemoryView({
           <MemoryExcerptCard
             label="初始请求"
             excerpt={parsed.initialRequest}
-            messages={messages} messageOffset={messageOffset}
+            messages={messages}
+            messageOffset={messageOffset}
           />
         )}
         {parsed.latestRequest && (
           <MemoryExcerptCard
             label="最近请求"
             excerpt={parsed.latestRequest}
-            messages={messages} messageOffset={messageOffset}
+            messages={messages}
+            messageOffset={messageOffset}
           />
         )}
         {parsed.latestAssistantReport && (
           <MemoryExcerptCard
             label="最近助手回复"
             excerpt={parsed.latestAssistantReport}
-            messages={messages} messageOffset={messageOffset}
+            messages={messages}
+            messageOffset={messageOffset}
           />
         )}
         {parsed.plan && (
@@ -1198,7 +1323,8 @@ export function ContextMemoryView({
                 <MemoryExcerptCard
                   key={`${obs.ref ?? idx}:${idx}`}
                   excerpt={obs}
-                  messages={messages} messageOffset={messageOffset}
+                  messages={messages}
+                  messageOffset={messageOffset}
                 />
               ))}
             </div>
@@ -1213,7 +1339,8 @@ export function ContextMemoryView({
             <div className="wb-disclosure-body">
               <ContextMemoryView
                 parsed={parsed.priorMemory}
-                messages={messages} messageOffset={messageOffset}
+                messages={messages}
+                messageOffset={messageOffset}
                 currentPlan={currentPlan}
               />
             </div>
@@ -1255,7 +1382,8 @@ export function ContextMemoryView({
                 <MemoryExcerptCard
                   key={`${item.ref ?? idx}:${idx}`}
                   excerpt={item}
-                  messages={messages} messageOffset={messageOffset}
+                  messages={messages}
+                  messageOffset={messageOffset}
                 />
               ))}
             </div>
@@ -1270,7 +1398,8 @@ export function ContextMemoryView({
             <div className="wb-disclosure-body">
               <ContextMemoryView
                 parsed={parsed.previousState}
-                messages={messages} messageOffset={messageOffset}
+                messages={messages}
+                messageOffset={messageOffset}
                 currentPlan={currentPlan}
               />
             </div>
@@ -1391,7 +1520,9 @@ export function ContextManagementPanel() {
     .at(-1);
   const totalTokens =
     usageStats.total?.totalTokens ??
-    (finished?.type === "run_finished" ? finished.usage?.totalTokens : undefined);
+    (finished?.type === "run_finished"
+      ? finished.usage?.totalTokens
+      : undefined);
 
   return (
     <section className="wb-stack inspector-section">

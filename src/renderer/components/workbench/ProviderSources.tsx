@@ -20,6 +20,8 @@ import {
 } from "@forge/core/shared/schemas";
 import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
+import { Checkbox } from "../primitives/Checkbox";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
@@ -907,7 +909,7 @@ export function ProviderSources({
         <Button
           size="sm"
           variant="secondary"
-          icon={<Plus size={16} />}
+          icon={<Plus size={14} />}
           disabled={!settings || busy || sources.length >= 20}
           onClick={() => openEditor(null)}
         >
@@ -1193,7 +1195,11 @@ export function ProviderSources({
           </ul>
         </div>
       ) : (
-        <p className="provider-empty">无来源。</p>
+        <EmptyState
+          variant="inline"
+          title="尚无模型来源"
+          description="点击右上角“添加来源”，或在下方“导入来源”中粘贴 JSON 配置。"
+        />
       )}
 
       {!editorOpen && message && (
@@ -1289,10 +1295,8 @@ export function ProviderSources({
                     id={`${id}-protocol`}
                     value={draft.apiMode}
                     options={protocolOptions}
-                    onChange={(event) =>
-                      changeProtocol(
-                        event.target.value as AccessDraft["apiMode"],
-                      )
+                    onValueChange={(value) =>
+                      changeProtocol(value as AccessDraft["apiMode"])
                     }
                   />
                 </Field>
@@ -1358,21 +1362,18 @@ export function ProviderSources({
                         { value: "smart", label: "智能" },
                         { value: "pace", label: "节流" },
                       ]}
-                      onChange={(event) =>
+                      onValueChange={(value) =>
                         change({
-                          credentialRouting: event.target
-                            .value as AccessDraft["credentialRouting"],
+                          credentialRouting:
+                            value as AccessDraft["credentialRouting"],
                         })
                       }
                     />
                   </Field>
                   <label className="model-access-check">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={draft.sticky}
-                      onChange={(event) =>
-                        change({ sticky: event.target.checked })
-                      }
+                      onCheckedChange={(checked) => change({ sticky: checked })}
                     />
                     黏性
                   </label>

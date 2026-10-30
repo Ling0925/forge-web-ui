@@ -196,7 +196,8 @@
   background: var(--surface-elevated);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border-subtle);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s
+    cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 0;
 }
 
@@ -281,7 +282,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s
+    ease;
 }
 
 .wb-inspector .inspector-subtab-btn:hover {
@@ -655,33 +657,6 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 8px;
-}
-
-.wb-inspector .inspector-plan-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  padding: 1px 7px;
-  border-radius: var(--radius-full);
-  background: var(--surface-soft);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-}
-
-.wb-inspector .inspector-plan-badge.is-active {
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
-}
-
-.wb-inspector .inspector-plan-badge.is-completed {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 10%, transparent);
-  border-color: color-mix(in srgb, var(--success) 24%, transparent);
 }
 
 .wb-inspector .wb-plan-current-title {
@@ -1062,7 +1037,9 @@
   gap: 6px;
 }
 
-.wb-inspector .inspector-plan-history-card > summary.inspector-plan-history-summary {
+.wb-inspector
+  .inspector-plan-history-card
+  > summary.inspector-plan-history-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1106,34 +1083,11 @@
 }
 
 .wb-inspector .inspector-plan-history-status {
-  display: inline-flex;
-  align-items: center;
-  height: 17px;
-  padding: 0 6px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
   flex-shrink: 0;
 }
 
 .wb-inspector .inspector-plan-history-status .inspector-plan-history-sep {
   display: none;
-}
-
-.wb-inspector .inspector-plan-history-status.is-completed {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 10%, transparent);
-  border-color: color-mix(in srgb, var(--success) 24%, transparent);
-}
-
-.wb-inspector .inspector-plan-history-status.is-active {
-  color: var(--accent);
-  background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .wb-inspector .inspector-plan-history-body {
@@ -1435,7 +1389,10 @@
   box-shadow: none;
 }
 
-.wb-app .wb-inspector .child-session-card .child-cancel-btn:hover:not(:disabled),
+.wb-app
+  .wb-inspector
+  .child-session-card
+  .child-cancel-btn:hover:not(:disabled),
 .wb-inspector .child-session-card .child-cancel-btn:hover:not(:disabled) {
   background: rgba(200, 75, 49, 0.2);
   border-color: rgba(200, 75, 49, 0.42);
@@ -2471,7 +2428,8 @@
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition: background-color 0.12s ease, color 0.12s ease, border-color 0.12s
+    ease;
 }
 
 .wb-inspector .inspector-memory-ref-btn:hover,
@@ -2740,7 +2698,8 @@
   font-size: var(--text-2xs);
   color: var(--text-secondary);
   padding-top: 4px;
-  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--border-subtle) 60%, transparent);
 }
 
 .wb-inspector .inspector-agent-spec-item code {
@@ -2828,42 +2787,6 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-}
-
-.wb-inspector .advisor-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-2xs);
-  font-weight: 500;
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-}
-
-.wb-inspector .advisor-badge.is-pending {
-  background: color-mix(in srgb, var(--warning) 14%, transparent);
-  color: var(--warning);
-  border: 1px solid color-mix(in srgb, var(--warning) 28%, transparent);
-}
-
-.wb-inspector .advisor-badge.is-delivered {
-  background: color-mix(in srgb, var(--success) 14%, transparent);
-  color: var(--success);
-  border: 1px solid color-mix(in srgb, var(--success) 28%, transparent);
-}
-
-.wb-inspector .advisor-badge.is-answered {
-  background: color-mix(in srgb, var(--success) 8%, transparent);
-  color: var(--success);
-  border: 1px solid color-mix(in srgb, var(--success) 20%, transparent);
-}
-
-.wb-inspector .advisor-badge.is-interrupted,
-.wb-inspector .advisor-badge.is-cancelled,
-.wb-inspector .advisor-badge.is-expired {
-  background: var(--surface-soft);
-  color: var(--text-muted);
-  border: 1px solid var(--border-subtle);
 }
 
 .wb-inspector .advisor-live-dot {
@@ -3025,10 +2948,14 @@
 }
 
 @keyframes advisor-wait-pulse {
-  50% { opacity: 0.4; }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .wb-inspector .advisor-live-dot,
-  .wb-inspector .child-advisor-dot.is-live { animation: none; }
+  .wb-inspector .child-advisor-dot.is-live {
+    animation: none;
+  }
 }

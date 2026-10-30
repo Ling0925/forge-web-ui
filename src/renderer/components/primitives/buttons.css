@@ -177,9 +177,19 @@
 }
 
 .btn-icon.btn-sm {
-  width: 36px;
-  min-width: 36px;
-  height: 36px;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+}
+
+/* 图标按钮的 ghost 变体：默认次级色，悬停提亮（与工作台图标按钮一致） */
+.btn-icon.btn-ghost {
+  color: var(--text-secondary);
+}
+
+.btn-icon.btn-ghost:hover:not(:disabled) {
+  color: var(--text-primary);
 }
 
 .btn-icon.btn-lg {
