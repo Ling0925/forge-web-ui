@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.12.2",
+  "checkpoint_id": "01M60RA8YDV9W0CQJX9FDGNZAW",
+  "session_id": "b94bfbdf-9c0c-4745-9b96-473b47721347",
+  "strategy": "import",
+  "created_at": "2026-10-28T07:59:08.749Z",
+  "commit_sha": "eb4da07dffe265404b0bcafc0e95cbf1ac9eb9b0",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "agent": "Claude Code",
+  "model": "deepseek/deepseek-v4.1-flash-1017",
+  "checkpoint_transcript_start": 11,
+  "transcript_lines_at_start": 11,
+  "compact_transcript_start": 4,
+  "token_usage": {
+    "input_tokens": 101157,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 2854656,
+    "output_tokens": 49602,
+    "api_call_count": 42,
+    "subagent_tokens": {
+      "input_tokens": 888448,
+      "cache_creation_tokens": 0,
+      "cache_read_tokens": 69153920,
+      "output_tokens": 547899,
+      "api_call_count": 329
+    }
+  },
+  "redaction": {
+    "replacements": 2350,
+    "layers": {
+      "betterleaks": 0,
+      "connection_string": 0,
+      "credential_key": 0,
+      "credential_value": 2,
+      "credentialed_uri": 0,
+      "entropy": 3388,
+      "key_context": 0,
+      "provider_token": 0,
+      "shell_stdin": 0
+    }
+  },
+  "kind": "imported"
+}
