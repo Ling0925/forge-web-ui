@@ -75,9 +75,7 @@ function InspectorSubTabs<T extends string>({
       if (target) {
         onChange(target.id);
         const buttons =
-          listRef.current?.querySelectorAll<HTMLButtonElement>(
-            '[role="tab"]',
-          );
+          listRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
         buttons?.[targetIndex]?.focus();
       }
     }
@@ -218,7 +216,11 @@ export function Inspector({
     >
       <div className="inspector-header wb-inspector-head">
         <div className="inspector-title-row">
-          <SlidersHorizontal size={14} weight="bold" className="inspector-title-icon" />
+          <SlidersHorizontal
+            size={14}
+            weight="bold"
+            className="inspector-title-icon"
+          />
           <span>执行详情</span>
           {snapshot && <StatusBadge status={run?.status ?? snapshot.status} />}
         </div>
@@ -229,11 +231,17 @@ export function Inspector({
               className="wb-inspector-close"
               aria-label="收起详情"
               title="收起详情"
-              icon={<SidebarSimple size={14} className="wb-inspector-close-icon" />}
+              icon={
+                <SidebarSimple size={14} className="wb-inspector-close-icon" />
+              }
               onClick={onRequestCollapse}
             >
               <span className="wb-inspector-close-label">收起</span>
-              <CaretRight size={11} weight="bold" className="wb-inspector-close-caret" />
+              <CaretRight
+                size={11}
+                weight="bold"
+                className="wb-inspector-close-caret"
+              />
             </Button>
           )}
         </div>
@@ -270,7 +278,9 @@ export function Inspector({
                       size="sm"
                       onClick={() => {
                         setMobileTab("task");
-                        requestAnimationFrame(() => scrollToInlineApproval(request.id));
+                        requestAnimationFrame(() =>
+                          scrollToInlineApproval(request.id),
+                        );
                       }}
                     >
                       定位到消息流
@@ -383,9 +393,7 @@ export function Inspector({
                       className="inspector-subtabpanel wb-stack"
                       hidden={planSubTab !== "plan"}
                       style={
-                        planSubTab !== "plan"
-                          ? { display: "none" }
-                          : undefined
+                        planSubTab !== "plan" ? { display: "none" } : undefined
                       }
                     >
                       <PlanDocumentPanel snapshot={snapshot} />

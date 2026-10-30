@@ -296,8 +296,9 @@
   color: var(--text-muted);
   cursor: pointer;
   opacity: 0;
-  transition: opacity var(--transition-fast), background-color var(--transition-fast),
-    color var(--transition-fast), border-color var(--transition-fast);
+  transition: opacity var(--transition-fast), background-color
+    var(--transition-fast), color var(--transition-fast), border-color
+    var(--transition-fast);
 }
 
 .session-folder-header-row:hover .session-folder-create-btn,

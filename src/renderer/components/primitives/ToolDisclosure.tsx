@@ -1,11 +1,11 @@
 import { CaretRight } from "@phosphor-icons/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Collapsible } from "./Collapsible";
-import { type ToolDisclosureProps } from "./tool-disclosure/types";
-import { getToolIcon, formatDuration } from "./tool-disclosure/presentation";
 import { StatusGlyph } from "./tool-disclosure/common";
-import { createToolDisclosureModel } from "./tool-disclosure/model";
 import { ToolDisclosureContent } from "./tool-disclosure/content";
+import { createToolDisclosureModel } from "./tool-disclosure/model";
+import { formatDuration, getToolIcon } from "./tool-disclosure/presentation";
+import { type ToolDisclosureProps } from "./tool-disclosure/types";
 import "./tool-disclosure.css";
 export type { ToolDisclosureProps } from "./tool-disclosure/types";
 export { friendlyLabel, getToolIcon } from "./tool-disclosure/presentation";

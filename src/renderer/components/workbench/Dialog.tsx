@@ -1,10 +1,5 @@
 import { X } from "@phosphor-icons/react";
-import {
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "../primitives/Button";
 

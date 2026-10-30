@@ -126,7 +126,11 @@ export function Tabs({
   };
 
   const activeTab = tabs.find((t) => t.id === activeId);
-  const classes = ["tabs-container", indicator ? "has-indicator" : "", className]
+  const classes = [
+    "tabs-container",
+    indicator ? "has-indicator" : "",
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
 
@@ -164,10 +168,16 @@ export function Tabs({
               onClick={() => onChange(tab.id)}
               onKeyDown={(e) => handleKeyDown(e, index)}
             >
-              {tab.icon && <span aria-hidden="true" className="tab-icon">{tab.icon}</span>}
+              {tab.icon && (
+                <span aria-hidden="true" className="tab-icon">
+                  {tab.icon}
+                </span>
+              )}
               <span>{tab.label}</span>
               {tab.badge !== undefined && tab.badge !== null && (
-                <span aria-hidden="true" className="tab-badge">{tab.badge}</span>
+                <span aria-hidden="true" className="tab-badge">
+                  {tab.badge}
+                </span>
               )}
             </button>
           );

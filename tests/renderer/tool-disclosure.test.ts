@@ -1,3 +1,4 @@
+import { createDiffPatch } from "@forge/core/shared/diff";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -6,7 +7,6 @@ import {
   ToolDisclosure,
   type ToolDisclosureProps,
 } from "../../src/renderer/components/primitives/ToolDisclosure";
-import { createDiffPatch } from "@forge/core/shared/diff";
 
 const render = (props: ToolDisclosureProps) =>
   renderToStaticMarkup(createElement(ToolDisclosure, props));
@@ -85,10 +85,13 @@ describe("tool disclosure row", () => {
     ["history_search", "搜索历史记录"],
     ["list_models", "列出模型"],
     ["search_memory", "搜索记忆"],
-  ])("labels %s with its own verb instead of the generic fallback", (toolName, label) => {
-    const html = render({ toolName, status: "completed" });
-    expect(html).toContain(`class="tool-disclosure-label">${label}</span>`);
-  });
+  ])(
+    "labels %s with its own verb instead of the generic fallback",
+    (toolName, label) => {
+      const html = render({ toolName, status: "completed" });
+      expect(html).toContain(`class="tool-disclosure-label">${label}</span>`);
+    },
+  );
 
   it("explains a command and keeps the concrete command in the expanded view", () => {
     const html = render({
@@ -384,11 +387,15 @@ describe("tool disclosure row", () => {
     });
 
     // Inner stdout is rendered cleanly with genuine lines, not escaped JSON quotes
-    expect(html).toContain("1 failed | 23 passed\nFAIL tests/core/memory.test.ts");
+    expect(html).toContain(
+      "1 failed | 23 passed\nFAIL tests/core/memory.test.ts",
+    );
     expect(html).not.toContain("&quot;stdout&quot;");
     // Inner stderr is extracted into its own stream
     expect(html).toContain("标准错误");
-    expect(html).toContain("ExperimentalWarning: SQLite is an experimental feature");
+    expect(html).toContain(
+      "ExperimentalWarning: SQLite is an experimental feature",
+    );
     // Exit code is surfaced
     expect(html).toContain("退出码 1");
     // Facts show duration and short task id, but omit internal protocol clutter
@@ -775,7 +782,8 @@ describe("tool disclosure row", () => {
     const rawResult = {
       path: "src/sample.ts",
       content: "const msg = 'hello world';",
-      version: "cded94407e9e8d4d66730259d0e10266b95b44a2ec239621fc4bc482d37a225",
+      version:
+        "cded94407e9e8d4d66730259d0e10266b95b44a2ec239621fc4bc482d37a225",
       end_line: 171,
       size_bytes: 5653,
       lines_returned: 171,
@@ -806,7 +814,9 @@ describe("tool disclosure row", () => {
     expect(html).not.toContain('<dt class="tool-param-key">返回行数</dt>');
     expect(html).not.toContain('<dt class="tool-param-key">末行不完整</dt>');
     expect(html).not.toContain('<dt class="tool-param-key">下一页偏移</dt>');
-    expect(html).not.toContain("cded94407e9e8d4d66730259d0e10266b95b44a2ec239621fc4bc482d37a225");
+    expect(html).not.toContain(
+      "cded94407e9e8d4d66730259d0e10266b95b44a2ec239621fc4bc482d37a225",
+    );
 
     // 不再显示“调用参数”与“调试信息”
     expect(html).not.toContain("调用参数");
@@ -930,4 +940,3 @@ describe("tool disclosure row", () => {
     expect(html).toContain("无匹配文件");
   });
 });
-

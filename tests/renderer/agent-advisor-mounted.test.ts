@@ -248,34 +248,80 @@ describe("Agent Advisor Coordination Mounted Tests", () => {
       // 1. Verify child session card displays role badge and waiting for advisor pill
       const childCard = page.locator(".child-session-card");
       await childCard.waitFor();
-      expect(await childCard.locator(".child-role-badge").textContent()).toBe("前端设计与实现");
-      expect(await childCard.locator(".child-advisor-pill").textContent()).toContain("等待答疑");
+      expect(await childCard.locator(".child-role-badge").textContent()).toBe(
+        "前端设计与实现",
+      );
+      expect(
+        await childCard.locator(".child-advisor-pill").textContent(),
+      ).toContain("等待答疑");
 
       // 2. Verify advisor coordination section header and hint
-      expect(await page.getByRole("heading", { name: /答疑与协调/ }).count()).toBe(1);
-      expect(await page.getByText(/默认由主代理在后续步骤自动答复，不提供人工审批按钮/).count()).toBe(1);
+      expect(
+        await page.getByRole("heading", { name: /答疑与协调/ }).count(),
+      ).toBe(1);
+      expect(
+        await page
+          .getByText(/默认由主代理在后续步骤自动答复，不提供人工审批按钮/)
+          .count(),
+      ).toBe(1);
 
       // 3. Verify pending advisor request when parent active run matches parentRunId (live)
       const pendingCard = page.locator(".inspector-advisor-card.is-pending");
       await pendingCard.waitFor();
-      expect(await pendingCard.locator(".advisor-badge.is-pending").textContent()).toContain("等待主代理答复");
-      expect(await pendingCard.locator(".advisor-question-text").textContent()).toBe("是否保留旧版配置的向前兼容支持？");
-      expect(await pendingCard.locator(".advisor-option-chip").allTextContents()).toEqual(["全量保留旧版", "仅兼容核心字段", "放弃旧版"]);
-      expect(await pendingCard.locator(".advisor-recommendation-text").textContent()).toBe("推荐全量保留旧版，以防老会话崩溃");
+      expect(
+        await pendingCard.locator(".advisor-badge.is-pending").textContent(),
+      ).toContain("等待主代理答复");
+      expect(
+        await pendingCard.locator(".advisor-question-text").textContent(),
+      ).toBe("是否保留旧版配置的向前兼容支持？");
+      expect(
+        await pendingCard.locator(".advisor-option-chip").allTextContents(),
+      ).toEqual(["全量保留旧版", "仅兼容核心字段", "放弃旧版"]);
+      expect(
+        await pendingCard.locator(".advisor-recommendation-text").textContent(),
+      ).toBe("推荐全量保留旧版，以防老会话崩溃");
 
       // 4. Verify answered request with deliveredAt (delivered receipt)
-      const answeredCard = page.locator(".inspector-advisor-card.is-answered").first();
-      expect(await answeredCard.locator(".advisor-delivered-receipt").textContent()).toContain("✓ 已投递到子代理");
-      expect(await answeredCard.getByText("使用规范统一的 --accent 变量，已做过 4.5:1 对比度校准。").count()).toBe(1);
-      expect(await answeredCard.getByText("继续完成 390px 响应式断点检查").count()).toBe(1);
+      const answeredCard = page
+        .locator(".inspector-advisor-card.is-answered")
+        .first();
+      expect(
+        await answeredCard.locator(".advisor-delivered-receipt").textContent(),
+      ).toContain("✓ 已投递到子代理");
+      expect(
+        await answeredCard
+          .getByText("使用规范统一的 --accent 变量，已做过 4.5:1 对比度校准。")
+          .count(),
+      ).toBe(1);
+      expect(
+        await answeredCard.getByText("继续完成 390px 响应式断点检查").count(),
+      ).toBe(1);
 
       // 5. Verify answered request without deliveredAt (pending delivery receipt)
-      const pendingDeliveryCard = page.locator(".inspector-advisor-card.is-answered").nth(1);
-      expect(await pendingDeliveryCard.locator(".advisor-pending-receipt").textContent()).toContain("已在主会话保存，等待子代理同步确认");
+      const pendingDeliveryCard = page
+        .locator(".inspector-advisor-card.is-answered")
+        .nth(1);
+      expect(
+        await pendingDeliveryCard
+          .locator(".advisor-pending-receipt")
+          .textContent(),
+      ).toContain("已在主会话保存，等待子代理同步确认");
 
-      expect(await page.locator(".inspector-advisor-card.is-cancelled .advisor-badge").textContent()).toBe("已取消");
-      expect(await page.locator(".inspector-advisor-card.is-expired .advisor-badge").textContent()).toBe("已超时");
-      expect(await page.locator(".inspector-advisor-card.is-interrupted .advisor-badge").textContent()).toBe("已中断");
+      expect(
+        await page
+          .locator(".inspector-advisor-card.is-cancelled .advisor-badge")
+          .textContent(),
+      ).toBe("已取消");
+      expect(
+        await page
+          .locator(".inspector-advisor-card.is-expired .advisor-badge")
+          .textContent(),
+      ).toBe("已超时");
+      expect(
+        await page
+          .locator(".inspector-advisor-card.is-interrupted .advisor-badge")
+          .textContent(),
+      ).toBe("已中断");
 
       // 6. Test historical running but runId mismatch (active run is run-parent-2, request was run-parent-1):
       // Must NOT pretend to be live!
@@ -284,8 +330,14 @@ describe("Agent Advisor Coordination Mounted Tests", () => {
       });
       await page.waitForTimeout(60);
 
-      expect(await childCard.locator(".child-advisor-pill").textContent()).toContain("答疑已中断");
-      expect(await pendingCard.locator(".advisor-badge.is-interrupted").textContent()).toContain("已中断");
+      expect(
+        await childCard.locator(".child-advisor-pill").textContent(),
+      ).toContain("答疑已中断");
+      expect(
+        await pendingCard
+          .locator(".advisor-badge.is-interrupted")
+          .textContent(),
+      ).toContain("已中断");
 
       // 7. Test historical/inactive parent status: snapshot.status="running" on disk but no activeRun in memory
       await page.evaluate(() => {
@@ -293,8 +345,14 @@ describe("Agent Advisor Coordination Mounted Tests", () => {
       });
       await page.waitForTimeout(60);
 
-      expect(await childCard.locator(".child-advisor-pill").textContent()).toContain("答疑已中断");
-      expect(await pendingCard.locator(".advisor-badge.is-interrupted").textContent()).toContain("已中断");
+      expect(
+        await childCard.locator(".child-advisor-pill").textContent(),
+      ).toContain("答疑已中断");
+      expect(
+        await pendingCard
+          .locator(".advisor-badge.is-interrupted")
+          .textContent(),
+      ).toContain("已中断");
 
       // 8. Switch to child session: verify full snapshot.agentProfile renders
       await page.evaluate(() => {
@@ -304,15 +362,33 @@ describe("Agent Advisor Coordination Mounted Tests", () => {
 
       const profileCard = page.locator(".inspector-agent-profile-card");
       await profileCard.waitFor();
-      expect(await profileCard.locator(".inspector-agent-profile-name").textContent()).toBe("前端设计与实现");
-      expect(await profileCard.locator(".inspector-agent-profile-id").textContent()).toBe("frontend");
-      expect(await profileCard.getByText("权限上限：workspace").count()).toBe(1);
+      expect(
+        await profileCard
+          .locator(".inspector-agent-profile-name")
+          .textContent(),
+      ).toBe("前端设计与实现");
+      expect(
+        await profileCard.locator(".inspector-agent-profile-id").textContent(),
+      ).toBe("frontend");
+      expect(await profileCard.getByText("权限上限：workspace").count()).toBe(
+        1,
+      );
       expect(await profileCard.getByText("工作树：shared").count()).toBe(1);
       expect(await profileCard.getByText("模型：继承父模型").count()).toBe(1);
-      expect(await profileCard.getByText("工具：read, edit, browser").count()).toBe(1);
+      expect(
+        await profileCard.getByText("工具：read, edit, browser").count(),
+      ).toBe(1);
       await profileCard.locator("summary").click();
-      expect(await profileCard.getByText("严格遵循 Web UI 规范，使用赤陶与暖纸色系。", { exact: true }).isVisible()).toBe(true);
-      expect(await profileCard.getByText("配置版本：1", { exact: true }).count()).toBe(1);
+      expect(
+        await profileCard
+          .getByText("严格遵循 Web UI 规范，使用赤陶与暖纸色系。", {
+            exact: true,
+          })
+          .isVisible(),
+      ).toBe(true);
+      expect(
+        await profileCard.getByText("配置版本：1", { exact: true }).count(),
+      ).toBe(1);
     } finally {
       await browser.close();
     }

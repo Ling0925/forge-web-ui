@@ -1,13 +1,3 @@
-import {
-  ArrowClockwise,
-  ArrowUpLeft,
-  FileCode,
-  FileText,
-  Folder,
-  MagnifyingGlass,
-  X,
-} from "@phosphor-icons/react";
-import { type ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import { isHtmlPath } from "@forge/core/shared/html-preview";
 import type {
   WorkspaceDirectoryListingDto,
@@ -19,6 +9,22 @@ import type {
   FileChange,
   SessionSnapshot,
 } from "@forge/core/shared/schemas";
+import {
+  ArrowClockwise,
+  ArrowUpLeft,
+  FileCode,
+  FileText,
+  Folder,
+  MagnifyingGlass,
+  X,
+} from "@phosphor-icons/react";
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { ErrorState } from "../primitives/ErrorState";
@@ -123,7 +129,9 @@ function buildFallbackListing(
       kind: "directory" as const,
     }));
 
-  files.sort((a, b) => a.name.localeCompare(b.name, "zh-CN", { numeric: true }));
+  files.sort((a, b) =>
+    a.name.localeCompare(b.name, "zh-CN", { numeric: true }),
+  );
 
   const lastSlash = normalizedDir.lastIndexOf("/");
   const parentPath =
@@ -338,10 +346,7 @@ export function WorkspaceFileManager({
           {session.workspace}
         </div>
 
-        <nav
-          className="inspector-file-breadcrumbs"
-          aria-label="工作区目录路径"
-        >
+        <nav className="inspector-file-breadcrumbs" aria-label="工作区目录路径">
           {breadcrumbs.map((crumb, index) => {
             const isLast = index === breadcrumbs.length - 1;
             return (
@@ -469,9 +474,10 @@ export function WorkspaceFileManager({
             {filteredEntries.map((entry) => {
               const change = changesByPath.get(entry.path);
               const isSelected = selectedFile === entry.path;
-              const isCode = /\.(?:ts|tsx|js|jsx|json|css|html|py|rs|go|sh|md|yml|yaml)$/i.test(
-                entry.name,
-              );
+              const isCode =
+                /\.(?:ts|tsx|js|jsx|json|css|html|py|rs|go|sh|md|yml|yaml)$/i.test(
+                  entry.name,
+                );
               return (
                 <li key={entry.path} className="inspector-file-tree-item">
                   <button

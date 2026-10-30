@@ -1,7 +1,14 @@
+import { sessionPlans } from "@forge/core/shared/plans";
+import {
+  type Message,
+  type SessionSnapshot,
+  type TaskPlan,
+  parseSessionId,
+} from "@forge/core/shared/schemas";
 import {
   ArrowSquareOut,
-  ArrowsInLineVertical,
   ArrowUpLeft,
+  ArrowsInLineVertical,
   ChartBar,
   Check,
   ClockCounterClockwise,
@@ -16,16 +23,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import { sessionUsage } from "../../state/session-usage";
 import { useWorkbench } from "../../state/workbench-context";
-import {
-  parseSessionId,
-  type Message,
-  type SessionSnapshot,
-  type TaskPlan,
-} from "@forge/core/shared/schemas";
-import { sessionPlans } from "@forge/core/shared/plans";
-import { EmptyState } from "../primitives/EmptyState";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 import { StatusBadge, ToneBadge } from "../primitives/StatusBadge";
+import { Markdown } from "./Markdown";
+import { SubAgentActivity } from "./SubAgentActivity";
 import {
   type MemoryExcerptBlock,
   type MemoryPlanSummary,
@@ -34,8 +36,6 @@ import {
   parseContextMemory,
   resolveMessageByRef,
 } from "./context-memory-parser";
-import { Markdown } from "./Markdown";
-import { SubAgentActivity } from "./SubAgentActivity";
 
 function planProgress(plan: TaskPlan) {
   const completed = plan.steps.filter(

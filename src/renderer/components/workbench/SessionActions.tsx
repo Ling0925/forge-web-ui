@@ -1,19 +1,19 @@
 import { DotsThreeVertical } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { OperationScope } from "../../state/operation-scope";
-import { hostCapabilities } from "../../web-host";
 import type { SessionSummary } from "../../shared-types";
+import { OperationScope } from "../../state/operation-scope";
 import {
   shallowEqual,
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
-import { IconButton } from "../primitives/IconButton";
+import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
+import { IconButton } from "../primitives/IconButton";
 import { Input } from "../primitives/Input";
-import { Dialog } from "./Dialog";
 import { useDismiss } from "../primitives/useDismiss";
+import { Dialog } from "./Dialog";
 
 export interface SessionActionsProps {
   readonly session?: SessionSummary;

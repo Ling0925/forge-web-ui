@@ -13,7 +13,7 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ToolCopyButton, SectionHead } from "./common";
+import { SectionHead, ToolCopyButton } from "./common";
 
 function formatBytes(bytes?: number): string | null {
   if (typeof bytes !== "number" || Number.isNaN(bytes) || bytes < 0)

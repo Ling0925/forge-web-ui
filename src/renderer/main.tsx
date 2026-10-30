@@ -1,13 +1,16 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./components/workbench/App";
 import { DeferredPanel } from "./components/primitives/DeferredPanel";
+import { App } from "./components/workbench/App";
 import "./styles/global.css";
 import "./styles/workspace-theme.css";
 import "./styles/sidebar-compact.css";
 import { installWebHost } from "./web-host";
 
-const loadPrimitiveShowcase = () => import("./showcase/PrimitiveShowcase").then((module) => ({ default: module.PrimitiveShowcase }));
+const loadPrimitiveShowcase = () =>
+  import("./showcase/PrimitiveShowcase").then((module) => ({
+    default: module.PrimitiveShowcase,
+  }));
 
 function Root() {
   const [isShowcase, setIsShowcase] = useState(() => {
@@ -39,27 +42,37 @@ function Root() {
 
   if (isShowcase) {
     return (
-      <DeferredPanel open label="组件展示" load={loadPrimitiveShowcase} onClose={() => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("showcase");
-        url.hash = "";
-        if (url.pathname.endsWith("/showcase")) url.pathname = url.pathname.slice(0, -8);
-        window.history.replaceState(null, "", url);
-        setIsShowcase(false);
-      }} />
+      <DeferredPanel
+        open
+        label="组件展示"
+        load={loadPrimitiveShowcase}
+        onClose={() => {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("showcase");
+          url.hash = "";
+          if (url.pathname.endsWith("/showcase"))
+            url.pathname = url.pathname.slice(0, -8);
+          window.history.replaceState(null, "", url);
+          setIsShowcase(false);
+        }}
+      />
     );
   }
 
   return <App />;
 }
 
-void installWebHost().then(() => {
-  const container = document.getElementById("root");
-  if (container) {
-    createRoot(container).render(
-      <StrictMode>
-        <Root />
-      </StrictMode>,
-    );
-  }
-}).catch(() => { /* Host status provides reconnect guidance. */ });
+void installWebHost()
+  .then(() => {
+    const container = document.getElementById("root");
+    if (container) {
+      createRoot(container).render(
+        <StrictMode>
+          <Root />
+        </StrictMode>,
+      );
+    }
+  })
+  .catch(() => {
+    /* Host status provides reconnect guidance. */
+  });

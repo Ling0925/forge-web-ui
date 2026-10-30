@@ -38,14 +38,30 @@ export function ModelCatalog({
   const id = useId();
   const listRef = useRef<HTMLDivElement>(null);
   const needle = query.trim();
-  const catalogs = groups ?? [{ sourceId: undefined, label: "", models: hideSearch ? models : [value, ...models] }];
+  const catalogs = groups ?? [
+    {
+      sourceId: undefined,
+      label: "",
+      models: hideSearch ? models : [value, ...models],
+    },
+  ];
   const filtered = catalogs.map((group) => ({
     ...group,
-    models: [...new Set(group.models.filter(Boolean))].filter((model) =>
-      hideSearch || !needle || `${group.label} ${model}`.toLowerCase().includes(needle.toLowerCase())),
+    models: [...new Set(group.models.filter(Boolean))].filter(
+      (model) =>
+        hideSearch ||
+        !needle ||
+        `${group.label} ${model}`.toLowerCase().includes(needle.toLowerCase()),
+    ),
   }));
-  const count = filtered.reduce((total, group) => total + group.models.length, 0);
-  const custom = !hideSearch && needle.length > 0 && !catalogs.some((group) => group.models.includes(needle));
+  const count = filtered.reduce(
+    (total, group) => total + group.models.length,
+    0,
+  );
+  const custom =
+    !hideSearch &&
+    needle.length > 0 &&
+    !catalogs.some((group) => group.models.includes(needle));
   return (
     <div
       className="model-catalog"
@@ -130,15 +146,31 @@ export function ModelCatalog({
         aria-label="模型目录"
       >
         {filtered.map((group) => (
-          <div key={group.sourceId ?? "legacy"} role={groups ? "group" : undefined} aria-label={group.label || undefined}>
-            {groups && <div className="model-catalog-group-label">{group.label}</div>}
+          <div
+            key={group.sourceId ?? "legacy"}
+            role={groups ? "group" : undefined}
+            aria-label={group.label || undefined}
+          >
+            {groups && (
+              <div className="model-catalog-group-label">{group.label}</div>
+            )}
             {group.models.map((model) => {
-              const selected = model === value && (!groups || group.sourceId === sourceId);
+              const selected =
+                model === value && (!groups || group.sourceId === sourceId);
               return (
-                <button key={model} type="button" className="model-catalog-option"
-                  disabled={disabled} aria-pressed={selected} title={model}
-                  onClick={() => onSelect(model, group.sourceId)}>
-                  <span><strong>{model.split("/").at(-1)}</strong><small>{model}</small></span>
+                <button
+                  key={model}
+                  type="button"
+                  className="model-catalog-option"
+                  disabled={disabled}
+                  aria-pressed={selected}
+                  title={model}
+                  onClick={() => onSelect(model, group.sourceId)}
+                >
+                  <span>
+                    <strong>{model.split("/").at(-1)}</strong>
+                    <small>{model}</small>
+                  </span>
                   {selected && <Check size={14} aria-hidden="true" />}
                 </button>
               );

@@ -533,9 +533,8 @@
     transform: translateX(-100%);
     visibility: hidden;
     pointer-events: none;
-    transition:
-      transform var(--transition-normal),
-      visibility 0s linear var(--transition-normal);
+    transition: transform var(--transition-normal), visibility 0s linear
+      var(--transition-normal);
     will-change: transform;
     overscroll-behavior: contain;
   }
@@ -1340,11 +1339,10 @@
   .wb-app .workbench-inspector {
     overflow: hidden;
     will-change: width, transform;
-    transition:
-      width var(--motion-duration-md) var(--motion-ease-out),
+    transition: width var(--motion-duration-md) var(--motion-ease-out),
       border-left-width var(--motion-duration-md) var(--motion-ease-out),
-      opacity var(--motion-duration-sm) ease,
-      transform var(--motion-duration-md) var(--motion-ease-out);
+      opacity var(--motion-duration-sm) ease, transform
+      var(--motion-duration-md) var(--motion-ease-out);
   }
   .wb-app .workbench-inspector > * {
     width: var(--inspector-width);

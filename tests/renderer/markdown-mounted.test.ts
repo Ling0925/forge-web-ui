@@ -60,7 +60,9 @@ it("routes links through the host, preserves copy text, throttles streams and me
     const code = 'const text = "<script>";\n\nreturn text;';
     const source = `\`\`\`ts\n${code}\n\`\`\``;
     await page.evaluate(`window.renderMarkdown(${JSON.stringify(source)})`);
-    expect(await page.locator(".code-token-keyword").count()).toBeGreaterThan(0);
+    expect(await page.locator(".code-token-keyword").count()).toBeGreaterThan(
+      0,
+    );
     await page.getByRole("button", { name: "复制全文" }).click();
     expect(await page.evaluate("window.copied")).toEqual([code]);
     expect(await page.locator("script").count()).toBe(1); // only the test bundle

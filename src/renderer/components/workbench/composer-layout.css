@@ -59,8 +59,12 @@
 }
 
 /* When returning from dual action back to single action, smoothly slide cancel button back to the right */
-.wb-app .composer-split .composer-submit-col.is-rebounding:not(.is-dual) .composer-cancel {
-  animation: composer-cancel-shift-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+.wb-app
+  .composer-split
+  .composer-submit-col.is-rebounding:not(.is-dual)
+  .composer-cancel {
+  animation: composer-cancel-shift-right 0.25s cubic-bezier(0.16, 1, 0.3, 1)
+    both;
   will-change: transform;
 }
 
@@ -109,7 +113,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms
+    ease, transform 140ms ease;
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn {
@@ -118,7 +123,10 @@
   color: var(--accent);
 }
 
-.wb-app .composer-split .composer-submit-col .composer-steer-btn:hover:not(:disabled) {
+.wb-app
+  .composer-split
+  .composer-submit-col
+  .composer-steer-btn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--accent) 20%, var(--surface-elevated));
   border-color: var(--accent);
   color: var(--accent);

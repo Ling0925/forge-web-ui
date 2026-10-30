@@ -1,8 +1,8 @@
 import { diffStats } from "../DiffViewer";
-import { type ToolDisclosureProps } from "./types";
-import { friendlyLabel, formatClock, formatStamp } from "./presentation";
-import { extractPlanData } from "./plans";
 import { decodeCommandConsole } from "./commands";
+import { extractPlanData } from "./plans";
+import { formatClock, formatStamp, friendlyLabel } from "./presentation";
+import { type ToolDisclosureProps } from "./types";
 import { parseParams, parseResult } from "./values";
 
 function firstLine(text: string, limit: number): string {
@@ -116,12 +116,20 @@ export function createToolDisclosureModel({
     !target && isAgentTool && agentParamsRecord
       ? (() => {
           if (isSpawnAgent) {
-            const profile = typeof agentParamsRecord.profileId === "string" ? agentParamsRecord.profileId : undefined;
-            const task = typeof agentParamsRecord.task === "string" ? firstLine(agentParamsRecord.task, 50) : undefined;
+            const profile =
+              typeof agentParamsRecord.profileId === "string"
+                ? agentParamsRecord.profileId
+                : undefined;
+            const task =
+              typeof agentParamsRecord.task === "string"
+                ? firstLine(agentParamsRecord.task, 50)
+                : undefined;
             if (profile && task) return `${profile} · ${task}`;
             if (profile) return profile;
             if (typeof agentParamsRecord.ownership === "string") {
-              return task ? `${agentParamsRecord.ownership} · ${task}` : agentParamsRecord.ownership;
+              return task
+                ? `${agentParamsRecord.ownership} · ${task}`
+                : agentParamsRecord.ownership;
             }
             if (task) return task;
             if (typeof agentParamsRecord.model === "string")
@@ -146,15 +154,28 @@ export function createToolDisclosureModel({
             return firstLine(agentParamsRecord.resolution, 60);
           }
           if (isAnswerAdvisor) {
-            const req = typeof agentParamsRecord.requestId === "string" ? `#${agentParamsRecord.requestId.slice(0, 8)}` : "";
-            const ans = typeof agentParamsRecord.answer === "string" ? firstLine(agentParamsRecord.answer, 40) : "";
-            return [req ? `答复 ${req}` : "答复咨询", ans].filter(Boolean).join(" · ") || undefined;
+            const req =
+              typeof agentParamsRecord.requestId === "string"
+                ? `#${agentParamsRecord.requestId.slice(0, 8)}`
+                : "";
+            const ans =
+              typeof agentParamsRecord.answer === "string"
+                ? firstLine(agentParamsRecord.answer, 40)
+                : "";
+            return (
+              [req ? `答复 ${req}` : "答复咨询", ans]
+                .filter(Boolean)
+                .join(" · ") || undefined
+            );
           }
           if (isAdvisor && typeof agentParamsRecord.question === "string") {
             return firstLine(agentParamsRecord.question, 60);
           }
           if (isListAgentProfiles) {
-            if (typeof agentParamsRecord.query === "string" && agentParamsRecord.query) {
+            if (
+              typeof agentParamsRecord.query === "string" &&
+              agentParamsRecord.query
+            ) {
               return `过滤：${agentParamsRecord.query}`;
             }
             return "查看全部可用角色";
@@ -163,7 +184,9 @@ export function createToolDisclosureModel({
             return `取消 #${agentParamsRecord.id.slice(0, 8)}`;
           }
           if (isListAgents) {
-            return agentParamsRecord.currentRun ? "当前运行子任务" : "全部子任务";
+            return agentParamsRecord.currentRun
+              ? "当前运行子任务"
+              : "全部子任务";
           }
           return undefined;
         })()

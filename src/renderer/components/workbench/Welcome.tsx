@@ -1,6 +1,10 @@
-import { ArrowUpRight } from "@phosphor-icons/react";
 import { isPrimarySession } from "@forge/core/shared/sessions";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import { ArrowUpRight } from "@phosphor-icons/react";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { EmptyState } from "../primitives/EmptyState";
 import { ForgeMark } from "../primitives/ForgeMark";
 
@@ -19,7 +23,11 @@ export function Welcome() {
     .slice(0, 4);
 
   return (
-    <div className="wb-new-session-scroll" role="region" aria-label="欢迎与最近任务">
+    <div
+      className="wb-new-session-scroll"
+      role="region"
+      aria-label="欢迎与最近任务"
+    >
       <section className="wb-new-session-intro" aria-labelledby="welcome-title">
         <div className="welcome-heading">
           <ForgeMark className="welcome-mark" />
@@ -42,7 +50,9 @@ export function Welcome() {
                     onClick={() => void selectSession(session.id)}
                   >
                     <span className="welcome-task-content">
-                      <span className="welcome-task-title">{session.title}</span>
+                      <span className="welcome-task-title">
+                        {session.title}
+                      </span>
                       <span className="welcome-task-meta">
                         <span title={session.workspace}>
                           {session.workspace
@@ -63,16 +73,14 @@ export function Welcome() {
                 </li>
               ))}
             </ul>
+          ) : state.isSessionsLoading ? (
+            <p className="welcome-empty">正在读取最近任务…</p>
           ) : (
-            state.isSessionsLoading ? (
-              <p className="welcome-empty">正在读取最近任务…</p>
-            ) : (
-              <EmptyState
-                variant="compact"
-                className="welcome-empty"
-                title="还没有历史任务，从下方开始。"
-              />
-            )
+            <EmptyState
+              variant="compact"
+              className="welcome-empty"
+              title="还没有历史任务，从下方开始。"
+            />
           )}
         </section>
       </section>

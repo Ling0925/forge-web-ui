@@ -1,4 +1,8 @@
 import {
+  type WorkspaceDirectoryPage,
+  isAbsoluteWorkspacePath,
+} from "@forge/core/shared/workspaces";
+import {
   ArrowElbowDownLeft,
   ArrowUp,
   CaretDown,
@@ -21,16 +25,12 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  isAbsoluteWorkspacePath,
-  type WorkspaceDirectoryPage,
-} from "@forge/core/shared/workspaces";
 import { hostCapabilities } from "../../web-host";
-import { EmptyState } from "../primitives/EmptyState";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 import "./workspace-picker.css";
-import { useDismiss } from "../primitives/useDismiss";
 import { IconButton } from "../primitives/IconButton";
+import { useDismiss } from "../primitives/useDismiss";
 
 const RECENT_WORKSPACES_STORAGE_KEY = "forge-recent-workspaces";
 const MAX_RECENT_WORKSPACES = 6;

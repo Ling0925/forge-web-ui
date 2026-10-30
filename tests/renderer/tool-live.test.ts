@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest";
 import { runIdSchema } from "@forge/core/shared/ipc";
 import { sessionIdSchema } from "@forge/core/shared/schemas";
+import { describe, expect, it } from "vitest";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
+import { reduceTimeline } from "../../src/renderer/state/timeline";
 import {
+  type WorkbenchState,
   initialWorkbenchState,
   workbenchReducer,
-  type WorkbenchState,
 } from "../../src/renderer/state/workbench-reducer";
-import { reduceTimeline } from "../../src/renderer/state/timeline";
 
 const session = sessionIdSchema.parse("11111111-1111-4111-8111-111111111111");
 const run = runIdSchema.parse("33333333-3333-4333-8333-333333333333");
@@ -44,7 +44,9 @@ function receive(state: WorkbenchState, event: Record<string, unknown>) {
 
 function toolRows(state: WorkbenchState) {
   return state.activeSnapshot
-    ? reduceTimeline(state.activeSnapshot).filter((item) => item.kind === "tool")
+    ? reduceTimeline(state.activeSnapshot).filter(
+        (item) => item.kind === "tool",
+      )
     : [];
 }
 
@@ -55,7 +57,12 @@ describe("live tool cards without a snapshot refresh", () => {
       activeSessionId: session,
       activeSnapshot: base,
       activeRuns: {
-        [session]: { sessionId: session, runId: run, status: "running", streamingText: "" },
+        [session]: {
+          sessionId: session,
+          runId: run,
+          status: "running",
+          streamingText: "",
+        },
       },
     };
     // No getSession call: only a run event arrives.
@@ -121,7 +128,13 @@ describe("live tool cards without a snapshot refresh", () => {
         { role: "user", content: "again" },
       ],
       events: [
-        { type: "run_started", sessionId: session, timestamp: ts(0), model: "m", permission: "readonly" },
+        {
+          type: "run_started",
+          sessionId: session,
+          timestamp: ts(0),
+          model: "m",
+          permission: "readonly",
+        },
         { type: "tool_started", sessionId: session, timestamp: ts(1), call },
         {
           type: "tool_finished",
@@ -130,7 +143,13 @@ describe("live tool cards without a snapshot refresh", () => {
           toolCallId: "call-1",
           result: { content: "old body", isError: false },
         },
-        { type: "run_started", sessionId: session, timestamp: ts(3), model: "m", permission: "readonly" },
+        {
+          type: "run_started",
+          sessionId: session,
+          timestamp: ts(3),
+          model: "m",
+          permission: "readonly",
+        },
       ],
     };
     let state: WorkbenchState = {
@@ -138,7 +157,12 @@ describe("live tool cards without a snapshot refresh", () => {
       activeSessionId: session,
       activeSnapshot: history,
       activeRuns: {
-        [session]: { sessionId: session, runId: run, status: "running", streamingText: "" },
+        [session]: {
+          sessionId: session,
+          runId: run,
+          status: "running",
+          streamingText: "",
+        },
       },
     };
     state = receive(state, {
@@ -174,7 +198,12 @@ describe("ephemeral tool previews", () => {
       activeSessionId: session,
       activeSnapshot: base,
       activeRuns: {
-        [session]: { sessionId: session, runId: run, status: "running", streamingText: "" },
+        [session]: {
+          sessionId: session,
+          runId: run,
+          status: "running",
+          streamingText: "",
+        },
       },
     };
     const preview = (argumentsChars: number) => ({
@@ -204,7 +233,11 @@ describe("ephemeral tool previews", () => {
     expect(state.activeRuns[session]?.toolPreviews).toEqual([]);
     expect(toolRows(state)).toMatchObject([{ status: "running" }]);
 
-    state = receive(state, { type: "tool_preview_reset", sessionId: session, timestamp: ts(3) });
+    state = receive(state, {
+      type: "tool_preview_reset",
+      sessionId: session,
+      timestamp: ts(3),
+    });
     expect(state.activeRuns[session]?.toolPreviews).toEqual([]);
   });
 
@@ -214,7 +247,12 @@ describe("ephemeral tool previews", () => {
       activeSessionId: session,
       activeSnapshot: base,
       activeRuns: {
-        [session]: { sessionId: session, runId: run, status: "running", streamingText: "" },
+        [session]: {
+          sessionId: session,
+          runId: run,
+          status: "running",
+          streamingText: "",
+        },
       },
     };
     for (let index = 0; index < 300; index++)
@@ -230,7 +268,11 @@ describe("ephemeral tool previews", () => {
     expect(previews).toHaveLength(256);
     expect(previews.at(-1)?.previewId).toBe("p299");
 
-    state = receive(state, { type: "retry_reset", sessionId: session, timestamp: ts(2) });
+    state = receive(state, {
+      type: "retry_reset",
+      sessionId: session,
+      timestamp: ts(2),
+    });
     expect(state.activeRuns[session]?.toolPreviews).toEqual([]);
 
     state = receive(state, {
@@ -258,9 +300,21 @@ describe("ephemeral tool previews", () => {
       name: "read_file",
       argumentsChars: 7,
     });
-    state = receive(state, { type: "state_changed", sessionId: session, timestamp: ts(6), status: "cancelled" });
+    state = receive(state, {
+      type: "state_changed",
+      sessionId: session,
+      timestamp: ts(6),
+      status: "cancelled",
+    });
     expect(state.activeRuns[session]?.toolPreviews).toEqual([]);
-    state = receive(state, { type: "tool_call_preview", sessionId: session, timestamp: ts(6), previewId: "p3", name: "read_file", argumentsChars: 8 });
+    state = receive(state, {
+      type: "tool_call_preview",
+      sessionId: session,
+      timestamp: ts(6),
+      previewId: "p3",
+      name: "read_file",
+      argumentsChars: 8,
+    });
     state = receive(state, {
       type: "run_finished",
       sessionId: session,
@@ -279,7 +333,12 @@ describe("ephemeral tool previews", () => {
       activeSessionId: session,
       activeSnapshot: base,
       activeRuns: {
-        [session]: { sessionId: session, runId: run, status: "running", streamingText: "" },
+        [session]: {
+          sessionId: session,
+          runId: run,
+          status: "running",
+          streamingText: "",
+        },
       },
     };
 

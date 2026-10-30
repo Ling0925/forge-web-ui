@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
-import { build } from "esbuild";
-import { chromium, type Page } from "playwright";
-import { expect, it } from "vitest";
 import { defaultPublicSettings } from "@forge/core/shared/schemas";
-import { chooseOption, selectValue, optionValues } from "./select-helpers";
+import { build } from "esbuild";
+import { type Page, chromium } from "playwright";
+import { expect, it } from "vitest";
+import { chooseOption, optionValues, selectValue } from "./select-helpers";
 
 /**
  * Browser regressions for the configured-model picker and the per-model
@@ -307,7 +307,9 @@ const openApp = async (
   const page = await browser.newPage({ viewport });
   page.setDefaultTimeout(5000);
   const pageErrors: string[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error.stack ?? error.message));
+  page.on("pageerror", (error) =>
+    pageErrors.push(error.stack ?? error.message),
+  );
   await page.route("https://forge.test/**", (route) =>
     route.fulfill({
       contentType: "text/html",
@@ -322,11 +324,12 @@ const openApp = async (
         ""),
   });
   await page.addScriptTag({
-    content: bundle.outputFiles.find((file) => file.path.endsWith(".js"))!
-      .text,
+    content: bundle.outputFiles.find((file) => file.path.endsWith(".js"))!.text,
   });
   try {
-    await page.locator("textarea.composer-textarea").waitFor({ state: "attached" });
+    await page
+      .locator("textarea.composer-textarea")
+      .waitFor({ state: "attached" });
     await page.waitForFunction(() =>
       Boolean(
         (window as unknown as { __wb?: { state?: { settings?: unknown } } })
@@ -349,8 +352,8 @@ const remount = async (page: Page) => {
     .waitFor({ state: "attached" });
   await page.waitForFunction(() =>
     Boolean(
-      (window as unknown as { __wb?: { state?: { settings?: unknown } } })
-        .__wb?.state?.settings,
+      (window as unknown as { __wb?: { state?: { settings?: unknown } } }).__wb
+        ?.state?.settings,
     ),
   );
 };
@@ -369,18 +372,16 @@ const closeModelPanel = async (page: Page) => {
 };
 
 const catalogGroups = (page: Page) =>
-  page
-    .locator('.model-catalog-list [role="group"]')
-    .evaluateAll((nodes) =>
-      nodes.map((node) => ({
-        label: node.getAttribute("aria-label") ?? "",
-        models: Array.from(
-          node.querySelectorAll<HTMLButtonElement>(
-            "button.model-catalog-option[title]",
-          ),
-        ).map((button) => button.title),
-      })),
-    );
+  page.locator('.model-catalog-list [role="group"]').evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      label: node.getAttribute("aria-label") ?? "",
+      models: Array.from(
+        node.querySelectorAll<HTMLButtonElement>(
+          "button.model-catalog-option[title]",
+        ),
+      ).map((button) => button.title),
+    })),
+  );
 
 const catalogModelTitles = (page: Page) =>
   page
@@ -565,14 +566,13 @@ it("shows a historical pinned model as current but never offers it again", async
         (await page.locator(".composer-status").innerText()).trim(),
       )
       .toContain("当前模型 a/legacy 未在来源 源 A 的设置中启用");
-    expect(await page.evaluate(() => window.__served["legacy-session"].model))
-      .toBe("a/legacy");
+    expect(
+      await page.evaluate(() => window.__served["legacy-session"].model),
+    ).toBe("a/legacy");
 
     await openModelCatalog(page);
     const groups = await catalogGroups(page);
-    expect(groups).toEqual([
-      { label: "源 A", models: ["a/current"] },
-    ]);
+    expect(groups).toEqual([{ label: "源 A", models: ["a/current"] }]);
     expect(await catalogModelTitles(page)).not.toContain("a/legacy");
 
     await pickModel(page, "源 A", "a/current");
@@ -638,9 +638,13 @@ it("saves added, protocol-overridden and removed models across a remount", async
 
     const existingProtocol = protocolSelect(page, "a/existing");
     await existingProtocol.waitFor();
-    expect(
-      await optionValues(existingProtocol),
-    ).toEqual(["", "chat-completions", "responses", "anthropic", "gemini"]);
+    expect(await optionValues(existingProtocol)).toEqual([
+      "",
+      "chat-completions",
+      "responses",
+      "anthropic",
+      "gemini",
+    ]);
 
     // A protocol override coexists with existing request fields and leaves the
     // source protocol plus every other model override untouched.
@@ -670,9 +674,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
 
     // Discarding must not leave a phantom pin behind.
     await page.getByRole("button", { name: "放弃修改", exact: true }).click();
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(0);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(0);
     expect(
       await page.evaluate(
         () =>
@@ -689,10 +691,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
     const update2 = await saveSourceModels(page, "源 A");
     const saved2 = sourceFields(update2);
     expect(saved2?.modelSelection.mode).toBe("selected");
-    expect(saved2?.modelSelection.models).toEqual([
-      "a/existing",
-      "a/upstream",
-    ]);
+    expect(saved2?.modelSelection.models).toEqual(["a/existing", "a/upstream"]);
     expect(saved2?.modelSelection.manual).toEqual([
       { id: "a/existing", contextWindowTokens: null },
       { id: "a/upstream", contextWindowTokens: null },
@@ -703,9 +702,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
       "a/upstream": { apiMode: "responses" },
     });
     expect(saved2?.apiMode).toBe("chat-completions");
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(1);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(1);
 
     // The mounted composer follows the save without a reload.
     await openModelCatalog(page);
@@ -730,10 +727,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
     const update3 = await saveSourceModels(page, "源 A");
     const saved3 = sourceFields(update3);
     expect(saved3?.modelSelection.overrides?.["a/upstream"]).toBeUndefined();
-    expect(saved3?.modelSelection.models).toEqual([
-      "a/existing",
-      "a/upstream",
-    ]);
+    expect(saved3?.modelSelection.models).toEqual(["a/existing", "a/upstream"]);
     expect(saved3?.modelSelection.manual).toEqual([
       { id: "a/existing", contextWindowTokens: null },
       { id: "a/upstream", contextWindowTokens: null },
@@ -770,18 +764,14 @@ it("saves added, protocol-overridden and removed models across a remount", async
       "a/existing": { maxOutputTokens: 4096, apiMode: "anthropic" },
       "a/other": { reasoningEffort: "high" },
     });
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(0);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(0);
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).not.toContain("a/upstream");
     await closeModelPanel(page);
 
     await remount(page);
     await modelCard(page, "a/existing").waitFor();
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(0);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(0);
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).not.toContain("a/upstream");
     await closeModelPanel(page);
@@ -816,9 +806,9 @@ it("edits a model protocol at a phone viewport without settings content overflow
     await select.waitFor();
     await chooseOption(select, "gemini");
     const update = await saveSourceModels(page, "源 A");
-    expect(sourceFields(update)?.modelSelection.overrides?.["a/mobile"]).toEqual(
-      { maxOutputTokens: 2048, apiMode: "gemini" },
-    );
+    expect(
+      sourceFields(update)?.modelSelection.overrides?.["a/mobile"],
+    ).toEqual({ maxOutputTokens: 2048, apiMode: "gemini" });
     await expect.poll(() => selectValue(select)).toBe("gemini");
     const overflow = await page.evaluate(() => {
       const root = document.querySelector<HTMLElement>(".provider-sources");

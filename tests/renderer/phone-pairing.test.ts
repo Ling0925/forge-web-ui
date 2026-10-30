@@ -32,7 +32,12 @@ const contextPlugin = (workspace: string, withPicker: boolean) => ({
   },
 });
 
-async function bundlePanel(outfile: string, body: string, workspace: string, withPicker: boolean) {
+async function bundlePanel(
+  outfile: string,
+  body: string,
+  workspace: string,
+  withPicker: boolean,
+) {
   const bundle = await build({
     stdin: { resolveDir: resolve("."), loader: "tsx", contents: body },
     bundle: true,
@@ -83,7 +88,9 @@ it("pairs over LAN explicitly, shows the QR url, and never replays failed action
     ...(executablePath ? { executablePath } : {}),
   });
   try {
-    const page = await browser.newPage({ viewport: { width: 1180, height: 900 } });
+    const page = await browser.newPage({
+      viewport: { width: 1180, height: 900 },
+    });
     page.setDefaultTimeout(5000);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
@@ -93,26 +100,41 @@ it("pairs over LAN explicitly, shows the QR url, and never replays failed action
     await page.getByRole("button", { name: "开始公开" }).waitFor();
 
     const calls = () =>
-      page.evaluate(() => Reflect.get(window, "lanCalls") as { action: string }[]);
+      page.evaluate(
+        () => Reflect.get(window, "lanCalls") as { action: string }[],
+      );
     // Only a read happened on mount: nothing listens before the explicit click.
     expect(await calls()).toEqual([{ action: "status" }]);
     expect(await selectValue(page.getByLabel("LAN 地址"))).toBe("192.168.1.24");
     expect(await page.getByLabel("端口").inputValue()).toBe("41234");
-    expect(await page.getByLabel("服务器工作区").inputValue()).toBe("/srv/forge-demo");
+    expect(await page.getByLabel("服务器工作区").inputValue()).toBe(
+      "/srv/forge-demo",
+    );
     await chooseOption(page.getByLabel("LAN 地址"), "10.0.0.7");
     expect(await page.locator(".phone-pairing-qr").count()).toBe(0);
 
     // A failed publish reports once, keeps the form, and is not retried.
-    await page.evaluate(() => { Reflect.set(window, "failNext", true); });
+    await page.evaluate(() => {
+      Reflect.set(window, "failNext", true);
+    });
     await page.getByRole("button", { name: "开始公开" }).click();
-    await page.getByRole("alert").filter({ hasText: "端口已被占用。" }).waitFor();
-    expect((await calls()).filter((call) => call.action === "start")).toHaveLength(1);
-    expect(await page.getByLabel("服务器工作区").inputValue()).toBe("/srv/forge-demo");
+    await page
+      .getByRole("alert")
+      .filter({ hasText: "端口已被占用。" })
+      .waitFor();
+    expect(
+      (await calls()).filter((call) => call.action === "start"),
+    ).toHaveLength(1);
+    expect(await page.getByLabel("服务器工作区").inputValue()).toBe(
+      "/srv/forge-demo",
+    );
 
     // The workspace picker is the only path that replaces the session workspace.
     await page.getByRole("button", { name: "选择工作区…" }).click();
     expect(await page.evaluate(() => Reflect.get(window, "picked"))).toBe(1);
-    expect(await page.getByLabel("服务器工作区").inputValue()).toBe("/srv/picked");
+    expect(await page.getByLabel("服务器工作区").inputValue()).toBe(
+      "/srv/picked",
+    );
 
     await page.getByRole("button", { name: "开始公开" }).click();
     await page.getByRole("button", { name: "停止公开" }).waitFor();
@@ -127,14 +149,19 @@ it("pairs over LAN explicitly, shows the QR url, and never replays failed action
     const img = page.locator("img.phone-pairing-qr");
     await img.waitFor();
     expect(await img.getAttribute("src")).toMatch(/^data:image\/png;base64,/);
-    expect(await img.getAttribute("alt")).toContain("http://192.168.1.24:41234/");
-    expect(await page.getByLabel("配对地址").inputValue()).toBe("http://192.168.1.24:41234/");
+    expect(await img.getAttribute("alt")).toContain(
+      "http://192.168.1.24:41234/",
+    );
+    expect(await page.getByLabel("配对地址").inputValue()).toBe(
+      "http://192.168.1.24:41234/",
+    );
     for (const note of [
       "二维码是普通 HTTP 地址，不含密钥或随机令牌，只用于按地址配对。",
       "配对只校验地址，不做身份鉴权：同一局域网内知道该地址的人都可能连接。",
       "手机连接的是同一核心与同一份任务列表；关闭桌面应用会终止正在运行的任务。",
       "停止公开只会断开远程连接，不会取消已经在运行的任务。",
-    ]) expect(await page.getByText(note).count()).toBe(1);
+    ])
+      expect(await page.getByText(note).count()).toBe(1);
 
     await page.getByRole("button", { name: "停止公开" }).click();
     await page.getByRole("button", { name: "开始公开" }).waitFor();
@@ -145,14 +172,22 @@ it("pairs over LAN explicitly, shows the QR url, and never replays failed action
     await page.getByRole("button", { name: "开始公开" }).click();
     await page.getByRole("button", { name: "复制地址" }).waitFor();
     await page.evaluate(() => {
-      Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+      Object.defineProperty(navigator, "clipboard", {
+        value: undefined,
+        configurable: true,
+      });
     });
     await page.getByRole("button", { name: "复制地址" }).click();
-    await page.getByText("当前环境无法直接写入剪贴板，已选中地址，请手动复制。").waitFor();
+    await page
+      .getByText("当前环境无法直接写入剪贴板，已选中地址，请手动复制。")
+      .waitFor();
     expect(
       await page.getByLabel("配对地址").evaluate((el) => {
         const field = el as HTMLInputElement;
-        return field.selectionStart === 0 && field.selectionEnd === field.value.length;
+        return (
+          field.selectionStart === 0 &&
+          field.selectionEnd === field.value.length
+        );
       }),
     ).toBe(true);
 
@@ -160,7 +195,9 @@ it("pairs over LAN explicitly, shows the QR url, and never replays failed action
     for (const width of [1180, 390]) {
       await page.setViewportSize({ width, height: 900 });
       expect(
-        await page.locator(".phone-pairing").evaluate((el) => el.scrollWidth <= el.clientWidth),
+        await page
+          .locator(".phone-pairing")
+          .evaluate((el) => el.scrollWidth <= el.clientWidth),
       ).toBe(true);
     }
     expect(errors).toEqual([]);
@@ -196,22 +233,40 @@ it("shows a read-only web pairing address without any start or stop control", as
     ...(executablePath ? { executablePath } : {}),
   });
   try {
-    const page = await browser.newPage({ viewport: { width: 1180, height: 900 } });
+    const page = await browser.newPage({
+      viewport: { width: 1180, height: 900 },
+    });
     page.setDefaultTimeout(5000);
     await page.setContent('<div id="root"></div>');
     await page.addStyleTag({ content: css });
     await page.addScriptTag({ content: js });
     await page.locator("img.phone-pairing-qr").waitFor();
-    expect(await page.getByRole("button", { name: "开始公开" }).count()).toBe(0);
-    expect(await page.getByRole("button", { name: "停止公开" }).count()).toBe(0);
-    expect(await page.getByRole("button", { name: "选择工作区…" }).count()).toBe(0);
+    expect(await page.getByRole("button", { name: "开始公开" }).count()).toBe(
+      0,
+    );
+    expect(await page.getByRole("button", { name: "停止公开" }).count()).toBe(
+      0,
+    );
     expect(
-      await page.getByText("Web 版只显示当前服务器公开的配对地址，不能在这里启动或停止服务。").count(),
+      await page.getByRole("button", { name: "选择工作区…" }).count(),
+    ).toBe(0);
+    expect(
+      await page
+        .getByText(
+          "Web 版只显示当前服务器公开的配对地址，不能在这里启动或停止服务。",
+        )
+        .count(),
     ).toBe(1);
-    expect(await page.getByLabel("配对地址").inputValue()).toBe("http://192.168.1.24:41234/");
+    expect(await page.getByLabel("配对地址").inputValue()).toBe(
+      "http://192.168.1.24:41234/",
+    );
     await page.getByRole("button", { name: "刷新状态" }).click();
     expect(
-      await page.evaluate(() => (Reflect.get(window, "lanCalls") as { action: string }[]).map((call) => call.action)),
+      await page.evaluate(() =>
+        (Reflect.get(window, "lanCalls") as { action: string }[]).map(
+          (call) => call.action,
+        ),
+      ),
     ).toEqual(["status", "status"]);
   } finally {
     await browser.close();

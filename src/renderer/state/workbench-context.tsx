@@ -1,3 +1,11 @@
+import { ForgeError } from "@forge/core/shared/errors";
+import type { ImageAttachment } from "@forge/core/shared/images";
+import {
+  type RunInput,
+  configureInputSchema,
+  createSessionInputSchema,
+  runInputSchema,
+} from "@forge/core/shared/schemas";
 import {
   type ReactNode,
   createContext,
@@ -9,12 +17,6 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  configureInputSchema,
-  createSessionInputSchema,
-  runInputSchema,
-  type RunInput,
-} from "@forge/core/shared/schemas";
 import type {
   ConfigureInput,
   CreateSessionInput,
@@ -23,12 +25,10 @@ import type {
   SessionId,
   SessionSnapshot,
 } from "../shared-types";
-import { ForgeError } from "@forge/core/shared/errors";
+import { modelServiceStatus } from "./model-service-status";
 import { shouldRefreshTranscript } from "./refresh-events";
 import { RunInputQueue } from "./run-input-queue";
 import { pageSnapshot } from "./session-pages";
-import { modelServiceStatus } from "./model-service-status";
-import type { ImageAttachment } from "@forge/core/shared/images";
 import {
   type WorkbenchAction,
   initialWorkbenchState,
@@ -36,7 +36,10 @@ import {
 } from "./workbench-reducer";
 
 const SESSION_READ_RETRY_DELAYS = [100, 300] as const;
-function waitForSessionReadRetry(delay: number, signal: AbortSignal): Promise<void> {
+function waitForSessionReadRetry(
+  delay: number,
+  signal: AbortSignal,
+): Promise<void> {
   return new Promise((resolve) => {
     const finish = () => {
       clearTimeout(timer);
@@ -64,20 +67,31 @@ function useController() {
   const [restoredQueue] = useState(() => {
     try {
       const raw = sessionStorage.getItem("forge-pending-inputs");
-      return raw && raw.length <= 20 * 1024 * 1024 ? RunInputQueue.restore(JSON.parse(raw)) : new RunInputQueue();
-    } catch { return new RunInputQueue(); }
+      return raw && raw.length <= 20 * 1024 * 1024
+        ? RunInputQueue.restore(JSON.parse(raw))
+        : new RunInputQueue();
+    } catch {
+      return new RunInputQueue();
+    }
   });
   const inputQueue = useRef(restoredQueue);
   const queuedStarts = useRef(new Map<SessionId, RunInput>());
   const terminalSessions = useRef(new Set<SessionId>());
   const [, setQueueVersion] = useState(0);
   const updateQueue = useCallback((requirePersistence = false) => {
-    try { sessionStorage.setItem("forge-pending-inputs", JSON.stringify(inputQueue.current.snapshot())); }
-    catch (error) {
-      if (requirePersistence) throw new Error("浏览器存储空间不足，无法保存待发图片；草稿已保留，请减少图片或在本轮结束后发送。");
+    try {
+      sessionStorage.setItem(
+        "forge-pending-inputs",
+        JSON.stringify(inputQueue.current.snapshot()),
+      );
+    } catch (error) {
+      if (requirePersistence)
+        throw new Error(
+          "浏览器存储空间不足，无法保存待发图片；草稿已保留，请减少图片或在本轮结束后发送。",
+        );
       if (!(error instanceof DOMException)) throw error;
     }
-    if (alive.current) setQueueVersion(version => version + 1);
+    if (alive.current) setQueueVersion((version) => version + 1);
   }, []);
   const launchQueued = useRef<(id: SessionId) => Promise<void>>(async () => {});
   const dispatch = useCallback((action: WorkbenchAction) => {
@@ -96,7 +110,10 @@ function useController() {
   const reads = useRef(new Map<string, number>());
   const pendingReads = useRef(new Map<string, Promise<void>>());
   const selectionVersion = useRef(0);
-  const historyRequest = useRef<{ sessionId: SessionId; selection: number } | null>(null);
+  const historyRequest = useRef<{
+    sessionId: SessionId;
+    selection: number;
+  } | null>(null);
   // Tracks the requested window synchronously, independent of React commit timing.
   const loadedFrom = useRef(new Map<SessionId, number>());
   const refreshSession = useCallback(
@@ -119,12 +136,26 @@ function useController() {
             try {
               const from = loadedFrom.current.get(id);
               const snapshot: SessionSnapshot = window.forge.getSessionPage
-                ? pageSnapshot(await window.forge.getSessionPage(id, from === undefined ? undefined : { from }))
+                ? pageSnapshot(
+                    await window.forge.getSessionPage(
+                      id,
+                      from === undefined ? undefined : { from },
+                    ),
+                  )
                 : await window.forge.getSession(id);
               if (signal.aborted) return;
               if (selection !== selectionVersion.current) break;
-              if (snapshot.transcript && current.current.activeSessionId === id) {
-                loadedFrom.current.set(id, Math.min(loadedFrom.current.get(id) ?? Infinity, snapshot.transcript.messageOffset));
+              if (
+                snapshot.transcript &&
+                current.current.activeSessionId === id
+              ) {
+                loadedFrom.current.set(
+                  id,
+                  Math.min(
+                    loadedFrom.current.get(id) ?? Infinity,
+                    snapshot.transcript.messageOffset,
+                  ),
+                );
               }
               dispatch({ type: "SET_ACTIVE_SNAPSHOT", snapshot });
               dispatch({ type: "CLEAR_SESSION_READ_ERROR", sessionId: id });
@@ -135,19 +166,29 @@ function useController() {
               const delay = SESSION_READ_RETRY_DELAYS[attempt++];
               // Only this idempotent read may retry an explicitly transient
               // storage conflict. Never retry mutations or hide corrupt data.
-              if (err instanceof ForgeError && err.code === "storage" && err.retryable && delay !== undefined) {
+              if (
+                err instanceof ForgeError &&
+                err.code === "storage" &&
+                err.retryable &&
+                delay !== undefined
+              ) {
                 await waitForSessionReadRetry(delay, signal);
                 continue;
               }
-              dispatch({ type: "SET_SESSION_READ_ERROR", sessionId: id,
-                error: err instanceof Error ? err.message : "会话读取失败，请重试" });
+              dispatch({
+                type: "SET_SESSION_READ_ERROR",
+                sessionId: id,
+                error:
+                  err instanceof Error ? err.message : "会话读取失败，请重试",
+              });
               return;
             }
           }
         } while (!signal.aborted && reads.current.get(id) !== observed);
       };
       const task = read().finally(() => {
-        if (pendingReads.current.get(id) === task) pendingReads.current.delete(id);
+        if (pendingReads.current.get(id) === task)
+          pendingReads.current.delete(id);
       });
       pendingReads.current.set(id, task);
       return task;
@@ -168,21 +209,46 @@ function useController() {
     const snapshot = current.current.activeSnapshot;
     const page = snapshot?.transcript;
     const signal = readLifetime.current?.signal;
-    if (!snapshot || !page?.hasMore || !window.forge.getSessionPage ||
-        !signal || signal.aborted || historyRequest.current) return;
-    const request = { sessionId: snapshot.id, selection: selectionVersion.current };
+    if (
+      !snapshot ||
+      !page?.hasMore ||
+      !window.forge.getSessionPage ||
+      !signal ||
+      signal.aborted ||
+      historyRequest.current
+    )
+      return;
+    const request = {
+      sessionId: snapshot.id,
+      selection: selectionVersion.current,
+    };
     historyRequest.current = request;
-    const valid = () => !signal.aborted && historyRequest.current === request &&
-      selectionVersion.current === request.selection && current.current.activeSessionId === snapshot.id;
-    dispatch({ type: "SET_HISTORY_LOADING", sessionId: snapshot.id, isLoading: true });
+    const valid = () =>
+      !signal.aborted &&
+      historyRequest.current === request &&
+      selectionVersion.current === request.selection &&
+      current.current.activeSessionId === snapshot.id;
+    dispatch({
+      type: "SET_HISTORY_LOADING",
+      sessionId: snapshot.id,
+      isLoading: true,
+    });
     try {
-      const result = await window.forge.getSessionPage(snapshot.id, { before: page.messageOffset });
+      const result = await window.forge.getSessionPage(snapshot.id, {
+        before: page.messageOffset,
+      });
       if (!valid()) return;
       loadedFrom.current.set(snapshot.id, result.page.messageOffset);
       dispatch({ type: "PREPEND_SESSION_PAGE", result });
     } catch (err) {
-      if (valid()) dispatch({ type: "SET_HISTORY_LOADING", sessionId: snapshot.id, isLoading: false,
-        error: err instanceof Error ? err.message : "历史记录加载失败，请重试" });
+      if (valid())
+        dispatch({
+          type: "SET_HISTORY_LOADING",
+          sessionId: snapshot.id,
+          isLoading: false,
+          error:
+            err instanceof Error ? err.message : "历史记录加载失败，请重试",
+        });
     } finally {
       if (historyRequest.current === request) historyRequest.current = null;
     }
@@ -195,7 +261,11 @@ function useController() {
       if (generation !== sessionListGeneration.current) return;
       dispatch({ type: "SET_SESSIONS", sessions });
       const first = sessions[0];
-      if (first && !current.current.activeSessionId && !current.current.isNewSessionOpen)
+      if (
+        first &&
+        !current.current.activeSessionId &&
+        !current.current.isNewSessionOpen
+      )
         await selectSession(first.id);
     } catch (err) {
       fail(err);
@@ -242,22 +312,32 @@ function useController() {
         if (event.event.type === "agent_update") {
           void loadSessions();
           void refreshSession(event.event.childSessionId);
-        } else if (event.event.type === "run_started" || event.event.type === "title_changed") void loadSessions();
+        } else if (
+          event.event.type === "run_started" ||
+          event.event.type === "title_changed"
+        )
+          void loadSessions();
       }
       if (event.event.type === "run_finished") {
         terminalSessions.current.add(id);
         queuedStarts.current.delete(id);
         if (event.event.status !== "completed") inputQueue.current.pause(id);
         updateQueue();
-        if (event.event.status === "completed") setTimeout(() => { if (alive.current) void launchQueued.current(id); }, 0);
+        if (event.event.status === "completed")
+          setTimeout(() => {
+            if (alive.current) void launchQueued.current(id);
+          }, 0);
         starting.current.delete(event.event.sessionId);
         // One bounded follow-up read for asynchronous title metadata; no polling.
         clearTimeout(titleRefreshes.get(id));
-        titleRefreshes.set(id, setTimeout(() => {
-          titleRefreshes.delete(id);
-          void loadSessions();
-          if (current.current.activeSessionId === id) void refreshSession(id);
-        }, 2500));
+        titleRefreshes.set(
+          id,
+          setTimeout(() => {
+            titleRefreshes.delete(id);
+            void loadSessions();
+            if (current.current.activeSessionId === id) void refreshSession(id);
+          }, 2500),
+        );
         void refreshSession(event.event.sessionId);
         void loadSessions();
       }
@@ -279,11 +359,15 @@ function useController() {
   // the visible selected active snapshot; never take ownership or replay a run.
   const selectedId = state.activeSessionId;
   const selectedRun = selectedId ? state.activeRuns[selectedId] : undefined;
-  const externalSessionId = selectedId && !state.isNewSessionOpen &&
+  const externalSessionId =
+    selectedId &&
+    !state.isNewSessionOpen &&
     state.activeSnapshot?.id === selectedId &&
     ["running", "awaiting_approval"].includes(state.activeSnapshot.status) &&
     !["running", "awaiting_approval"].includes(selectedRun?.status ?? "") &&
-    state.alertReadSessionId !== selectedId ? selectedId : null;
+    state.alertReadSessionId !== selectedId
+      ? selectedId
+      : null;
   useEffect(() => {
     if (!externalSessionId) return;
     let disposed = false;
@@ -295,8 +379,13 @@ function useController() {
     };
     const refresh = async () => {
       clearTimeout(timer);
-      if (disposed || pending || document.visibilityState !== "visible" ||
-          current.current.activeSessionId !== externalSessionId) return;
+      if (
+        disposed ||
+        pending ||
+        document.visibilityState !== "visible" ||
+        current.current.activeSessionId !== externalSessionId
+      )
+        return;
       pending = true;
       try {
         // Reuse an in-flight read without invalidating it. A slow read must not
@@ -352,7 +441,8 @@ function useController() {
       // failures escalate to the global alert so the user never sees it twice.
       return {
         ok: false,
-        error: err instanceof Error ? err.message : "设置保存失败，未自动重试。",
+        error:
+          err instanceof Error ? err.message : "设置保存失败，未自动重试。",
       };
     }
   };
@@ -390,8 +480,8 @@ function useController() {
     const run = current.current.activeRuns[id];
     if (
       starting.current.has(id) ||
-      (!terminalSessions.current.has(id) && (run?.status === "running" ||
-      run?.status === "awaiting_approval"))
+      (!terminalSessions.current.has(id) &&
+        (run?.status === "running" || run?.status === "awaiting_approval"))
     )
       return false;
     try {
@@ -421,11 +511,24 @@ function useController() {
   const runQueued = async (id: SessionId) => {
     if (queuedStarts.current.has(id) || starting.current.has(id)) return;
     const run = current.current.activeRuns[id];
-    if (!terminalSessions.current.has(id) && (run?.status === "running" || run?.status === "awaiting_approval")) return;
+    if (
+      !terminalSessions.current.has(id) &&
+      (run?.status === "running" || run?.status === "awaiting_approval")
+    )
+      return;
     const input = inputQueue.current.peek(id);
     if (!input) return;
     queuedStarts.current.set(id, input);
-    const started = await startRun(input.prompt, input.permission, input.model, id, input.mode, input.providerSourceId, input.images, input.routeGroupId);
+    const started = await startRun(
+      input.prompt,
+      input.permission,
+      input.model,
+      id,
+      input.mode,
+      input.providerSourceId,
+      input.images,
+      input.routeGroupId,
+    );
     if (!started) {
       queuedStarts.current.delete(id);
       inputQueue.current.pause(id);
@@ -440,11 +543,16 @@ function useController() {
       return true;
     } catch (error) {
       if (queued) inputQueue.current.remove(queued);
-      fail(error); return false;
+      fail(error);
+      return false;
     }
   };
   launchQueued.current = runQueued;
-  const sendSteering = async (prompt: string, id: SessionId, images?: readonly ImageAttachment[]): Promise<boolean> => {
+  const sendSteering = async (
+    prompt: string,
+    id: SessionId,
+    images?: readonly ImageAttachment[],
+  ): Promise<boolean> => {
     const run = current.current.activeRuns[id];
     if (!run?.runId) return false;
     try {
@@ -454,8 +562,10 @@ function useController() {
       await window.forge.steerRun(run.runId, prompt, images);
       void refreshSession(id);
       return true;
+    } catch (error) {
+      fail(error);
+      return false;
     }
-    catch (error) { fail(error); return false; }
   };
   const cancelRun = async (target?: SessionId) => {
     const id = target ?? current.current.activeSessionId;
@@ -528,8 +638,12 @@ function useController() {
     startRun,
     sendSteering,
     queueInput,
-    pendingInputs: state.activeSessionId ? inputQueue.current.items(state.activeSessionId) : [],
-    inputQueuePaused: state.activeSessionId ? inputQueue.current.isPaused(state.activeSessionId) : false,
+    pendingInputs: state.activeSessionId
+      ? inputQueue.current.items(state.activeSessionId)
+      : [],
+    inputQueuePaused: state.activeSessionId
+      ? inputQueue.current.isPaused(state.activeSessionId)
+      : false,
     queueItemKey: (item: RunInput) => inputQueue.current.keyOf(item),
     removeQueuedInput: (index: number): boolean => {
       const id = current.current.activeSessionId;
@@ -561,7 +675,10 @@ function useController() {
       if (!id) return false;
       const inFlight = queuedStarts.current.get(id);
       const items = inputQueue.current.items(id);
-      if (inFlight && (items[fromIndex] === inFlight || items[toIndex] === inFlight)) {
+      if (
+        inFlight &&
+        (items[fromIndex] === inFlight || items[toIndex] === inFlight)
+      ) {
         return false;
       }
       const moved = inputQueue.current.reorder(id, fromIndex, toIndex);
@@ -570,11 +687,18 @@ function useController() {
     },
     resumeInputs: () => {
       const id = current.current.activeSessionId;
-      if (id) { inputQueue.current.resume(id); updateQueue(); void runQueued(id); }
+      if (id) {
+        inputQueue.current.resume(id);
+        updateQueue();
+        void runQueued(id);
+      }
     },
     clearInputs: () => {
       const id = current.current.activeSessionId;
-      if (id && !queuedStarts.current.has(id)) { inputQueue.current.clear(id); updateQueue(); }
+      if (id && !queuedStarts.current.has(id)) {
+        inputQueue.current.clear(id);
+        updateQueue();
+      }
     },
     cancelRun,
     setRunPermission,
@@ -598,7 +722,10 @@ function useController() {
       dispatch({ type: "OPEN_USAGE_DASHBOARD", isOpen }),
     openNewSession: (isOpen: boolean) => {
       dispatch({ type: "OPEN_NEW_SESSION", isOpen });
-      if (isOpen) requestAnimationFrame(() => document.getElementById("new-prompt")?.focus());
+      if (isOpen)
+        requestAnimationFrame(() =>
+          document.getElementById("new-prompt")?.focus(),
+        );
     },
     setMobileTab: (tab: "task" | "inspector") =>
       dispatch({ type: "SET_MOBILE_TAB", tab }),

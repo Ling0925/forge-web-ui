@@ -1,18 +1,21 @@
-import { useEffect, useState } from "react";
 import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
 import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
 import {
+  type ModelPrice,
+  type TokenRates,
   estimateAggregateCostUsd,
   estimateRequestCostUsd,
   findModelPrice,
   modelCatalogPricingToPrice,
   normalizePricingModelId,
   resolveRequestRates,
-  type ModelPrice,
-  type TokenRates,
 } from "@forge/core/shared/model-pricing";
-import type { AgentEvent, PublicProviderSource } from "@forge/core/shared/schemas";
+import type {
+  AgentEvent,
+  PublicProviderSource,
+} from "@forge/core/shared/schemas";
 import type { SessionUsage } from "@forge/core/shared/session-usage";
+import { useEffect, useState } from "react";
 import { composerModelMetadata } from "./composer-model";
 
 interface PricingStoreState {
@@ -154,7 +157,9 @@ export async function ensureUsageModelPrices(
   ];
   const unrequested = cleaned.filter((m) => {
     const key = normalizePricingModelId(m);
-    return key.length > 0 && !requestedModels.has(key) && !mutablePrices.has(key);
+    return (
+      key.length > 0 && !requestedModels.has(key) && !mutablePrices.has(key)
+    );
   });
   if (unrequested.length === 0 && pricingStatus !== undefined) return;
   if (inflightFetch) return inflightFetch;
@@ -342,7 +347,8 @@ export function computeSessionSpeedMetrics(
   }
 
   return {
-    avgTps: avgTps !== undefined && Number.isFinite(avgTps) ? avgTps : undefined,
+    avgTps:
+      avgTps !== undefined && Number.isFinite(avgTps) ? avgTps : undefined,
     latestTps,
     peakTps,
     durationMs,
@@ -382,7 +388,9 @@ export function computeSessionCostMetrics(options: {
   } = options;
 
   const primaryModel = model || snapshotModel;
-  const resolvePrice = (targetModel: string | undefined): ModelPrice | undefined => {
+  const resolvePrice = (
+    targetModel: string | undefined,
+  ): ModelPrice | undefined => {
     if (!targetModel) return undefined;
     const usagePrice = findModelPrice(prices, targetModel);
     const catalogMeta =

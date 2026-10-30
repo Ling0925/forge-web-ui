@@ -1,5 +1,5 @@
-import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
@@ -384,22 +384,43 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
 
     await page.getByRole("button", { name: "添加来源" }).click();
     await chooseOption(page.getByLabel("预设", { exact: true }), "google");
-    expect(await selectValue(page.getByLabel("协议", { exact: true }))).toBe("gemini");
-    expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("https://generativelanguage.googleapis.com/v1beta");
+    expect(await selectValue(page.getByLabel("协议", { exact: true }))).toBe(
+      "gemini",
+    );
+    expect(
+      await page.getByLabel("API 地址", { exact: true }).inputValue(),
+    ).toBe("https://generativelanguage.googleapis.com/v1beta");
     await chooseOption(page.getByLabel("预设", { exact: true }), "azure");
-    expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("");
+    expect(
+      await page.getByLabel("API 地址", { exact: true }).inputValue(),
+    ).toBe("");
     await chooseOption(page.getByLabel("预设", { exact: true }), "bedrock");
-    await chooseOption(page.getByLabel("Region", { exact: true }), "eu-central-1");
-    expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1");
+    await chooseOption(
+      page.getByLabel("Region", { exact: true }),
+      "eu-central-1",
+    );
+    expect(
+      await page.getByLabel("API 地址", { exact: true }).inputValue(),
+    ).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1");
     const captureDir = process.env.FORGE_MODEL_ACCESS_CAPTURE_DIR;
     if (captureDir) {
       await mkdir(captureDir, { recursive: true });
-      for (const theme of ["light", "dark"]) for (const width of [1440, 390]) {
-        await page.setViewportSize({ width, height: 1000 });
-        await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-        await page.screenshot({ path: resolve(captureDir, `providers-${theme}-${width}.png`), fullPage: true });
-        expect(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth)).toBe(true);
-      }
+      for (const theme of ["light", "dark"])
+        for (const width of [1440, 390]) {
+          await page.setViewportSize({ width, height: 1000 });
+          await page.evaluate((value) => {
+            document.documentElement.dataset.theme = value;
+          }, theme);
+          await page.screenshot({
+            path: resolve(captureDir, `providers-${theme}-${width}.png`),
+            fullPage: true,
+          });
+          expect(
+            await page.evaluate(
+              () => document.body.scrollWidth <= window.innerWidth,
+            ),
+          ).toBe(true);
+        }
     }
   } finally {
     await browser.close();
@@ -492,7 +513,9 @@ it("shows actual route, source and credential usage in the stats panel", async (
     });
 
     const overviewTab = page.getByRole("tab", { name: "概览", exact: true });
-    await expect.poll(() => overviewTab.getAttribute("aria-selected")).toBe("true");
+    await expect
+      .poll(() => overviewTab.getAttribute("aria-selected"))
+      .toBe("true");
     await page.getByRole("tab", { name: "用量统计", exact: true }).click();
 
     const section = page

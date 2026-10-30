@@ -55,9 +55,7 @@ export function Reasoning({
   const last = lastReasoningLine(text);
   if (!live && !last) return null;
 
-  const tail = live
-    ? text.split("\n").slice(-LIVE_TAIL_LINES).join("\n")
-    : "";
+  const tail = live ? text.split("\n").slice(-LIVE_TAIL_LINES).join("\n") : "";
 
   return (
     <section
@@ -69,7 +67,14 @@ export function Reasoning({
         type="button"
         className="reasoning-head"
         disabled={live}
-        onClick={live ? undefined : () => onExpandedChange ? onExpandedChange(!expanded) : setExpanded(!expanded)}
+        onClick={
+          live
+            ? undefined
+            : () =>
+                onExpandedChange
+                  ? onExpandedChange(!expanded)
+                  : setExpanded(!expanded)
+        }
         aria-expanded={live ? undefined : expanded}
         aria-label={live ? "思考中" : `思考过程：${last}`}
       >
@@ -86,7 +91,16 @@ export function Reasoning({
             {last}
           </span>
         )}
-        {status && <span className="wb-muted">未保存的思考预览{status === "failed" ? " · 失败" : status === "cancelled" ? " · 已取消" : " · 未确认"}</span>}
+        {status && (
+          <span className="wb-muted">
+            未保存的思考预览
+            {status === "failed"
+              ? " · 失败"
+              : status === "cancelled"
+                ? " · 已取消"
+                : " · 未确认"}
+          </span>
+        )}
         {!live && (
           <CaretRight
             size={12}

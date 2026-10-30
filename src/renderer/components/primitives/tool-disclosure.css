@@ -228,9 +228,16 @@
 }
 
 @keyframes tool-status-shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
 }
 
 .tool-disclosure-spinner {
@@ -851,9 +858,9 @@
   color: var(--text-muted);
   cursor: pointer;
   opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-out),
-              background-color var(--duration-fast) var(--ease-out),
-              color var(--duration-fast) var(--ease-out);
+  transition: opacity var(--duration-fast) var(--ease-out), background-color
+    var(--duration-fast) var(--ease-out), color var(--duration-fast)
+    var(--ease-out);
 }
 
 .tool-file-item:hover .tool-file-copy-btn,
@@ -1465,7 +1472,8 @@
   border-left: 2.5px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   position: relative;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  transition: border-color var(--transition-fast), background-color
+    var(--transition-fast);
 }
 
 .agent-report-card:hover {
@@ -1572,7 +1580,8 @@
 }
 
 @keyframes agent-live-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1593,8 +1602,12 @@
 }
 
 @keyframes agent-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1969,4 +1982,3 @@
     animation: none;
   }
 }
-

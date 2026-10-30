@@ -5,7 +5,10 @@ import { expect, it } from "vitest";
 
 it("shows preparing, executing and finished tool UI while session snapshot reads are withheld", async () => {
   const bundle = await build({
-    stdin: { resolveDir: resolve("."), loader: "tsx", contents: `
+    stdin: {
+      resolveDir: resolve("."),
+      loader: "tsx",
+      contents: `
       import {useReducer} from 'react';
       import {createRoot} from 'react-dom/client';
       import {Transcript} from './src/renderer/components/workbench/Transcript';
@@ -31,46 +34,94 @@ it("shows preparing, executing and finished tool UI while session snapshot reads
         return <div className="wb-app"><main className="workbench-main"><Transcript/></main></div>;
       }
       createRoot(document.getElementById('root')).render(<Harness/>);
-    ` },
-    bundle: true, write: false, format: "iife", jsx: "automatic", outfile: "tool-live.js",
-    loader: { ".woff2": "dataurl" }, define: { "process.env.NODE_ENV": '"development"' },
-    plugins: [{ name: "context", setup(api) {
-      api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({ contents: "export const useWorkbench=()=>window.testController;", loader: "js" }));
-    } }],
+    `,
+    },
+    bundle: true,
+    write: false,
+    format: "iife",
+    jsx: "automatic",
+    outfile: "tool-live.js",
+    loader: { ".woff2": "dataurl" },
+    define: { "process.env.NODE_ENV": '"development"' },
+    plugins: [
+      {
+        name: "context",
+        setup(api) {
+          api.onLoad({ filter: /workbench-context\.tsx$/ }, () => ({
+            contents: "export const useWorkbench=()=>window.testController;",
+            loader: "js",
+          }));
+        },
+      },
+    ],
   });
-  const js = bundle.outputFiles.find(f => f.path.endsWith(".js"))?.text;
-  const css = bundle.outputFiles.find(f => f.path.endsWith(".css"))?.text;
+  const js = bundle.outputFiles.find((f) => f.path.endsWith(".js"))?.text;
+  const css = bundle.outputFiles.find((f) => f.path.endsWith(".css"))?.text;
   if (!js || !css) throw new Error("Missing bundle");
   const browser = await chromium.launch({ headless: true });
   try {
     const page = await browser.newPage();
     const errors: string[] = [];
-    page.on("pageerror", error => errors.push(error.message));
+    page.on("pageerror", (error) => errors.push(error.message));
     await page.setContent('<div id="root"></div>');
     await page.addStyleTag({ content: css });
     await page.addScriptTag({ content: js });
-    await page.waitForFunction(() => typeof (window as unknown as { step?: unknown }).step === "function");
+    await page.waitForFunction(
+      () =>
+        typeof (window as unknown as { step?: unknown }).step === "function",
+    );
     const step = async (action: string) => {
-      await page.evaluate(value => (window as unknown as { step: (a: string) => void }).step(value), action);
-      await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+      await page.evaluate(
+        (value) =>
+          (window as unknown as { step: (a: string) => void }).step(value),
+        action,
+      );
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve) =>
+            requestAnimationFrame(() => resolve()),
+          ),
+      );
     };
     await step("prepare");
-    expect(await page.locator(".conversation-inner").innerText()).toContain("生成参数中");
-    expect(await page.locator(".conversation-inner").innerText()).toContain("123");
+    expect(await page.locator(".conversation-inner").innerText()).toContain(
+      "生成参数中",
+    );
+    expect(await page.locator(".conversation-inner").innerText()).toContain(
+      "123",
+    );
     await step("update");
-    expect((await page.locator(".conversation-inner").innerText()).match(/生成参数中/g)).toHaveLength(1);
-    expect(await page.locator(".conversation-inner").innerText()).toContain("456");
+    expect(
+      (await page.locator(".conversation-inner").innerText()).match(
+        /生成参数中/g,
+      ),
+    ).toHaveLength(1);
+    expect(await page.locator(".conversation-inner").innerText()).toContain(
+      "456",
+    );
     await step("start");
-    expect(await page.locator('.tool-disclosure[data-status="running"]').count()).toBe(1);
-    expect(await page.locator(".conversation-inner").innerText()).not.toContain("生成参数中");
+    expect(
+      await page.locator('.tool-disclosure[data-status="running"]').count(),
+    ).toBe(1);
+    expect(await page.locator(".conversation-inner").innerText()).not.toContain(
+      "生成参数中",
+    );
     await step("stale");
-    expect(await page.locator('.tool-disclosure[data-status="running"]').count()).toBe(1);
+    expect(
+      await page.locator('.tool-disclosure[data-status="running"]').count(),
+    ).toBe(1);
     await step("finish");
-    expect(await page.locator('.tool-disclosure[data-status="completed"]').count()).toBe(1);
+    expect(
+      await page.locator('.tool-disclosure[data-status="completed"]').count(),
+    ).toBe(1);
     await step("saved");
     expect(await page.locator(".tool-disclosure").count()).toBe(1);
     await page.locator(".tool-disclosure-header").click();
-    expect(await page.locator(".tool-disclosure").innerText()).toContain("file content");
+    expect(await page.locator(".tool-disclosure").innerText()).toContain(
+      "file content",
+    );
     expect(errors).toEqual([]);
-  } finally { await browser.close(); }
+  } finally {
+    await browser.close();
+  }
 }, 20000);

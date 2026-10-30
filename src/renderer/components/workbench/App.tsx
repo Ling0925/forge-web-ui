@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useGlobalModalShortcuts } from "../../state/modal-shortcuts";
 import { WorkbenchProvider } from "../../state/workbench-context";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
-import { ErrorState } from "../primitives/ErrorState";
 import { DeferredPanel } from "../primitives/DeferredPanel";
+import { ErrorState } from "../primitives/ErrorState";
 import { Composer } from "./Composer";
 import { Inspector } from "./Inspector";
 import { Sidebar } from "./Sidebar";
@@ -19,8 +23,12 @@ import "./new-session.css";
 import "./inspector.css";
 import "../../styles/motion.css";
 
-const loadSettingsPanel = () => import("./Settings").then((module) => ({ default: module.Settings }));
-const loadUsageDashboard = () => import("./UsageDashboard").then((module) => ({ default: module.UsageDashboard }));
+const loadSettingsPanel = () =>
+  import("./Settings").then((module) => ({ default: module.Settings }));
+const loadUsageDashboard = () =>
+  import("./UsageDashboard").then((module) => ({
+    default: module.UsageDashboard,
+  }));
 
 function Workbench() {
   const {
@@ -37,26 +45,22 @@ function Workbench() {
   // The shell only needs layout flags and approval counts. Selecting them keeps
   // streamed tokens (which only touch `activeRuns[id]`) from re-rendering the
   // whole workbench tree.
-  const state = useWorkbenchSelector(
-    ({ state }) => {
-      const runs = Object.values(state.activeRuns);
-      return {
-        isSettingsOpen: state.isSettingsOpen,
-        isUsageDashboardOpen: state.isUsageDashboardOpen,
-        isNewSessionOpen: state.isNewSessionOpen,
-        activeSessionId: state.activeSessionId,
-        mobileTab: state.mobileTab,
-        isMobileSidebarOpen: state.isMobileSidebarOpen,
-        alertError: state.alertError,
-        pending: runs.filter((run) => run.pendingApproval).length,
-        backgroundPending: runs.filter(
-          (run) =>
-            run.pendingApproval && run.sessionId !== state.activeSessionId,
-        ).length,
-      };
-    },
-    shallowEqual,
-  );
+  const state = useWorkbenchSelector(({ state }) => {
+    const runs = Object.values(state.activeRuns);
+    return {
+      isSettingsOpen: state.isSettingsOpen,
+      isUsageDashboardOpen: state.isUsageDashboardOpen,
+      isNewSessionOpen: state.isNewSessionOpen,
+      activeSessionId: state.activeSessionId,
+      mobileTab: state.mobileTab,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      alertError: state.alertError,
+      pending: runs.filter((run) => run.pendingApproval).length,
+      backgroundPending: runs.filter(
+        (run) => run.pendingApproval && run.sessionId !== state.activeSessionId,
+      ).length,
+    };
+  }, shallowEqual);
   useGlobalModalShortcuts({
     onNewSession: (open) => {
       if (!state.isSettingsOpen) openNewSession(open);
@@ -163,8 +167,18 @@ function Workbench() {
           </div>
         </div>
       </div>
-      <DeferredPanel open={state.isSettingsOpen} label="设置" onClose={() => openSettings(false)} load={loadSettingsPanel} />
-      <DeferredPanel open={state.isUsageDashboardOpen} label="用量看板" onClose={() => openUsageDashboard(false)} load={loadUsageDashboard} />
+      <DeferredPanel
+        open={state.isSettingsOpen}
+        label="设置"
+        onClose={() => openSettings(false)}
+        load={loadSettingsPanel}
+      />
+      <DeferredPanel
+        open={state.isUsageDashboardOpen}
+        label="用量看板"
+        onClose={() => openUsageDashboard(false)}
+        load={loadUsageDashboard}
+      />
     </>
   );
 }

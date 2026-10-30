@@ -1,14 +1,4 @@
 import { resolve } from "node:path";
-import { build } from "esbuild";
-import { chromium } from "playwright";
-import { expect, it } from "vitest";
-import type { SessionSnapshot } from "../../src/renderer/shared-types";
-import { createPersistentUsageCache } from "../../src/renderer/state/persistent-usage-cache";
-import {
-  appendSessionEvent,
-  seedSessionUsage,
-  sessionUsage,
-} from "../../src/renderer/state/session-usage";
 import {
   type AgentEvent,
   agentEventSchema,
@@ -20,6 +10,16 @@ import {
   sessionUsageStateSchema,
   summarizeUsageState,
 } from "@forge/core/shared/session-usage";
+import { build } from "esbuild";
+import { chromium } from "playwright";
+import { expect, it } from "vitest";
+import type { SessionSnapshot } from "../../src/renderer/shared-types";
+import { createPersistentUsageCache } from "../../src/renderer/state/persistent-usage-cache";
+import {
+  appendSessionEvent,
+  seedSessionUsage,
+  sessionUsage,
+} from "../../src/renderer/state/session-usage";
 
 type AttemptEvent = Extract<AgentEvent, { type: "provider_attempt" }>;
 const id = parseSessionId("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");

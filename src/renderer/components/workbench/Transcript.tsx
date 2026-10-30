@@ -1,39 +1,68 @@
-import { ArrowDown, CaretDown, CaretRight, Check, Copy, Robot, WarningCircle } from "@phosphor-icons/react";
-import { Fragment, memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Collapsible } from "../primitives/Collapsible";
-import { commandActivity, toolActivity } from "@forge/core/shared/tool-activity";
 import { executionLabel, executionTurns } from "@forge/core/shared/execution";
+import {
+  commandActivity,
+  toolActivity,
+} from "@forge/core/shared/tool-activity";
 import { webSearchStatus } from "@forge/core/shared/web-search-display";
+import {
+  ArrowDown,
+  CaretDown,
+  CaretRight,
+  Check,
+  Copy,
+  Robot,
+  WarningCircle,
+} from "@phosphor-icons/react";
+import {
+  Fragment,
+  type ReactNode,
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type {
   ApprovalRequest,
   SessionId,
   SessionSnapshot,
 } from "../../shared-types";
-import { reduceTimeline, type TimelineItem } from "../../state/timeline";
 import { publishesPublishedFiles } from "../../state/published-file-tools";
-import type { PendingOutput } from "../../state/transcript-sync";
-import { streamedOutput, type ActiveRunState } from "../../state/workbench-reducer";
-import { completedTurnExecutions, type CompletedTurnExecution } from "../../state/turn-execution";
+import { type TimelineItem, reduceTimeline } from "../../state/timeline";
 import { TranscriptScrollState } from "../../state/transcript-scroll";
+import {
+  type TranscriptStage,
+  foldedTool,
+  transcriptStages,
+} from "../../state/transcript-stages";
+import type { PendingOutput } from "../../state/transcript-sync";
+import {
+  type CompletedTurnExecution,
+  completedTurnExecutions,
+} from "../../state/turn-execution";
 import { useWorkbench } from "../../state/workbench-context";
+import {
+  type ActiveRunState,
+  streamedOutput,
+} from "../../state/workbench-reducer";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
 import { Button } from "../primitives/Button";
+import { Collapsible } from "../primitives/Collapsible";
 import { EmptyState } from "../primitives/EmptyState";
 import { ErrorState } from "../primitives/ErrorState";
 import {
+  type PlanItemData,
+  PlanStepsList,
   ToolDisclosure,
+  extractPlanData,
   friendlyLabel,
   getToolIcon,
-  PlanStepsList,
-  extractPlanData,
-  type PlanItemData,
 } from "../primitives/ToolDisclosure";
-import { Markdown } from "./Markdown";
-import { StreamingMarkdown } from "./StreamingMarkdown";
-import { Reasoning } from "./Reasoning";
 import { ImageAttachments } from "./ImageAttachments";
+import { Markdown } from "./Markdown";
 import { PublishedFiles } from "./PublishedFiles";
-import { foldedTool, transcriptStages, type TranscriptStage } from "../../state/transcript-stages";
+import { Reasoning } from "./Reasoning";
+import { StreamingMarkdown } from "./StreamingMarkdown";
 import "./transcript.css";
 import "./tool-live.css";
 export { phaseMarkers, foldedTool } from "../../state/transcript-stages";
@@ -53,12 +82,17 @@ export function ToolPreviews({
   >;
 }) {
   return (
-    <div className="tool-call-group tool-live-list" role="status" aria-label="工具参数生成中">
+    <div
+      className="tool-call-group tool-live-list"
+      role="status"
+      aria-label="工具参数生成中"
+    >
       {previews.map((preview) => {
         const toolName = preview.name || "";
         const label = friendlyLabel(toolName);
         const icon = getToolIcon(toolName);
-        const isCommand = toolName === "run_command" || toolName === "command_task";
+        const isCommand =
+          toolName === "run_command" || toolName === "command_task";
         return (
           <div
             className={`tool-disclosure tool-live-item ${isCommand ? "is-command" : ""}`}
@@ -68,14 +102,24 @@ export function ToolPreviews({
           >
             <div className="tool-disclosure-header tool-live-header">
               <div className="tool-disclosure-summary">
-                <span className="tool-disclosure-icon tool-live-icon" aria-hidden="true">
+                <span
+                  className="tool-disclosure-icon tool-live-icon"
+                  aria-hidden="true"
+                >
                   {icon}
                 </span>
-                <span className="tool-disclosure-label tool-live-name">{label}</span>
+                <span className="tool-disclosure-label tool-live-name">
+                  {label}
+                </span>
                 <span className="tool-disclosure-target">
                   <span className="tool-live-status">生成参数中</span>
-                  <span className="tool-live-sep" aria-hidden="true"> · </span>
-                  <span className="tool-live-chars">{preview.argumentsChars} 字符</span>
+                  <span className="tool-live-sep" aria-hidden="true">
+                    {" "}
+                    ·{" "}
+                  </span>
+                  <span className="tool-live-chars">
+                    {preview.argumentsChars} 字符
+                  </span>
                 </span>
               </div>
               <div className="tool-disclosure-meta">
@@ -87,14 +131,15 @@ export function ToolPreviews({
                     +{preview.linesAdded}
                   </span>
                 )}
-                {preview.linesRemoved !== undefined && preview.linesRemoved > 0 && (
-                  <span
-                    className="tool-diff-stat tool-diff-removed tool-live-diff"
-                    title={`实时删除约 ${preview.linesRemoved} 行`}
-                  >
-                    -{preview.linesRemoved}
-                  </span>
-                )}
+                {preview.linesRemoved !== undefined &&
+                  preview.linesRemoved > 0 && (
+                    <span
+                      className="tool-diff-stat tool-diff-removed tool-live-diff"
+                      title={`实时删除约 ${preview.linesRemoved} 行`}
+                    >
+                      -{preview.linesRemoved}
+                    </span>
+                  )}
                 <span className="tool-disclosure-status" data-status="running">
                   <span className="tool-live-spinner" aria-hidden="true" />
                 </span>
@@ -102,7 +147,10 @@ export function ToolPreviews({
             </div>
             {isCommand && (
               <div className="tool-disclosure-body">
-                <div className="tool-terminal-card tool-live-command-hint" aria-hidden="true">
+                <div
+                  className="tool-terminal-card tool-live-command-hint"
+                  aria-hidden="true"
+                >
                   <div className="tool-terminal-header">
                     <span className="tool-live-skeleton" />
                   </div>
@@ -185,9 +233,7 @@ export function PlanStageDivider({
     (plan ? plan.steps.filter((s) => s.status === "completed").length : 0);
   const percent =
     propPercent ??
-    (actualTotal > 0
-      ? Math.round((actualCompleted / actualTotal) * 100)
-      : 0);
+    (actualTotal > 0 ? Math.round((actualCompleted / actualTotal) * 100) : 0);
   const planInProgress = plan
     ? plan.steps.filter((s) => s.status === "in_progress").length
     : undefined;
@@ -209,8 +255,7 @@ export function PlanStageDivider({
           Math.round((actualInProgress / actualTotal) * 100),
         )
       : 0;
-  const countText =
-    actualTotal > 0 ? `${actualCompleted}/${actualTotal}` : "";
+  const countText = actualTotal > 0 ? `${actualCompleted}/${actualTotal}` : "";
 
   return (
     <div className="transcript-stage-divider">
@@ -231,9 +276,7 @@ export function PlanStageDivider({
         }
         aria-expanded={plan ? expanded : undefined}
         title={
-          plan
-            ? `${title} (点击${expanded ? "收起" : "查看"}步骤详情)`
-            : title
+          plan ? `${title} (点击${expanded ? "收起" : "查看"}步骤详情)` : title
         }
       >
         <span className="transcript-stage-title" title={title}>
@@ -301,18 +344,28 @@ interface TranscriptTurnData {
   readonly id: string;
   readonly turnNumber: number;
   readonly userEntry?: TurnEntry & {
-    readonly item: TimelineItem & { readonly kind: "message"; readonly role: "user" };
+    readonly item: TimelineItem & {
+      readonly kind: "message";
+      readonly role: "user";
+    };
   };
   readonly items: readonly TurnEntry[];
 }
 
-function partitionTurns(timeline: readonly TimelineItem[]): readonly TranscriptTurnData[] {
+function partitionTurns(
+  timeline: readonly TimelineItem[],
+): readonly TranscriptTurnData[] {
   const turns: TranscriptTurnData[] = [];
   let currentTurnNumber = 0;
   let currentTurn: {
     id: string;
     turnNumber: number;
-    userEntry?: TurnEntry & { readonly item: TimelineItem & { readonly kind: "message"; readonly role: "user" } };
+    userEntry?: TurnEntry & {
+      readonly item: TimelineItem & {
+        readonly kind: "message";
+        readonly role: "user";
+      };
+    };
     items: TurnEntry[];
   } | null = null;
 
@@ -323,7 +376,10 @@ function partitionTurns(timeline: readonly TimelineItem[]): readonly TranscriptT
     const isHumanUser =
       item.kind === "message" && item.role === "user" && !item.origin;
 
-    if (isHumanUser && (item.turn === undefined || item.turn !== currentTurn?.turnNumber)) {
+    if (
+      isHumanUser &&
+      (item.turn === undefined || item.turn !== currentTurn?.turnNumber)
+    ) {
       currentTurnNumber = item.turn ?? currentTurnNumber + 1;
       currentTurn = {
         id: item.id || `turn-${currentTurnNumber}`,
@@ -350,7 +406,11 @@ function partitionTurns(timeline: readonly TimelineItem[]): readonly TranscriptT
 
 type TurnBlock =
   | { readonly kind: "single"; readonly entry: TurnEntry }
-  | { readonly kind: "tool_group"; readonly id: string; readonly entries: readonly TurnEntry[] };
+  | {
+      readonly kind: "tool_group";
+      readonly id: string;
+      readonly entries: readonly TurnEntry[];
+    };
 
 function groupTurnEntries(
   entries: readonly TurnEntry[],
@@ -424,7 +484,8 @@ function findBackgroundCommand(
 ): { command: string; cwd: string } | undefined {
   if (!taskId) return undefined;
   for (const item of timeline) {
-    if (item.kind !== "tool" || item.call.function.name !== "run_command") continue;
+    if (item.kind !== "tool" || item.call.function.name !== "run_command")
+      continue;
     try {
       const output = JSON.parse(item.output);
       if (output && typeof output === "object" && output.id === taskId) {
@@ -445,9 +506,14 @@ function renderToolCard(
 ) {
   if (item.status === "unexecuted")
     return (
-      <section key={item.id} className="wb-stack tool-unexecuted message-evidence">
+      <section
+        key={item.id}
+        className="wb-stack tool-unexecuted message-evidence"
+      >
         <strong>{item.call.function.name} · 无匹配执行记录</strong>
-        <p className="wb-muted">已保存调用意图，但没有可可靠关联的执行或结果记录。</p>
+        <p className="wb-muted">
+          已保存调用意图，但没有可可靠关联的执行或结果记录。
+        </p>
         <code>{item.call.function.arguments.slice(0, 12000)}</code>
       </section>
     );
@@ -522,14 +588,20 @@ function renderTimelineEntry(
   headers: readonly (TranscriptStage | null)[],
   phases: readonly number[],
   timeline?: readonly TimelineItem[],
-  reasoningView?: { expanded: Readonly<Record<string, boolean>>; toggle(id: string): void },
+  reasoningView?: {
+    expanded: Readonly<Record<string, boolean>>;
+    toggle(id: string): void;
+  },
 ) {
   const { item, index } = entry;
   if (item.kind === "error" && item.historical) return null;
   if (item.kind === "hook_diagnostic" && item.historical) return null;
   if (item.kind === "message" && item.origin === "agent_reconciliation")
     return (
-      <details className="message message-internal agent-reconciliation-card" key={item.id}>
+      <details
+        className="message message-internal agent-reconciliation-card"
+        key={item.id}
+      >
         <summary className="agent-reconciliation-summary">
           <span className="agent-reconciliation-title">
             <Robot size={15} weight="bold" />
@@ -577,7 +649,9 @@ function renderTimelineEntry(
           <span className="hook-diagnostic-reason">：{item.reason}</span>
         )}
         {item.exitCode !== undefined && item.exitCode !== 0 && (
-          <span className="hook-diagnostic-code">（退出码 {item.exitCode}）</span>
+          <span className="hook-diagnostic-code">
+            （退出码 {item.exitCode}）
+          </span>
         )}
       </div>
     );
@@ -586,11 +660,20 @@ function renderTimelineEntry(
     return (
       <Fragment key={item.id}>
         {headers[index] && <StageHeader stage={headers[index]} />}
-        <article className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}`} data-generation-id={item.generationId}>
+        <article
+          className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}`}
+          data-generation-id={item.generationId}
+        >
           {item.role === "user" && <div className="message-header">你</div>}
           {item.role === "assistant" && item.content && (
             <div className="message-header message-author-row">
-              <span>{item.streaming ? "Forge · 实时草稿" : item.incomplete ? "Forge · 未完成回复" : "Forge"}</span>
+              <span>
+                {item.streaming
+                  ? "Forge · 实时草稿"
+                  : item.incomplete
+                    ? "Forge · 未完成回复"
+                    : "Forge"}
+              </span>
               {item.content && <MessageCopyButton text={item.content} />}
             </div>
           )}
@@ -598,15 +681,40 @@ function renderTimelineEntry(
             <ImageAttachments key={snapshot.id} images={item.images} />
           )}
           {item.reasoning && (
-            <Reasoning text={item.reasoning} live={Boolean(item.reasoningLive)} truncated={Boolean(item.reasoningTruncated)}
-              status={item.reasoningStatus} expanded={reasoningView ? Boolean(reasoningView.expanded[item.id]) : undefined}
-              onExpandedChange={reasoningView ? () => reasoningView.toggle(item.id) : undefined} />
+            <Reasoning
+              text={item.reasoning}
+              live={Boolean(item.reasoningLive)}
+              truncated={Boolean(item.reasoningTruncated)}
+              status={item.reasoningStatus}
+              expanded={
+                reasoningView
+                  ? Boolean(reasoningView.expanded[item.id])
+                  : undefined
+              }
+              onExpandedChange={
+                reasoningView ? () => reasoningView.toggle(item.id) : undefined
+              }
+            />
           )}
-          {item.content && <div className="message-body">
-            {item.truncated && <p className="wb-muted">实时预览已达显示上限，完整内容以同步后的记录为准。</p>}
-            {item.streaming ? <StreamingMarkdown source={item.content} enableCharts /> : <Markdown source={item.content} enableCharts />}
-          </div>}
-          {item.webSearchDetails && <div className="message-body"><Markdown source={item.webSearchDetails} /></div>}
+          {item.content && (
+            <div className="message-body">
+              {item.truncated && (
+                <p className="wb-muted">
+                  实时预览已达显示上限，完整内容以同步后的记录为准。
+                </p>
+              )}
+              {item.streaming ? (
+                <StreamingMarkdown source={item.content} enableCharts />
+              ) : (
+                <Markdown source={item.content} enableCharts />
+              )}
+            </div>
+          )}
+          {item.webSearchDetails && (
+            <div className="message-body">
+              <Markdown source={item.webSearchDetails} />
+            </div>
+          )}
         </article>
       </Fragment>
     );
@@ -615,11 +723,18 @@ function renderTimelineEntry(
       <ErrorState
         key={item.id}
         title="执行错误（历史记录）"
-        error={item.error ?? { code: "internal", message: item.message, retryable: false }}
+        error={
+          item.error ?? {
+            code: "internal",
+            message: item.message,
+            retryable: false,
+          }
+        }
         impact={`历史事件时间：${new Date(item.timestamp).toLocaleString()}。此错误不会覆盖当前会话状态。`}
       />
     );
-  if (item.status === "unexecuted") return renderToolCard(item, index, phases, timeline);
+  if (item.status === "unexecuted")
+    return renderToolCard(item, index, phases, timeline);
   if (
     item.kind === "tool" &&
     ["create_plan", "update_plan"].includes(item.call.function.name) &&
@@ -630,13 +745,15 @@ function renderTimelineEntry(
       extractPlanData(item.call.function.arguments);
     if (planData) {
       const total = planData.steps.length;
-      const completed = planData.steps.filter((s) => s.status === "completed").length;
+      const completed = planData.steps.filter(
+        (s) => s.status === "completed",
+      ).length;
       const inProgress = planData.steps.find((s) => s.status === "in_progress");
       const title =
         inProgress?.step ??
         (completed === total
-          ? (planData.title || "全部步骤已完成")
-          : (planData.explanation || planData.title || "计划步骤"));
+          ? planData.title || "全部步骤已完成"
+          : planData.explanation || planData.title || "计划步骤");
       return (
         <Fragment key={item.id}>
           {headers[index] && <StageHeader stage={headers[index]} />}
@@ -668,7 +785,15 @@ function ExecutionProcess({
   readonly children: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  if (!execution) return <>{counts && <div className="wb-muted transcript-execution-summary">{counts}</div>}{children}</>;
+  if (!execution)
+    return (
+      <>
+        {counts && (
+          <div className="wb-muted transcript-execution-summary">{counts}</div>
+        )}
+        {children}
+      </>
+    );
   return (
     <div className="transcript-execution">
       <button
@@ -709,19 +834,36 @@ export const StoredTranscript = memo(function StoredTranscript({
   snapshot,
   pendingOutputs,
   run,
-}: { readonly snapshot: SessionSnapshot; readonly pendingOutputs?: readonly PendingOutput[] | undefined; readonly run?: ActiveRunState | undefined }) {
+}: {
+  readonly snapshot: SessionSnapshot;
+  readonly pendingOutputs?: readonly PendingOutput[] | undefined;
+  readonly run?: ActiveRunState | undefined;
+}) {
   const liveText = run && streamedOutput(run);
   const liveReasoning = run && streamedOutput(run, true);
-  const outputs = [...(pendingOutputs ?? run?.pendingOutputs ?? []), ...(liveText ? [liveText] : [])];
-  const thoughts = [...(run?.pendingReasoning ?? []), ...(liveReasoning ? [liveReasoning] : [])];
+  const outputs = [
+    ...(pendingOutputs ?? run?.pendingOutputs ?? []),
+    ...(liveText ? [liveText] : []),
+  ];
+  const thoughts = [
+    ...(run?.pendingReasoning ?? []),
+    ...(liveReasoning ? [liveReasoning] : []),
+  ];
   const timeline = reduceTimeline(snapshot, outputs, thoughts);
-  const [expandedReasoning, setExpandedReasoning] = useState<Record<string, boolean>>({});
+  const [expandedReasoning, setExpandedReasoning] = useState<
+    Record<string, boolean>
+  >({});
   const toggleReasoning = useCallback((id: string) => {
-    setExpandedReasoning(previous => ({ ...previous, [id]: !previous[id] }));
+    setExpandedReasoning((previous) => ({ ...previous, [id]: !previous[id] }));
   }, []);
-  const reasoningView = { expanded: expandedReasoning, toggle: toggleReasoning };
+  const reasoningView = {
+    expanded: expandedReasoning,
+    toggle: toggleReasoning,
+  };
   const { phases, headers } = transcriptStages(timeline);
-  const [collapsedTurns, setCollapsedTurns] = useState<Record<string, boolean>>({});
+  const [collapsedTurns, setCollapsedTurns] = useState<Record<string, boolean>>(
+    {},
+  );
   const toggleTurn = useCallback((turnId: string) => {
     setCollapsedTurns((prev) => ({ ...prev, [turnId]: !prev[turnId] }));
   }, []);
@@ -747,7 +889,14 @@ export const StoredTranscript = memo(function StoredTranscript({
               </p>
             ) : item.kind === "hook_diagnostic" ? (
               <p key={item.id}>
-                {new Date(item.timestamp).toLocaleString()} · Hook {item.hookId} ({item.hook}) {item.status === "denied" ? "拒绝" : item.status === "timed_out" ? "超时" : "失败"}{item.reason ? `：${item.reason}` : ""}
+                {new Date(item.timestamp).toLocaleString()} · Hook {item.hookId}{" "}
+                ({item.hook}){" "}
+                {item.status === "denied"
+                  ? "拒绝"
+                  : item.status === "timed_out"
+                    ? "超时"
+                    : "失败"}
+                {item.reason ? `：${item.reason}` : ""}
               </p>
             ) : null,
           )}
@@ -756,7 +905,9 @@ export const StoredTranscript = memo(function StoredTranscript({
       {turns.map((turn) => {
         const isCollapsed = Boolean(collapsedTurns[turn.id]);
         const userItem = turn.userEntry?.item;
-        const recordIndex = executionRecords.findIndex(record => record.turn === turn.turnNumber);
+        const recordIndex = executionRecords.findIndex(
+          (record) => record.turn === turn.turnNumber,
+        );
         const record = executionRecords[recordIndex];
         const execution = executions[recordIndex];
         const finalEntry = execution
@@ -773,33 +924,59 @@ export const StoredTranscript = memo(function StoredTranscript({
             item.kind === "hook_diagnostic" ||
             (item.kind === "tool" && item.status === "failed"),
         );
-        const summaryText = counts ? `${counts}${hasError ? " · 含异常记录" : ""}` : computeTurnSummary(turn.items);
-        const files = turn.items.flatMap(({ item }) => item.kind === "tool" && item.status === "completed" && publishesPublishedFiles(item.call.function.name) ? item.files ?? [] : []);
+        const summaryText = counts
+          ? `${counts}${hasError ? " · 含异常记录" : ""}`
+          : computeTurnSummary(turn.items);
+        const files = turn.items.flatMap(({ item }) =>
+          item.kind === "tool" &&
+          item.status === "completed" &&
+          publishesPublishedFiles(item.call.function.name)
+            ? (item.files ?? [])
+            : [],
+        );
 
         return (
-          <section className="transcript-turn" key={turn.id} data-turn={turn.turnNumber}>
+          <section
+            className="transcript-turn"
+            key={turn.id}
+            data-turn={turn.turnNumber}
+          >
             {userItem && (
               <article className="message message-user">
                 <div className="message-header">你</div>
                 {turn.turnNumber > 0 && (
                   <div className="transcript-turn-actions">
-                    <span className="transcript-turn-badge">第 {turn.turnNumber} 轮</span>
+                    <span className="transcript-turn-badge">
+                      第 {turn.turnNumber} 轮
+                    </span>
                     <button
                       type="button"
                       className="transcript-turn-toggle"
                       onClick={() => toggleTurn(turn.id)}
                       aria-expanded={!isCollapsed}
-                      aria-label={isCollapsed ? `展开第 ${turn.turnNumber} 轮对话` : `收起第 ${turn.turnNumber} 轮对话`}
+                      aria-label={
+                        isCollapsed
+                          ? `展开第 ${turn.turnNumber} 轮对话`
+                          : `收起第 ${turn.turnNumber} 轮对话`
+                      }
                       title={isCollapsed ? "展开此轮" : "收起此轮"}
                     >
                       {isCollapsed ? (
                         <>
-                          <CaretRight size={12} weight="bold" aria-hidden="true" />
+                          <CaretRight
+                            size={12}
+                            weight="bold"
+                            aria-hidden="true"
+                          />
                           <span>展开本轮</span>
                         </>
                       ) : (
                         <>
-                          <CaretDown size={12} weight="bold" aria-hidden="true" />
+                          <CaretDown
+                            size={12}
+                            weight="bold"
+                            aria-hidden="true"
+                          />
                           <span>收起本轮</span>
                         </>
                       )}
@@ -807,7 +984,10 @@ export const StoredTranscript = memo(function StoredTranscript({
                   </div>
                 )}
                 {userItem.images && userItem.images.length > 0 && (
-                  <ImageAttachments key={snapshot.id} images={userItem.images} />
+                  <ImageAttachments
+                    key={snapshot.id}
+                    images={userItem.images}
+                  />
                 )}
                 {userItem.content && (
                   <div className="message-body">
@@ -816,26 +996,56 @@ export const StoredTranscript = memo(function StoredTranscript({
                 )}
               </article>
             )}
-            {turn.items.length > 0 && (
-              isCollapsed ? (
+            {turn.items.length > 0 &&
+              (isCollapsed ? (
                 <button
                   type="button"
                   className="transcript-turn-collapsed-bar"
                   onClick={() => toggleTurn(turn.id)}
                   aria-label={`展开第 ${turn.turnNumber} 轮执行与回复`}
                 >
-                  <CaretRight size={13} weight="bold" className="transcript-turn-collapsed-caret" aria-hidden="true" />
-                  <span className="transcript-turn-collapsed-title">本轮执行已收起</span>
-                  <span className="transcript-turn-collapsed-sep" aria-hidden="true">·</span>
-                  <span className="transcript-turn-collapsed-meta">{summaryText}</span>
-                  <span className="transcript-turn-collapsed-action">点击展开</span>
+                  <CaretRight
+                    size={13}
+                    weight="bold"
+                    className="transcript-turn-collapsed-caret"
+                    aria-hidden="true"
+                  />
+                  <span className="transcript-turn-collapsed-title">
+                    本轮执行已收起
+                  </span>
+                  <span
+                    className="transcript-turn-collapsed-sep"
+                    aria-hidden="true"
+                  >
+                    ·
+                  </span>
+                  <span className="transcript-turn-collapsed-meta">
+                    {summaryText}
+                  </span>
+                  <span className="transcript-turn-collapsed-action">
+                    点击展开
+                  </span>
                 </button>
               ) : (
                 <div className="transcript-turn-body">
-                  <ExecutionProcess execution={finalEntry ? execution : undefined} counts={counts}>
+                  <ExecutionProcess
+                    execution={finalEntry ? execution : undefined}
+                    counts={counts}
+                  >
                     {blocks.map((block) => {
                       if (block.kind === "single") {
-                        return <Fragment key={block.entry.item.id}>{renderTimelineEntry(block.entry, snapshot, headers, phases, timeline, reasoningView)}</Fragment>;
+                        return (
+                          <Fragment key={block.entry.item.id}>
+                            {renderTimelineEntry(
+                              block.entry,
+                              snapshot,
+                              headers,
+                              phases,
+                              timeline,
+                              reasoningView,
+                            )}
+                          </Fragment>
+                        );
                       }
                       return (
                         <div className="tool-call-group" key={block.id}>
@@ -848,11 +1058,18 @@ export const StoredTranscript = memo(function StoredTranscript({
                       );
                     })}
                   </ExecutionProcess>
-                  {finalEntry && renderTimelineEntry(finalEntry, snapshot, headers, phases, timeline, reasoningView)}
+                  {finalEntry &&
+                    renderTimelineEntry(
+                      finalEntry,
+                      snapshot,
+                      headers,
+                      phases,
+                      timeline,
+                      reasoningView,
+                    )}
                   <PublishedFiles sessionId={snapshot.id} files={files} />
                 </div>
-              )
-            )}
+              ))}
           </section>
         );
       })}
@@ -1004,7 +1221,9 @@ export function Transcript() {
     if (!scroll || !history) return null;
     const scrollRect = scroll.getBoundingClientRect();
     let element: HTMLElement | null = null;
-    for (const candidate of scroll.querySelectorAll<HTMLElement>("[data-turn]")) {
+    for (const candidate of scroll.querySelectorAll<HTMLElement>(
+      "[data-turn]",
+    )) {
       if (candidate.getBoundingClientRect().bottom > scrollRect.top + 1) {
         element = candidate;
         break;
@@ -1043,7 +1262,8 @@ export function Transcript() {
           ? null
           : (Array.from(
               scroll.querySelectorAll<HTMLElement>("[data-turn]"),
-            ).find((candidate) => candidate.dataset.turn === anchor.turn) ?? null);
+            ).find((candidate) => candidate.dataset.turn === anchor.turn) ??
+            null);
       const delta = element
         ? element.getBoundingClientRect().top -
           scroll.getBoundingClientRect().top -
@@ -1062,10 +1282,12 @@ export function Transcript() {
     // collapse above the reader can move the anchor a pixel or two after this
     // commit: re-measure once on the next frame unless the reader moved first.
     const settle = () => {
-      if (!scroll.isConnected || scroll.scrollTop !== lastScrollTop.current) return;
+      if (!scroll.isConnected || scroll.scrollTop !== lastScrollTop.current)
+        return;
       align();
     };
-    if (typeof requestAnimationFrame === "function") requestAnimationFrame(settle);
+    if (typeof requestAnimationFrame === "function")
+      requestAnimationFrame(settle);
   };
   const requestOlderMessages = async (retry = false) => {
     if (!sessionId || !snapshot || !history?.hasMore) return;
@@ -1222,14 +1444,17 @@ export function Transcript() {
           lastScrollTop.current = scroll.scrollTop;
           // A collapsing disclosure (or a shrinking viewport) can clamp
           // scrollTop upward. That is layout, not reading intent.
-          const heightShrank = scroll.scrollHeight < lastScrollHeight.current - 1;
+          const heightShrank =
+            scroll.scrollHeight < lastScrollHeight.current - 1;
           lastScrollHeight.current = scroll.scrollHeight;
           navigation.current.readPosition(scroll);
           setHasNewContent(navigation.current.hasNewContent);
           // If the reader moves while the request is pending, preserve their
           // latest position rather than pulling them back to the request origin.
-          if (historyAnchor.current?.sessionId === sessionId &&
-              historyAnchor.current?.messageOffset === history?.messageOffset) {
+          if (
+            historyAnchor.current?.sessionId === sessionId &&
+            historyAnchor.current?.messageOffset === history?.messageOffset
+          ) {
             historyAnchor.current = captureHistoryAnchor();
           }
           // Programmatic follow/restore jumps record their own scrollTop, and an
@@ -1263,7 +1488,8 @@ export function Transcript() {
           touchStartY.current = null;
         }}
         onKeyDown={(event) => {
-          if (event.target !== event.currentTarget || event.defaultPrevented) return;
+          if (event.target !== event.currentTarget || event.defaultPrevented)
+            return;
           if (
             event.key === "ArrowUp" ||
             event.key === "PageUp" ||
@@ -1285,7 +1511,8 @@ export function Transcript() {
           const isExpanding =
             trigger.getAttribute("aria-expanded") === "false" ||
             trigger.classList.contains("transcript-turn-collapsed-bar") ||
-            (trigger.tagName === "SUMMARY" && !trigger.parentElement?.hasAttribute("open"));
+            (trigger.tagName === "SUMMARY" &&
+              !trigger.parentElement?.hasAttribute("open"));
 
           if (isExpanding) {
             requestAnimationFrame(() => {
@@ -1293,7 +1520,8 @@ export function Transcript() {
               if (!scroll || !trigger.isConnected) return;
               const scrollRect = scroll.getBoundingClientRect();
               const triggerRect = trigger.getBoundingClientRect();
-              const offsetTop = triggerRect.top - scrollRect.top + scroll.scrollTop;
+              const offsetTop =
+                triggerRect.top - scrollRect.top + scroll.scrollTop;
               const top = Math.max(0, offsetTop - 12);
               const reduced =
                 typeof window.matchMedia === "function" &&
@@ -1362,28 +1590,58 @@ export function Transcript() {
               />
             )
           )}
-          {snapshot?.pendingSteering?.map((message, index) => message.role === "user" && (
-            <article className="message message-user" key={`steering:${snapshot.id}:${index}`}>
-              <div className="message-header">你</div>
-              {!!message.images?.length && <ImageAttachments images={message.images} />}
-              {message.content && <div className="message-body"><Markdown source={message.content} /></div>}
-            </article>
-          ))}
+          {snapshot?.pendingSteering?.map(
+            (message, index) =>
+              message.role === "user" && (
+                <article
+                  className="message message-user"
+                  key={`steering:${snapshot.id}:${index}`}
+                >
+                  <div className="message-header">你</div>
+                  {!!message.images?.length && (
+                    <ImageAttachments images={message.images} />
+                  )}
+                  {message.content && (
+                    <div className="message-body">
+                      <Markdown source={message.content} />
+                    </div>
+                  )}
+                </article>
+              ),
+          )}
           {run?.webSearch && run.status === "running" && (
-            <div className="tool-call-group tool-live-list" role="status" aria-label="网页搜索中">
-              <div className="tool-disclosure tool-live-item" data-status="running" data-tool="web_search">
+            <div
+              className="tool-call-group tool-live-list"
+              role="status"
+              aria-label="网页搜索中"
+            >
+              <div
+                className="tool-disclosure tool-live-item"
+                data-status="running"
+                data-tool="web_search"
+              >
                 <div className="tool-disclosure-header tool-live-header">
                   <div className="tool-disclosure-summary">
-                    <span className="tool-disclosure-icon tool-live-icon" aria-hidden="true">
+                    <span
+                      className="tool-disclosure-icon tool-live-icon"
+                      aria-hidden="true"
+                    >
                       {getToolIcon("web_search")}
                     </span>
-                    <span className="tool-disclosure-label tool-live-name">{friendlyLabel("web_search")}</span>
+                    <span className="tool-disclosure-label tool-live-name">
+                      {friendlyLabel("web_search")}
+                    </span>
                     <span className="tool-disclosure-target">
-                      <span className="tool-live-status">{webSearchStatus(run.webSearch)}</span>
+                      <span className="tool-live-status">
+                        {webSearchStatus(run.webSearch)}
+                      </span>
                     </span>
                   </div>
                   <div className="tool-disclosure-meta">
-                    <span className="tool-disclosure-status" data-status="running">
+                    <span
+                      className="tool-disclosure-status"
+                      data-status="running"
+                    >
                       <span className="tool-live-spinner" aria-hidden="true" />
                     </span>
                   </div>

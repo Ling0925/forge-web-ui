@@ -3,9 +3,9 @@ import {
   CircleDashed,
   WarningCircle,
 } from "@phosphor-icons/react";
-import { type ToolDisclosureProps } from "./types";
+import { SectionHead, ToolCopyButton } from "./common";
 import { formatDuration, paramLabels } from "./presentation";
-import { ToolCopyButton, SectionHead } from "./common";
+import { type ToolDisclosureProps } from "./types";
 
 export interface CommandTaskItem {
   readonly id: string;

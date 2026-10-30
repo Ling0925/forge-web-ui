@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { build } from "esbuild";
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page, chromium } from "playwright";
 import { expect, it } from "vitest";
 
 const SESSION_A = "11111111-1111-4111-8111-111111111111";
@@ -26,7 +26,9 @@ interface FakeWindow {
 }
 
 async function openPage(browser: Browser, js: string, css: string) {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
+  const page = await browser.newPage({
+    viewport: { width: 1200, height: 800 },
+  });
   page.setDefaultTimeout(5000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -278,7 +280,9 @@ it("windows transcript history on real upward intent, anchors the reader, and is
   });
 
   const js = bundle.outputFiles.find((file) => file.path.endsWith(".js"))?.text;
-  const css = bundle.outputFiles.find((file) => file.path.endsWith(".css"))?.text;
+  const css = bundle.outputFiles.find((file) =>
+    file.path.endsWith(".css"),
+  )?.text;
   if (!js || !css) throw new Error("Missing test bundle");
 
   const browser = await chromium.launch({ headless: true });
@@ -309,9 +313,7 @@ it("windows transcript history on real upward intent, anchors the reader, and is
       expect(shortMetrics.scrollTop).toBe(0);
       const control = page.locator(".transcript-history");
       expect(await control.innerText()).toContain("上滑加载更早对话");
-      await control
-        .getByRole("button", { name: "加载更早的对话记录" })
-        .click();
+      await control.getByRole("button", { name: "加载更早的对话记录" }).click();
       await expect.poll(() => calls(page)).toBe(1);
       await page.getByText("A question 5").waitFor();
       expect(await calls(page)).toBe(1);
@@ -387,12 +389,16 @@ it("windows transcript history on real upward intent, anchors the reader, and is
       expect(await turnSixSummary.innerText()).toContain("总耗时");
       expect(await page.locator('[data-turn="1"]').count()).toBe(0);
 
-      await page.evaluate(() => { (window as unknown as FakeWindow).delay = 500; });
+      await page.evaluate(() => {
+        (window as unknown as FakeWindow).delay = 500;
+      });
       const box = await scroll.boundingBox();
       if (!box) throw new Error("missing transcript viewport");
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.wheel(0, -10000);
-      await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBe(0);
+      await expect
+        .poll(() => scroll.evaluate((element) => element.scrollTop))
+        .toBe(0);
       const anchorBefore = await turnSix.boundingBox();
       expect(anchorBefore).not.toBeNull();
       // A second upward gesture while the page is still in flight is deduped.
@@ -403,9 +409,9 @@ it("windows transcript history on real upward intent, anchors the reader, and is
       expect(await calls(page)).toBe(1);
       const anchorAfter = await page.locator('[data-turn="6"]').boundingBox();
       expect(anchorAfter).not.toBeNull();
-      expect(Math.abs((anchorAfter?.y ?? 0) - (anchorBefore?.y ?? 0))).toBeLessThanOrEqual(
-        2,
-      );
+      expect(
+        Math.abs((anchorAfter?.y ?? 0) - (anchorBefore?.y ?? 0)),
+      ).toBeLessThanOrEqual(2);
       expect(await page.locator('[data-turn="5"]').count()).toBe(1);
       expect(await page.locator('[data-turn="6"]').count()).toBe(1);
       // The prepended turn keeps its own execution summary too.
@@ -420,14 +426,18 @@ it("windows transcript history on real upward intent, anchors the reader, and is
       await page.mouse.wheel(0, -10000);
       await expect.poll(() => calls(page)).toBe(2);
       await page.mouse.wheel(0, 180);
-      await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(100);
+      await expect
+        .poll(() => scroll.evaluate((element) => element.scrollTop))
+        .toBeGreaterThan(100);
       const movedBefore = await page.locator('[data-turn="5"]').boundingBox();
       await page.getByText("A question 4").waitFor();
       await page.waitForTimeout(100);
       const movedAfter = await page.locator('[data-turn="5"]').boundingBox();
       expect(movedBefore).not.toBeNull();
       expect(movedAfter).not.toBeNull();
-      expect(Math.abs((movedAfter?.y ?? 0) - (movedBefore?.y ?? 0))).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs((movedAfter?.y ?? 0) - (movedBefore?.y ?? 0)),
+      ).toBeLessThanOrEqual(2);
       expect(await calls(page)).toBe(2);
       await page.close();
     }
@@ -482,11 +492,13 @@ it("windows transcript history on real upward intent, anchors the reader, and is
       expect(await page.locator("text=A question 6").count()).toBe(0);
       await expect
         .poll(() =>
-          page.locator(".workbench-conversation-scroll").evaluate((element) =>
-            Math.abs(
-              element.scrollHeight - element.clientHeight - element.scrollTop,
+          page
+            .locator(".workbench-conversation-scroll")
+            .evaluate((element) =>
+              Math.abs(
+                element.scrollHeight - element.clientHeight - element.scrollTop,
+              ),
             ),
-          ),
         )
         .toBeLessThanOrEqual(2);
       const logAfterSwitch = await callLog(page);

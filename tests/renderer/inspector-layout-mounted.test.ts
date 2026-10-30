@@ -5,7 +5,9 @@ import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
 it("keeps execution details compact, navigable and diagnostics on demand", async () => {
-  const output = resolve(process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/inspector-layout");
+  const output = resolve(
+    process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/inspector-layout",
+  );
   await mkdir(output, { recursive: true });
   const bundle = await build({
     stdin: {
@@ -155,9 +157,9 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         expect(stepMetrics.gap).toBe("0px");
         expect(stepMetrics.pendingWidth).toBe(14);
         expect(stepMetrics.pendingHeight).toBe(14);
-        expect(Number.parseFloat(stepMetrics.pendingBorderWidth)).toBeGreaterThan(
-          0,
-        );
+        expect(
+          Number.parseFloat(stepMetrics.pendingBorderWidth),
+        ).toBeGreaterThan(0);
         expect(stepMetrics.pendingBorderColor).not.toBe("rgba(0, 0, 0, 0)");
         expect(stepMetrics.titleRowDisplay).toBe("flex");
         await page.screenshot({

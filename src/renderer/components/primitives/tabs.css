@@ -33,9 +33,7 @@
   z-index: 1;
   /* Token-layer durations: tabs.css is also loaded by entry points that never
      import motion.css, so the slide must not depend on those variables. */
-  transition:
-    transform var(--transition-fast),
-    width var(--transition-fast);
+  transition: transform var(--transition-fast), width var(--transition-fast);
 }
 
 .tab-btn {

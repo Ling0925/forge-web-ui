@@ -1,13 +1,13 @@
+import { createDiffPatch } from "@forge/core/shared/diff";
+import {
+  type AgentEvent,
+  type Message,
+  sessionIdSchema,
+  sessionSnapshotSchema,
+} from "@forge/core/shared/schemas";
 import { describe, expect, it } from "vitest";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
 import { reduceTimeline } from "../../src/renderer/state/timeline";
-import { createDiffPatch } from "@forge/core/shared/diff";
-import {
-  sessionIdSchema,
-  sessionSnapshotSchema,
-  type AgentEvent,
-  type Message,
-} from "@forge/core/shared/schemas";
 const id = sessionIdSchema.parse("11111111-1111-4111-8111-111111111111");
 it("reuses timeline for the same immutable snapshot and rebuilds replacements", () => {
   const first = reduceTimeline(base);
@@ -112,9 +112,9 @@ describe("chronological execution timeline", () => {
     // Out of order: a negative or invented duration is never displayed.
     // (Unparseable timestamps never reach here: sessionSnapshotSchema rejects
     // them before the transcript sees the snapshot.)
-    expect(timed("2026-01-01T00:00:09Z", "2026-01-01T00:00:02Z")).not.toHaveProperty(
-      "durationMs",
-    );
+    expect(
+      timed("2026-01-01T00:00:09Z", "2026-01-01T00:00:02Z"),
+    ).not.toHaveProperty("durationMs");
     // A recorded start without a finish still reports when the action began.
     expect(timed("2026-01-01T00:00:01Z", undefined)).toMatchObject({
       startedAt: "2026-01-01T00:00:01Z",
@@ -160,7 +160,9 @@ describe("chronological execution timeline", () => {
     const tool = reduceTimeline(snapshot).find((item) => item.kind === "tool");
     expect(tool).toMatchObject({
       status: "completed",
-      changes: [{ path: "a.ts", kind: "modified", patch: createDiffPatch("x", "y") }],
+      changes: [
+        { path: "a.ts", kind: "modified", patch: createDiffPatch("x", "y") },
+      ],
     });
     if (tool?.kind !== "tool") throw new Error("missing tool item");
     expect(tool.changes?.[0]).not.toHaveProperty("before");
@@ -168,23 +170,37 @@ describe("chronological execution timeline", () => {
     expect(tool.changes?.[0]).not.toHaveProperty("truncated");
   });
   it("validates patch-only message changes and skips malformed entries independently", () => {
-    const change = { path: "a.ts", kind: "modified", patch: createDiffPatch("x", "y") };
+    const change = {
+      path: "a.ts",
+      kind: "modified",
+      patch: createDiffPatch("x", "y"),
+    };
     const snapshot = sessionSnapshotSchema.parse({
       ...base,
       events: [],
       messages: [
         base.messages[1],
         {
-          role: "tool", tool_call_id: "c1",
+          role: "tool",
+          tool_call_id: "c1",
           content: JSON.stringify({
-            content: "edited", isError: false,
-            changes: [null, { ...change, patch: { version: 1, hunks: "invalid" } }, change],
+            content: "edited",
+            isError: false,
+            changes: [
+              null,
+              { ...change, patch: { version: 1, hunks: "invalid" } },
+              change,
+            ],
           }),
         },
       ],
     });
     const tool = reduceTimeline(snapshot).find((item) => item.kind === "tool");
-    expect(tool).toMatchObject({ status: "completed", output: "edited", changes: [change] });
+    expect(tool).toMatchObject({
+      status: "completed",
+      output: "edited",
+      changes: [change],
+    });
   });
   it("retains failure evidence without declaring a later session state failed", () => {
     const failed = {
@@ -473,13 +489,21 @@ it("indexes a long execution turn without revisiting history for each tool call"
   function visits(count: number): number {
     let reads = 0;
     const messages: Message[] = [{ role: "user", content: "inspect files" }];
-    const events: AgentEvent[] = [{
-      type: "run_started", sessionId: id, timestamp: base.createdAt,
-      model: "m", permission: "readonly", messageIndex: 0, turn: 1,
-    }];
+    const events: AgentEvent[] = [
+      {
+        type: "run_started",
+        sessionId: id,
+        timestamp: base.createdAt,
+        model: "m",
+        permission: "readonly",
+        messageIndex: 0,
+        turn: 1,
+      },
+    ];
     for (let index = 0; index < count; index++) {
       const call = {
-        id: `call-${index}`, type: "function" as const,
+        id: `call-${index}`,
+        type: "function" as const,
         function: { name: "read_file", arguments: "{}" },
       };
       messages.push(
@@ -487,30 +511,48 @@ it("indexes a long execution turn without revisiting history for each tool call"
         { role: "tool", tool_call_id: call.id, content: "native file content" },
       );
       events.push(
-        { type: "tool_started", sessionId: id, timestamp: base.createdAt, call },
-        { type: "tool_finished", sessionId: id, timestamp: base.updatedAt,
-          toolCallId: call.id, result: { content: "native file content", isError: false } },
+        {
+          type: "tool_started",
+          sessionId: id,
+          timestamp: base.createdAt,
+          call,
+        },
+        {
+          type: "tool_finished",
+          sessionId: id,
+          timestamp: base.updatedAt,
+          toolCallId: call.id,
+          result: { content: "native file content", isError: false },
+        },
       );
     }
     const observed: SessionSnapshot = {
       ...base,
-      messages: messages.map(message => new Proxy(message, {
-        get(target, property, receiver) {
-          if (property === "role") reads++;
-          return Reflect.get(target, property, receiver);
-        },
-      })),
-      events: events.map(event => new Proxy(event, {
-        get(target, property, receiver) {
-          if (property === "type") reads++;
-          return Reflect.get(target, property, receiver);
-        },
-      })),
+      messages: messages.map(
+        (message) =>
+          new Proxy(message, {
+            get(target, property, receiver) {
+              if (property === "role") reads++;
+              return Reflect.get(target, property, receiver);
+            },
+          }),
+      ),
+      events: events.map(
+        (event) =>
+          new Proxy(event, {
+            get(target, property, receiver) {
+              if (property === "type") reads++;
+              return Reflect.get(target, property, receiver);
+            },
+          }),
+      ),
     };
-    const tools = reduceTimeline(observed).filter(item => item.kind === "tool");
+    const tools = reduceTimeline(observed).filter(
+      (item) => item.kind === "tool",
+    );
     expect(tools).toHaveLength(count);
-    expect(tools.every(item => item.status === "completed")).toBe(true);
-    expect(new Set(tools.map(item => item.id)).size).toBe(count);
+    expect(tools.every((item) => item.status === "completed")).toBe(true);
+    expect(new Set(tools.map((item) => item.id)).size).toBe(count);
     return reads;
   }
   // Count input visits instead of wall time so this regression is independent of CI load.

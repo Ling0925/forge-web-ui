@@ -1,3 +1,7 @@
+import type { AdvisorRequest } from "@forge/core/shared/agent-coordination";
+import { estimateTokens } from "@forge/core/shared/context-usage";
+import { recordPlan } from "@forge/core/shared/plans";
+import type { SessionPage } from "@forge/core/shared/session-page";
 import type {
   AgentEvent,
   ApprovalRequest,
@@ -12,12 +16,8 @@ import type {
   SessionStatus,
   SessionSummary,
 } from "../shared-types";
-import { appendSessionEvent } from "./session-usage";
-import type { AdvisorRequest } from "@forge/core/shared/agent-coordination";
-import { estimateTokens } from "@forge/core/shared/context-usage";
-import { recordPlan } from "@forge/core/shared/plans";
-import type { SessionPage } from "@forge/core/shared/session-page";
 import { prependSessionPage } from "./session-pages";
+import { appendSessionEvent } from "./session-usage";
 import {
   type PendingOutput,
   generationMessage,
@@ -47,7 +47,9 @@ export interface ActiveRunState {
    * `activeSnapshot.events` (high-frequency display state only).
    */
   readonly toolPreviews?: readonly ToolPreviewEntry[];
-  readonly webSearch?: import("@forge/core/shared/web-search").WebSearchProgress | undefined;
+  readonly webSearch?:
+    | import("@forge/core/shared/web-search").WebSearchProgress
+    | undefined;
   readonly providerRetry?: number | undefined;
   readonly generationId?: string | undefined;
   readonly generationFinished?: boolean;
@@ -85,14 +87,24 @@ export interface WorkbenchState {
   readonly isSessionsLoading: boolean;
   readonly activeSessionId: SessionId | null;
   readonly activeSnapshot: SessionSnapshot | null;
-  readonly snapshotCache: Readonly<Record<string, { readonly snapshot: SessionSnapshot; readonly persistedAt: string | null }>>;
+  readonly snapshotCache: Readonly<
+    Record<
+      string,
+      {
+        readonly snapshot: SessionSnapshot;
+        readonly persistedAt: string | null;
+      }
+    >
+  >;
   readonly snapshotPersistedAt: string | null;
   readonly isSnapshotLoading: boolean;
   readonly isHistoryLoading: boolean;
   readonly historyError: string | null;
   readonly activeRuns: Readonly<Record<string, ActiveRunState>>;
   /** Cumulative child drafts, never mixed into the parent's transcript or run. */
-  readonly agentProgress: Readonly<Record<string, Extract<AgentEvent, { type: "agent_progress" }>>>;
+  readonly agentProgress: Readonly<
+    Record<string, Extract<AgentEvent, { type: "agent_progress" }>>
+  >;
   readonly isSettingsOpen: boolean;
   readonly isUsageDashboardOpen: boolean;
   readonly isNewSessionOpen: boolean;
@@ -101,34 +113,63 @@ export interface WorkbenchState {
   readonly alertError: string | null;
   readonly alertReadSessionId: SessionId | null;
 }
-export function streamedOutput(run: ActiveRunState, reasoning = false): PendingOutput | undefined {
+export function streamedOutput(
+  run: ActiveRunState,
+  reasoning = false,
+): PendingOutput | undefined {
   const text = reasoning ? run.streamingReasoning : run.streamingText;
   if (!text) return undefined;
-  const id = run.generationId ? `generation:${run.generationId}` : `${run.runId ?? "pending"}:${run.streamingTurn ?? 0}`;
+  const id = run.generationId
+    ? `generation:${run.generationId}`
+    : `${run.runId ?? "pending"}:${run.streamingTurn ?? 0}`;
   return {
     id: reasoning ? `${id}:reasoning` : id,
     text,
-    truncated: Boolean(reasoning ? run.reasoningTruncated : run.streamingTruncated),
-    afterMessage: (reasoning ? run.reasoningStartMessage : run.streamStartMessage) ?? 0,
+    truncated: Boolean(
+      reasoning ? run.reasoningTruncated : run.streamingTruncated,
+    ),
+    afterMessage:
+      (reasoning ? run.reasoningStartMessage : run.streamStartMessage) ?? 0,
     generationId: run.generationId,
     turn: run.streamTurn,
     step: run.streamStep,
-    live: active(run.status) && !run.generationFinished && (!reasoning || (!run.reasoningDone && !run.streamingText)),
+    live:
+      active(run.status) &&
+      !run.generationFinished &&
+      (!reasoning || (!run.reasoningDone && !run.streamingText)),
     status: run.generationStatus,
   };
 }
-function retainChannel(run: ActiveRunState, snapshot: SessionSnapshot | null, reasoning: boolean, toolCallId?: string): readonly PendingOutput[] {
+function retainChannel(
+  run: ActiveRunState,
+  snapshot: SessionSnapshot | null,
+  reasoning: boolean,
+  toolCallId?: string,
+): readonly PendingOutput[] {
   const pending = (reasoning ? run.pendingReasoning : run.pendingOutputs) ?? [];
   const streamed = streamedOutput(run, reasoning);
   if (!streamed) return pending;
-  const output = { ...streamed, live: false, toolCallId, status: run.generationStatus ?? "pending" as const };
+  const output = {
+    ...streamed,
+    live: false,
+    toolCallId,
+    status: run.generationStatus ?? ("pending" as const),
+  };
   const saved = reasoning ? reasoningSaved : outputSaved;
   return saved(output, snapshot?.id === run.sessionId ? snapshot : null)
     ? pending
-    : [...pending.filter(previous => previous.id !== output.id), output];
+    : [...pending.filter((previous) => previous.id !== output.id), output];
 }
-const retainOutput = (run: ActiveRunState, snapshot: SessionSnapshot | null, toolCallId?: string) => retainChannel(run, snapshot, false, toolCallId);
-const retainReasoning = (run: ActiveRunState, snapshot: SessionSnapshot | null, toolCallId?: string) => retainChannel(run, snapshot, true, toolCallId);
+const retainOutput = (
+  run: ActiveRunState,
+  snapshot: SessionSnapshot | null,
+  toolCallId?: string,
+) => retainChannel(run, snapshot, false, toolCallId);
+const retainReasoning = (
+  run: ActiveRunState,
+  snapshot: SessionSnapshot | null,
+  toolCallId?: string,
+) => retainChannel(run, snapshot, true, toolCallId);
 
 /** Same-id preview updates replace in place; a new id appends within the bound. */
 function upsertPreview(
@@ -187,7 +228,12 @@ export type WorkbenchAction =
       readonly snapshot: SessionSnapshot | null;
     }
   | { readonly type: "SET_SNAPSHOT_LOADING"; readonly isLoading: boolean }
-  | { readonly type: "SET_HISTORY_LOADING"; readonly sessionId: SessionId; readonly isLoading: boolean; readonly error?: string }
+  | {
+      readonly type: "SET_HISTORY_LOADING";
+      readonly sessionId: SessionId;
+      readonly isLoading: boolean;
+      readonly error?: string;
+    }
   | { readonly type: "PREPEND_SESSION_PAGE"; readonly result: SessionPage }
   | { readonly type: "START_RUN_INITIATED"; readonly sessionId: SessionId }
   | { readonly type: "START_RUN_FAILED"; readonly sessionId: SessionId }
@@ -214,8 +260,15 @@ export type WorkbenchAction =
   | { readonly type: "SET_MOBILE_TAB"; readonly tab: "task" | "inspector" }
   | { readonly type: "SET_MOBILE_SIDEBAR"; readonly isOpen: boolean }
   | { readonly type: "SET_ALERT_ERROR"; readonly error: string | null }
-  | { readonly type: "SET_SESSION_READ_ERROR"; readonly sessionId: SessionId; readonly error: string }
-  | { readonly type: "CLEAR_SESSION_READ_ERROR"; readonly sessionId: SessionId };
+  | {
+      readonly type: "SET_SESSION_READ_ERROR";
+      readonly sessionId: SessionId;
+      readonly error: string;
+    }
+  | {
+      readonly type: "CLEAR_SESSION_READ_ERROR";
+      readonly sessionId: SessionId;
+    };
 const active = (status: SessionStatus) =>
   status === "running" || status === "awaiting_approval";
 /** No further events can arrive for a run that already reached a terminal status. */
@@ -270,9 +323,13 @@ export function workbenchReducer(
         delete cache[state.activeSnapshot.id];
         // Release explicitly loaded history when leaving a paged conversation.
         if (!state.activeSnapshot.transcript)
-          cache[state.activeSnapshot.id] = { snapshot: state.activeSnapshot, persistedAt: state.snapshotPersistedAt };
+          cache[state.activeSnapshot.id] = {
+            snapshot: state.activeSnapshot,
+            persistedAt: state.snapshotPersistedAt,
+          };
       }
-      if (cache[action.sessionId]?.snapshot.transcript) delete cache[action.sessionId];
+      if (cache[action.sessionId]?.snapshot.transcript)
+        delete cache[action.sessionId];
       const selected = cache[action.sessionId];
       for (const id of Object.keys(cache).slice(0, -8)) delete cache[id];
       return {
@@ -302,9 +359,13 @@ export function workbenchReducer(
       // Read completion is independent of transcript freshness. Terminal local
       // events may never reach disk (for example, a pre-acceptance busy failure).
       const merged = mergeTranscript(
-        state.activeSnapshot?.id === snap.id ? state.activeSnapshot : state.snapshotCache?.[snap.id]?.snapshot ?? null,
+        state.activeSnapshot?.id === snap.id
+          ? state.activeSnapshot
+          : (state.snapshotCache?.[snap.id]?.snapshot ?? null),
         snap,
-        state.activeSnapshot?.id === snap.id ? state.snapshotPersistedAt : state.snapshotCache?.[snap.id]?.persistedAt ?? null,
+        state.activeSnapshot?.id === snap.id
+          ? state.snapshotPersistedAt
+          : (state.snapshotCache?.[snap.id]?.persistedAt ?? null),
       );
       const selectedSnapshot =
         run && active(run.status) ? { ...merged, status: run.status } : merged;
@@ -365,7 +426,11 @@ export function workbenchReducer(
             ...run,
             pendingOutputs,
             pendingReasoning,
-            reasoningDone: run.reasoningDone || Boolean(generationMessage(selectedSnapshot, run.generationId)) || reasoningSavedLive || liveSaved,
+            reasoningDone:
+              run.reasoningDone ||
+              Boolean(generationMessage(selectedSnapshot, run.generationId)) ||
+              reasoningSavedLive ||
+              liveSaved,
             ...(liveSaved
               ? { streamingText: "", streamingTruncated: false }
               : {}),
@@ -377,7 +442,13 @@ export function workbenchReducer(
       const cache = { ...state.snapshotCache };
       const persistedAt = cache[snap.id]?.persistedAt;
       delete cache[snap.id];
-      cache[snap.id] = { snapshot: selectedSnapshot, persistedAt: persistedAt && persistedAt > snap.updatedAt ? persistedAt : snap.updatedAt };
+      cache[snap.id] = {
+        snapshot: selectedSnapshot,
+        persistedAt:
+          persistedAt && persistedAt > snap.updatedAt
+            ? persistedAt
+            : snap.updatedAt,
+      };
       for (const id of Object.keys(cache).slice(0, -8)) delete cache[id];
       const next = { ...state, activeRuns: runs, snapshotCache: cache };
       return {
@@ -410,18 +481,39 @@ export function workbenchReducer(
     }
     case "SET_HISTORY_LOADING":
       return state.activeSessionId === action.sessionId
-        ? { ...state, isHistoryLoading: action.isLoading, historyError: action.error ?? null }
+        ? {
+            ...state,
+            isHistoryLoading: action.isLoading,
+            historyError: action.error ?? null,
+          }
         : state;
     case "PREPEND_SESSION_PAGE": {
       const snapshot = state.activeSnapshot;
       if (!snapshot || snapshot.id !== action.result.snapshot.id) return state;
       try {
         const next = prependSessionPage(snapshot, action.result);
-        return { ...state, activeSnapshot: next, isHistoryLoading: false, historyError: null,
-          snapshotCache: { ...state.snapshotCache, [next.id]: { snapshot: next, persistedAt: state.snapshotPersistedAt } } };
+        return {
+          ...state,
+          activeSnapshot: next,
+          isHistoryLoading: false,
+          historyError: null,
+          snapshotCache: {
+            ...state.snapshotCache,
+            [next.id]: {
+              snapshot: next,
+              persistedAt: state.snapshotPersistedAt,
+            },
+          },
+        };
       } catch (error) {
-        return { ...state, isHistoryLoading: false,
-          historyError: error instanceof Error ? error.message : "历史记录边界已变化，请重新打开会话" };
+        return {
+          ...state,
+          isHistoryLoading: false,
+          historyError:
+            error instanceof Error
+              ? error.message
+              : "历史记录边界已变化，请重新打开会话",
+        };
       }
     }
     case "SET_SNAPSHOT_LOADING":
@@ -485,7 +577,8 @@ export function workbenchReducer(
         progress[event.childSessionId] = event;
         // The runtime permits at most 32 children per run. Keep display state
         // bounded across parent sessions too, without growing persisted events.
-        for (const id of Object.keys(progress).slice(0, -32)) delete progress[id];
+        for (const id of Object.keys(progress).slice(0, -32))
+          delete progress[id];
         return { ...state, agentProgress: progress };
       }
       if (event.type === "advisor_update") {
@@ -521,7 +614,9 @@ export function workbenchReducer(
                 ...cacheEntry,
                 snapshot: {
                   ...cacheEntry.snapshot,
-                  advisorRequests: updateRequests(cacheEntry.snapshot.advisorRequests),
+                  advisorRequests: updateRequests(
+                    cacheEntry.snapshot.advisorRequests,
+                  ),
                   updatedAt: event.timestamp,
                   events: appendSessionEvent(cacheEntry.snapshot.events, event),
                 },
@@ -558,21 +653,67 @@ export function workbenchReducer(
             ...previous,
             runId,
           };
-      const scopedStream = ["text_delta", "reasoning_delta", "tool_call_preview", "tool_preview_reset", "retry_reset", "generation_finished"].includes(event.type);
-      if (event.generationId && scopedStream && event.generationId !== run.generationId) return state;
-      if (run.generationFinished && ["text_delta", "reasoning_delta", "tool_call_preview"].includes(event.type)) return state;
-      const savedGeneration = generationMessage(state.activeSnapshot?.id === event.sessionId ? state.activeSnapshot : null, event.generationId);
-      if ((event.type === "reasoning_delta" && savedGeneration?.reasoning) ||
-          (event.type === "text_delta" && savedGeneration?.content)) return state;
+      const scopedStream = [
+        "text_delta",
+        "reasoning_delta",
+        "tool_call_preview",
+        "tool_preview_reset",
+        "retry_reset",
+        "generation_finished",
+      ].includes(event.type);
+      if (
+        event.generationId &&
+        scopedStream &&
+        event.generationId !== run.generationId
+      )
+        return state;
+      if (
+        run.generationFinished &&
+        ["text_delta", "reasoning_delta", "tool_call_preview"].includes(
+          event.type,
+        )
+      )
+        return state;
+      const savedGeneration = generationMessage(
+        state.activeSnapshot?.id === event.sessionId
+          ? state.activeSnapshot
+          : null,
+        event.generationId,
+      );
+      if (
+        (event.type === "reasoning_delta" && savedGeneration?.reasoning) ||
+        (event.type === "text_delta" && savedGeneration?.content)
+      )
+        return state;
       let next = run;
       if (event.type === "generation_started") {
-        if (event.generationId === run.generationId || !active(run.status)) return state;
-        const history = state.activeSnapshot?.id === event.sessionId ? state.activeSnapshot.events : [];
-        const previousStart = history.findIndex(item => item.type === "generation_started" && item.generationId === event.generationId);
-        const currentStart = history.findIndex(item => item.type === "generation_started" && item.generationId === run.generationId);
-        if ((previousStart >= 0 && currentStart > previousStart) ||
-            (event.turn !== undefined && run.streamTurn !== undefined && event.turn < run.streamTurn) ||
-            (event.turn === run.streamTurn && event.step !== undefined && run.streamStep !== undefined && event.step < run.streamStep)) return state;
+        if (event.generationId === run.generationId || !active(run.status))
+          return state;
+        const history =
+          state.activeSnapshot?.id === event.sessionId
+            ? state.activeSnapshot.events
+            : [];
+        const previousStart = history.findIndex(
+          (item) =>
+            item.type === "generation_started" &&
+            item.generationId === event.generationId,
+        );
+        const currentStart = history.findIndex(
+          (item) =>
+            item.type === "generation_started" &&
+            item.generationId === run.generationId,
+        );
+        if (
+          (previousStart >= 0 && currentStart > previousStart) ||
+          (event.turn !== undefined &&
+            run.streamTurn !== undefined &&
+            event.turn < run.streamTurn) ||
+          (event.turn === run.streamTurn &&
+            event.step !== undefined &&
+            run.streamStep !== undefined &&
+            event.step < run.streamStep)
+        )
+          return state;
         next = {
           ...run,
           pendingOutputs: retainOutput(run, state.activeSnapshot),
@@ -581,24 +722,45 @@ export function workbenchReducer(
           generationFinished: false,
           generationStatus: "pending",
           reasoningDone: Boolean(savedGeneration),
-          streamingText: "", streamingReasoning: "",
-          streamingTruncated: false, reasoningTruncated: false,
-          streamStartMessage: event.messageIndex, reasoningStartMessage: event.messageIndex,
-          streamTurn: event.turn, streamStep: event.step,
+          streamingText: "",
+          streamingReasoning: "",
+          streamingTruncated: false,
+          reasoningTruncated: false,
+          streamStartMessage: event.messageIndex,
+          reasoningStartMessage: event.messageIndex,
+          streamTurn: event.turn,
+          streamStep: event.step,
           toolPreviews: [],
         };
       }
       if (event.type === "generation_finished") {
-        const terminalRun = { ...run, generationStatus: event.status === "failed" || event.status === "cancelled" ? event.status : "pending" as const };
+        const terminalRun = {
+          ...run,
+          generationStatus:
+            event.status === "failed" || event.status === "cancelled"
+              ? event.status
+              : ("pending" as const),
+        };
         next = {
-          ...terminalRun, generationFinished: true, reasoningDone: true,
-          pendingOutputs: event.status === "superseded"
-            ? (run.pendingOutputs ?? []).filter(output => output.generationId !== event.generationId)
-            : retainOutput(terminalRun, state.activeSnapshot),
-          pendingReasoning: event.status === "superseded"
-            ? (run.pendingReasoning ?? []).filter(output => output.generationId !== event.generationId)
-            : retainReasoning(terminalRun, state.activeSnapshot),
-          streamingText: "", streamingReasoning: "", streamingTruncated: false, reasoningTruncated: false,
+          ...terminalRun,
+          generationFinished: true,
+          reasoningDone: true,
+          pendingOutputs:
+            event.status === "superseded"
+              ? (run.pendingOutputs ?? []).filter(
+                  (output) => output.generationId !== event.generationId,
+                )
+              : retainOutput(terminalRun, state.activeSnapshot),
+          pendingReasoning:
+            event.status === "superseded"
+              ? (run.pendingReasoning ?? []).filter(
+                  (output) => output.generationId !== event.generationId,
+                )
+              : retainReasoning(terminalRun, state.activeSnapshot),
+          streamingText: "",
+          streamingReasoning: "",
+          streamingTruncated: false,
+          reasoningTruncated: false,
           toolPreviews: [],
         };
       }
@@ -612,8 +774,12 @@ export function workbenchReducer(
             previewId: event.previewId,
             name: event.name,
             argumentsChars: event.argumentsChars,
-            ...(event.linesAdded !== undefined ? { linesAdded: event.linesAdded } : {}),
-            ...(event.linesRemoved !== undefined ? { linesRemoved: event.linesRemoved } : {}),
+            ...(event.linesAdded !== undefined
+              ? { linesAdded: event.linesAdded }
+              : {}),
+            ...(event.linesRemoved !== undefined
+              ? { linesRemoved: event.linesRemoved }
+              : {}),
           }),
         };
       if (event.type === "tool_preview_reset")
@@ -624,7 +790,9 @@ export function workbenchReducer(
         next = {
           ...run,
           toolPreviews: event.previewId
-            ? previews.filter((preview) => preview.previewId !== event.previewId)
+            ? previews.filter(
+                (preview) => preview.previewId !== event.previewId,
+              )
             : previews,
         };
       }
@@ -645,7 +813,8 @@ export function workbenchReducer(
       if (event.type === "run_started") {
         const messageCount =
           state.activeSnapshot?.id === event.sessionId
-            ? (state.activeSnapshot.transcript?.messageOffset ?? 0) + state.activeSnapshot.messages.length
+            ? (state.activeSnapshot.transcript?.messageOffset ?? 0) +
+              state.activeSnapshot.messages.length
             : 0;
         next = {
           ...next,
@@ -679,13 +848,22 @@ export function workbenchReducer(
           ...run,
           streamTurn: event.turn ?? run.streamTurn,
           streamStep: event.step ?? run.streamStep,
-          reasoningStartMessage: text || run.generationId
-            ? (run.reasoningStartMessage ?? 0)
-            : state.activeSnapshot?.id === event.sessionId
-              ? (state.activeSnapshot.transcript?.messageOffset ?? 0) + state.activeSnapshot.messages.length
-              : 0,
-          streamingReasoning: text + event.text.slice(0, Math.max(0, STREAMING_REASONING_LIMIT - text.length)),
-          reasoningTruncated: Boolean(run.reasoningTruncated) || text.length + event.text.length > STREAMING_REASONING_LIMIT,
+          reasoningStartMessage:
+            text || run.generationId
+              ? (run.reasoningStartMessage ?? 0)
+              : state.activeSnapshot?.id === event.sessionId
+                ? (state.activeSnapshot.transcript?.messageOffset ?? 0) +
+                  state.activeSnapshot.messages.length
+                : 0,
+          streamingReasoning:
+            text +
+            event.text.slice(
+              0,
+              Math.max(0, STREAMING_REASONING_LIMIT - text.length),
+            ),
+          reasoningTruncated:
+            Boolean(run.reasoningTruncated) ||
+            text.length + event.text.length > STREAMING_REASONING_LIMIT,
         };
       }
       if (event.type === "text_delta")
@@ -694,11 +872,13 @@ export function workbenchReducer(
           ...(event.turn === undefined ? {} : { streamTurn: event.turn }),
           ...(event.step === undefined ? {} : { streamStep: event.step }),
           reasoningDone: run.reasoningDone || Boolean(event.text),
-          streamStartMessage: run.streamingText || run.generationId
-            ? (run.streamStartMessage ?? 0)
-            : state.activeSnapshot?.id === event.sessionId
-              ? (state.activeSnapshot.transcript?.messageOffset ?? 0) + state.activeSnapshot.messages.length
-              : 0,
+          streamStartMessage:
+            run.streamingText || run.generationId
+              ? (run.streamStartMessage ?? 0)
+              : state.activeSnapshot?.id === event.sessionId
+                ? (state.activeSnapshot.transcript?.messageOffset ?? 0) +
+                  state.activeSnapshot.messages.length
+                : 0,
           streamingText:
             run.streamingText +
             event.text.slice(
@@ -709,7 +889,10 @@ export function workbenchReducer(
             !!run.streamingTruncated ||
             run.streamingText.length + event.text.length > STREAMING_TEXT_LIMIT,
         };
-      if (event.type === "tool_started" && (!event.generationId || event.generationId === run.generationId))
+      if (
+        event.type === "tool_started" &&
+        (!event.generationId || event.generationId === run.generationId)
+      )
         next = {
           ...next,
           reasoningDone: true,
@@ -718,7 +901,11 @@ export function workbenchReducer(
             state.activeSnapshot,
             event.call.id,
           ),
-          pendingReasoning: retainReasoning(run, state.activeSnapshot, event.call.id),
+          pendingReasoning: retainReasoning(
+            run,
+            state.activeSnapshot,
+            event.call.id,
+          ),
           streamingReasoning: "",
           reasoningTruncated: false,
           streamingText: "",
@@ -747,7 +934,8 @@ export function workbenchReducer(
         // untouched and advance to the head; the submit spinner is always
         // cleared because this surface may have had a reply in flight.
         const queued =
-          run.approvalQueue ?? (run.pendingApproval ? [run.pendingApproval] : []);
+          run.approvalQueue ??
+          (run.pendingApproval ? [run.pendingApproval] : []);
         const remaining = queued.filter(
           (request) => request.id !== event.approvalId,
         );
@@ -772,16 +960,41 @@ export function workbenchReducer(
           ...run,
           pendingApproval: run.pendingApproval,
           status: run.pendingApproval ? "awaiting_approval" : event.status,
-          ...(["cancelled", "failed", "completed", "interrupted"].includes(event.status)
-            ? { toolPreviews: [] } : {}),
+          ...(["cancelled", "failed", "completed", "interrupted"].includes(
+            event.status,
+          )
+            ? { toolPreviews: [] }
+            : {}),
         };
       if (event.type === "run_finished")
         next = {
           ...run,
           providerRetry: undefined,
           toolPreviews: [],
-          pendingOutputs: retainOutput({ ...run, generationStatus: event.status === "cancelled" ? "cancelled" : event.status === "completed" ? "pending" : "failed" }, state.activeSnapshot),
-          pendingReasoning: retainReasoning({ ...run, generationStatus: event.status === "cancelled" ? "cancelled" : event.status === "completed" ? "pending" : "failed" }, state.activeSnapshot),
+          pendingOutputs: retainOutput(
+            {
+              ...run,
+              generationStatus:
+                event.status === "cancelled"
+                  ? "cancelled"
+                  : event.status === "completed"
+                    ? "pending"
+                    : "failed",
+            },
+            state.activeSnapshot,
+          ),
+          pendingReasoning: retainReasoning(
+            {
+              ...run,
+              generationStatus:
+                event.status === "cancelled"
+                  ? "cancelled"
+                  : event.status === "completed"
+                    ? "pending"
+                    : "failed",
+            },
+            state.activeSnapshot,
+          ),
           streamingReasoning: "",
           reasoningDone: true,
           generationFinished: true,
@@ -795,16 +1008,44 @@ export function workbenchReducer(
           isSubmittingApproval: false,
         };
       if (event.type === "error")
-        next = { ...run, error: event.error, reasoningDone: true, toolPreviews: [] };
-      if (event.type === "web_search") next = { ...next, webSearch: event.search };
-      if (["run_started", "run_finished", "error", "retry_reset", "web_search_result", "tool_started", "text_delta"].includes(event.type) ||
-        (event.type === "state_changed" && ["cancelled", "failed", "interrupted"].includes(event.status)))
+        next = {
+          ...run,
+          error: event.error,
+          reasoningDone: true,
+          toolPreviews: [],
+        };
+      if (event.type === "web_search")
+        next = { ...next, webSearch: event.search };
+      if (
+        [
+          "run_started",
+          "run_finished",
+          "error",
+          "retry_reset",
+          "web_search_result",
+          "tool_started",
+          "text_delta",
+        ].includes(event.type) ||
+        (event.type === "state_changed" &&
+          ["cancelled", "failed", "interrupted"].includes(event.status))
+      )
         next = { ...next, webSearch: undefined };
       if (event.type === "text_delta" || event.type === "reasoning_delta")
-        next = { ...next, unreportedOutputTokens: (run.unreportedOutputTokens ?? 0) + estimateTokens(event.text) };
-      if (event.type === "run_started" || event.type === "run_finished" || event.type === "retry_reset" ||
-        (event.type === "provider_attempt" && event.selection.outcome === "started") ||
-        (event.type === "context_usage" && event.usage.basis !== "projected" && event.usage.completionTokens !== undefined))
+        next = {
+          ...next,
+          unreportedOutputTokens:
+            (run.unreportedOutputTokens ?? 0) + estimateTokens(event.text),
+        };
+      if (
+        event.type === "run_started" ||
+        event.type === "run_finished" ||
+        event.type === "retry_reset" ||
+        (event.type === "provider_attempt" &&
+          event.selection.outcome === "started") ||
+        (event.type === "context_usage" &&
+          event.usage.basis !== "projected" &&
+          event.usage.completionTokens !== undefined)
+      )
         next = { ...next, unreportedOutputTokens: 0 };
       const result = putRun(state, next);
       if (
@@ -896,7 +1137,12 @@ export function workbenchReducer(
       return { ...state, alertError: action.error, alertReadSessionId: null };
     case "SET_SESSION_READ_ERROR":
       return state.activeSessionId === action.sessionId
-        ? { ...state, isSnapshotLoading: false, alertError: action.error, alertReadSessionId: action.sessionId }
+        ? {
+            ...state,
+            isSnapshotLoading: false,
+            alertError: action.error,
+            alertReadSessionId: action.sessionId,
+          }
         : state;
     case "CLEAR_SESSION_READ_ERROR":
       // A successful background read must not dismiss a failed user operation

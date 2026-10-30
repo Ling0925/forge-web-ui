@@ -1,3 +1,4 @@
+import { isPrimarySession } from "@forge/core/shared/sessions";
 import {
   Archive,
   ArrowClockwise,
@@ -11,13 +12,16 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
-import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../state/workbench-store";
 import { modelServiceStatus } from "../../state/model-service-status";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { EmptyState } from "../primitives/EmptyState";
-import { IconButton } from "../primitives/IconButton";
 import { ForgeMark } from "../primitives/ForgeMark";
+import { IconButton } from "../primitives/IconButton";
 import { SessionListItem } from "./SessionListItem";
 
 /** Folder label for a workspace path; the full path stays available as a tooltip. */
@@ -36,7 +40,13 @@ const DEFAULT_VISIBLE_COUNT = 10;
 const PAGE_SIZE = 10;
 
 export function Sidebar() {
-  const { openNewSession, setMobileSidebar, openSettings, openUsageDashboard, createSession } = useWorkbenchActions();
+  const {
+    openNewSession,
+    setMobileSidebar,
+    openSettings,
+    openUsageDashboard,
+    createSession,
+  } = useWorkbenchActions();
   const state = useWorkbenchSelector(
     ({ state }) => ({
       activeSessionId: state.activeSessionId,
@@ -52,7 +62,9 @@ export function Sidebar() {
   const serviceStatus = modelServiceStatus(state.settings);
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [creatingWorkspace, setCreatingWorkspace] = useState<string | null>(null);
+  const [creatingWorkspace, setCreatingWorkspace] = useState<string | null>(
+    null,
+  );
   const [collapsedFolders, setCollapsedFolders] = useState<
     Readonly<Record<string, boolean>>
   >({});
@@ -204,9 +216,17 @@ export function Sidebar() {
         {state.isSessionsLoading && sessions.length === 0 ? (
           <p className="wb-muted sidebar-empty">正在加载会话...</p>
         ) : sessions.length === 0 ? (
-          <EmptyState variant="compact" className="sidebar-empty" title="暂无历史任务" />
+          <EmptyState
+            variant="compact"
+            className="sidebar-empty"
+            title="暂无历史任务"
+          />
         ) : groups.length === 0 ? (
-          <EmptyState variant="compact" className="sidebar-empty" title="没有匹配的任务" />
+          <EmptyState
+            variant="compact"
+            className="sidebar-empty"
+            title="没有匹配的任务"
+          />
         ) : (
           groups.map((group) => {
             // A live search must reveal its matches, so collapse state is held
@@ -329,7 +349,11 @@ export function Sidebar() {
             aria-hidden="true"
           />
           <span>{serviceStatus.label}</span>
-          <CaretRight size={12} className="sidebar-status-arrow" aria-hidden="true" />
+          <CaretRight
+            size={12}
+            className="sidebar-status-arrow"
+            aria-hidden="true"
+          />
         </button>
 
         <div className="sidebar-footer-actions">

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { CheckpointDto } from "@forge/core/shared/ipc";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import {
   shallowEqual,

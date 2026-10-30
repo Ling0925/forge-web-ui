@@ -5,7 +5,11 @@ import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
 it("uses pinned sources, retains unacknowledged drafts and runs only confirmed session queues", async () => {
-  const bundle = await build({ stdin: { resolveDir: resolve("."), loader: "tsx", contents: `
+  const bundle = await build({
+    stdin: {
+      resolveDir: resolve("."),
+      loader: "tsx",
+      contents: `
     import {createRoot} from 'react-dom/client';
     import {Composer} from './src/renderer/components/workbench/Composer';
     import {WorkbenchProvider,useWorkbench} from './src/renderer/state/workbench-context';
@@ -43,44 +47,98 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
       <button onClick={()=>selectSession(a)}>打开 A</button><button onClick={()=>selectSession(b)}>打开 B</button>
       <output id="selected">{state.activeSessionId}</output><div className="wb-app"><Composer/></div></>}
     createRoot(document.getElementById('root')).render(<WorkbenchProvider><Harness/></WorkbenchProvider>);
-  ` }, bundle: true, write: false, format: "iife", jsx: "automatic", outfile: "steering.js", loader: { ".woff2": "dataurl" }, define: { "process.env.NODE_ENV": '"development"' } });
-  const browser = await chromium.launch({ headless: true, ...(process.env.FORGE_BROWSER_EXECUTABLE ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE } : {}) });
+  `,
+    },
+    bundle: true,
+    write: false,
+    format: "iife",
+    jsx: "automatic",
+    outfile: "steering.js",
+    loader: { ".woff2": "dataurl" },
+    define: { "process.env.NODE_ENV": '"development"' },
+  });
+  const browser = await chromium.launch({
+    headless: true,
+    ...(process.env.FORGE_BROWSER_EXECUTABLE
+      ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
+      : {}),
+  });
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, hasTouch: true, isMobile: true });
+    const page = await browser.newPage({
+      viewport: { width: 1440, height: 900 },
+      hasTouch: true,
+      isMobile: true,
+    });
     page.setDefaultTimeout(3000);
     const errors: string[] = [];
-    page.on("pageerror", error => errors.push(error.message));
-    await page.route("http://forge.test/**", route => route.fulfill({ body: '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div id="root"></div></body></html>', contentType: "text/html" }));
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("http://forge.test/**", (route) =>
+      route.fulfill({
+        body: '<html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div id="root"></div></body></html>',
+        contentType: "text/html",
+      }),
+    );
     await page.goto("http://forge.test");
-    const js = bundle.outputFiles.find(file => file.path.endsWith(".js"))?.text;
+    const js = bundle.outputFiles.find((file) =>
+      file.path.endsWith(".js"),
+    )?.text;
     if (!js) throw new Error("Missing mounted bundle");
-    const css = bundle.outputFiles.find(file => file.path.endsWith(".css"))?.text ?? "";
+    const css =
+      bundle.outputFiles.find((file) => file.path.endsWith(".css"))?.text ?? "";
     await page.addStyleTag({ content: css });
-    await page.addStyleTag({ content: ".wb-app{height:auto!important;padding-top:400px}body,#root{overflow:auto!important}" });
+    await page.addStyleTag({
+      content:
+        ".wb-app{height:auto!important;padding-top:400px}body,#root{overflow:auto!important}",
+    });
     await page.addScriptTag({ content: js });
     await page.getByRole("button", { name: "打开 A", exact: true }).click();
     const input = page.locator("textarea.composer-textarea");
-    expect(await page.getByRole("button", { name: "思考等级", exact: true }).count()).toBe(0);
+    expect(
+      await page.getByRole("button", { name: "思考等级", exact: true }).count(),
+    ).toBe(0);
     const modelSummary = page.locator(".composer-model-summary");
     await modelSummary.click();
-    const effortSlider = page.getByRole("slider", { name: "思考等级", exact: true });
+    const effortSlider = page.getByRole("slider", {
+      name: "思考等级",
+      exact: true,
+    });
     await effortSlider.waitFor();
     expect(await effortSlider.isVisible()).toBe(true);
-    expect(await page.locator('.composer-model-source-area').count()).toBe(0);
+    expect(await page.locator(".composer-model-source-area").count()).toBe(0);
     await page.locator(".model-picker-current").click();
-    expect(await page.getByRole('group', { name: 'Source A', exact: true }).getByRole('button', { pressed: true }).innerText()).toContain('a-model');
-    expect(await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { pressed: true }).count()).toBe(0);
+    expect(
+      await page
+        .getByRole("group", { name: "Source A", exact: true })
+        .getByRole("button", { pressed: true })
+        .innerText(),
+    ).toContain("a-model");
+    expect(
+      await page
+        .getByRole("group", { name: "Source B", exact: true })
+        .getByRole("button", { pressed: true })
+        .count(),
+    ).toBe(0);
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").catalogues.includes("a"))).toBe(true);
-    await input.fill("initial"); await input.press("Enter");
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          Reflect.get(window, "fixture").catalogues.includes("a"),
+        ),
+      )
+      .toBe(true);
+    await input.fill("initial");
+    await input.press("Enter");
     await expect.poll(() => input.inputValue()).toBe("");
     expect(await page.locator(".composer-cancel").count()).toBe(1);
     expect(await page.locator(".composer-submit").count()).toBe(0);
     expect(await page.locator(".composer-live-hints").count()).toBe(0);
     expect(await page.locator(".composer-queue").count()).toBe(0);
-    expect(await input.getAttribute("title")).toBe("Enter 排队，Alt+Enter 插话");
-    await input.fill("/queue"); await input.press("Enter");
+    expect(await input.getAttribute("title")).toBe(
+      "Enter 排队，Alt+Enter 插话",
+    );
+    await input.fill("/queue");
+    await input.press("Enter");
     await expect.poll(() => input.inputValue()).toBe("");
     expect(await page.locator(".composer-slash-message").count()).toBe(0);
     expect(await page.locator(".composer-queue").count()).toBe(0);
@@ -103,20 +161,39 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     expect(await steerBtn.count()).toBe(1);
     expect(await queueBtn.count()).toBe(1);
     await steerBtn.click();
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending())).toBe(1);
+    await expect
+      .poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending()))
+      .toBe(1);
     expect(await input.inputValue()).toBe("change direction\nsecond line");
     const inputRect1 = await input.boundingBox();
-    const trackRect = await page.locator(".usage-track.is-active").boundingBox();
-    if (!inputRect1 || !trackRect) throw new Error("Missing rects for live status check");
+    const trackRect = await page
+      .locator(".usage-track.is-active")
+      .boundingBox();
+    if (!inputRect1 || !trackRect)
+      throw new Error("Missing rects for live status check");
     expect(await page.locator(".composer-activity").count()).toBe(0);
     expect(await page.locator(".composer-live-actions").count()).toBe(0);
-    expect(await page.getByRole("button", { name: "运行中消息", exact: true }).count()).toBe(0);
-    expect(await page.getByRole("button", { name: "发送插话", exact: true }).count()).toBe(0);
-    expect(await page.getByRole("button", { name: "加入待发队列", exact: true }).count()).toBe(0);
-    expect(trackRect.y).toBeGreaterThanOrEqual(inputRect1.y + inputRect1.height);
+    expect(
+      await page
+        .getByRole("button", { name: "运行中消息", exact: true })
+        .count(),
+    ).toBe(0);
+    expect(
+      await page.getByRole("button", { name: "发送插话", exact: true }).count(),
+    ).toBe(0);
+    expect(
+      await page
+        .getByRole("button", { name: "加入待发队列", exact: true })
+        .count(),
+    ).toBe(0);
+    expect(trackRect.y).toBeGreaterThanOrEqual(
+      inputRect1.y + inputRect1.height,
+    );
     await page.evaluate(() => Reflect.get(window, "fixture").apply());
     await expect.poll(() => input.inputValue()).toBe("");
-    await expect.poll(() => page.locator(".composer-submit-col.is-dual").count()).toBe(0);
+    await expect
+      .poll(() => page.locator(".composer-submit-col.is-dual").count())
+      .toBe(0);
     const reboundAnim = await page.evaluate(() => {
       const col = document.querySelector(".composer-submit-col");
       const btn = document.querySelector(".composer-cancel");
@@ -130,147 +207,328 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     await input.fill("follow one draft");
     await page.locator(".composer-queue-btn").click();
     await expect.poll(() => input.inputValue()).toBe("");
-    expect(await page.locator(".composer-queue-title").innerText()).toBe("待发 1 条");
-    expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual(["follow one draft"]);
-    expect(await page.getByRole("button", { name: "立即插话第 1 条待发消息", exact: true }).count()).toBe(1);
+    expect(await page.locator(".composer-queue-title").innerText()).toBe(
+      "待发 1 条",
+    );
+    expect(
+      await page
+        .locator(".composer-queue-item .composer-queue-text")
+        .allInnerTexts(),
+    ).toEqual(["follow one draft"]);
+    expect(
+      await page
+        .getByRole("button", { name: "立即插话第 1 条待发消息", exact: true })
+        .count(),
+    ).toBe(1);
     expect(await page.locator(".composer-queue-hint").count()).toBe(0);
     expect(await page.locator(".composer-slash-message").count()).toBe(0);
     // Test promoting a queued item to immediate steer via the queue item button
     await input.fill("queued to steer");
     await page.locator(".composer-queue-btn").click();
     expect(await page.locator(".composer-queue-item").count()).toBe(2);
-    await page.getByRole("button", { name: "立即插话第 2 条待发消息", exact: true }).click();
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending())).toBe(1);
+    await page
+      .getByRole("button", { name: "立即插话第 2 条待发消息", exact: true })
+      .click();
+    await expect
+      .poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending()))
+      .toBe(1);
     await page.evaluate(() => Reflect.get(window, "fixture").apply());
-    await expect.poll(() => page.locator(".composer-queue-item").count()).toBe(1);
-    expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual(["follow one draft"]);
+    await expect
+      .poll(() => page.locator(".composer-queue-item").count())
+      .toBe(1);
+    expect(
+      await page
+        .locator(".composer-queue-item .composer-queue-text")
+        .allInnerTexts(),
+    ).toEqual(["follow one draft"]);
     // Edit queued item in place
-    await page.getByRole("button", { name: "编辑第 1 条待发消息", exact: true }).click();
+    await page
+      .getByRole("button", { name: "编辑第 1 条待发消息", exact: true })
+      .click();
     const editBox = page.locator(".composer-queue-edit-input");
     await editBox.fill("follow one");
     await editBox.press("Enter");
-    expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual(["follow one"]);
+    expect(
+      await page
+        .locator(".composer-queue-item .composer-queue-text")
+        .allInnerTexts(),
+    ).toEqual(["follow one"]);
     // Add second and third items, test drag reorder and cancel
-    await input.fill("to be cancelled"); await input.press("Control+Enter");
+    await input.fill("to be cancelled");
+    await input.press("Control+Enter");
     await expect.poll(() => input.inputValue()).toBe("");
-    await input.fill("follow two\nsecond line"); await input.press("Control+Enter");
+    await input.fill("follow two\nsecond line");
+    await input.press("Control+Enter");
     await expect.poll(() => input.inputValue()).toBe("");
     expect(await page.locator(".composer-queue-item").count()).toBe(3);
-    await page.locator(".composer-queue-item").nth(2).dragTo(page.locator(".composer-queue-item").nth(1));
-    expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual([
-      "follow one",
-      "follow two\nsecond line",
-      "to be cancelled",
-    ]);
-    await page.getByRole("button", { name: "取消第 3 条待发消息", exact: true }).click();
-    expect(await page.locator(".composer-queue-item .composer-queue-text").allInnerTexts()).toEqual([
-      "follow one",
-      "follow two\nsecond line",
-    ]);
-    await page.evaluate(() => Reflect.get(window, "fixture").finish('11111111-1111-4111-8111-111111111111', 'cancelled'));
-    await expect.poll(() => page.locator(".composer-status").innerText()).toContain("已暂停");
+    await page
+      .locator(".composer-queue-item")
+      .nth(2)
+      .dragTo(page.locator(".composer-queue-item").nth(1));
+    expect(
+      await page
+        .locator(".composer-queue-item .composer-queue-text")
+        .allInnerTexts(),
+    ).toEqual(["follow one", "follow two\nsecond line", "to be cancelled"]);
+    await page
+      .getByRole("button", { name: "取消第 3 条待发消息", exact: true })
+      .click();
+    expect(
+      await page
+        .locator(".composer-queue-item .composer-queue-text")
+        .allInnerTexts(),
+    ).toEqual(["follow one", "follow two\nsecond line"]);
+    await page.evaluate(() =>
+      Reflect.get(window, "fixture").finish(
+        "11111111-1111-4111-8111-111111111111",
+        "cancelled",
+      ),
+    );
+    await expect
+      .poll(() => page.locator(".composer-status").innerText())
+      .toContain("已暂停");
     const inputRect2 = await input.boundingBox();
-    const queueStatusRect = await page.locator(".composer-status").boundingBox();
-    if (!inputRect2 || !queueStatusRect) throw new Error("Missing rects for queue status check");
-    expect(queueStatusRect.y + queueStatusRect.height).toBeLessThanOrEqual(inputRect2.y);
-    expect(await page.evaluate(() => Reflect.get(window, "fixture").starts.length)).toBe(1);
-    await input.fill("/queue run"); await input.press("Enter");
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").starts.length)).toBe(2);
-    await expect.poll(() => page.locator(".composer-status").innerText()).toContain("待发 1 条");
+    const queueStatusRect = await page
+      .locator(".composer-status")
+      .boundingBox();
+    if (!inputRect2 || !queueStatusRect)
+      throw new Error("Missing rects for queue status check");
+    expect(queueStatusRect.y + queueStatusRect.height).toBeLessThanOrEqual(
+      inputRect2.y,
+    );
+    expect(
+      await page.evaluate(() => Reflect.get(window, "fixture").starts.length),
+    ).toBe(1);
+    await input.fill("/queue run");
+    await input.press("Enter");
+    await expect
+      .poll(() =>
+        page.evaluate(() => Reflect.get(window, "fixture").starts.length),
+      )
+      .toBe(2);
+    await expect
+      .poll(() => page.locator(".composer-status").innerText())
+      .toContain("待发 1 条");
     await page.getByRole("button", { name: "打开 B", exact: true }).click();
-    expect(await page.getByRole("button", { name: "清空队列", exact: true }).count()).toBe(0);
-    await page.evaluate(() => Reflect.get(window, "fixture").finish('11111111-1111-4111-8111-111111111111', 'completed'));
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").starts.length)).toBe(3);
-    expect(await page.locator("#selected").innerText()).toBe("22222222-2222-4222-8222-222222222222");
-    expect(await page.evaluate(() => Reflect.get(window, "fixture").starts.map((item: { prompt: string }) => item.prompt))).toEqual(["initial", "follow one", "follow two\nsecond line"]);
-    expect(await page.evaluate(() => Reflect.get(window, "fixture").starts[2].providerSourceId)).toBe("a");
+    expect(
+      await page.getByRole("button", { name: "清空队列", exact: true }).count(),
+    ).toBe(0);
+    await page.evaluate(() =>
+      Reflect.get(window, "fixture").finish(
+        "11111111-1111-4111-8111-111111111111",
+        "completed",
+      ),
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() => Reflect.get(window, "fixture").starts.length),
+      )
+      .toBe(3);
+    expect(await page.locator("#selected").innerText()).toBe(
+      "22222222-2222-4222-8222-222222222222",
+    );
+    expect(
+      await page.evaluate(() =>
+        Reflect.get(window, "fixture").starts.map(
+          (item: { prompt: string }) => item.prompt,
+        ),
+      ),
+    ).toEqual(["initial", "follow one", "follow two\nsecond line"]);
+    expect(
+      await page.evaluate(
+        () => Reflect.get(window, "fixture").starts[2].providerSourceId,
+      ),
+    ).toBe("a");
     await page.getByRole("button", { name: "打开 A", exact: true }).click();
-    await input.fill("retain on cancellation"); await input.press("Alt+Enter");
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending())).toBe(1);
-    await page.evaluate(() => Reflect.get(window, "fixture").finish('11111111-1111-4111-8111-111111111111', 'cancelled'));
-    await expect.poll(() => page.getByRole("alert").last().innerText()).toContain("草稿已保留");
+    await input.fill("retain on cancellation");
+    await input.press("Alt+Enter");
+    await expect
+      .poll(() => page.evaluate(() => Reflect.get(window, "fixture").pending()))
+      .toBe(1);
+    await page.evaluate(() =>
+      Reflect.get(window, "fixture").finish(
+        "11111111-1111-4111-8111-111111111111",
+        "cancelled",
+      ),
+    );
+    await expect
+      .poll(() => page.getByRole("alert").last().innerText())
+      .toContain("草稿已保留");
     const inputRect3 = await input.boundingBox();
     const alertRect = await page.getByRole("alert").last().boundingBox();
-    if (!inputRect3 || !alertRect) throw new Error("Missing rects for alert check");
+    if (!inputRect3 || !alertRect)
+      throw new Error("Missing rects for alert check");
     expect(alertRect.y + alertRect.height).toBeLessThanOrEqual(inputRect3.y);
     expect(await input.inputValue()).toBe("retain on cancellation");
     await modelSummary.click();
     await page.locator(".model-picker-current").click();
-    await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { name: 'shared-model shared-model', exact: true }).click();
+    await page
+      .getByRole("group", { name: "Source B", exact: true })
+      .getByRole("button", { name: "shared-model shared-model", exact: true })
+      .click();
     await page.locator(".model-picker-current").click();
-    expect(await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { pressed: true }).innerText()).toContain('shared-model');
-    expect(await page.getByRole('group', { name: 'Source A', exact: true }).getByRole('button', { pressed: true }).count()).toBe(0);
+    expect(
+      await page
+        .getByRole("group", { name: "Source B", exact: true })
+        .getByRole("button", { pressed: true })
+        .innerText(),
+    ).toContain("shared-model");
+    expect(
+      await page
+        .getByRole("group", { name: "Source A", exact: true })
+        .getByRole("button", { pressed: true })
+        .count(),
+    ).toBe(0);
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
-    await input.fill("explicit source change"); await page.getByRole("button", { name: "运行", exact: true }).click();
-    await expect.poll(() => page.evaluate(() => Reflect.get(window, "fixture").starts.at(-1).providerSourceId)).toBe("b");
-    await input.fill("/queue add keep across reload\nsecond line"); await input.press("Enter");
+    await input.fill("explicit source change");
+    await page.getByRole("button", { name: "运行", exact: true }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => Reflect.get(window, "fixture").starts.at(-1).providerSourceId,
+        ),
+      )
+      .toBe("b");
+    await input.fill("/queue add keep across reload\nsecond line");
+    await input.press("Enter");
     await expect.poll(() => input.inputValue()).toBe("");
     await mkdir(resolve(".build/design-fixes-ui"), { recursive: true });
-    for (const width of [320, 360, 390, 430, 1440]) for (const theme of ["light", "dark"]) {
-      await page.setViewportSize({ width, height: 900 });
-      await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-      await page.screenshot({ path: resolve(`.build/design-fixes-ui/steering-${width}-${theme}.png`), animations: "disabled" });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-      const promptBox = await page.locator(".composer-prompt").boundingBox();
-      const actionBox = await page.locator(".composer-action").boundingBox();
-      const toolbarBox = await page.locator(".composer-toolbar").boundingBox();
-      if (!promptBox || !actionBox || !toolbarBox) throw new Error("Missing composer layout");
-      expect(actionBox.x).toBeGreaterThanOrEqual(promptBox.x + promptBox.width);
-      expect(actionBox.y).toBeLessThan(promptBox.y + promptBox.height);
-      expect(actionBox.y + actionBox.height).toBeGreaterThan(promptBox.y);
-      expect(actionBox.width).toBeGreaterThanOrEqual(44);
-      expect(actionBox.height).toBeGreaterThanOrEqual(44);
-      expect(toolbarBox.height).toBeLessThanOrEqual(48);
-      expect(Math.abs(promptBox.height - actionBox.height)).toBeLessThanOrEqual(1);
-      expect(Math.abs(promptBox.y - actionBox.y)).toBeLessThanOrEqual(1);
-      const iconSizes = await page.locator(
-        '.composer-action svg, .composer-toolbar-start button svg, .composer-model-summary > svg',
-      ).evaluateAll(nodes => nodes.map(node => {
-        const box = node.getBoundingClientRect();
-        return { width: box.width, height: box.height };
-      }));
-      expect(iconSizes.length).toBe(6);
-      const imageTriggerBox = await page.getByRole("button", { name: "添加图片", exact: true }).boundingBox();
-      expect(imageTriggerBox?.width).toBe(44);
-      expect(imageTriggerBox?.height).toBe(44);
-      for (const icon of iconSizes) {
-        expect(icon.width).toBeGreaterThanOrEqual(16);
-        expect(icon).toEqual(iconSizes[0]);
+    for (const width of [320, 360, 390, 430, 1440])
+      for (const theme of ["light", "dark"]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate((value) => {
+          document.documentElement.dataset.theme = value;
+        }, theme);
+        await page.screenshot({
+          path: resolve(
+            `.build/design-fixes-ui/steering-${width}-${theme}.png`,
+          ),
+          animations: "disabled",
+        });
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+        ).toBe(true);
+        const promptBox = await page.locator(".composer-prompt").boundingBox();
+        const actionBox = await page.locator(".composer-action").boundingBox();
+        const toolbarBox = await page
+          .locator(".composer-toolbar")
+          .boundingBox();
+        if (!promptBox || !actionBox || !toolbarBox)
+          throw new Error("Missing composer layout");
+        expect(actionBox.x).toBeGreaterThanOrEqual(
+          promptBox.x + promptBox.width,
+        );
+        expect(actionBox.y).toBeLessThan(promptBox.y + promptBox.height);
+        expect(actionBox.y + actionBox.height).toBeGreaterThan(promptBox.y);
+        expect(actionBox.width).toBeGreaterThanOrEqual(44);
+        expect(actionBox.height).toBeGreaterThanOrEqual(44);
+        expect(toolbarBox.height).toBeLessThanOrEqual(48);
+        expect(
+          Math.abs(promptBox.height - actionBox.height),
+        ).toBeLessThanOrEqual(1);
+        expect(Math.abs(promptBox.y - actionBox.y)).toBeLessThanOrEqual(1);
+        const iconSizes = await page
+          .locator(
+            ".composer-action svg, .composer-toolbar-start button svg, .composer-model-summary > svg",
+          )
+          .evaluateAll((nodes) =>
+            nodes.map((node) => {
+              const box = node.getBoundingClientRect();
+              return { width: box.width, height: box.height };
+            }),
+          );
+        expect(iconSizes.length).toBe(6);
+        const imageTriggerBox = await page
+          .getByRole("button", { name: "添加图片", exact: true })
+          .boundingBox();
+        expect(imageTriggerBox?.width).toBe(44);
+        expect(imageTriggerBox?.height).toBe(44);
+        for (const icon of iconSizes) {
+          expect(icon.width).toBeGreaterThanOrEqual(16);
+          expect(icon).toEqual(iconSizes[0]);
+        }
+        const modelFont = await modelSummary.evaluate(
+          (node) => getComputedStyle(node).fontSize,
+        );
+        expect(modelFont).toBe(
+          await input.evaluate((node) => getComputedStyle(node).fontSize),
+        );
+        const modelAlignment = await modelSummary.evaluate((node) => {
+          const edge = node
+            .closest(".composer-toolbar-end")
+            ?.getBoundingClientRect().right;
+          const caret = node
+            .querySelector("svg:last-child")
+            ?.getBoundingClientRect().right;
+          const style = getComputedStyle(node);
+          return {
+            edge,
+            caret,
+            inset:
+              Number.parseFloat(style.paddingRight) +
+              Number.parseFloat(style.borderRightWidth),
+          };
+        });
+        if (
+          modelAlignment.edge === undefined ||
+          modelAlignment.caret === undefined
+        )
+          throw new Error("Missing model alignment anchors");
+        expect(
+          Math.abs(
+            modelAlignment.edge - modelAlignment.caret - modelAlignment.inset,
+          ),
+        ).toBeLessThanOrEqual(1);
+        for (const name of ["运行模式", "执行权限"]) {
+          const box = await page
+            .getByRole("button", { name, exact: true })
+            .boundingBox();
+          if (!box) throw new Error(`Missing ${name}`);
+          expect(box.width).toBeGreaterThanOrEqual(44);
+          expect(box.height).toBeGreaterThanOrEqual(44);
+          expect(Math.abs(box.height - toolbarBox.height)).toBeLessThanOrEqual(
+            1,
+          );
+          expect(Math.abs(box.y - toolbarBox.y)).toBeLessThanOrEqual(1);
+        }
+        expect(await page.locator(".composer-queue-actions").count()).toBe(0);
+        expect(
+          await page
+            .locator('.composer-toolbar [aria-label="会话模型来源"]')
+            .count(),
+        ).toBe(0);
       }
-      const modelFont = await modelSummary.evaluate(node => getComputedStyle(node).fontSize);
-      expect(modelFont).toBe(await input.evaluate(node => getComputedStyle(node).fontSize));
-      const modelAlignment = await modelSummary.evaluate(node => {
-        const edge = node.closest(".composer-toolbar-end")?.getBoundingClientRect().right;
-        const caret = node.querySelector("svg:last-child")?.getBoundingClientRect().right;
-        const style = getComputedStyle(node);
-        return { edge, caret, inset: Number.parseFloat(style.paddingRight) + Number.parseFloat(style.borderRightWidth) };
-      });
-      if (modelAlignment.edge === undefined || modelAlignment.caret === undefined) throw new Error("Missing model alignment anchors");
-      expect(Math.abs(modelAlignment.edge - modelAlignment.caret - modelAlignment.inset)).toBeLessThanOrEqual(1);
-      for (const name of ["运行模式", "执行权限"]) {
-        const box = await page.getByRole("button", { name, exact: true }).boundingBox();
-        if (!box) throw new Error(`Missing ${name}`);
-        expect(box.width).toBeGreaterThanOrEqual(44);
-        expect(box.height).toBeGreaterThanOrEqual(44);
-        expect(Math.abs(box.height - toolbarBox.height)).toBeLessThanOrEqual(1);
-        expect(Math.abs(box.y - toolbarBox.y)).toBeLessThanOrEqual(1);
-      }
-      expect(await page.locator(".composer-queue-actions").count()).toBe(0);
-      expect(await page.locator('.composer-toolbar [aria-label="会话模型来源"]').count()).toBe(0);
-    }
     await modelSummary.click();
     await page.locator(".composer-model-panel").waitFor();
-    for (const width of [390, 1440]) for (const theme of ["light", "dark"]) {
-      await page.setViewportSize({ width, height: 900 });
-      await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-      await page.screenshot({ path: resolve(`.build/design-fixes-ui/steering-model-panel-${width}-${theme}.png`), animations: "disabled" });
-    }
+    for (const width of [390, 1440])
+      for (const theme of ["light", "dark"]) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.evaluate((value) => {
+          document.documentElement.dataset.theme = value;
+        }, theme);
+        await page.screenshot({
+          path: resolve(
+            `.build/design-fixes-ui/steering-model-panel-${width}-${theme}.png`,
+          ),
+          animations: "disabled",
+        });
+      }
     await page.keyboard.press("Escape");
-    await page.reload(); await page.addStyleTag({ content: css }); await page.addScriptTag({ content: js });
+    await page.reload();
+    await page.addStyleTag({ content: css });
+    await page.addScriptTag({ content: js });
     await page.getByRole("button", { name: "打开 A", exact: true }).click();
-    await expect.poll(() => page.locator(".composer-status").innerText()).toContain("已暂停");
-    expect(await page.evaluate(() => Reflect.get(window, "fixture").starts.length)).toBe(0);
+    await expect
+      .poll(() => page.locator(".composer-status").innerText())
+      .toContain("已暂停");
+    expect(
+      await page.evaluate(() => Reflect.get(window, "fixture").starts.length),
+    ).toBe(0);
     expect(errors).toEqual([]);
-  } finally { await browser.close(); }
+  } finally {
+    await browser.close();
+  }
 }, 30000);

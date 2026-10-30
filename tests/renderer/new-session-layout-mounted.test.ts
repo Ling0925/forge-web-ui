@@ -53,12 +53,16 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
 
   const browser = await chromium.launch({
     headless: true,
-    ...(process.env.FORGE_BROWSER_EXECUTABLE ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE } : {}),
+    ...(process.env.FORGE_BROWSER_EXECUTABLE
+      ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
+      : {}),
   });
 
   try {
     // 1. Verify on empty content: no spurious scrolling, composer fixed at bottom
-    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    const page = await browser.newPage({
+      viewport: { width: 1280, height: 800 },
+    });
     await page.setContent(`<!DOCTYPE html><html><head><style>${css}</style></head><body><div id="root"></div><script>
       window.__empty = true;
       ${js}
@@ -82,7 +86,9 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
     // workbench-main must NOT be scrollable
     expect(emptyMetrics.mainScrollHeight).toBe(emptyMetrics.mainClientHeight);
     // wb-new-session-scroll must NOT be scrollable when content fits
-    expect(emptyMetrics.scrollScrollHeight).toBe(emptyMetrics.scrollClientHeight);
+    expect(emptyMetrics.scrollScrollHeight).toBe(
+      emptyMetrics.scrollClientHeight,
+    );
     // composer is positioned near the bottom of viewport (800 - 24px margin = 776px)
     expect(emptyMetrics.composerBottom).toBeGreaterThanOrEqual(750);
     expect(emptyMetrics.composerBottom).toBeLessThanOrEqual(800);
@@ -90,7 +96,9 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
     await page.close();
 
     // 2. Verify with tasks on compact viewport: top scroll area scrolls, composer stays fixed and does not move
-    const compactPage = await browser.newPage({ viewport: { width: 1280, height: 500 } });
+    const compactPage = await browser.newPage({
+      viewport: { width: 1280, height: 500 },
+    });
     await compactPage.setContent(`<!DOCTYPE html><html><head><style>${css}</style></head><body><div id="root"></div><script>
       window.__empty = false;
       ${js}
@@ -105,7 +113,8 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
         mainScrollable: (main?.scrollHeight ?? 0) > (main?.clientHeight ?? 0),
         composerBottom: composer?.getBoundingClientRect().bottom ?? 0,
         composerTop: composer?.getBoundingClientRect().top ?? 0,
-        scrollCanScroll: (scroll?.scrollHeight ?? 0) > (scroll?.clientHeight ?? 0),
+        scrollCanScroll:
+          (scroll?.scrollHeight ?? 0) > (scroll?.clientHeight ?? 0),
       };
     });
 
@@ -130,8 +139,12 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
 
     expect(afterScroll.scrollTop).toBeGreaterThan(0);
     // Composer must remain firmly in place: bottom and top coordinates must not shift with scroll!
-    expect(Math.abs(afterScroll.composerBottom - beforeScroll.composerBottom)).toBeLessThan(1);
-    expect(Math.abs(afterScroll.composerTop - beforeScroll.composerTop)).toBeLessThan(1);
+    expect(
+      Math.abs(afterScroll.composerBottom - beforeScroll.composerBottom),
+    ).toBeLessThan(1);
+    expect(
+      Math.abs(afterScroll.composerTop - beforeScroll.composerTop),
+    ).toBeLessThan(1);
 
     await compactPage.close();
   } finally {
