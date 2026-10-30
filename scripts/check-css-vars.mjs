@@ -5,8 +5,9 @@
 // An undefined property silently invalidates its declaration at runtime.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("../src/renderer", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../src/renderer", import.meta.url));
 const files = [];
 (function walk(dir) {
   for (const name of readdirSync(dir)) {
