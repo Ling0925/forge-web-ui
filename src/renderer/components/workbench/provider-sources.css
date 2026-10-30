@@ -102,23 +102,7 @@
   overflow-wrap: anywhere;
 }
 
-.provider-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 7px;
-  border-radius: var(--radius-full);
-  background-color: var(--surface-soft);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  font-size: var(--text-2xs);
-  font-weight: 500;
-  line-height: 1.4;
-  white-space: nowrap;
-}
 
-.provider-tag.is-muted {
-  color: var(--text-muted);
-}
 
 .provider-source-protocol {
   flex-shrink: 0;

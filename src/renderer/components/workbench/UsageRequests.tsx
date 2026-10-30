@@ -4,6 +4,7 @@ import { shallowEqual, useWorkbenchActions, useWorkbenchSelector } from "../../s
 import { EmptyState } from "../primitives/EmptyState";
 import { Button } from "../primitives/Button";
 import { type BadgeTone, ToneBadge } from "../primitives/StatusBadge";
+import { Tag } from "../primitives/Tag";
 
 const pageSize = 50;
 
@@ -266,7 +267,7 @@ export function UsageRequests({
         <div className="usage-section-header">
           <div className="usage-section-title-group">
             <span className="usage-section-title">请求明细记录</span>
-            <span className="usage-kpi-badge">{requests.length} 条</span>
+            <Tag>{requests.length} 条</Tag>
           </div>
           {pageCount > 1 && (
             <nav className="usage-request-pagination" aria-label="请求记录分页">

@@ -38,6 +38,7 @@ import { EmptyState } from "../primitives/EmptyState";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
+import { Tag } from "../primitives/Tag";
 import { AgentProfilesPanel } from "./AgentProfilesPanel";
 import { McpPanel } from "./McpPanel";
 import { PluginPanel } from "./PluginPanel";
@@ -717,7 +718,7 @@ export function Settings() {
                       <div className="provider-inference-info">
                         <div className="provider-inference-title-row">
                           <h3>默认思考等级</h3>
-                          <span className="provider-tag">通用推理偏好</span>
+                          <Tag>通用推理偏好</Tag>
                         </div>
                         <p>
                           适用于支持思考参数的模型；未单独定制思考等级的模型将跟随此设定，修改后通过底部保存设置。
@@ -887,9 +888,9 @@ export function Settings() {
                           <div className="execution-panel-title-wrap">
                             <div className="execution-panel-title-row">
                               <h3>默认权限</h3>
-                              <span className="execution-panel-tag">
+                              <Tag tone="muted">
                                 新建运行策略
-                              </span>
+                              </Tag>
                             </div>
                             <p>
                               为新建会话与后续发起的运行设定默认安全边界；切换默认策略不会自动提升当前正在运行的任务权限。
@@ -1036,9 +1037,9 @@ export function Settings() {
                                 <div className="execution-panel-title-wrap">
                                   <div className="execution-panel-title-row">
                                     <h3>请求空闲超时</h3>
-                                    <span className="execution-panel-tag">
+                                    <Tag tone="muted">
                                       流式保活阈值
-                                    </span>
+                                    </Tag>
                                   </div>
                                   <p>
                                     限制单次模型请求在流式输出期间的最大静默等待时间；只中断单次请求的空闲，不限制任务总时长。
@@ -1160,9 +1161,9 @@ export function Settings() {
                                 <div className="execution-panel-title-wrap">
                                   <div className="execution-panel-title-row">
                                     <h3>上下文压缩预算</h3>
-                                    <span className="execution-panel-tag">
+                                    <Tag tone="muted">
                                       自动摘要与检索
-                                    </span>
+                                    </Tag>
                                   </div>
                                   <p>
                                     自动压缩保留可检索的原始历史。压缩影响后续请求，不会删除聊天或清零累计用量。
@@ -1264,11 +1265,11 @@ export function Settings() {
                           <div className="execution-panel-title-wrap">
                             <div className="execution-panel-title-row">
                               <h4>逐模型窗口覆盖</h4>
-                              <span className="execution-panel-tag">
+                              <Tag tone="muted">
                                 {draft.modelContextWindows.length
                                   ? `${draft.modelContextWindows.length} 项覆盖`
                                   : "最高优先级"}
-                              </span>
+                              </Tag>
                             </div>
                             <p>
                               填写精确模型

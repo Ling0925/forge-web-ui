@@ -34,6 +34,7 @@ import { Select } from "../primitives/Select";
 import { Dialog } from "./Dialog";
 import "./model-access.css";
 import { IconButton } from "../primitives/IconButton";
+import { Tag } from "../primitives/Tag";
 
 export type ProviderProtocol = NonNullable<PublicProviderSource["apiMode"]>;
 export type AccountQuota = Extract<
@@ -2365,11 +2366,11 @@ export function CredentialsEditor({
                   }
                 />
               </label>
-              <span className="model-access-tag">
+              <Tag>
                 {credential.type === "account"
                   ? `账号${credential.platform ? ` · ${credential.platform}` : ""}`
                   : "API Key"}
-              </span>
+              </Tag>
               <span className="model-access-status">
                 {statusLabel(credential.status)}
               </span>
@@ -2640,7 +2641,7 @@ export function AccountLoginPanel({
             <span className="model-access-status">{login.account.user}</span>
           )}
           {login.account?.plan && (
-            <span className="model-access-tag">{login.account.plan}</span>
+            <Tag>{login.account.plan}</Tag>
           )}
         </div>
       )}
@@ -2726,13 +2727,13 @@ export function ImportPanel({
         </div>
         <div className="model-access-import-summary-meta">
           {preview ? (
-            <span className="model-access-tag is-highlight">
+            <Tag tone="accent">
               待导入 {selected.size}/{preview.sources.length}
-            </span>
+            </Tag>
           ) : message ? (
-            <span className="model-access-tag is-success">{message}</span>
+            <Tag tone="success">{message}</Tag>
           ) : (
-            <span className="model-access-tag">JSON / 链接</span>
+            <Tag>JSON / 链接</Tag>
           )}
           <CaretDown
             size={14}
@@ -2879,12 +2880,12 @@ export function ImportPanel({
                       )}
                     </div>
                     <div className="model-access-preview-badges">
-                      <span className="model-access-tag">
+                      <Tag>
                         {source.model || "未指定模型"}
-                      </span>
-                      <span className="model-access-tag">
+                      </Tag>
+                      <Tag>
                         {source.credentialCount} 凭据
-                      </span>
+                      </Tag>
                       {source.warnings.map((warning) => (
                         <span
                           className="model-access-status is-error model-access-preview-warning"
@@ -3088,14 +3089,14 @@ export function RouteGroupsPanel({
                       aria-hidden="true"
                     />
                     <strong>{group.label}</strong>
-                    <span
-                      className="model-access-tag is-strategy"
+                    <Tag
+                      tone="accent"
                       title={strategyMeta.desc}
                     >
                       {strategyMeta.badge} · {group.strategy}
-                    </span>
+                    </Tag>
                     {group.sticky && (
-                      <span className="model-access-tag is-sticky">黏性</span>
+                      <Tag tone="success">黏性</Tag>
                     )}
                     <span className="model-access-status">
                       {group.members.length} 个成员

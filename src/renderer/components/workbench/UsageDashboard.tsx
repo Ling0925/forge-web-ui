@@ -35,6 +35,7 @@ import { UsageRequests } from "./UsageRequests";
 import "./usage-dashboard.css";
 import { Button } from "../primitives/Button";
 import { IconButton } from "../primitives/IconButton";
+import { Tag } from "../primitives/Tag";
 import { useDismiss } from "../primitives/useDismiss";
 
 const usageTabs = [
@@ -1117,9 +1118,9 @@ export function UsageDashboard() {
                         <Database size={15} />
                         Token 结构与缓存效率
                       </span>
-                      <span className="usage-kpi-badge">
+                      <Tag>
                         缓存率 {percent(data.averageCacheRate)}
-                      </span>
+                      </Tag>
                     </div>
 
                     {compositionTotal === 0 ? (
@@ -1260,9 +1261,9 @@ export function UsageDashboard() {
                         <Cpu size={15} />
                         模型消耗分布
                       </span>
-                      <span className="usage-kpi-badge">
+                      <Tag>
                         {data.models.length} 个模型
-                      </span>
+                      </Tag>
                     </div>
 
                     {data.models.length === 0 ? (
@@ -1394,9 +1395,9 @@ export function UsageDashboard() {
                         <Lightning size={15} />
                         模型速度与耗时对比
                       </span>
-                      <span className="usage-kpi-badge">
+                      <Tag>
                         {requestAnalytics.modelPerfList.length} 个模型
-                      </span>
+                      </Tag>
                     </div>
 
                     {requestAnalytics.modelPerfList.length === 0 ? (
@@ -1622,9 +1623,9 @@ export function UsageDashboard() {
                       <Lightning size={15} />
                       消耗排名前列的会话
                     </span>
-                    <span className="usage-kpi-badge">
+                    <Tag>
                       Top {data.topSessions.length}
-                    </span>
+                    </Tag>
                   </div>
 
                   {data.topSessions.length === 0 ? (
@@ -1727,9 +1728,9 @@ export function UsageDashboard() {
                         <ArrowsClockwise size={15} />
                         来源调用统计
                       </span>
-                      <span className="usage-kpi-badge">
+                      <Tag>
                         {data.routes.length} 条
-                      </span>
+                      </Tag>
                     </div>
 
                     <div className="usage-table-wrapper">

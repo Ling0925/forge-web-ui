@@ -25,6 +25,7 @@ import { Checkbox } from "../primitives/Checkbox";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
+import { Tag } from "../primitives/Tag";
 import { Dialog } from "./Dialog";
 import {
   type AccessDraft,
@@ -1049,21 +1050,21 @@ export function ProviderSources({
                           {isDefault && (
                             <span className="provider-current">默认</span>
                           )}
-                          <span className="provider-tag">
+                          <Tag>
                             {item.credentials?.length ?? 1} 凭据
-                          </span>
-                          <span className="provider-tag is-muted">
+                          </Tag>
+                          <Tag tone="muted">
                             {item.hasApiKey ? "已保存密钥" : "无密钥"}
-                          </span>
+                          </Tag>
                           {overrideCount > 0 && (
-                            <span className="provider-tag is-customized">
+                            <Tag tone="accent">
                               已定制 {overrideCount} 个模型
-                            </span>
+                            </Tag>
                           )}
                           {meta?.stale && catalog && catalog.length > 0 && (
-                            <span className="provider-tag is-stale">
+                            <Tag tone="warning">
                               已过期
-                            </span>
+                            </Tag>
                           )}
                         </span>
                         <span className="provider-source-protocol">

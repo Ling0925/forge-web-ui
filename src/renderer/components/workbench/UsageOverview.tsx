@@ -29,6 +29,7 @@ import { compactTokens } from "../../state/session-usage";
 import type { ActiveRunState } from "../../state/workbench-reducer";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
+import { Tag } from "../primitives/Tag";
 
 export interface ProviderNode3D {
   readonly id: string;
@@ -1776,9 +1777,9 @@ export function UsageOverview({
             <div className="usage-3d-sidebar-block">
               <div className="usage-3d-sidebar-head">
                 <span>当前活跃能量通道 (会话 & 子代理)</span>
-                <span className="usage-kpi-badge">
+                <Tag>
                   {activeConduits.length} 条
-                </span>
+                </Tag>
               </div>
 
               {activeConduits.length === 0 ? (
@@ -1848,9 +1849,9 @@ export function UsageOverview({
             <div className="usage-3d-sidebar-block">
               <div className="usage-3d-sidebar-head">
                 <span>周边供应商与模型节点</span>
-                <span className="usage-kpi-badge">
+                <Tag>
                   {topology.providers.length} 源 / {topology.models.length} 模型
-                </span>
+                </Tag>
               </div>
               <div className="usage-3d-provider-list">
                 {topology.providers.length === 0 && (
