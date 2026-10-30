@@ -395,8 +395,28 @@
   justify-content: space-between;
   gap: 6px;
   margin-bottom: 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Flattened groups need no rule under their title: the hairline between
+   groups already separates them. */
+.wb-app .wb-inspector .inspector-section > .inspector-card-header,
+.wb-app .wb-inspector .inspector-overview > .inspector-card-header {
   padding-bottom: 0;
   border-bottom: 0;
+}
+
+/* The session overview is a group like the sections below it, not a card. */
+.wb-app .wb-inspector .inspector-overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-1);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .wb-inspector .inspector-card-title {

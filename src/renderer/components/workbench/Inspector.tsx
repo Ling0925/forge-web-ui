@@ -372,7 +372,7 @@ export function Inspector({
                       onChange={setPlanSubTab}
                       items={[
                         { id: "progress", label: "计划进度" },
-                        { id: "plan", label: "Plan" },
+                        { id: "plan", label: "规划文档" },
                       ]}
                     />
                     <div

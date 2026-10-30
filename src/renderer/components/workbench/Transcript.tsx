@@ -255,7 +255,14 @@ export function PlanStageDivider({
           Math.round((actualInProgress / actualTotal) * 100),
         )
       : 0;
-  const countText = actualTotal > 0 ? `${actualCompleted}/${actualTotal}` : "";
+  // Position, not tally: before the first step completes "0/4" read as
+  // "nothing done" while the title already names the step being worked on.
+  const countText =
+    actualTotal === 0
+      ? ""
+      : actualCompleted >= actualTotal
+        ? `${actualTotal}/${actualTotal} 完成`
+        : `第 ${Math.min(actualCompleted + 1, actualTotal)}/${actualTotal} 步`;
 
   return (
     <div className="transcript-stage-divider">

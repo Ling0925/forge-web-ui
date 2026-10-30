@@ -166,7 +166,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           path: resolve(output, `forge-inspector-plan-${width}-${theme}.png`),
           animations: "disabled",
         });
-        await page.getByRole("tab", { name: "Plan", exact: true }).click();
+        await page.getByRole("tab", { name: "规划文档", exact: true }).click();
         expect(
           await page.getByText("真实计划说明", { exact: true }).isVisible(),
         ).toBe(true);

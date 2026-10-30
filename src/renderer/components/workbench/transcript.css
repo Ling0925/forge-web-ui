@@ -37,16 +37,18 @@
 }
 
 .transcript-stage-title {
-  flex-shrink: 0;
-  max-width: 55%;
+  flex: 0 1 auto;
+  max-width: 70%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
+/* A short meter, not a full-width bar: the Inspector owns the detailed
+   progress view, the transcript only marks where the work is. */
 .transcript-stage-track {
-  flex: 1;
+  flex: 0 0 48px;
   display: flex;
   align-items: stretch;
   min-width: 48px;
@@ -76,42 +78,7 @@
   flex-shrink: 0;
   border-radius: 0 var(--radius-full) var(--radius-full) 0;
   background: color-mix(in srgb, var(--accent) 35%, transparent);
-  overflow: hidden;
   transition: width var(--transition-normal) ease;
-}
-
-.transcript-stage-fill-active::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--accent) 45%,
-    color-mix(in srgb, var(--accent) 72%, #ffffff) 60%,
-    var(--accent) 75%,
-    transparent 100%
-  );
-  animation: transcript-stage-progress-flow 1.6s cubic-bezier(0.4, 0, 0.2, 1)
-    infinite;
-}
-
-@keyframes transcript-stage-progress-flow {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .transcript-stage-fill-active::after {
-    animation: none;
-    transform: none;
-    opacity: 0.65;
-  }
 }
 
 .transcript-stage-count {
@@ -318,8 +285,20 @@
   position: relative;
 }
 
-.wb-app .transcript-turn .message-user .message-header {
-  padding-right: 136px;
+/* Turn actions are revealed on hover or keyboard focus instead of reserving
+   a 136px gutter in every user block. Touch pointers keep them visible. */
+.transcript-turn-actions {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+.wb-app .message-user:hover .transcript-turn-actions,
+.wb-app .message-user:focus-within .transcript-turn-actions {
+  opacity: 1;
+}
+@media (hover: none) {
+  .transcript-turn-actions {
+    opacity: 1;
+  }
 }
 
 .transcript-turn-actions {

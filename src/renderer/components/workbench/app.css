@@ -209,8 +209,11 @@
   background: var(--border-hover);
   flex-shrink: 0;
 }
+.wb-app .message-user .message-header {
+  font-weight: 500;
+}
 .wb-app .message-user .message-header::before {
-  background: var(--accent);
+  background: var(--border-hover);
 }
 .wb-app .message-assistant.message-streaming .message-header::before {
   background: var(--accent);
@@ -595,6 +598,9 @@
 .markdown-content ul,
 .markdown-content ol {
   margin: 0.75em 0;
+}
+.markdown-content > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+  max-width: var(--prose-measure);
 }
 .markdown-content h1,
 .markdown-content h2,

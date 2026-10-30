@@ -10,7 +10,8 @@
 :root {
   /* Typography */
   --font-sans: "Geist Variable", "Geist", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
   --font-mono: "Geist Mono Variable", "Geist Mono", "SFMono-Regular",
     "Cascadia Mono", Menlo, Consolas, monospace;
 
@@ -77,6 +78,9 @@
   --control-height-sm: 24px;
   --control-height-lg: 32px;
   --reading-measure: 760px;
+  /* Running prose inside the reading column; code blocks and tables keep the
+     full --reading-measure. */
+  --prose-measure: 720px;
   /* Compact phone navigation bar; also the offset reserved for it in the
      stacked mobile layout so the reading flow never hides behind it. */
   --mobile-nav-height: 56px;

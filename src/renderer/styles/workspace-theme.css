@@ -21,8 +21,10 @@
   /* Ink levels (primary > secondary > muted >= tertiary > disabled).
      muted / tertiary stay >= 4.5:1 on the canvas; disabled is decorative. */
   --text-primary: #292824;
-  --text-secondary: #68665f;
+  --text-secondary: #57554f;
   --text-muted: #716e66;
+  /* Composer usage bar keeps its previous ink (intentionally untouched). */
+  --composer-usage-ink: #68665f;
   --text-tertiary: #716e66;
   --text-disabled: #9c998f;
 
@@ -94,6 +96,7 @@
   /* Four distinct ink levels; tertiary stays >= 4.5:1 on canvas / elevated. */
   --text-primary: #eeede8;
   --text-secondary: #b3b0a8;
+  --composer-usage-ink: #b3b0a8;
   --text-muted: #a19e96;
   --text-tertiary: #8f8c84;
   --text-disabled: #6b6862;
@@ -144,6 +147,9 @@
   --chart-heat: #1c1b1a, #dc9477, #f2c4ae;
 }
 
+.composer-usage {
+  --text-secondary: var(--composer-usage-ink);
+}
 .wb-app .workbench-task-header {
   border-bottom-color: transparent;
   padding-inline: var(--space-6);

@@ -215,7 +215,7 @@ describe("Transcript Turn partitioning and grouping", () => {
     expect(html).toContain('class="transcript-stage-fill-active"');
     expect(html).toContain('style="width:33%"');
     expect(html).toContain('class="transcript-stage-count"');
-    expect(html).toContain("1/3");
+    expect(html).toContain("第 2/3 步");
   });
 
   it("renders animated active progress segment for in-progress stage at 0/3 and omits it when all steps are completed", () => {
@@ -249,7 +249,7 @@ describe("Transcript Turn partitioning and grouping", () => {
     expect(initialHtml).toContain(
       'class="transcript-stage-fill-active" style="width:33%"',
     );
-    expect(initialHtml).toContain("0/3");
+    expect(initialHtml).toContain("第 1/3 步");
 
     const completedHtml = renderToStaticMarkup(
       createElement(PlanStageDivider, {
@@ -270,7 +270,7 @@ describe("Transcript Turn partitioning and grouping", () => {
       'class="transcript-stage-fill" style="width:100%"',
     );
     expect(completedHtml).not.toContain("transcript-stage-fill-active");
-    expect(completedHtml).toContain("3/3");
+    expect(completedHtml).toContain("3/3 完成");
   });
 
   it.each(["create_plan", "update_plan"])(
