@@ -9,7 +9,7 @@
   font-family: var(--font-mono);
   /* DESIGN.md §3 sets code at 13px/20px; 12.5px read a full step below the
      16px body and made code the least legible block in an answer. */
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: var(--leading-sm);
   max-width: 100%;
 }
@@ -154,7 +154,7 @@
   border-radius: var(--radius-card);
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: var(--leading-sm);
   max-width: 100%;
 }
@@ -215,11 +215,11 @@
 
 .diff-header-meta .diff-preview-action {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .diff-badge-suggested {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-family: var(--font-sans);
   font-weight: 500;
   padding: 1px 6px;
@@ -230,7 +230,7 @@
 }
 
 .diff-badge-applied {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-family: var(--font-sans);
   font-weight: 500;
   padding: 1px 6px;

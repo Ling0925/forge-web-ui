@@ -811,6 +811,7 @@ export function Settings() {
                           >
                             <div
                               className={`settings-theme-preview preview-${theme.value}`}
+                              data-theme={theme.value === "dark" ? "dark" : "light"}
                             >
                               <div className="preview-window-bar">
                                 <span className="window-dot" />
@@ -823,7 +824,10 @@ export function Settings() {
                                   <div className="preview-line xs" />
                                   <div className="preview-line sm" />
                                 </div>
-                                <div className="preview-main">
+                                <div
+                                  className="preview-main"
+                                  data-theme={theme.value === "light" ? undefined : "dark"}
+                                >
                                   <div className="preview-bubble received" />
                                   <div className="preview-bubble sent" />
                                 </div>

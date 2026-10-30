@@ -66,14 +66,14 @@
 }
 
 .sidebar-badge {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 1px 6px;
   border-radius: var(--radius-xs);
-  background-color: var(--accent-sage-soft);
-  color: var(--accent-sage);
+  background-color: var(--accent-soft);
+  color: var(--accent);
   border: 1px solid transparent;
 }
 
@@ -232,7 +232,7 @@
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -275,7 +275,7 @@
 
 .session-folder-count {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
@@ -291,7 +291,7 @@
   margin-right: 4px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--radius-xs, 4px);
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -306,9 +306,9 @@
 }
 
 .session-folder-create-btn:hover {
-  background-color: var(--surface-active, rgba(127, 127, 127, 0.15));
+  background-color: var(--surface-active);
   color: var(--text-primary);
-  border-color: var(--border-subtle, transparent);
+  border-color: var(--border-subtle);
 }
 
 .session-folder-create-btn:active {
@@ -376,7 +376,7 @@
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -392,7 +392,7 @@
 }
 
 .session-folder-more:focus-visible {
-  outline: 2px solid var(--accent, #3b82f6);
+  outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
 
@@ -483,7 +483,7 @@
 
 .session-item-time {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
   white-space: nowrap;
@@ -775,7 +775,7 @@
 .wb-status-dot[data-status="running"],
 .wb-status-dot[data-status="active"] {
   background-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-sage-soft);
+  box-shadow: 0 0 0 2px var(--accent-soft);
   animation: pulse-ring 2s infinite ease-out;
 }
 
