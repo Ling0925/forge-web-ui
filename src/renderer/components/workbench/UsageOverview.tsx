@@ -28,6 +28,7 @@ import { configuredModelIds } from "../../state/composer-model";
 import { compactTokens } from "../../state/session-usage";
 import type { ActiveRunState } from "../../state/workbench-reducer";
 import { Button } from "../primitives/Button";
+import { EmptyState } from "../primitives/EmptyState";
 
 export interface ProviderNode3D {
   readonly id: string;
@@ -468,16 +469,8 @@ export function buildEnergyNetworkTopology(
     });
   }
 
-  // Ensure at least one provider & model exist for the 3D periphery even on empty state
-  if (sourceById.size === 0) {
-    const fallbackModel = settings?.model?.trim() || "forge-default";
-    sourceById.set("default", {
-      id: "default",
-      label: "默认供应商",
-      models: new Set([fallbackModel]),
-      totalTokens: 0,
-    });
-  }
+  // No configured source and no recorded usage: leave the periphery empty so the
+  // view shows an honest empty state instead of a fabricated provider/model node.
 
   // Build session conduits and count active sessions per provider/model
   const modelSessionCounter = new Map<string, number>();
@@ -1763,6 +1756,10 @@ export function UsageOverview({
                 <span className="usage-3d-hover-readout">
                   {hoveredNodeLabel}
                 </span>
+              ) : topology.providers.length === 0 ? (
+                <span>
+                  尚未配置模型供应商，也没有用量记录；在设置中添加供应商后将显示供应商与模型节点
+                </span>
               ) : (
                 <span>
                   拖拽画布可 360° 旋转 3D 拓扑 · 会话越多能量线越密集、传输越快
@@ -1856,6 +1853,13 @@ export function UsageOverview({
                 </span>
               </div>
               <div className="usage-3d-provider-list">
+                {topology.providers.length === 0 && (
+                  <EmptyState
+                    variant="compact"
+                    title="暂无供应商与模型节点"
+                    description="在设置 → 模型接入中添加供应商后，这里会列出供应商及其模型。"
+                  />
+                )}
                 {topology.providers.map((prov) => {
                   const childModels = topology.models.filter(
                     (m) => m.providerId === prov.id,
