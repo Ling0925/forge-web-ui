@@ -6,6 +6,8 @@ export interface CollapsibleProps {
   readonly className?: string;
   readonly id?: string;
   readonly durationMs?: number;
+  /** Animate in on first mount when it starts open (default: start settled). */
+  readonly appear?: boolean;
 }
 
 /**
@@ -19,8 +21,9 @@ export function Collapsible({
   className = "",
   id,
   durationMs = 200,
+  appear = false,
 }: CollapsibleProps) {
-  const [mounted, setMounted] = useState(open);
+  const [mounted, setMounted] = useState(open && !appear);
   const [closing, setClosing] = useState(false);
   // A panel that mounts because it was opened (not one that starts open)
   // renders one frame at 0fr first, so the height grows instead of popping.

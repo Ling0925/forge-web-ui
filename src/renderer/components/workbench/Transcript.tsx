@@ -18,6 +18,7 @@ import {
   type ReactNode,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -568,7 +569,12 @@ function renderToolCard(
 ) {
   // Same row as every other state, so a call that never ran does not switch
   // to a different card shape.
-  if (item.status === "unexecuted")
+  // A live run records the call a moment before it starts; that row is the
+  // same running row, not a one-frame "未执行" flash.
+  if (
+    item.status === "unexecuted" &&
+    (resolveStatus?.(item) ?? "cancelled") === "cancelled"
+  )
     return (
       <ToolDisclosure
         key={item.id}
@@ -634,7 +640,13 @@ function renderToolCard(
         item.output.length > 24000 ||
         item.call.function.arguments.length > 12000
       }
-      status={resolveStatus ? resolveStatus(item) : item.status}
+      status={
+        resolveStatus
+          ? resolveStatus(item)
+          : item.status === "unexecuted"
+            ? "cancelled"
+            : item.status
+      }
       {...(item.durationMs === undefined
         ? {}
         : { durationMs: item.durationMs })}
@@ -955,7 +967,9 @@ export const StoredTranscript = memo(function StoredTranscript({
   const resolveStatus: ToolStatusResolver = (item) =>
     item.status !== "running"
       ? item.status === "unexecuted"
-        ? "cancelled"
+        ? live
+          ? "running"
+          : "cancelled"
         : item.status
       : approvalCallId === item.call.id
         ? "awaiting_approval"
@@ -1316,6 +1330,11 @@ export function Transcript() {
   // The inline card is the primary path only for the selected session's live
   // run; every other run (background, child) stays in the Inspector summary.
   const showInlineApproval = Boolean(sessionId && pendingApproval);
+  // The last approval stays mounted while its card collapses away.
+  const [shownApproval, setShownApproval] = useState(pendingApproval);
+  useEffect(() => {
+    if (pendingApproval) setShownApproval(pendingApproval);
+  }, [pendingApproval]);
   // Live rows of the running step, rendered by StoredTranscript inside the
   // active execution group (or after the last turn when there is none).
   const liveTail = (
@@ -1341,17 +1360,30 @@ export function Transcript() {
       {(run?.toolPreviews?.length ?? 0) > 0 && (
         <ToolPreviews previews={run?.toolPreviews ?? []} />
       )}
-      {showInlineApproval && pendingApproval && sessionId && (
-        <InlineApproval
-          key={pendingApproval.id}
-          request={pendingApproval}
-          sessionId={sessionId}
-          isSubmitting={Boolean(run?.isSubmittingApproval || run?.isCancelling)}
-          hasQueued={(run?.approvalQueue?.length ?? 0) > 1}
-          onDecide={(approved) =>
-            void answerApproval(sessionId, pendingApproval.id, approved)
-          }
-        />
+      {shownApproval && sessionId && (
+        // The card collapses (height + opacity) after a decision instead of
+        // vanishing in one frame, which jolted the bottom-pinned transcript.
+        <Collapsible
+          key={shownApproval.id}
+          appear
+          className="transcript-approval-collapse"
+          durationMs={320}
+          open={showInlineApproval && pendingApproval?.id === shownApproval.id}
+        >
+          <InlineApproval
+            request={shownApproval}
+            sessionId={sessionId}
+            isSubmitting={Boolean(
+              run?.isSubmittingApproval ||
+                run?.isCancelling ||
+                pendingApproval?.id !== shownApproval.id,
+            )}
+            hasQueued={(run?.approvalQueue?.length ?? 0) > 1}
+            onDecide={(approved) =>
+              void answerApproval(sessionId, shownApproval.id, approved)
+            }
+          />
+        </Collapsible>
       )}
     </>
   );

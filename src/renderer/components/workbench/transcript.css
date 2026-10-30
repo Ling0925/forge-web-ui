@@ -654,6 +654,13 @@
 .transcript-approval {
   gap: var(--space-2);
 }
+/* A symmetric curve: the default front-loaded ease moved the transcript by
+   most of the card height in the first frame of the collapse. */
+.smooth-collapse.transcript-approval-collapse {
+  transition-duration: 320ms, 240ms;
+  transition-timing-function: cubic-bezier(0.45, 0, 0.55, 1), ease;
+}
+
 .transcript-approval-title {
   font-size: var(--text-xs);
   font-weight: 600;
