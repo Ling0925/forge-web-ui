@@ -7,6 +7,7 @@ import {
   StoredTranscript,
   ToolPreviews,
   computeTurnSummary,
+  groupExecution,
   groupTurnEntries,
   partitionTurns,
 } from "../../src/renderer/components/workbench/Transcript";
@@ -317,6 +318,20 @@ describe("Transcript Turn partitioning and grouping", () => {
       expect(blocks[1].kind).toBe("single");
       expect(blocks[1].entry.item.id).toBe("plan-tool-1");
       expect(blocks[2].kind).toBe("tool_group");
+
+      // The plan bar heads an execution group holding the work after it;
+      // work before the first plan bar stays outside any group.
+      const sections = groupExecution(blocks);
+      expect(sections.map((section) => section.kind)).toEqual([
+        "loose",
+        "group",
+      ]);
+      const group = sections[1];
+      if (group?.kind !== "group") throw new Error("expected a group");
+      expect(group.header.entry.item.id).toBe("plan-tool-1");
+      expect(group.members.map(({ index }) => index)).toEqual([2]);
+      expect(group.complete).toBe(false);
+      expect(group.last).toBe(true);
     },
   );
 

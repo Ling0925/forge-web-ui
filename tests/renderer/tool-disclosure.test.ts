@@ -318,6 +318,32 @@ describe("tool disclosure row", () => {
     expect(html).toContain('data-status="failed"');
   });
 
+  it.each([
+    ["generating", "参数生成中"],
+    ["awaiting_approval", "等待批准"],
+    ["running", "执行中"],
+    ["completed", "完成"],
+    ["failed", "失败"],
+    ["cancelled", "已中断"],
+  ] as const)(
+    "keeps one row structure in the %s state so changes transition in place",
+    (status, label) => {
+      const html = render({
+        toolName: "run_command",
+        command: "npm test",
+        status,
+      });
+      // Every glyph layer is always mounted; only data-status selects one.
+      for (const glyph of ["spin", "wait", "done", "fail", "stop"])
+        expect(html).toContain(`tool-glyph tool-glyph-${glyph}`);
+      expect(html).toContain(
+        `class="tool-disclosure-status" data-status="${status}"`,
+      );
+      expect(html).toContain(label);
+      expect(html).toContain('class="tool-disclosure-header"');
+    },
+  );
+
   it("shows a measured duration when one is recorded", () => {
     const html = render({
       toolName: "read_file",

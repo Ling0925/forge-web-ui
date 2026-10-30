@@ -96,7 +96,8 @@
   opacity: 1;
 }
 
-.smooth-collapse.is-collapsing {
+.smooth-collapse.is-collapsing,
+.smooth-collapse.is-entering {
   grid-template-rows: 0fr;
   opacity: 0;
 }
@@ -404,6 +405,7 @@
   .modal-backdrop,
   .tool-disclosure,
   .tool-disclosure-body,
+  .smooth-collapse,
   .tool-call-group,
   .transcript-execution-items,
   .transcript-turn-collapsed-bar,
