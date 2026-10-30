@@ -3052,6 +3052,7 @@ export function RouteGroupsPanel({
           variant="secondary"
           icon={<Plus size={14} />}
           disabled={!sources.length}
+          title={sources.length ? undefined : "请先添加至少一个模型来源"}
           onClick={add}
         >
           添加路由组
