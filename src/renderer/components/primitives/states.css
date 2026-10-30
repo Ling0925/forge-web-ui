@@ -39,6 +39,47 @@
   margin-top: var(--space-2);
 }
 
+.empty-state-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Inline：设置页分组/列表内的空状态 */
+.empty-state-inline {
+  align-items: flex-start;
+  text-align: left;
+  max-width: none;
+  margin: 0;
+  padding: var(--space-4) var(--space-4);
+  gap: var(--space-2);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+
+.empty-state-inline .empty-state-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.empty-state-inline .empty-state-title {
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+.empty-state-inline .empty-state-description {
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+}
+
+.empty-state-inline .empty-state-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
 /* Error State */
 .error-state {
   display: flex;
