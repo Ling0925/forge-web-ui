@@ -209,8 +209,11 @@
   background: var(--border-hover);
   flex-shrink: 0;
 }
+.wb-app .message-user .message-header {
+  font-weight: 500;
+}
 .wb-app .message-user .message-header::before {
-  background: var(--accent);
+  background: var(--border-hover);
 }
 .wb-app .message-assistant.message-streaming .message-header::before {
   background: var(--accent);
@@ -596,6 +599,9 @@
 .markdown-content ol {
   margin: 0.75em 0;
 }
+.markdown-content > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+  max-width: var(--prose-measure);
+}
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3,
@@ -667,6 +673,30 @@
 .markdown-content th {
   font-weight: 600;
   border-bottom: 1px solid var(--border-subtle);
+  /* Short CJK headers must never break per character ("风/险"). */
+  white-space: nowrap;
+}
+/* Tables are reference material: one step below body prose so a 4-column
+   table fits the reading column without per-character wrapping. */
+.markdown-content table {
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+}
+.markdown-content td {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.markdown-content tr:last-child td {
+  border-bottom: none;
+}
+/* Inline code as a quiet chip. Bare monospace inside CJK prose read as a font
+   fallback glitch; the chip makes identifiers intentional and scannable. */
+.markdown-content code:not(.markdown-code code) {
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-xs);
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 .agent-card {
   padding: var(--space-2-5);

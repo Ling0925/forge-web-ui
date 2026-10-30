@@ -16,6 +16,12 @@ export {
   type PlanStepItem,
 } from "./tool-disclosure/plans";
 
+/**
+ * The single tool-call row for every lifecycle state (generating → awaiting
+ * approval → running → completed / failed / cancelled). The DOM structure
+ * never changes between states: only `data-status` does, so colour, glyph and
+ * details transition in place instead of one component replacing another.
+ */
 export function ToolDisclosure(props: ToolDisclosureProps) {
   const {
     toolName,
@@ -24,7 +30,12 @@ export function ToolDisclosure(props: ToolDisclosureProps) {
     defaultExpanded,
     autoCollapsed = false,
     className = "",
+    detail,
+    meta,
+    footer,
   } = props;
+  // Arguments that are still streaming have nothing to disclose yet.
+  const expandable = status !== "generating";
   const model = createToolDisclosureModel(props);
   const {
     writesFiles,
@@ -85,31 +96,37 @@ export function ToolDisclosure(props: ToolDisclosureProps) {
       <button
         type="button"
         className="tool-disclosure-header"
+        disabled={!expandable}
         onClick={() => {
           manuallyToggled.current = true;
           setExpanded((value) => !value);
         }}
-        aria-expanded={expanded}
-        aria-controls={detailsId}
+        aria-expanded={expandable ? expanded : undefined}
+        aria-controls={expandable ? detailsId : undefined}
       >
         <div className="tool-disclosure-summary">
           <span className="tool-disclosure-icon" aria-hidden="true">
             {getToolIcon(toolName)}
           </span>
           <span className="tool-disclosure-label">{label}</span>
-          {displayTarget && (
-            <span
-              className="tool-disclosure-target"
-              title={readPath || displayTarget}
-            >
-              {displayTarget}
-            </span>
+          {detail !== undefined ? (
+            <span className="tool-disclosure-target">{detail}</span>
+          ) : (
+            displayTarget && (
+              <span
+                className="tool-disclosure-target"
+                title={readPath || displayTarget}
+              >
+                {displayTarget}
+              </span>
+            )
           )}
         </div>
         <div className="tool-disclosure-meta">
           {status === "failed" && (
             <span className="tool-disclosure-failure">失败</span>
           )}
+          {meta}
           {diffTotals.added > 0 && (
             <span className="tool-diff-stat tool-diff-added">
               +{diffTotals.added}
@@ -140,9 +157,13 @@ export function ToolDisclosure(props: ToolDisclosureProps) {
         </div>
       </button>
 
-      <Collapsible open={expanded} id={detailsId}>
+      {footer}
+      <Collapsible open={expandable && expanded} id={detailsId}>
         <ToolDisclosureContent props={props} model={model} />
       </Collapsible>
     </section>
   );
 }
+
+/** Canonical name: the transcript's one tool-call component. */
+export const ToolCall = ToolDisclosure;

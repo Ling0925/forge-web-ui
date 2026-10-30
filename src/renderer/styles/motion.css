@@ -96,7 +96,8 @@
   opacity: 1;
 }
 
-.smooth-collapse.is-collapsing {
+.smooth-collapse.is-collapsing,
+.smooth-collapse.is-entering {
   grid-template-rows: 0fr;
   opacity: 0;
 }
@@ -286,6 +287,40 @@
   pointer-events: none;
 }
 
+/* Lists and quotes carry the caret on their last line of text; on the block
+   itself it dropped onto a line of its own below the final item. */
+.message-streaming
+  .markdown-content
+  > :is(ul, ol, blockquote):last-child:not(.markdown-code):not(
+    .markdown-table-scroll
+  )::after {
+  content: none;
+}
+.message-streaming
+  .markdown-content
+  > :is(ul, ol):last-child
+  > li:last-child:not(:has(> :is(p, ul, ol)))::after,
+.message-streaming
+  .markdown-content
+  > :is(ul, ol, blockquote):last-child
+  > :last-child:is(p, li)
+  > p:last-child::after,
+.message-streaming
+  .markdown-content
+  > blockquote:last-child
+  > p:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.15em;
+  margin-left: 3px;
+  vertical-align: -0.15em;
+  border-radius: var(--radius-2xs);
+  background: var(--accent);
+  animation: wb-caret-blink 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
 @keyframes wb-caret-blink {
   0%,
   100% {
@@ -370,6 +405,7 @@
   .modal-backdrop,
   .tool-disclosure,
   .tool-disclosure-body,
+  .smooth-collapse,
   .tool-call-group,
   .transcript-execution-items,
   .transcript-turn-collapsed-bar,
@@ -395,7 +431,15 @@
      keeps a readable solid colour instead of a frozen clipped gradient. */
   .message-streaming
     .markdown-content
-    > :last-child:not(.markdown-code):not(.markdown-table-scroll)::after {
+    > :last-child:not(.markdown-code):not(.markdown-table-scroll)::after,
+  .message-streaming
+    .markdown-content
+    > :is(ul, ol):last-child
+    > li:last-child::after,
+  .message-streaming
+    .markdown-content
+    > :is(ul, ol, blockquote):last-child
+    p:last-child::after {
     animation: none !important;
     opacity: 1;
   }

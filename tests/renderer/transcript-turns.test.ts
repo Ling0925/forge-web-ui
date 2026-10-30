@@ -7,6 +7,7 @@ import {
   StoredTranscript,
   ToolPreviews,
   computeTurnSummary,
+  groupExecution,
   groupTurnEntries,
   partitionTurns,
 } from "../../src/renderer/components/workbench/Transcript";
@@ -215,7 +216,7 @@ describe("Transcript Turn partitioning and grouping", () => {
     expect(html).toContain('class="transcript-stage-fill-active"');
     expect(html).toContain('style="width:33%"');
     expect(html).toContain('class="transcript-stage-count"');
-    expect(html).toContain("1/3");
+    expect(html).toContain("第 2/3 步");
   });
 
   it("renders animated active progress segment for in-progress stage at 0/3 and omits it when all steps are completed", () => {
@@ -249,7 +250,7 @@ describe("Transcript Turn partitioning and grouping", () => {
     expect(initialHtml).toContain(
       'class="transcript-stage-fill-active" style="width:33%"',
     );
-    expect(initialHtml).toContain("0/3");
+    expect(initialHtml).toContain("第 1/3 步");
 
     const completedHtml = renderToStaticMarkup(
       createElement(PlanStageDivider, {
@@ -270,7 +271,7 @@ describe("Transcript Turn partitioning and grouping", () => {
       'class="transcript-stage-fill" style="width:100%"',
     );
     expect(completedHtml).not.toContain("transcript-stage-fill-active");
-    expect(completedHtml).toContain("3/3");
+    expect(completedHtml).toContain("3/3 完成");
   });
 
   it.each(["create_plan", "update_plan"])(
@@ -317,6 +318,20 @@ describe("Transcript Turn partitioning and grouping", () => {
       expect(blocks[1].kind).toBe("single");
       expect(blocks[1].entry.item.id).toBe("plan-tool-1");
       expect(blocks[2].kind).toBe("tool_group");
+
+      // The plan bar heads an execution group holding the work after it;
+      // work before the first plan bar stays outside any group.
+      const sections = groupExecution(blocks);
+      expect(sections.map((section) => section.kind)).toEqual([
+        "loose",
+        "group",
+      ]);
+      const group = sections[1];
+      if (group?.kind !== "group") throw new Error("expected a group");
+      expect(group.header.entry.item.id).toBe("plan-tool-1");
+      expect(group.members.map(({ index }) => index)).toEqual([2]);
+      expect(group.complete).toBe(false);
+      expect(group.last).toBe(true);
     },
   );
 

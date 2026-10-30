@@ -45,7 +45,10 @@ export function createToolDisclosureModel({
   const isCommandTaskList =
     isCommandTask && Array.isArray(parsedOutputRecord?.tasks);
   const isConsole = isRunCommand || (isCommandTask && !isCommandTaskList);
-  const isWaiting = status === "running";
+  const isWaiting =
+    status === "running" ||
+    status === "awaiting_approval" ||
+    status === "generating";
   const label = friendlyLabel(toolName);
   const parsedParams = parseParams(parameters);
   const parameterPath =
@@ -272,8 +275,14 @@ export function createToolDisclosureModel({
     { added: 0, removed: 0 },
   );
 
-  const statusLabel =
-    status === "running" ? "执行中" : status === "completed" ? "完成" : "失败";
+  const statusLabel = {
+    generating: "参数生成中",
+    awaiting_approval: "等待批准",
+    running: "执行中",
+    completed: "完成",
+    failed: "失败",
+    cancelled: "已中断",
+  }[status];
 
   const explicitReason =
     result?.kind === "object" && typeof result.record.error === "string"

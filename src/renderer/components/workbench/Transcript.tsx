@@ -18,6 +18,7 @@ import {
   type ReactNode,
   memo,
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -54,9 +55,8 @@ import {
   type PlanItemData,
   PlanStepsList,
   ToolDisclosure,
+  type ToolDisclosureProps,
   extractPlanData,
-  friendlyLabel,
-  getToolIcon,
 } from "../primitives/ToolDisclosure";
 import { ImageAttachments } from "./ImageAttachments";
 import { Markdown } from "./Markdown";
@@ -89,40 +89,28 @@ export function ToolPreviews({
     >
       {previews.map((preview) => {
         const toolName = preview.name || "";
-        const label = friendlyLabel(toolName);
-        const icon = getToolIcon(toolName);
         const isCommand =
           toolName === "run_command" || toolName === "command_task";
         return (
-          <div
-            className={`tool-disclosure tool-live-item ${isCommand ? "is-command" : ""}`}
+          <ToolDisclosure
             key={preview.previewId}
-            data-status="generating"
-            data-tool={toolName}
-          >
-            <div className="tool-disclosure-header tool-live-header">
-              <div className="tool-disclosure-summary">
-                <span
-                  className="tool-disclosure-icon tool-live-icon"
-                  aria-hidden="true"
-                >
-                  {icon}
+            toolName={toolName}
+            status="generating"
+            className={`tool-live-item ${isCommand ? "is-command" : ""}`}
+            detail={
+              <>
+                <span className="tool-live-status">生成参数中</span>
+                <span className="tool-live-sep" aria-hidden="true">
+                  {" "}
+                  ·{" "}
                 </span>
-                <span className="tool-disclosure-label tool-live-name">
-                  {label}
+                <span className="tool-live-chars">
+                  {preview.argumentsChars} 字符
                 </span>
-                <span className="tool-disclosure-target">
-                  <span className="tool-live-status">生成参数中</span>
-                  <span className="tool-live-sep" aria-hidden="true">
-                    {" "}
-                    ·{" "}
-                  </span>
-                  <span className="tool-live-chars">
-                    {preview.argumentsChars} 字符
-                  </span>
-                </span>
-              </div>
-              <div className="tool-disclosure-meta">
+              </>
+            }
+            meta={
+              <>
                 {preview.linesAdded !== undefined && preview.linesAdded > 0 && (
                   <span
                     className="tool-diff-stat tool-diff-added tool-live-diff"
@@ -140,24 +128,23 @@ export function ToolPreviews({
                       -{preview.linesRemoved}
                     </span>
                   )}
-                <span className="tool-disclosure-status" data-status="running">
-                  <span className="tool-live-spinner" aria-hidden="true" />
-                </span>
-              </div>
-            </div>
-            {isCommand && (
-              <div className="tool-disclosure-body">
-                <div
-                  className="tool-terminal-card tool-live-command-hint"
-                  aria-hidden="true"
-                >
-                  <div className="tool-terminal-header">
-                    <span className="tool-live-skeleton" />
+              </>
+            }
+            footer={
+              isCommand && (
+                <div className="tool-disclosure-body">
+                  <div
+                    className="tool-terminal-card tool-live-command-hint"
+                    aria-hidden="true"
+                  >
+                    <div className="tool-terminal-header">
+                      <span className="tool-live-skeleton" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )
+            }
+          />
         );
       })}
     </div>
@@ -255,7 +242,14 @@ export function PlanStageDivider({
           Math.round((actualInProgress / actualTotal) * 100),
         )
       : 0;
-  const countText = actualTotal > 0 ? `${actualCompleted}/${actualTotal}` : "";
+  // Position, not tally: before the first step completes "0/4" read as
+  // "nothing done" while the title already names the step being worked on.
+  const countText =
+    actualTotal === 0
+      ? ""
+      : actualCompleted >= actualTotal
+        ? `${actualTotal}/${actualTotal} 完成`
+        : `第 ${Math.min(actualCompleted + 1, actualTotal)}/${actualTotal} 步`;
 
   return (
     <div className="transcript-stage-divider">
@@ -454,6 +448,68 @@ function groupTurnEntries(
   return blocks;
 }
 
+type ExecutionSection =
+  | {
+      readonly kind: "loose";
+      readonly block: TurnBlock;
+      readonly index: number;
+    }
+  | {
+      readonly kind: "group";
+      readonly header: Extract<TurnBlock, { readonly kind: "single" }>;
+      readonly index: number;
+      readonly members: { readonly block: TurnBlock; readonly index: number }[];
+      readonly complete: boolean;
+      readonly last: boolean;
+    };
+
+/**
+ * Each plan bar opens an execution group: the blocks after it (tool rows,
+ * reasoning, process text) up to the next plan bar belong to that step.
+ * Blocks before the first plan bar stay loose, exactly as before.
+ */
+export function groupExecution(
+  blocks: readonly TurnBlock[],
+): readonly ExecutionSection[] {
+  const sections: ExecutionSection[] = [];
+  let group: {
+    kind: "group";
+    header: Extract<TurnBlock, { readonly kind: "single" }>;
+    index: number;
+    members: { block: TurnBlock; index: number }[];
+    complete: boolean;
+    last: boolean;
+  } | null = null;
+  for (const [index, block] of blocks.entries()) {
+    const item = block.kind === "single" ? block.entry.item : undefined;
+    if (
+      block.kind === "single" &&
+      item?.kind === "tool" &&
+      ["create_plan", "update_plan"].includes(item.call.function.name) &&
+      item.status !== "failed"
+    ) {
+      const plan =
+        extractPlanData(item.output) ??
+        extractPlanData(item.call.function.arguments);
+      if (group) group.last = false;
+      group = {
+        kind: "group",
+        header: block,
+        index,
+        members: [],
+        complete: Boolean(
+          plan?.steps.length &&
+            plan.steps.every((step) => step.status === "completed"),
+        ),
+        last: true,
+      };
+      sections.push(group);
+    } else if (group) group.members.push({ block, index });
+    else sections.push({ kind: "loose", block, index });
+  }
+  return sections;
+}
+
 function computeTurnSummary(items: readonly TurnEntry[]): string {
   let toolCount = 0;
   let hasAssistant = false;
@@ -498,24 +554,37 @@ function findBackgroundCommand(
   return undefined;
 }
 
+type ToolCallStatus = ToolDisclosureProps["status"];
+/** Maps a recorded tool's status onto the live lifecycle the row displays. */
+type ToolStatusResolver = (
+  item: Extract<TimelineItem, { readonly kind: "tool" }>,
+) => ToolCallStatus;
+
 function renderToolCard(
   item: Extract<TimelineItem, { readonly kind: "tool" }>,
   index: number,
   phases: readonly number[],
   timeline?: readonly TimelineItem[],
+  resolveStatus?: ToolStatusResolver,
 ) {
-  if (item.status === "unexecuted")
+  // Same row as every other state, so a call that never ran does not switch
+  // to a different card shape.
+  // A live run records the call a moment before it starts; that row is the
+  // same running row, not a one-frame "未执行" flash.
+  if (
+    item.status === "unexecuted" &&
+    (resolveStatus?.(item) ?? "cancelled") === "cancelled"
+  )
     return (
-      <section
+      <ToolDisclosure
         key={item.id}
-        className="wb-stack tool-unexecuted message-evidence"
-      >
-        <strong>{item.call.function.name} · 无匹配执行记录</strong>
-        <p className="wb-muted">
-          已保存调用意图，但没有可可靠关联的执行或结果记录。
-        </p>
-        <code>{item.call.function.arguments.slice(0, 12000)}</code>
-      </section>
+        className="tool-unexecuted"
+        toolName={item.call.function.name}
+        status="cancelled"
+        detail="未执行 · 无匹配执行记录"
+        parameters={item.call.function.arguments.slice(0, 12000)}
+        output="已保存调用意图，但没有可可靠关联的执行或结果记录。"
+      />
     );
   let command =
     item.call.function.name === "run_command"
@@ -571,7 +640,13 @@ function renderToolCard(
         item.output.length > 24000 ||
         item.call.function.arguments.length > 12000
       }
-      status={item.status}
+      status={
+        resolveStatus
+          ? resolveStatus(item)
+          : item.status === "unexecuted"
+            ? "cancelled"
+            : item.status
+      }
       {...(item.durationMs === undefined
         ? {}
         : { durationMs: item.durationMs })}
@@ -592,6 +667,10 @@ function renderTimelineEntry(
     expanded: Readonly<Record<string, boolean>>;
     toggle(id: string): void;
   },
+  // Intermediate narration inside a turn: rendered as quieter process text
+  // and, after the first one, without repeating the author row.
+  step?: { readonly showAuthor: boolean },
+  resolveStatus?: ToolStatusResolver,
 ) {
   const { item, index } = entry;
   if (item.kind === "error" && item.historical) return null;
@@ -661,22 +740,24 @@ function renderTimelineEntry(
       <Fragment key={item.id}>
         {headers[index] && <StageHeader stage={headers[index]} />}
         <article
-          className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}`}
+          className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}${step && item.role === "assistant" ? " message-step" : ""}`}
           data-generation-id={item.generationId}
         >
           {item.role === "user" && <div className="message-header">你</div>}
-          {item.role === "assistant" && item.content && (
-            <div className="message-header message-author-row">
-              <span>
-                {item.streaming
-                  ? "Forge · 实时草稿"
-                  : item.incomplete
-                    ? "Forge · 未完成回复"
-                    : "Forge"}
-              </span>
-              {item.content && <MessageCopyButton text={item.content} />}
-            </div>
-          )}
+          {item.role === "assistant" &&
+            item.content &&
+            step?.showAuthor !== false && (
+              <div className="message-header message-author-row">
+                <span>
+                  {item.streaming
+                    ? "Forge · 实时草稿"
+                    : item.incomplete
+                      ? "Forge · 未完成回复"
+                      : "Forge"}
+                </span>
+                {item.content && <MessageCopyButton text={item.content} />}
+              </div>
+            )}
           {item.role === "user" && item.images && item.images.length > 0 && (
             <ImageAttachments key={snapshot.id} images={item.images} />
           )}
@@ -734,7 +815,7 @@ function renderTimelineEntry(
       />
     );
   if (item.status === "unexecuted")
-    return renderToolCard(item, index, phases, timeline);
+    return renderToolCard(item, index, phases, timeline, resolveStatus);
   if (
     item.kind === "tool" &&
     ["create_plan", "update_plan"].includes(item.call.function.name) &&
@@ -770,7 +851,7 @@ function renderTimelineEntry(
   return (
     <Fragment key={item.id}>
       {headers[index] && <StageHeader stage={headers[index]} />}
-      {renderToolCard(item, index, phases, timeline)}
+      {renderToolCard(item, index, phases, timeline, resolveStatus)}
     </Fragment>
   );
 }
@@ -811,7 +892,7 @@ function ExecutionProcess({
           aria-hidden="true"
         />
         <Check size={13} aria-hidden="true" />
-        <span>done</span>
+        <span>已完成</span>
         {counts && (
           <>
             <span aria-hidden="true">·</span>
@@ -834,10 +915,14 @@ export const StoredTranscript = memo(function StoredTranscript({
   snapshot,
   pendingOutputs,
   run,
+  liveTail,
 }: {
   readonly snapshot: SessionSnapshot;
   readonly pendingOutputs?: readonly PendingOutput[] | undefined;
   readonly run?: ActiveRunState | undefined;
+  /** Live rows (argument previews, web search, approval) that belong to the
+   * running step; placed inside its execution group when there is one. */
+  readonly liveTail?: ReactNode;
 }) {
   const liveText = run && streamedOutput(run);
   const liveReasoning = run && streamedOutput(run, true);
@@ -874,6 +959,24 @@ export const StoredTranscript = memo(function StoredTranscript({
       item.historical,
   );
   const turns = partitionTurns(timeline);
+  const live =
+    snapshot.status === "running" || snapshot.status === "awaiting_approval";
+  const approvalCallId = run?.pendingApproval?.toolCallId;
+  // A started call is "running" in the record; the row shows what it is
+  // actually waiting for, and a run that ended without a result is cancelled.
+  const resolveStatus: ToolStatusResolver = (item) =>
+    item.status !== "running"
+      ? item.status === "unexecuted"
+        ? live
+          ? "running"
+          : "cancelled"
+        : item.status
+      : approvalCallId === item.call.id
+        ? "awaiting_approval"
+        : live
+          ? "running"
+          : "cancelled";
+  let tailPlaced = false;
   const executions = completedTurnExecutions(snapshot);
   const executionRecords = executionTurns(snapshot);
 
@@ -1032,27 +1135,84 @@ export const StoredTranscript = memo(function StoredTranscript({
                     execution={finalEntry ? execution : undefined}
                     counts={counts}
                   >
-                    {blocks.map((block) => {
-                      if (block.kind === "single") {
+                    {groupExecution(blocks).map((section) => {
+                      const renderBlock = (
+                        block: TurnBlock,
+                        blockIndex: number,
+                      ) => {
+                        if (block.kind === "single") {
+                          // Every block before the turn's last one (or all of
+                          // them when the final answer is rendered separately)
+                          // is process narration, not the answer.
+                          const isStep =
+                            Boolean(finalEntry) ||
+                            blockIndex < blocks.length - 1;
+                          const firstAssistant = blocks.findIndex(
+                            (candidate) =>
+                              candidate.kind === "single" &&
+                              candidate.entry.item.kind === "message" &&
+                              candidate.entry.item.role === "assistant",
+                          );
+                          return (
+                            <Fragment key={block.entry.item.id}>
+                              {renderTimelineEntry(
+                                block.entry,
+                                snapshot,
+                                headers,
+                                phases,
+                                timeline,
+                                reasoningView,
+                                isStep
+                                  ? {
+                                      showAuthor:
+                                        !finalEntry &&
+                                        blockIndex === firstAssistant,
+                                    }
+                                  : undefined,
+                                resolveStatus,
+                              )}
+                            </Fragment>
+                          );
+                        }
                         return (
-                          <Fragment key={block.entry.item.id}>
-                            {renderTimelineEntry(
-                              block.entry,
-                              snapshot,
-                              headers,
-                              phases,
-                              timeline,
-                              reasoningView,
+                          <div className="tool-call-group" key={block.id}>
+                            {block.entries.map(({ item, index }) =>
+                              item.kind === "tool"
+                                ? renderToolCard(
+                                    item,
+                                    index,
+                                    phases,
+                                    timeline,
+                                    resolveStatus,
+                                  )
+                                : null,
                             )}
-                          </Fragment>
+                          </div>
                         );
-                      }
+                      };
+                      if (section.kind === "loose")
+                        return renderBlock(section.block, section.index);
+                      const active =
+                        live &&
+                        !finalEntry &&
+                        turn === turns.at(-1) &&
+                        section.last &&
+                        !section.complete;
+                      const tail = active && !tailPlaced ? liveTail : null;
+                      if (tail) tailPlaced = true;
                       return (
-                        <div className="tool-call-group" key={block.id}>
-                          {block.entries.map(({ item, index }) =>
-                            item.kind === "tool"
-                              ? renderToolCard(item, index, phases, timeline)
-                              : null,
+                        <div
+                          className={`transcript-exec-group${active ? " is-active" : ""}`}
+                          key={`group:${section.header.entry.item.id}`}
+                        >
+                          {renderBlock(section.header, section.index)}
+                          {(section.members.length > 0 || tail) && (
+                            <div className="transcript-exec-group-body">
+                              {section.members.map(({ block, index }) =>
+                                renderBlock(block, index),
+                              )}
+                              {tail}
+                            </div>
                           )}
                         </div>
                       );
@@ -1073,6 +1233,7 @@ export const StoredTranscript = memo(function StoredTranscript({
           </section>
         );
       })}
+      {!tailPlaced && liveTail}
     </>
   );
 });
@@ -1093,33 +1254,18 @@ export const InlineApproval = memo(function InlineApproval({
   readonly hasQueued: boolean;
   readonly onDecide: (approved: boolean) => void;
 }) {
-  const command = request.command
-    ? // Command arrays are shown verbatim; a plain description is the fallback
-      // for approvals whose risk is not a literal argv.
-      JSON.stringify(request.command)
-    : request.description;
+  // ApprovalPanel joins argv for display; a plain description is the
+  // fallback for approvals whose risk is not a literal argv.
+  const command = request.command ?? request.description;
   return (
     <section
       className="transcript-approval wb-stack"
       aria-label="待批准执行"
       data-session-id={sessionId}
       data-approval-id={request.id}
-      style={{
-        // Styling owned by this component only: the workspace CSS file is not
-        // part of this change, so the card borrows contract tokens inline.
-        gap: "var(--space-3)",
-        padding: "var(--space-4)",
-        borderRadius: "var(--radius-card)",
-        border: "1px solid var(--warning-border)",
-        // The ApprovalPanel inside keeps its own warning surface; the outer
-        // frame is a quiet card so the pair reads as one inline unit.
-        background: "var(--surface-elevated)",
-      }}
     >
       <div className="transcript-approval-head wb-stack">
-        <strong style={{ fontSize: "var(--text-base)", fontWeight: 600 }}>
-          需要你的批准
-        </strong>
+        <strong className="transcript-approval-title">需要你的批准</strong>
         {request.childSessionId && (
           <span className="wb-muted">
             子代理审批 · {request.childSessionId}
@@ -1184,6 +1330,63 @@ export function Transcript() {
   // The inline card is the primary path only for the selected session's live
   // run; every other run (background, child) stays in the Inspector summary.
   const showInlineApproval = Boolean(sessionId && pendingApproval);
+  // The last approval stays mounted while its card collapses away.
+  const [shownApproval, setShownApproval] = useState(pendingApproval);
+  useEffect(() => {
+    if (pendingApproval) setShownApproval(pendingApproval);
+  }, [pendingApproval]);
+  // Live rows of the running step, rendered by StoredTranscript inside the
+  // active execution group (or after the last turn when there is none).
+  const liveTail = (
+    <>
+      {run?.webSearch && run.status === "running" && (
+        <div
+          className="tool-call-group tool-live-list"
+          role="status"
+          aria-label="网页搜索中"
+        >
+          <ToolDisclosure
+            toolName="web_search"
+            status="running"
+            className="tool-live-item"
+            detail={
+              <span className="tool-live-status">
+                {webSearchStatus(run.webSearch)}
+              </span>
+            }
+          />
+        </div>
+      )}
+      {(run?.toolPreviews?.length ?? 0) > 0 && (
+        <ToolPreviews previews={run?.toolPreviews ?? []} />
+      )}
+      {shownApproval && sessionId && (
+        // The card collapses (height + opacity) after a decision instead of
+        // vanishing in one frame, which jolted the bottom-pinned transcript.
+        <Collapsible
+          key={shownApproval.id}
+          appear
+          className="transcript-approval-collapse"
+          durationMs={320}
+          open={showInlineApproval && pendingApproval?.id === shownApproval.id}
+        >
+          <InlineApproval
+            request={shownApproval}
+            sessionId={sessionId}
+            isSubmitting={Boolean(
+              run?.isSubmittingApproval ||
+                run?.isCancelling ||
+                pendingApproval?.id !== shownApproval.id,
+            )}
+            hasQueued={(run?.approvalQueue?.length ?? 0) > 1}
+            onDecide={(approved) =>
+              void answerApproval(sessionId, shownApproval.id, approved)
+            }
+          />
+        </Collapsible>
+      )}
+    </>
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const navigation = useRef(new TranscriptScrollState());
@@ -1579,7 +1782,12 @@ export function Transcript() {
           )}
           {state.isSnapshotLoading && <p className="wb-muted">正在读取会话…</p>}
           {snapshot ? (
-            <StoredTranscript key={snapshot.id} snapshot={snapshot} run={run} />
+            <StoredTranscript
+              key={snapshot.id}
+              snapshot={snapshot}
+              run={run}
+              liveTail={liveTail}
+            />
           ) : (
             !state.isSnapshotLoading && (
               <EmptyState
@@ -1608,63 +1816,6 @@ export function Transcript() {
                   )}
                 </article>
               ),
-          )}
-          {run?.webSearch && run.status === "running" && (
-            <div
-              className="tool-call-group tool-live-list"
-              role="status"
-              aria-label="网页搜索中"
-            >
-              <div
-                className="tool-disclosure tool-live-item"
-                data-status="running"
-                data-tool="web_search"
-              >
-                <div className="tool-disclosure-header tool-live-header">
-                  <div className="tool-disclosure-summary">
-                    <span
-                      className="tool-disclosure-icon tool-live-icon"
-                      aria-hidden="true"
-                    >
-                      {getToolIcon("web_search")}
-                    </span>
-                    <span className="tool-disclosure-label tool-live-name">
-                      {friendlyLabel("web_search")}
-                    </span>
-                    <span className="tool-disclosure-target">
-                      <span className="tool-live-status">
-                        {webSearchStatus(run.webSearch)}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="tool-disclosure-meta">
-                    <span
-                      className="tool-disclosure-status"
-                      data-status="running"
-                    >
-                      <span className="tool-live-spinner" aria-hidden="true" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          {(run?.toolPreviews?.length ?? 0) > 0 && (
-            <ToolPreviews previews={run?.toolPreviews ?? []} />
-          )}
-          {showInlineApproval && pendingApproval && sessionId && (
-            <InlineApproval
-              key={pendingApproval.id}
-              request={pendingApproval}
-              sessionId={sessionId}
-              isSubmitting={Boolean(
-                run?.isSubmittingApproval || run?.isCancelling,
-              )}
-              hasQueued={(run?.approvalQueue?.length ?? 0) > 1}
-              onDecide={(approved) =>
-                void answerApproval(sessionId, pendingApproval.id, approved)
-              }
-            />
           )}
         </div>
       </div>

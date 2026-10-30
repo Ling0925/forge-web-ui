@@ -21,14 +21,13 @@
   animation: tool-card-appear 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Fade only: a slide made the live-preview → recorded-row handoff jump. */
 @keyframes tool-card-appear {
   0% {
     opacity: 0;
-    transform: translateY(8px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -52,7 +51,7 @@
   min-height: 28px;
   padding: 2px var(--space-2);
   border: 1px solid transparent;
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-sm);
   background-color: transparent;
   color: inherit;
   font: inherit;
@@ -77,11 +76,14 @@
   background-color: var(--surface-soft);
 }
 
-/* A failed action must be findable while scrolling: the row tints and carries
-   the word "失败", not only a small glyph. */
+/* A failed action must be findable while scrolling: it carries the word
+   "失败" and error ink, but stays a row — a filled red bar outweighed the
+   answer around it. */
 .tool-disclosure[data-status="failed"] .tool-disclosure-header {
-  background-color: var(--error-bg);
-  border-color: var(--error-border);
+  background-color: transparent;
+}
+.tool-disclosure[data-status="failed"] .tool-disclosure-icon {
+  color: var(--error);
 }
 
 .tool-disclosure[data-status="failed"] .tool-disclosure-label,
@@ -106,15 +108,15 @@
 }
 
 .tool-disclosure-icon svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
 }
 
 .tool-disclosure-label {
   flex-shrink: 0;
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -125,8 +127,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
 .tool-disclosure-meta {
@@ -151,8 +153,8 @@
   height: 16px;
   padding: 0 var(--space-1-5);
   border-radius: var(--radius-xs);
-  background-color: var(--error);
-  color: var(--surface-elevated);
+  background-color: var(--error-bg);
+  color: var(--error);
   font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -184,59 +186,82 @@
 
 /* Status Glyph */
 .tool-disclosure-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
   width: 14px;
   height: 14px;
   flex-shrink: 0;
   color: var(--text-muted);
+  transition: color var(--transition-normal);
 }
 
-.tool-disclosure-status[data-status="running"] {
+/* All glyphs share one cell; the state picks the visible one, so a change
+   cross-fades and scales in place without moving anything around it. */
+.tool-glyph {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--transition-normal), transform
+    var(--transition-normal);
+}
+
+.tool-disclosure-status:is([data-status="running"], [data-status="generating"])
+  .tool-glyph-spin,
+.tool-disclosure-status[data-status="awaiting_approval"] .tool-glyph-wait,
+.tool-disclosure-status[data-status="completed"] .tool-glyph-done,
+.tool-disclosure-status[data-status="failed"] .tool-glyph-fail,
+.tool-disclosure-status[data-status="cancelled"] .tool-glyph-stop {
+  opacity: 1;
+  transform: none;
+}
+
+.tool-disclosure-status:is(
+    [data-status="running"],
+    [data-status="generating"]
+  ) {
   color: var(--accent);
+}
+
+.tool-disclosure-status[data-status="awaiting_approval"] {
+  color: var(--warning);
 }
 
 .tool-disclosure-status[data-status="completed"] {
   color: var(--success);
 }
 
-.tool-disclosure-status[data-status="completed"] svg {
-  animation: tool-status-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-@keyframes tool-status-pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  70% {
-    transform: scale(1.2);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 .tool-disclosure-status[data-status="failed"] {
   color: var(--error);
 }
 
-.tool-disclosure-status[data-status="failed"] svg {
-  animation: tool-status-shake 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+/* Held for approval / stopped: the row says so in its own ink, no new shape. */
+.tool-disclosure-label,
+.tool-disclosure-target,
+.tool-disclosure-icon {
+  transition: color var(--transition-normal);
 }
-
-@keyframes tool-status-shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px);
-  }
-  75% {
-    transform: translateX(2px);
+.tool-disclosure[data-status="awaiting_approval"] .tool-disclosure-icon {
+  color: var(--warning);
+}
+.tool-disclosure[data-status="cancelled"]
+  :is(.tool-disclosure-label, .tool-disclosure-target) {
+  color: var(--text-muted);
+}
+.tool-disclosure-header:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.tool-disclosure-header:disabled:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+.tool-disclosure-failure {
+  animation: tool-badge-in var(--transition-normal) both;
+}
+@keyframes tool-badge-in {
+  from {
+    opacity: 0;
   }
 }
 
@@ -1981,4 +2006,24 @@
   .tool-terminal-card {
     animation: none;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tool-glyph,
+  .tool-disclosure-status,
+  .tool-disclosure-label,
+  .tool-disclosure-target,
+  .tool-disclosure-icon {
+    transition-duration: 0.01ms;
+  }
+  .tool-disclosure-spinner,
+  .tool-disclosure-failure {
+    animation: none;
+  }
+}
+
+/* Nothing to disclose yet: keep the chevron's slot so the row does not shift
+   when it becomes expandable. */
+.tool-disclosure-header:disabled .tool-disclosure-chevron {
+  visibility: hidden;
 }
