@@ -4,9 +4,9 @@ import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
 // A real mounted browser run is required: horizontal overflow inside the
-// inspector pane is an outcome of the real CSS cascade (a 320px flex column
-// pane plus an unbreakable command/path token), which a markup snapshot cannot
-// observe.
+// project resources panel (now in the 工作区 dialog opened from the inspector
+// footer) is an outcome of the real CSS cascade plus an unbreakable
+// command/path token, which a markup snapshot cannot observe.
 // Uses the normal Playwright browser by default; set FORGE_BROWSER_EXECUTABLE
 // (same override as the browser tool) when the bundled browser is not on disk.
 const executablePath = process.env.FORGE_BROWSER_EXECUTABLE;
@@ -31,7 +31,7 @@ const skillDirectory = `/home/ling/services/desktop-harness/skills/${"s".repeat(
 // the measurement below really detects the pre-repair overflow.
 const controlToken = "c".repeat(260);
 
-it("mounted narrow inspector wraps a long MCP command and resource paths without horizontal overflow", async () => {
+it("mounted project resources dialog wraps a long MCP command and resource paths without horizontal overflow", async () => {
   // In-memory test-only bundling that also emits the real component CSS; this
   // is not an application build and mutates no assets.
   const bundle = await build({
@@ -41,6 +41,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
       import './src/renderer/components/workbench/app.css';
       import {createRoot} from 'react-dom/client';
       import {Inspector} from './src/renderer/components/workbench/Inspector';
+      import {WorkspaceResourcesDialog} from './src/renderer/components/workbench/WorkspaceResourcesDialog';
       const session = {
         id: ${JSON.stringify(sessionId)},
         title: '长命令资源会话',
@@ -104,7 +105,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
       // shell is the rendered container whose measured width the assertions
       // below use, so the pane is never pinned to a hardcoded layout number.
       createRoot(document.getElementById('root')).render(
-        <div className="wb-app" id="app-shell"><Inspector/></div>,
+        <div className="wb-app" id="app-shell"><Inspector/><WorkspaceResourcesDialog/></div>,
       );
     `,
       resolveDir: resolve("."),
@@ -220,14 +221,13 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
         }, scenario.shellWidth);
       }
 
-      await page.getByRole("tab", { name: "会话信息", exact: true }).click();
-      await page.getByRole("tab", { name: "项目资源", exact: true }).click();
-      const resourcesPanel = page.locator("#tabpanel-inspector-resources");
+      await page.getByRole("button", { name: "项目资源与 MCP" }).click();
+      const resourcesPanel = page.locator("#tabpanel-resources");
       await resourcesPanel.waitFor({ state: "visible" });
       await page.waitForFunction(
         (expected) =>
           Array.from(
-            document.querySelectorAll("#tabpanel-inspector-resources code"),
+            document.querySelectorAll("#tabpanel-resources code"),
           ).some((node) => node.textContent === expected),
         commandLine,
       );
@@ -265,7 +265,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
             };
           };
           const codes = Array.from(
-            document.querySelectorAll("#tabpanel-inspector-resources code"),
+            document.querySelectorAll("#tabpanel-resources code"),
           ).filter((node): node is HTMLElement => node instanceof HTMLElement);
           const commandCode = codes.find(
             (node) => node.textContent === expectedCommand,
@@ -276,11 +276,11 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
           if (!commandCode || !pathCode)
             throw new Error("command/path code nodes are not mounted");
           const directoryNode = Array.from(
-            document.querySelectorAll("#tabpanel-inspector-resources p"),
+            document.querySelectorAll("#tabpanel-resources p"),
           ).find((node) => node.textContent?.startsWith("workspace-agents ·"));
           if (!(directoryNode instanceof HTMLElement))
             throw new Error("skill source directory node is not mounted");
-          const scroll = element(".inspector-scroll");
+          const scroll = element(".workspace-resources-content");
           // Negative control: give the unwrapped pane the same available width
           // the real pane actually has, so it is not measured against a
           // hardcoded legacy column.
@@ -306,7 +306,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
               ),
             },
             inspectorScroll: box(scroll),
-            resourcesPanel: box(element("#tabpanel-inspector-resources")),
+            resourcesPanel: box(element("#tabpanel-resources")),
             command: metrics(commandCode),
             path: metrics(pathCode),
             skillDirectory: metrics(directoryNode),
@@ -343,15 +343,15 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
       expect(report.inspector.clientWidth).toBeLessThanOrEqual(
         report.shell.clientWidth,
       );
-      // The resources tabpanel is bounded by the actual inspector pane, not by
-      // a number copied from the previous layout.
+      // The resources tabpanel is bounded by the dialog inside the viewport,
+      // not by a number copied from the previous layout.
       expect(report.resourcesPanel.clientWidth).toBeLessThan(
-        report.inspector.clientWidth,
+        report.viewportWidth,
       );
 
       // The repair: with the long command mounted, neither the shell, the
-      // inspector scroll pane nor the resources tabpanel overflows
-      // horizontally at the contracted available width.
+      // dialog content nor the resources tabpanel overflows
+      // horizontally at the available width.
       expect(report.documentOverflow).toBeLessThanOrEqual(0);
       expect(report.shell.scrollWidth).toBeLessThanOrEqual(
         report.shell.clientWidth,

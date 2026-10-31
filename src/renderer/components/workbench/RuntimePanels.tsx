@@ -26,6 +26,7 @@ import { useWorkbench } from "../../state/workbench-context";
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
 import { StatusBadge, ToneBadge } from "../primitives/StatusBadge";
+import { InspectorSection } from "./InspectorSection";
 import { Markdown } from "./Markdown";
 import { SubAgentActivity } from "./SubAgentActivity";
 import {
@@ -372,7 +373,99 @@ export function PlanSection({
   );
 }
 
-export function SubAgentsPanel() {
+/** One-line progress for the Inspector's 进度 header, e.g. `3/5 · 进行中`. */
+export function planOverviewSummary(
+  snapshot: Pick<SessionSnapshot, "plan" | "plans">,
+): string {
+  const { currentProgress } = resolveDisplayPlans(snapshot);
+  if (!currentProgress || currentProgress.total === 0) return "暂无计划";
+  if (currentProgress.tone === "completed")
+    return `✓ ${currentProgress.completed}/${currentProgress.total} 完成`;
+  return `${currentProgress.completed}/${currentProgress.total} · ${currentProgress.label}`;
+}
+
+/**
+ * Inspector 进度分区正文：当前计划步骤 + 一行折叠的方案说明与历史计划。
+ * 计数只出现在分区标题的摘要里，正文不再重复进度条与统计胶囊。
+ */
+export function PlanOverview({
+  snapshot,
+}: {
+  readonly snapshot: Pick<SessionSnapshot, "plan" | "plans">;
+}) {
+  const { plans, currentPlan, historical } = resolveDisplayPlans(snapshot);
+  if (!currentPlan) {
+    return (
+      <EmptyState
+        variant="compact"
+        className="inspector-plan-empty"
+        title="尚无计划"
+        description="执行中创建的步骤会在这里实时同步；Plan 模式可先生成只读方案。"
+      />
+    );
+  }
+  return (
+    <div className="inspector-plan-overview">
+      <p className="inspector-plan-overview-title">
+        {currentPlan.title ?? "原有计划"}
+      </p>
+      <PlanSteps plan={currentPlan} />
+      {currentPlan.explanation && (
+        <details className="inspector-row-disclosure">
+          <summary>
+            <FileText size={13} weight="bold" aria-hidden="true" />
+            <span>方案说明</span>
+            <span className="inspector-row-hint">
+              共 {currentPlan.steps.length} 步
+            </span>
+          </summary>
+          <div className="inspector-row-disclosure-body">
+            <Markdown source={currentPlan.explanation} />
+          </div>
+        </details>
+      )}
+      {historical.length > 0 && (
+        <details className="inspector-row-disclosure">
+          <summary>
+            <ClockCounterClockwise size={13} weight="bold" aria-hidden="true" />
+            <span>历史计划</span>
+            <span className="inspector-row-hint">{historical.length}</span>
+          </summary>
+          <div className="inspector-row-disclosure-body">
+            {historical.map((plan) => {
+              const index = plans.indexOf(plan) + 1;
+              const progress = planProgress(plan);
+              return (
+                <div
+                  key={`${plan.id}:${index}`}
+                  className="inspector-plan-history-item"
+                >
+                  <p className="inspector-plan-history-item-title">
+                    <span>
+                      计划 {index} · {plan.title ?? "原有计划"}
+                    </span>
+                    <span className="inspector-row-hint">
+                      {progress.completed}/{progress.total} {progress.label}
+                    </span>
+                  </p>
+                  <PlanSteps plan={plan} />
+                  {plan.explanation && <Markdown source={plan.explanation} />}
+                </div>
+              );
+            })}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
+
+export function SubAgentsPanel({
+  embedded = false,
+}: {
+  /** Rendered inside the Inspector's 子任务 section, which owns the title. */
+  readonly embedded?: boolean;
+} = {}) {
   const { state, selectSession, refreshActiveSession } = useWorkbench();
   const snapshot = state.activeSnapshot;
   const cancelScope = useRef(new OperationScope());
@@ -448,47 +541,65 @@ export function SubAgentsPanel() {
 
   return (
     <section className="wb-stack inspector-section inspector-subagents-section">
-      <div className="inspector-card-header inspector-subagents-header">
-        <div className="inspector-title-row">
-          <GitBranch size={14} weight="bold" className="inspector-title-icon" />
-          <h3>子任务</h3>
-          <span className="inspector-subagents-count">
-            {sortedChildren.length}
-          </span>
+      {embedded ? (
+        parentId && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="inspector-parent-jump-btn"
+            onClick={() => void selectSession(parentId)}
+          >
+            <ArrowUpLeft size={12} weight="bold" />
+            <span>打开父任务</span>
+          </Button>
+        )
+      ) : (
+        <div className="inspector-card-header inspector-subagents-header">
+          <div className="inspector-title-row">
+            <GitBranch
+              size={14}
+              weight="bold"
+              className="inspector-title-icon"
+            />
+            <h3>子任务</h3>
+            <span className="inspector-subagents-count">
+              {sortedChildren.length}
+            </span>
+          </div>
+          <div className="inspector-subagents-header-actions">
+            {sortedChildren.length > 0 && (
+              <div className="inspector-plan-stats-row inspector-subagents-stats">
+                {runningCount > 0 && (
+                  <span className="inspector-plan-stat-pill is-active">
+                    运行中 {runningCount}
+                  </span>
+                )}
+                {completedCount > 0 && (
+                  <span className="inspector-plan-stat-pill is-completed">
+                    完成 {completedCount}
+                  </span>
+                )}
+                {failedCount > 0 && (
+                  <span className="inspector-plan-stat-pill is-failed">
+                    结束/异常 {failedCount}
+                  </span>
+                )}
+              </div>
+            )}
+            {parentId && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="inspector-parent-jump-btn"
+                onClick={() => void selectSession(parentId)}
+              >
+                <ArrowUpLeft size={12} weight="bold" />
+                <span>打开父任务</span>
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="inspector-subagents-header-actions">
-          {sortedChildren.length > 0 && (
-            <div className="inspector-plan-stats-row inspector-subagents-stats">
-              {runningCount > 0 && (
-                <span className="inspector-plan-stat-pill is-active">
-                  运行中 {runningCount}
-                </span>
-              )}
-              {completedCount > 0 && (
-                <span className="inspector-plan-stat-pill is-completed">
-                  完成 {completedCount}
-                </span>
-              )}
-              {failedCount > 0 && (
-                <span className="inspector-plan-stat-pill is-failed">
-                  结束/异常 {failedCount}
-                </span>
-              )}
-            </div>
-          )}
-          {parentId && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="inspector-parent-jump-btn"
-              onClick={() => void selectSession(parentId)}
-            >
-              <ArrowUpLeft size={12} weight="bold" />
-              <span>打开父任务</span>
-            </Button>
-          )}
-        </div>
-      </div>
+      )}
 
       {hasChildMeta && (
         <div className="inspector-subagent-context-card wb-stack">
@@ -1433,7 +1544,18 @@ export function ContextMemoryView({
   );
 }
 
-export function ContextManagementPanel() {
+export function ContextManagementPanel({
+  section,
+}: {
+  /**
+   * Render as the Inspector's 上下文 section: the compress action moves into
+   * the section header and the saved memory becomes a secondary disclosure.
+   */
+  readonly section?: {
+    readonly open: boolean;
+    readonly onToggle: (open: boolean) => void;
+  };
+} = {}) {
   const { state, refreshActiveSession } = useWorkbench();
   const snapshot = state.activeSnapshot;
   const scope = useRef(new OperationScope());
@@ -1453,7 +1575,8 @@ export function ContextManagementPanel() {
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [controlMessage, setControlMessage] = useState("");
-  const [diagnosticsOpen, setDiagnosticsOpen] = useState(true);
+  const [diagnosticsDisclosureOpen, setDiagnosticsOpen] = useState(true);
+  const diagnosticsOpen = section ? section.open : diagnosticsDisclosureOpen;
   const [diagnosticsError, setDiagnosticsError] = useState("");
   const sessionId = snapshot?.id;
   const cancelOwned = async (id: NonNullable<typeof state.activeSessionId>) => {
@@ -1518,6 +1641,129 @@ export function ContextManagementPanel() {
     (finished?.type === "run_finished"
       ? finished.usage?.totalTokens
       : undefined);
+
+  const compact = async () => {
+    const valid = scope.current.begin();
+    setBusy(true);
+    setError("");
+    try {
+      await window.forge.compactSession(snapshot.id);
+      if (valid()) await refreshActiveSession();
+    } catch (err) {
+      if (valid()) setError(err instanceof Error ? err.message : "压缩失败");
+    } finally {
+      if (valid()) setBusy(false);
+    }
+  };
+  const controls = (
+    <>
+      {busy && (
+        <Button
+          variant="danger"
+          disabled={cancelling}
+          onClick={() => void cancelOwned(snapshot.id)}
+        >
+          {cancelling ? "等待取消确认…" : "取消上下文压缩"}
+        </Button>
+      )}
+      {controlMessage && <output>{controlMessage}</output>}
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+    </>
+  );
+
+  if (section) {
+    return (
+      <InspectorSection
+        id="context"
+        title="上下文"
+        summary={
+          totalTokens !== undefined
+            ? `${totalTokens.toLocaleString()} tokens`
+            : "尚无已结算用量"
+        }
+        open={section.open}
+        onToggle={section.onToggle}
+        action={
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={busy || running}
+            title={
+              running
+                ? "运行结束后可压缩，原始记录保留。"
+                : "保留原始记录，仅压缩模型使用的上下文。"
+            }
+            onClick={compact}
+          >
+            <ArrowsInLineVertical size={13} weight="bold" />
+            <span>{busy ? "正在压缩…" : "压缩上下文"}</span>
+          </Button>
+        }
+      >
+        {diagnosticsError ? (
+          <p role="alert" className="form-error">
+            {diagnosticsError}
+          </p>
+        ) : !diagnostics ? (
+          <p className="wb-muted">正在读取…</p>
+        ) : (
+          <dl className="wb-details inspector-details-grid">
+            <dt>原始记录</dt>
+            <dd>
+              {diagnostics.transcriptChars.toLocaleString()} 字符 ·{" "}
+              {diagnostics.messageCount} 条消息
+            </dd>
+            <dt>投影上下文</dt>
+            <dd>{diagnostics.projectedChars.toLocaleString()} 字符</dd>
+            <dt>摘要类型</dt>
+            <dd>
+              {diagnostics.summaryFallback
+                ? "摘录回退（非语义摘要）"
+                : "语义摘要 / 未压缩"}
+            </dd>
+            {finished?.type === "run_finished" && (
+              <>
+                <dt>最近一轮</dt>
+                <dd>
+                  {finished.steps ?? finished.turns} 步 · {finished.toolCalls}{" "}
+                  次工具调用
+                  {finished.retries ? ` · ${finished.retries} 次重试` : ""}
+                </dd>
+              </>
+            )}
+          </dl>
+        )}
+        {snapshot.contextSummary && parsedMemory ? (
+          <details className="inspector-row-disclosure inspector-memory-card">
+            <summary>
+              <span>记忆与工作状态</span>
+              <span className="inspector-row-hint">
+                边界 {snapshot.contextSummary.boundary}
+                {snapshot.contextSummary.fallback ? " · 摘录回退" : ""}
+              </span>
+            </summary>
+            <div className="inspector-row-disclosure-body">
+              <ContextMemoryView
+                parsed={parsedMemory}
+                messages={snapshot.messages}
+                messageOffset={snapshot.transcript?.messageOffset}
+                currentPlan={snapshot.plan}
+              />
+            </div>
+          </details>
+        ) : (
+          <p className="wb-muted inspector-row-hint">
+            尚未压缩；压缩后的记忆与工作状态会显示在这里。
+          </p>
+        )}
+        {controls}
+      </InspectorSection>
+    );
+  }
 
   return (
     <section className="wb-stack inspector-section">
@@ -1612,24 +1858,7 @@ export function ContextManagementPanel() {
         </details>
       )}
       <div className="context-compaction-row">
-        <Button
-          size="sm"
-          disabled={busy || running}
-          onClick={async () => {
-            const valid = scope.current.begin();
-            setBusy(true);
-            setError("");
-            try {
-              await window.forge.compactSession(snapshot.id);
-              if (valid()) await refreshActiveSession();
-            } catch (err) {
-              if (valid())
-                setError(err instanceof Error ? err.message : "压缩失败");
-            } finally {
-              if (valid()) setBusy(false);
-            }
-          }}
-        >
+        <Button size="sm" disabled={busy || running} onClick={compact}>
           <ArrowsInLineVertical size={13} weight="bold" />
           <span>{busy ? "正在压缩…" : "压缩上下文"}</span>
         </Button>
@@ -1639,21 +1868,7 @@ export function ContextManagementPanel() {
             : "保留原始记录，仅压缩模型使用的上下文。"}
         </p>
       </div>
-      {busy && (
-        <Button
-          variant="danger"
-          disabled={cancelling}
-          onClick={() => void cancelOwned(snapshot.id)}
-        >
-          {cancelling ? "等待取消确认…" : "取消上下文压缩"}
-        </Button>
-      )}
-      {controlMessage && <output>{controlMessage}</output>}
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
-      )}
+      {controls}
     </section>
   );
 }

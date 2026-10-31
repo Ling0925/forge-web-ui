@@ -8,8 +8,8 @@ const sessionShot = makePng(20, 12);
 
 /**
  * Integration-level rendered check: the Inspector mounts the browser panel only
- * inside the 会话信息 → 浏览器 subtab, binds it to the selected Forge session,
- * and performs no browser RPC before that subtab is opened.
+ * inside the 会话信息 section's 浏览器 row, binds it to the selected Forge
+ * session, and performs no browser RPC before that row is opened.
  */
 it("binds the browser panel to the selected session and probes only when opened", async () => {
   const bundle = await build({
@@ -124,10 +124,14 @@ it("binds the browser panel to the selected session and probes only when opened"
         }[]
       >;
 
-    await page.getByRole("tab", { name: "会话信息", exact: true }).click();
-    // The default subtab is the overview: the browser tab has not been opened.
+    await page
+      .locator(
+        'section.inspector-sec[aria-label="会话信息"] .inspector-sec-toggle',
+      )
+      .click();
+    // Session info shows the browser as one folded row: nothing probed yet.
     expect(await rpc()).toEqual([]);
-    await page.getByRole("tab", { name: "浏览器", exact: true }).click();
+    await page.getByText("浏览器", { exact: true }).click();
     const panel = page.getByRole("region", { name: "浏览器预览与接管" });
     await expect.poll(() => panel.isVisible()).toBe(true);
     // Only a read-only status probe, scoped to the selected session.
@@ -162,6 +166,12 @@ it("binds the browser panel to the selected session and probes only when opened"
         window as unknown as { selectTestSession: (id: string) => void }
       ).selectTestSession("22222222-2222-4222-8222-222222222222"),
     );
+    // Expand state is remembered per session: open 会话信息 for session B.
+    await page
+      .locator(
+        'section.inspector-sec[aria-label="会话信息"] .inspector-sec-toggle[aria-expanded="false"]',
+      )
+      .click();
     await expect
       .poll(async () => (await rpc()).at(-1)?.sessionId)
       .toBe("22222222-2222-4222-8222-222222222222");
