@@ -1,0 +1,201 @@
+/* Unified settings page layout: groups of label/description/control rows. */
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.setting-group-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.setting-group-heading {
+  min-width: 0;
+}
+.setting-group-heading h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.setting-group-heading p {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-muted);
+}
+.setting-group-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.setting-group-body {
+  container: setting-group / inline-size;
+}
+.setting-group-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--surface-elevated);
+}
+.setting-group.is-danger .setting-group-body {
+  border-color: color-mix(in srgb, var(--error) 35%, var(--border-subtle));
+}
+.setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  min-width: 0;
+}
+.setting-row + .setting-row,
+.setting-group-body > * + * {
+  border-top: 1px solid var(--border-subtle);
+}
+.setting-row.is-stacked {
+  grid-template-columns: minmax(0, 1fr);
+}
+.setting-row.is-highlighted {
+  background: var(--accent-soft);
+  transition: background-color 600ms ease;
+}
+.setting-row-text {
+  min-width: 0;
+}
+.setting-row-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+.setting-row-description {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-muted);
+}
+.setting-row-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.setting-row.is-stacked .setting-row-control {
+  justify-content: flex-start;
+}
+.setting-row-control .forge-select-trigger {
+  min-width: 200px;
+}
+.setting-row-extra {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.setting-inline-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+.setting-inline-input input {
+  width: 128px;
+  font-variant-numeric: tabular-nums;
+}
+.setting-inline-input .setting-unit {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.setting-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-md);
+  background: var(--surface-control);
+  overflow: hidden;
+}
+.setting-segment {
+  appearance: none;
+  border: 0;
+  border-left: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: var(--text-xs);
+  padding: 5px var(--space-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.setting-segment:first-child {
+  border-left: 0;
+}
+.setting-segment:hover:not(:disabled):not(.is-active) {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+.setting-segment.is-active {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.setting-segment:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.setting-save {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.setting-save.is-saving {
+  color: var(--text-muted);
+}
+.setting-save.is-saved {
+  color: var(--success);
+}
+.setting-save.is-error {
+  color: var(--error);
+  white-space: normal;
+}
+.setting-hint {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-xs);
+  color: var(--text-muted);
+}
+/* Stack label and control when the card itself is narrow (sidebar layouts,
+   dialogs, phones), not only when the viewport is. */
+@container setting-group (max-width: 600px) {
+  .setting-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .setting-row-control {
+    justify-content: flex-start;
+  }
+}
+.setting-advanced > summary {
+  cursor: pointer;
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  list-style-position: inside;
+}
+.setting-advanced[open] > summary {
+  border-bottom: 1px solid var(--border-subtle);
+}
