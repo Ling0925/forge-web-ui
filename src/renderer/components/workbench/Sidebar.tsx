@@ -6,6 +6,7 @@ import {
   ChartBar,
   Folder,
   FolderOpen,
+  Files,
   Gear,
   MagnifyingGlass,
   Plus,
@@ -14,6 +15,7 @@ import {
 import { useState } from "react";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
+import { openWorkspaceResources } from "../../state/workspace-resources";
 import {
   shallowEqual,
   useWorkbenchActions,
@@ -46,6 +48,7 @@ export function Sidebar() {
     openSettings,
     openUsageDashboard,
     createSession,
+    selectSession,
   } = useWorkbenchActions();
   const state = useWorkbenchSelector(
     ({ state }) => ({
@@ -283,6 +286,25 @@ export function Sidebar() {
                     <span className="session-folder-count">
                       {group.sessions.length}
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="session-folder-create-btn session-folder-resources-btn"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const inWorkspace = group.sessions.some(
+                        (s) => s.id === state.activeSessionId,
+                      );
+                      const target = group.sessions[0];
+                      if (!inWorkspace && target)
+                        await selectSession(target.id);
+                      setMobileSidebar(false);
+                      openWorkspaceResources("files");
+                    }}
+                    title={`${workspaceName(group.workspace)} 的工作区文件与项目资源`}
+                    aria-label={`${workspaceName(group.workspace)} 的工作区文件与项目资源`}
+                  >
+                    <Files size={12} weight="bold" />
                   </button>
                   <button
                     type="button"

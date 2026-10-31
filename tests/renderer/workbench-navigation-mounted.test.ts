@@ -247,12 +247,14 @@ it("unifies navigation and opens recent tasks without loading their histories up
       .toContain("待批准 1 项");
     expect(await page.locator(".wb-header-pending").isVisible()).toBe(true);
     await details.click();
+    // The selected session's request is decided in the transcript only; the
+    // details pane does not repeat it as a 需要处理 item.
     expect(
       await page
-        .locator(".workbench-inspector .wb-approval-row-inline")
-        .isVisible(),
-    ).toBe(true);
-    await page.getByRole("button", { name: "定位到消息流" }).click();
+        .locator('.workbench-inspector section[aria-label="需要处理"]')
+        .count(),
+    ).toBe(0);
+    await details.click();
     expect(await page.locator(".workbench-main").isVisible()).toBe(true);
     expect(await page.locator(".approval-description").isVisible()).toBe(true);
     await page.screenshot({ path: `${evidence}/approval-320-dark.png` });

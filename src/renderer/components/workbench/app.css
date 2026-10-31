@@ -1398,7 +1398,7 @@
    pane narrows to --inspector-width-compact and the sidebar rail follows
    --rail-width-compact so the central reading flow keeps a comfortable
    (>= 640px) width instead of being squeezed below its legible measure. */
-@media (min-width: 1001px) and (max-width: 1366px) {
+@media (min-width: 1281px) and (max-width: 1366px) {
   .wb-app:not(.inspector-collapsed) .workbench-inspector,
   .wb-app:not(.inspector-collapsed) .workbench-inspector > * {
     width: var(--inspector-width-compact);
@@ -1409,6 +1409,53 @@
     min-width: var(--rail-width-compact);
     max-width: var(--rail-width-compact);
   }
+}
+
+.wb-inspector-scrim {
+  display: none;
+}
+/* 1001px ~ 1280px: the inspector stays collapsed by default and opens as an
+   overlay drawer above the reading column instead of narrowing it. */
+@media (min-width: 1001px) and (max-width: 1280px) {
+  .wb-app .workbench-content {
+    position: relative;
+  }
+  .wb-app .workbench-inspector {
+    position: absolute;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    box-shadow: var(--shadow-overlay);
+  }
+  .wb-app.inspector-collapsed .workbench-inspector {
+    width: var(--inspector-width);
+    transform: translateX(100%);
+    box-shadow: none;
+  }
+  .wb-app .wb-inspector-scrim {
+    display: block;
+    position: absolute;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    inset: 0;
+    z-index: 29;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.16);
+    cursor: default;
+    animation: wb-inspector-scrim-in var(--motion-duration-sm) ease both;
+  }
+}
+@keyframes wb-inspector-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (min-width: 1001px) and (max-width: 1366px) {
   /* One scroll owner: the reading flow fills the remaining space instead of
      growing an outer page scrollbar next to the conversation scrollbar. */
   .wb-app .workbench-main {

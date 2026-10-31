@@ -17,6 +17,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
       import {useState} from 'react';
       import {createRoot} from 'react-dom/client';
       import {Inspector} from './src/renderer/components/workbench/Inspector';
+      import {WorkspaceResourcesDialog} from './src/renderer/components/workbench/WorkspaceResourcesDialog';
       import {initialWorkbenchState} from './src/renderer/state/workbench-reducer';
       import './src/renderer/styles/global.css';
       import './src/renderer/components/workbench/app.css';
@@ -77,7 +78,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         const [tick,setTick]=useState(0);
         window.refreshFixture=()=>setTick(tick+1);
         window.testController={state:{...initialWorkbenchState,activeSessionId:'session',activeSnapshot:{...snapshot,updatedAt:String(tick)},activeRuns:{session:{status:'running',permission:'unrestricted'}},sessions:childSessions},refreshActiveSession:async()=>{},selectSession:async()=>{}};
-        return <div className="wb-app mobile-inspector" style={{height:'100vh',justifyContent:'flex-end'}}><Inspector onRequestCollapse={()=>{window.collapsed=true}}/></div>;
+        return <div className="wb-app mobile-inspector" style={{height:'100vh',justifyContent:'flex-end'}}><Inspector onRequestCollapse={()=>{window.collapsed=true}}/><WorkspaceResourcesDialog/></div>;
       }
       createRoot(document.getElementById('root')).render(<Harness/>);
     `,
@@ -120,27 +121,40 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         );
         await page.addStyleTag({ content: css });
         await page.addScriptTag({ content: js });
-        const runtime = page.getByRole("tab", {
-          name: "计划与进度",
-          exact: true,
-        });
+        const section = (name: string) =>
+          page.locator(`section.inspector-sec[aria-label="${name}"]`);
+        const toggle = (name: string) =>
+          section(name).locator(".inspector-sec-toggle");
+        // Running session: 进度 starts open, 变更 / 上下文 / 会话信息 collapsed.
         await expect
-          .poll(() => runtime.getAttribute("aria-selected"))
+          .poll(() => toggle("进度").getAttribute("aria-expanded"))
           .toBe("true");
+        expect(await page.getByRole("tab").count()).toBe(0);
+        expect(await toggle("变更").getAttribute("aria-expanded")).toBe(
+          "false",
+        );
+        expect(await toggle("上下文").getAttribute("aria-expanded")).toBe(
+          "false",
+        );
+        expect(await toggle("会话信息").getAttribute("aria-expanded")).toBe(
+          "false",
+        );
+        expect(await toggle("进度").textContent()).toContain("1/3 · 进行中");
         expect(
           await page
             .getByText("检查会话数据与执行状态", { exact: true })
             .isVisible(),
         ).toBe(true);
-        // Verify PlanSteps pending item circle and inline title row
+        // Background approvals/errors only: nothing needs attention here.
+        expect(await section("需要处理").count()).toBe(0);
+        expect(await toggle("子任务").textContent()).toContain("1 个 · 1 完成");
+        // Verify PlanSteps pending item circle and the section header row
         const stepMetrics = await page.evaluate(() => {
           const list = document.querySelector(".wb-plan-progress");
           const pending = document.querySelector(
             ".wb-plan-progress .plan-pending",
           );
-          const titleRow = document.querySelector(
-            ".inspector-plan-progress-panel .inspector-title-row",
-          );
+          const titleRow = document.querySelector(".inspector-sec-head");
           const listStyle = list ? getComputedStyle(list) : null;
           const pendingStyle = pending ? getComputedStyle(pending) : null;
           const pendingRect = pending?.getBoundingClientRect();
@@ -166,43 +180,34 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           path: resolve(output, `forge-inspector-plan-${width}-${theme}.png`),
           animations: "disabled",
         });
-        await page.getByRole("tab", { name: "规划文档", exact: true }).click();
+        // The plan document is a single folded row inside 进度.
+        await page.getByText("方案说明", { exact: true }).click();
         expect(
           await page.getByText("真实计划说明", { exact: true }).isVisible(),
         ).toBe(true);
-        await page.getByRole("tab", { name: "计划进度", exact: true }).click();
-        await runtime.focus();
-        await page.keyboard.press("ArrowRight");
-        await page.keyboard.press("Enter");
-        await expect
-          .poll(() =>
-            page
-              .getByRole("tab", { name: "文件", exact: true })
-              .getAttribute("aria-selected"),
-          )
-          .toBe("true");
-        expect(
-          await page.getByText("工作区文件", { exact: true }).isVisible(),
-        ).toBe(true);
-        await page.getByText("README.md", { exact: true }).click();
-        expect(
-          await page
-            .getByText("# Workspace Preview Content", { exact: true })
-            .isVisible(),
-        ).toBe(true);
-        await page
-          .getByRole("tab", { name: "变更与检查点", exact: true })
-          .click();
+        await toggle("变更").click();
         expect(
           await page.getByRole("button", { name: "刷新检查点" }).isVisible(),
         ).toBe(true);
         expect(
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(0);
-        await page.getByRole("tab", { name: "会话信息", exact: true }).click();
+        await toggle("会话信息").click();
         expect(
-          await page.getByText("无限制", { exact: true }).isVisible(),
+          await section("会话信息")
+            .locator("dd", { hasText: "无限制" })
+            .isVisible(),
         ).toBe(true);
+        expect(
+          await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
+        ).toBe(0);
+        // Compress lives in the 上下文 header and is usable while collapsed.
+        expect(
+          await section("上下文")
+            .getByRole("button", { name: "压缩上下文", exact: true })
+            .isDisabled(),
+        ).toBe(true);
+        await toggle("上下文").click();
         await expect
           .poll(() =>
             page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
@@ -213,14 +218,10 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(1);
         expect(
-          await page
-            .getByRole("button", { name: "压缩上下文", exact: true })
-            .isDisabled(),
-        ).toBe(true);
-        expect(
           await page.getByText("42,000 字符", { exact: false }).isVisible(),
         ).toBe(true);
-        // Memory card is open by default and truncated excerpt expands on click
+        // Memory is a secondary expand; its truncated excerpt still expands.
+        await page.getByText("记忆与工作状态", { exact: true }).click();
         expect(
           await page.getByText("初始简短摘要", { exact: true }).isVisible(),
         ).toBe(true);
@@ -232,14 +233,34 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
             .getByText("需要把右侧面板的折叠项默认展开", { exact: false })
             .isVisible(),
         ).toBe(true);
+        // Expand state is remembered for the session across re-renders.
+        await toggle("进度").click();
+        await page.evaluate(() => Reflect.get(window, "refreshFixture")());
+        expect(await toggle("进度").getAttribute("aria-expanded")).toBe(
+          "false",
+        );
+        expect(await toggle("变更").getAttribute("aria-expanded")).toBe("true");
         await page.screenshot({
           path: resolve(output, `forge-inspector-${width}-${theme}.png`),
           animations: "disabled",
         });
-        await page.getByRole("tab", { name: "项目资源", exact: true }).click();
+        // Workspace files and project resources moved to the 工作区 dialog.
+        await page.getByRole("button", { name: "工作区文件" }).click();
+        const dialog = page.locator("dialog.workspace-resources-dialog");
+        await dialog.getByText("README.md", { exact: true }).click();
         expect(
-          await page.getByText("项目指令与技能", { exact: true }).isVisible(),
+          await dialog
+            .getByText("# Workspace Preview Content", { exact: true })
+            .isVisible(),
         ).toBe(true);
+        await dialog
+          .getByRole("tab", { name: "项目资源", exact: true })
+          .click();
+        expect(
+          await dialog.getByText("项目指令与技能", { exact: true }).isVisible(),
+        ).toBe(true);
+        await dialog.getByRole("button", { name: "关闭面板" }).click();
+        await expect.poll(() => dialog.count()).toBe(0);
         const overflow = await page
           .locator(".inspector-scroll")
           .evaluate((el) => el.scrollWidth > el.clientWidth + 1);

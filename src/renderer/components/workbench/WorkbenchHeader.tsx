@@ -11,6 +11,13 @@ import { CommandPalette } from "./CommandPalette";
 interface WorkbenchHeaderProps {
   readonly isNew: boolean;
   readonly pending: number;
+  /**
+   * Pending requests the Inspector shows (background sessions / subagents).
+   * The selected session's own request lives in the transcript, so when
+   * nothing else is pending the pill jumps there instead of opening details.
+   */
+  readonly backgroundPending?: number;
+  readonly onLocateApproval?: () => void;
   readonly inspector: {
     readonly collapsed: boolean;
     readonly toggleRef: Ref<HTMLButtonElement>;
@@ -22,6 +29,8 @@ interface WorkbenchHeaderProps {
 export function WorkbenchHeader({
   isNew,
   pending,
+  backgroundPending = pending,
+  onLocateApproval,
   inspector,
 }: WorkbenchHeaderProps) {
   const { setMobileSidebar } = useWorkbenchActions();
@@ -67,8 +76,12 @@ export function WorkbenchHeader({
           <button
             type="button"
             className="wb-approval-pill"
-            onClick={inspector.reveal}
-            aria-label={`待批准 ${pending} 项，打开执行详情`}
+            onClick={
+              backgroundPending > 0 || !onLocateApproval
+                ? inspector.reveal
+                : onLocateApproval
+            }
+            aria-label={`待批准 ${pending} 项，${backgroundPending > 0 || !onLocateApproval ? "打开执行详情" : "定位到消息流"}`}
           >
             待批准 {pending}
           </button>
