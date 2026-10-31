@@ -3,12 +3,19 @@ import { useEffect, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import {
   shallowEqual,
+  useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
-import { McpPanel } from "./McpPanel";
+import { requestSettingsSection } from "./settings/settings-options";
 
-export function ProjectResources() {
+export function ProjectResources({
+  onLeave,
+}: {
+  /** Closes the surrounding dialog before Settings opens. */
+  readonly onLeave?: () => void;
+} = {}) {
+  const { openSettings } = useWorkbenchActions();
   const state = useWorkbenchSelector(
     ({ state }) => ({
       activeSessionId: state.activeSessionId,
@@ -107,7 +114,22 @@ export function ProjectResources() {
           </>
         )}
       </section>
-      <McpPanel />
+      <section className="wb-stack" aria-label="MCP 服务器">
+        <h3>MCP 服务器</h3>
+        <p className="wb-muted">
+          MCP 服务器对所有工作区生效，在设置中统一添加、启用和测试。
+        </p>
+        <Button
+          size="sm"
+          onClick={() => {
+            onLeave?.();
+            requestSettingsSection("mcp");
+            openSettings(true);
+          }}
+        >
+          在设置中管理 MCP 服务器
+        </Button>
+      </section>
     </>
   );
 }

@@ -1,10 +1,11 @@
 import {
   ArrowLeft,
+  CaretRight,
   Gear,
   MagnifyingGlass,
-  WarningCircle,
   X,
 } from "@phosphor-icons/react";
+import { useEffect } from "react";
 // 侧效导入保持拆分前的模块加载顺序，确保打包后的 CSS 层叠顺序不变。
 import { Button } from "../primitives/Button";
 import { EmptyState } from "../primitives/EmptyState";
@@ -20,11 +21,10 @@ import { PhonePairing } from "./PhonePairing";
 import { ProviderSources } from "./ProviderSources";
 import { ServerConnection } from "./ServerConnection";
 import { useSettingsForm } from "./settings/useSettingsForm";
+import { GeneralSection } from "./settings/GeneralSection";
 import { ReasoningSection } from "./settings/ReasoningSection";
-import { AppearanceSection } from "./settings/AppearanceSection";
-import { ExecutionSection } from "./settings/ExecutionSection";
-import { ContextSection } from "./settings/ContextSection";
 import { LanguageSection } from "./settings/LanguageSection";
+import { SECTION_GROUPS } from "./settings/settings-options";
 import "./settings-page.css";
 import "../../styles/settings-models.css";
 
@@ -34,30 +34,46 @@ export function Settings() {
     state,
     serviceStatus,
     section,
-    setSection,
+    goTo,
     query,
     setQuery,
-    error,
-    notice,
-    busy,
+    results,
+    titleOf,
+    focusSetting,
+    setFocusSetting,
     listing,
     setListing,
     mobile,
-    agentDirty,
     setAgentDirty,
     agentBusy,
     setAgentBusy,
     sourceBusy,
     heading,
-    dirty,
     close,
-    reset,
-    save,
+    confirmDialog,
     catalog,
-    matching,
     selected,
-    visible,
+    lspDirty,
+    migrationNotice,
   } = form;
+  const searching = query.trim().length > 0;
+  const visible = (id: typeof section) => section === id;
+
+  // A search result lands on its row: scroll it into view and flash it.
+  useEffect(() => {
+    if (!focusSetting) return;
+    const frame = requestAnimationFrame(() => {
+      const row = document.querySelector<HTMLElement>(
+        `.settings-page [data-setting="${focusSetting}"]`,
+      );
+      if (!row) return;
+      row.scrollIntoView({ block: "center" });
+      row.classList.add("is-highlighted");
+      setTimeout(() => row.classList.remove("is-highlighted"), 1600);
+      setFocusSetting(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [focusSetting, setFocusSetting]);
 
   return (
     <section
@@ -74,8 +90,8 @@ export function Settings() {
             size="sm"
             className="settings-back-btn"
             icon={<ArrowLeft size={16} weight="bold" />}
-            onClick={close}
-            disabled={busy || listing}
+            onClick={() => void close()}
+            disabled={listing || agentBusy}
           >
             返回工作台
           </Button>
@@ -93,39 +109,15 @@ export function Settings() {
           <MagnifyingGlass size={16} className="settings-search-icon" />
           <Input
             aria-label="搜索设置"
-            placeholder="搜索设置…"
+            placeholder="搜索设置项…"
             value={query}
-            disabled={agentBusy}
-            onChange={(e) => {
-              if (agentDirty) {
-                if (
-                  !window.confirm(
-                    "当前智能体有未保存的修改，搜索将重置分类视图并丢失草稿。是否继续？",
-                  )
-                ) {
-                  return;
-                }
-              }
-              setQuery(e.target.value);
-            }}
+            onChange={(e) => setQuery(e.target.value)}
           />
           {query && (
             <button
               type="button"
               className="settings-search-clear"
-              disabled={agentBusy}
-              onClick={() => {
-                if (agentDirty) {
-                  if (
-                    !window.confirm(
-                      "当前智能体有未保存的修改，清空搜索将重置分类视图并丢失草稿。是否继续？",
-                    )
-                  ) {
-                    return;
-                  }
-                }
-                setQuery("");
-              }}
+              onClick={() => setQuery("")}
               aria-label="清空搜索"
             >
               <X size={13} weight="bold" />
@@ -134,40 +126,43 @@ export function Settings() {
         </div>
 
         <nav aria-label="设置分类" className="settings-nav-menu">
-          {catalog.map((item) => {
-            const Icon = item.icon;
-            const isCurrent = !query && section === item.id;
-            return (
-              <button
-                type="button"
-                key={item.id}
-                className={`settings-nav-item ${isCurrent ? "is-active" : ""}`}
-                aria-current={isCurrent ? "page" : undefined}
-                disabled={agentBusy}
-                onClick={() => {
-                  if (agentBusy) return;
-                  if (item.id !== section && agentDirty) {
-                    if (
-                      !window.confirm(
-                        "当前智能体有未保存的修改，切换分类将丢失这些草稿。是否继续？",
-                      )
-                    ) {
-                      return;
-                    }
-                  }
-                  setSection(item.id);
-                  setQuery("");
-                }}
-              >
-                <Icon
-                  size={18}
-                  weight={isCurrent ? "bold" : "regular"}
-                  className="settings-nav-icon"
-                />
-                <span className="settings-nav-title">{item.title}</span>
-              </button>
-            );
-          })}
+          {SECTION_GROUPS.map((group) => (
+            <div className="settings-nav-group" key={group}>
+              <div className="settings-nav-group-title" aria-hidden="true">
+                {group}
+              </div>
+              {catalog
+                .filter((item) => item.group === group)
+                .map((item) => {
+                  const Icon = item.icon;
+                  const isCurrent = !searching && section === item.id;
+                  return (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className={`settings-nav-item ${isCurrent ? "is-active" : ""}`}
+                      aria-current={isCurrent ? "page" : undefined}
+                      disabled={agentBusy}
+                      onClick={() => void goTo(item.id)}
+                    >
+                      <Icon
+                        size={18}
+                        weight={isCurrent ? "bold" : "regular"}
+                        className="settings-nav-icon"
+                      />
+                      <span className="settings-nav-title">{item.title}</span>
+                      {item.id === "language" && lspDirty && (
+                        <span
+                          className="settings-nav-unsaved"
+                          title="有未保存的修改"
+                          aria-label="有未保存的修改"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
+          ))}
         </nav>
 
         <div className="settings-local-note">
@@ -179,11 +174,13 @@ export function Settings() {
       <div className="settings-body">
         <header className="settings-page-header">
           <div className="settings-header-meta">
-            <small>偏好设置 / {query ? "搜索" : selected.title}</small>
-            <h2>{query ? "搜索结果" : selected.title}</h2>
+            <small>{searching ? "设置" : selected.group}</small>
+            <h2>{searching ? "搜索结果" : selected.title}</h2>
             <p>
-              {query
-                ? `找到 ${matching.length} 个相关分区`
+              {searching
+                ? results.length
+                  ? `找到 ${results.length} 个相关设置项`
+                  : "没有找到相关设置"
                 : selected.description}
             </p>
           </div>
@@ -209,137 +206,117 @@ export function Settings() {
               设置尚未加载，加载完成后即可编辑。
             </p>
           )}
-          {query && !matching.length && (
-            <EmptyState
-              variant="inline"
-              title="没有找到相关设置，试试“模型”“token”或“权限”。"
-            />
-          )}
 
-          <div hidden={!visible("connection")}>
-            <ProviderSources
-              active={visible("connection")}
-              onBusy={(value) => {
-                sourceBusy.current = value;
-                setListing(value);
-              }}
-            />
-          </div>
-          <form
-            id="settings-page-form"
-            noValidate
-            onSubmit={(e) => {
-              e.preventDefault();
-              void save();
-            }}
-          >
-            <fieldset
-              disabled={busy || listing || !state.settings}
-              className="settings-page-fields"
-            >
-              {visible("connection") && <ReasoningSection form={form} />}
-
-              {visible("appearance") && <AppearanceSection form={form} />}
-
-              {visible("execution") && <ExecutionSection form={form} />}
-
-              {visible("context") && <ContextSection form={form} />}
-
-              {visible("language") && <LanguageSection form={form} />}
-            </fieldset>
-          </form>
-
-          {visible("agents") && (
-            <section
-              className="settings-section settings-section-agents"
-              aria-label="智能体配置"
-            >
-              <AgentProfilesPanel
-                onDirtyChange={setAgentDirty}
-                onBusyChange={setAgentBusy}
-              />
-            </section>
-          )}
-
-          {visible("plugins") && (
-            <section
-              className="settings-section settings-section-plugins"
-              aria-label="插件配置"
-            >
-              <PluginPanel />
-            </section>
-          )}
-
-          {visible("mcp") && (
-            <section
-              className="settings-section settings-section-mcp"
-              aria-label="MCP 配置"
-            >
-              <McpPanel showHeader={false} />
-            </section>
-          )}
-
-          {visible("pairing") &&
-            (mobile ? (
-              <section className="settings-section" aria-label="服务器连接配置">
-                <ServerConnection dirty={dirty} />
-              </section>
-            ) : (
-              <section className="settings-section" aria-label="手机连接配置">
-                <PhonePairing />
-              </section>
-            ))}
-        </div>
-
-        <footer className="settings-save-bar">
-          <div className="settings-save-status" aria-live="polite">
-            {error ? (
-              <p role="alert" className="form-error">
-                <WarningCircle size={15} weight="bold" />
-                <span>{error}</span>
-              </p>
-            ) : (
-              <div className="settings-status-indicator">
-                <span
-                  className={`settings-save-dot ${
-                    busy
-                      ? "is-busy"
-                      : notice
-                        ? "is-notice"
-                        : dirty
-                          ? "is-dirty"
-                          : "is-clean"
-                  }`}
+          {searching && (
+            <div className="settings-search-results">
+              {results.length ? (
+                <ul aria-label="搜索结果">
+                  {results.map((item) => (
+                    <li key={`${item.section}-${item.id || "page"}`}>
+                      <button
+                        type="button"
+                        className="settings-search-result"
+                        onClick={() => void goTo(item.section, item.id)}
+                      >
+                        <span className="settings-search-result-label">
+                          {item.label}
+                        </span>
+                        <span className="settings-search-result-path">
+                          {catalog.find((page) => page.id === item.section)
+                            ?.group ?? ""}{" "}
+                          › {titleOf(item.section)}
+                        </span>
+                        <CaretRight size={14} aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyState
+                  variant="inline"
+                  title="没有找到相关设置，试试“主题”“上下文窗口”或“权限”。"
                 />
-                <p>
-                  {busy
-                    ? "正在保存…"
-                    : notice || (dirty ? "有未保存的修改" : "所有设置已同步")}
+              )}
+            </div>
+          )}
+
+          <div className="settings-page-content" hidden={searching}>
+            {(visible("models") || visible("reasoning")) &&
+              migrationNotice.state !== "idle" && (
+                <p
+                  className={`settings-migration-notice${
+                    migrationNotice.state === "error" ? " is-error" : ""
+                  }`}
+                  role={migrationNotice.state === "error" ? "alert" : "status"}
+                >
+                  {migrationNotice.state === "error"
+                    ? migrationNotice.message
+                    : "已把旧版“逐模型窗口覆盖”移到对应模型的参数中，生效值不变。"}
                 </p>
-              </div>
+              )}
+            <div hidden={!visible("models")}>
+              <ProviderSources
+                active={visible("models")}
+                onBusy={(value) => {
+                  sourceBusy.current = value;
+                  setListing(value);
+                }}
+              />
+            </div>
+
+            {visible("general") && <GeneralSection form={form} />}
+
+            {visible("reasoning") && <ReasoningSection form={form} />}
+
+            {visible("language") && <LanguageSection form={form} />}
+
+            {visible("agents") && (
+              <section
+                className="settings-section settings-section-agents"
+                aria-label="智能体配置"
+              >
+                <AgentProfilesPanel
+                  onDirtyChange={setAgentDirty}
+                  onBusyChange={setAgentBusy}
+                />
+              </section>
             )}
-            <small>返回工作台保留草稿；退出应用不保留草稿。</small>
+
+            {visible("plugins") && (
+              <section
+                className="settings-section settings-section-plugins"
+                aria-label="插件配置"
+              >
+                <PluginPanel />
+              </section>
+            )}
+
+            {visible("mcp") && (
+              <section
+                className="settings-section settings-section-mcp"
+                aria-label="MCP 配置"
+              >
+                <McpPanel showHeader={false} />
+              </section>
+            )}
+
+            {visible("pairing") &&
+              (mobile ? (
+                <section
+                  className="settings-section"
+                  aria-label="服务器连接配置"
+                >
+                  <ServerConnection dirty={lspDirty} />
+                </section>
+              ) : (
+                <section className="settings-section" aria-label="手机连接配置">
+                  <PhonePairing />
+                </section>
+              ))}
           </div>
-          <div className="settings-save-actions">
-            <Button
-              variant="ghost"
-              disabled={busy || listing || !dirty}
-              onClick={reset}
-            >
-              放弃未保存修改
-            </Button>
-            <Button
-              type="submit"
-              form="settings-page-form"
-              variant="primary"
-              loading={busy}
-              disabled={listing || !state.settings || !dirty}
-            >
-              保存设置
-            </Button>
-          </div>
-        </footer>
+        </div>
       </div>
+      {confirmDialog}
     </section>
   );
 }

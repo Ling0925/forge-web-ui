@@ -35,6 +35,7 @@ import { Select } from "../primitives/Select";
 import { SettingsToggleCard } from "../primitives/SettingsToggleCard";
 import { Textarea } from "../primitives/Textarea";
 import { useDismiss } from "../primitives/useDismiss";
+import { useConfirm } from "./ConfirmDialog";
 
 function isConflictError(error: string): boolean {
   return (
@@ -129,6 +130,7 @@ export function AgentProfilesPanel({
   readonly onBusyChange?: ((busy: boolean) => void) | undefined;
 }) {
   const { updateSettings, loadSettings } = useWorkbenchActions();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const state = useWorkbenchSelector(
     ({ state }) => ({
       settings: state.settings,
@@ -171,7 +173,6 @@ export function AgentProfilesPanel({
     null,
   );
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [listConflict, setListConflict] = useState(false);
 
   const templateMenuRef = useRef<HTMLDivElement>(null);
@@ -378,17 +379,19 @@ export function AgentProfilesPanel({
     setListConflict(false);
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = async () => {
     if (busy) return;
-    if (isDirty) {
-      if (
-        !window.confirm(
-          "当前智能体有未保存的修改，离开将丢失这些内容。是否继续？",
-        )
-      ) {
-        return;
-      }
-    }
+    if (
+      isDirty &&
+      !(await confirm({
+        title: "放弃智能体修改？",
+        body: "当前智能体有未保存的修改，离开后这些修改会丢失。",
+        confirmLabel: "放弃修改",
+        cancelLabel: "继续编辑",
+        tone: "danger",
+      }))
+    )
+      return;
     setEditingId(null);
     setOriginalProfile(null);
     setConflictRevision(null);
@@ -450,7 +453,6 @@ export function AgentProfilesPanel({
       });
       if (res.ok) {
         setStatusMessage(`已删除智能体「${profile.name}」`);
-        setDeletingId(null);
         setListConflict(false);
         if (editingId === profile.id) {
           setEditingId(null);
@@ -558,12 +560,14 @@ export function AgentProfilesPanel({
 
   const handleRefreshFromHost = async () => {
     if (
-      !window.confirm(
-        "刷新将从服务器拉取最新配置，并放弃当前草稿。确定继续吗？",
-      )
-    ) {
+      !(await confirm({
+        title: "重新读取并放弃草稿？",
+        body: "将读取已保存的最新配置，当前草稿会被替换。",
+        confirmLabel: "重新读取",
+        tone: "danger",
+      }))
+    )
       return;
-    }
     setBusy(true);
     try {
       const latestSettings = await loadSettings();
@@ -604,7 +608,6 @@ export function AgentProfilesPanel({
       if (!latestSettings) {
         throw new Error("未能读取服务器配置，请稍后重试。");
       }
-      setDeletingId(null);
       setListConflict(false);
       setErrorMessage(null);
       setStatusMessage("已同步最新服务器配置。");
@@ -642,12 +645,13 @@ export function AgentProfilesPanel({
         role="region"
         aria-label="智能体编辑器"
       >
+        {confirmDialog}
         <div className="agent-editor-header">
           <Button
             size="sm"
             variant="ghost"
             icon={<ArrowLeft size={14} weight="bold" />}
-            onClick={handleCancelEdit}
+            onClick={() => void handleCancelEdit()}
             disabled={busy}
           >
             返回列表
@@ -674,7 +678,7 @@ export function AgentProfilesPanel({
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={handleCancelEdit}
+                  onClick={() => void handleCancelEdit()}
                   disabled={busy}
                 >
                   放弃修改
@@ -1116,7 +1120,11 @@ export function AgentProfilesPanel({
           >
             {busy ? "正在保存…" : "保存智能体角色"}
           </Button>
-          <Button variant="ghost" onClick={handleCancelEdit} disabled={busy}>
+          <Button
+            variant="ghost"
+            onClick={() => void handleCancelEdit()}
+            disabled={busy}
+          >
             取消
           </Button>
         </div>
@@ -1131,6 +1139,7 @@ export function AgentProfilesPanel({
       role="region"
       aria-label="智能体角色配置"
     >
+      {confirmDialog}
       <div className="agent-list-toolbar">
         <span className="agent-count-badge">
           已配置 {profiles.length} / 64 个智能体
@@ -1239,7 +1248,6 @@ export function AgentProfilesPanel({
       ) : (
         <div className="agent-profiles-list">
           {profiles.map((profile) => {
-            const isDeleting = deletingId === profile.id;
             return (
               <article
                 key={profile.id}
@@ -1312,41 +1320,27 @@ export function AgentProfilesPanel({
                     {profile.enabled ? "停用" : "启用"}
                   </Button>
 
-                  {isDeleting ? (
-                    <div className="agent-delete-confirm">
-                      <span className="agent-delete-confirm-text">
-                        确认删除？此操作不可逆
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => void handleDelete(profile)}
-                        disabled={busy}
-                      >
-                        确定删除
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeletingId(null)}
-                        disabled={busy}
-                      >
-                        取消
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="agent-delete-btn"
-                      icon={<Trash size={13} />}
-                      onClick={() => setDeletingId(profile.id)}
-                      disabled={busy}
-                      aria-label={`删除智能体 ${profile.name}`}
-                    >
-                      删除
-                    </Button>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="agent-delete-btn"
+                    icon={<Trash size={13} />}
+                    onClick={async () => {
+                      if (
+                        await confirm({
+                          title: `删除智能体“${profile.name}”？`,
+                          body: "删除后无法恢复；已在运行中的子代理不受影响。",
+                          confirmLabel: "删除智能体",
+                          tone: "danger",
+                        })
+                      )
+                        void handleDelete(profile);
+                    }}
+                    disabled={busy}
+                    aria-label={`删除智能体 ${profile.name}`}
+                  >
+                    删除
+                  </Button>
                 </div>
               </article>
             );

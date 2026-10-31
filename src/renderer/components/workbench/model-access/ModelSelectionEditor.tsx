@@ -3,14 +3,7 @@ import type {
   ModelCatalog,
   ModelCatalogEntry,
 } from "@forge/core/shared/model-catalog";
-import {
-  ArrowClockwise,
-  CaretDown,
-  Plus,
-  SlidersHorizontal,
-  Trash,
-  X,
-} from "@phosphor-icons/react";
+import { ArrowClockwise, Plus, Trash, X } from "@phosphor-icons/react";
 import { useId, useState } from "react";
 import { configuredModelIds } from "../../../state/composer-model";
 import { Button } from "../../primitives/Button";
@@ -20,7 +13,6 @@ import { IconButton } from "../../primitives/IconButton";
 import { Input } from "../../primitives/Input";
 import { Select } from "../../primitives/Select";
 import { ModelMetadata } from "./ModelMetadata";
-import { ModelParameterEditor } from "./ModelParameterEditor";
 import {
   type CatalogTestState,
   type EditableAlias,
@@ -28,12 +20,7 @@ import {
   type ProviderProtocol,
   randomId,
 } from "./drafts";
-import {
-  clearModelOverride,
-  effectiveModelEntry,
-  hasModelOverride,
-  updateModelOverride,
-} from "./model-overrides";
+import { effectiveModelEntry, hasModelOverride } from "./model-overrides";
 
 export function PresetPicker({
   presets,
@@ -131,7 +118,6 @@ export function ModelSelectionEditor({
   const [query, setQuery] = useState("");
   const [manual, setManual] = useState("");
   const [visible, setVisible] = useState(50);
-  const [expandedModel, setExpandedModel] = useState<string | null>(null);
   const listId = useId();
   const byId = new Map<string, ModelCatalogEntry>();
   for (const entry of selection.manual) byId.set(entry.id, entry);
@@ -212,9 +198,9 @@ export function ModelSelectionEditor({
       >
         {(
           [
-            ["all", "已配置"],
-            ["selected", "选择"],
-            ["none", "不提供"],
+            ["all", "全部已添加的模型"],
+            ["selected", "只提供勾选的模型"],
+            ["none", "不提供模型"],
           ] as const
         ).map(([value, label]) => (
           <label key={value} className="model-access-mode">
@@ -311,10 +297,9 @@ export function ModelSelectionEditor({
               const override = selection.overrides?.[entry.id];
               const effective = effectiveModelEntry(entry, override);
               const overridden = hasModelOverride(override);
-              const isExpanded = expandedModel === entry.id;
               return (
                 <div
-                  className={`model-access-model-row${isExpanded ? " is-expanded" : ""}${overridden ? " is-customized" : ""}`}
+                  className={`model-access-model-row${overridden ? " is-customized" : ""}`}
                   key={entry.id}
                 >
                   <div className="model-access-model-row-main">
@@ -334,21 +319,8 @@ export function ModelSelectionEditor({
                     <ModelMetadata entry={effective} />
                     <div className="model-access-row-actions">
                       {overridden && (
-                        <span className="model-override-badge">已定制</span>
+                        <span className="model-override-badge">已自定义</span>
                       )}
-                      <button
-                        type="button"
-                        className={`model-param-toggle-btn${isExpanded ? " is-open" : ""}`}
-                        aria-expanded={isExpanded}
-                        aria-label={`配置模型参数 ${entry.id}`}
-                        onClick={() =>
-                          setExpandedModel(isExpanded ? null : entry.id)
-                        }
-                      >
-                        <SlidersHorizontal size={13} aria-hidden="true" />
-                        <span>参数配置</span>
-                        <CaretDown size={11} aria-hidden="true" />
-                      </button>
                       {isManual && (
                         <IconButton
                           label={`移除手工模型 ${entry.id}`}
@@ -359,21 +331,6 @@ export function ModelSelectionEditor({
                       )}
                     </div>
                   </div>
-                  {isExpanded && (
-                    <ModelParameterEditor
-                      entry={entry}
-                      override={override}
-                      disabled={false}
-                      onChange={(patch) =>
-                        onSelection(
-                          updateModelOverride(selection, entry.id, patch),
-                        )
-                      }
-                      onReset={() =>
-                        onSelection(clearModelOverride(selection, entry.id))
-                      }
-                    />
-                  )}
                 </div>
               );
             })}
@@ -398,9 +355,9 @@ export function ModelSelectionEditor({
       )}
       <div className="model-access-inline">
         <Input
-          aria-label="手工模型 ID"
+          aria-label="手动添加模型 ID"
           value={manual}
-          placeholder="手工模型 ID"
+          placeholder="目录中没有的模型 ID"
           onChange={(event) => setManual(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter") {

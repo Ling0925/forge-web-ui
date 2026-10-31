@@ -320,16 +320,34 @@ export function pluginCapabilityLabel(capability: string): {
     case "network":
       return {
         label: "网络",
-        description:
-          "访问网络；按 allowedDomains 限制主机，显式填写 * 则允许全部网站。",
+        description: "访问网络；只限“允许的主机名”，填写 * 则允许全部网站。",
       };
     case "process":
       return {
         label: "本机进程",
-        description: "启动本机进程；不是 OS 沙箱。",
+        description: "启动本机程序；程序不在沙箱内运行。",
       };
     default:
-      return { label: capability, description: "主机声明的能力。" };
+      return { label: capability, description: "插件声明的其他能力。" };
+  }
+}
+
+/** Capabilities that reach outside Forge; enabling them needs confirmation. */
+export const HIGH_RISK_PLUGIN_CAPABILITIES: readonly string[] = [
+  "network",
+  "process",
+  "browser",
+];
+
+/** Localized description for built-in plugins; manifests are English. */
+export function pluginDescription(id: string, fallback: string): string {
+  switch (id) {
+    case "officecli":
+      return "读取、创建和编辑 Word、Excel、PowerPoint 文档，并生成隔离的 HTML 预览。需要本机已安装可信的 OfficeCLI，不会自动安装。";
+    case "browser":
+      return "隔离的浏览器工具，支持按需截图预览和人工接管。需要 agent-browser 与 Chrome；启用后仍受 Forge 权限约束。";
+    default:
+      return fallback;
   }
 }
 

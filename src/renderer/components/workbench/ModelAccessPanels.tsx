@@ -54,7 +54,6 @@ export {
   updateModelOverride,
 } from "./model-access/model-overrides";
 export { EffortBars, ModelMetadata } from "./model-access/ModelMetadata";
-export { ModelParameterEditor } from "./model-access/ModelParameterEditor";
 export {
   ModelSelectionEditor,
   PresetPicker,

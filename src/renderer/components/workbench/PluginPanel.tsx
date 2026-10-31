@@ -17,6 +17,7 @@ import { OperationScope } from "../../state/operation-scope";
 import {
   BROWSER_PLUGIN_ID,
   type ConfigSchemaProperty,
+  HIGH_RISK_PLUGIN_CAPABILITIES,
   OFFICECLI_PLUGIN_ID,
   OFFICECLI_TIMEOUT_SECONDS,
   type OfficeCliConfigDraft,
@@ -28,6 +29,7 @@ import {
   listPlugins,
   officeCliConfigFromDraft,
   pluginCapabilityLabel,
+  pluginDescription,
   pluginDraftDirty,
   pluginDraftFor,
   pluginManagementAvailable,
@@ -36,6 +38,7 @@ import {
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
+import { useConfirm } from "./ConfirmDialog";
 import "./plugin-panel.css";
 
 type PluginDraft = PluginConfigDraft | OfficeCliConfigDraft;
@@ -95,7 +98,7 @@ function BrowserConfigEditor({
         <Field
           id="plugin-browser-executable"
           label="agent-browser 可执行路径"
-          helper="默认 agent-browser 使用 Core 锁定的可选依赖；也可填写已安装程序的路径，不会自动安装。"
+          helper="留空使用 Forge 自带的 agent-browser；也可填写已安装程序的路径，不会自动安装。"
         >
           <Input
             id="plugin-browser-executable"
@@ -221,7 +224,7 @@ function ConfigSchemaDetails({
   if (schema.length === 0) return null;
   return (
     <details className="plugin-schema">
-      <summary>Core 配置 schema（{schema.length} 个字段）</summary>
+      <summary>全部配置字段（{schema.length} 个）</summary>
       <ul>
         {schema.map((property) => (
           <li key={property.name}>
@@ -242,8 +245,8 @@ function ConfigSchemaDetails({
 /** Per-plugin approval wording; enabling never implies installation or a new model. */
 function safetyNote(id: string): string {
   if (id === OFFICECLI_PLUGIN_ID)
-    return "不绕过审批：workspace 下 Agent 的 OfficeCLI 调用逐次请求批准；可执行文件是本机受信程序，不是 OS 沙箱。文档内容是不可信数据，不改变模型或 provider。只读模式下 OfficeCLI 调用被拒绝。";
-  return "不绕过审批：workspace 下 Agent 的浏览器调用逐次请求批准；人工动作由你的点击授权。两者均受当前权限和允许域名限制，只读模式下浏览器动作被拒绝。";
+    return "不绕过审批：工作区权限下，智能体每次调用 OfficeCLI 都需要你批准；只读权限下调用会被拒绝。OfficeCLI 是本机可信程序，不在沙箱内运行；文档内容按不可信数据处理，不会改变所用模型。";
+  return "不绕过审批：工作区权限下，智能体每次操作浏览器都需要你批准；你在浏览器中的手动操作由你自己授权。两者都受当前权限和允许的主机名限制，只读权限下浏览器操作会被拒绝。";
 }
 
 function PluginIcon({ id }: { readonly id: string }) {
@@ -253,6 +256,7 @@ function PluginIcon({ id }: { readonly id: string }) {
 }
 
 export function PluginPanel() {
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [plugins, setPlugins] = useState<readonly PluginRecord[]>([]);
   const [drafts, setDrafts] = useState<Readonly<Record<string, PluginDraft>>>(
     {},
@@ -300,7 +304,7 @@ export function PluginPanel() {
       if (!available) {
         setLoading(false);
         setError(
-          "当前连接的 Core 尚未提供插件 RPC。插件管理只在已连接且已更新 Core 的客户端可用。",
+          "当前连接的 Forge 核心版本不支持插件管理。更新核心后即可使用。",
         );
         return;
       }
@@ -395,8 +399,8 @@ export function PluginPanel() {
       setHealth((old) => ({ ...old, [id]: { state: "idle" } }));
       setNotice(
         id === OFFICECLI_PLUGIN_ID
-          ? "OfficeCLI 插件配置已保存。status=configured 只表示配置已持久化，不代表依赖可用。"
-          : "浏览器插件配置已保存。status=configured 只表示配置已持久化，不代表依赖可用。",
+          ? "OfficeCLI 插件配置已保存。保存不代表依赖可用，请检查依赖。"
+          : "浏览器插件配置已保存。保存不代表依赖可用，请检查依赖。",
       );
     });
 
@@ -413,9 +417,9 @@ export function PluginPanel() {
       setNotice(
         next.enabled
           ? id === OFFICECLI_PLUGIN_ID
-            ? "OfficeCLI 插件已启用。不会自动安装 OfficeCLI；下一次运行时才会注册 officecli_* 工具，并沿用当前模型与 provider。"
+            ? "OfficeCLI 插件已启用。不会自动安装 OfficeCLI；下一次运行时才会提供 OfficeCLI 工具，所用模型不变。"
             : "插件已启用。启用不启动浏览器，也不绕过审批；下一次运行时才会创建隔离会话。"
-          : "插件已禁用，新运行不会再注册它的工具。已启动的运行由 Core 按配置变更处理。",
+          : "插件已禁用，新的运行不再提供它的工具。",
       );
     });
 
@@ -425,8 +429,8 @@ export function PluginPanel() {
         <output className="plugin-gate">
           <Info size={14} weight="bold" aria-hidden="true" />
           <span>
-            当前客户端连接的 Core 未提供插件管理接口。插件状态由 Core
-            持有，只有已连接并已更新 Core 的 Web 客户端才能读取和修改。
+            当前连接的 Forge
+            核心版本不支持插件管理。更新核心后即可在这里查看和修改插件。
           </span>
         </output>
       </section>
@@ -454,7 +458,7 @@ export function PluginPanel() {
           <div className="plugin-panel-summary-row">
             <span className="plugin-panel-kicker">
               <PuzzlePiece size={12} weight="bold" aria-hidden="true" />
-              Core 插件清单
+              内置插件
             </span>
             {!loading && plugins.length > 0 && (
               <span className="plugin-panel-count-pill">
@@ -463,8 +467,8 @@ export function PluginPanel() {
             )}
           </div>
           <p className="wb-muted">
-            插件由 Core 注册并持有状态；这里只展示 Core
-            返回的清单和配置。启用能力不等于授予权限，运行仍按会话权限与审批执行。
+            插件由 Forge
+            核心注册和管理。启用插件不等于授予权限，运行仍按会话权限与审批执行。
           </p>
         </div>
         <Button
@@ -485,7 +489,7 @@ export function PluginPanel() {
         <output className="plugin-gate">正在读取插件清单…</output>
       )}
       {!loading && !plugins.length && !error && (
-        <p className="plugin-gate">Core 未注册任何插件。</p>
+        <p className="plugin-gate">暂无可用插件。</p>
       )}
       {plugins.map((record) => {
         const id = record.manifest.id;
@@ -528,9 +532,6 @@ export function PluginPanel() {
                       <span className="plugin-meta-pill">
                         v{record.manifest.version}
                       </span>
-                      <span className="plugin-meta-pill">
-                        API v{record.manifest.apiVersion}
-                      </span>
                       {record.manifest.builtin && (
                         <span className="plugin-meta-pill is-builtin">
                           内置
@@ -539,7 +540,7 @@ export function PluginPanel() {
                     </div>
                   </div>
                   <p className="plugin-description">
-                    {record.manifest.description}
+                    {pluginDescription(id, record.manifest.description)}
                   </p>
                 </div>
               </div>
@@ -577,7 +578,6 @@ export function PluginPanel() {
                     <li key={capability}>
                       <div className="plugin-capability-head">
                         <strong>{item.label}</strong>
-                        <code>{capability}</code>
                       </div>
                       <span>{item.description}</span>
                     </li>
@@ -617,8 +617,7 @@ export function PluginPanel() {
                   <p className="plugin-hint">
                     依赖需由你自行安装并保持可执行；Forge
                     不自动安装、不下载、不升级，也不会改用其它 Office
-                    后端。启用只影响新的运行，当前会话与已启动的运行不热更新；不会修改模型或
-                    provider。
+                    后端。启用只影响新的运行，正在进行的运行不受影响，也不会改变所用模型。
                   </p>
                 </div>
 
@@ -696,8 +695,7 @@ export function PluginPanel() {
               </div>
             ) : (
               <p className="plugin-hint">
-                当前版本不提供该插件的可视化配置编辑器；配置由 Core
-                维护，页面不会注入任意插件脚本。
+                这个插件暂不提供可视化配置；它的配置由 Forge 核心维护。
               </p>
             )}
 
@@ -706,8 +704,8 @@ export function PluginPanel() {
                 <p className="plugin-hint">
                   {record.status === "configured"
                     ? isOfficeCli
-                      ? "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只执行 officecli --version，不安装依赖、不转换文档。"
-                      : "status=configured 仅表示配置已保存；未执行依赖检查前不能视为 ready。检查只探测 agent-browser 工具协议，不安装依赖、不启动网站访问。"
+                      ? "配置已保存，但还没检查依赖。检查只运行 officecli --version，不安装依赖、不转换文档。"
+                      : "配置已保存，但还没检查依赖。检查只探测 agent-browser 是否可用，不安装依赖、不访问网站。"
                     : record.status === "running"
                       ? isOfficeCli
                         ? `有 ${record.activeSessions} 个活动会话正在使用 OfficeCLI；运行结束后工具随之卸载。`
@@ -756,7 +754,28 @@ export function PluginPanel() {
                   size="sm"
                   variant={record.enabled ? "secondary" : "primary"}
                   disabled={busy}
-                  onClick={() => void toggle(record)}
+                  onClick={async () => {
+                    const risky = record.manifest.capabilities.filter((item) =>
+                      HIGH_RISK_PLUGIN_CAPABILITIES.includes(item),
+                    );
+                    if (
+                      !record.enabled &&
+                      risky.length > 0 &&
+                      !(await confirm({
+                        title: `启用插件“${record.manifest.name}”？`,
+                        body: `启用后，新的运行可以使用这些能力：${risky
+                          .map((item) => pluginCapabilityLabel(item).label)
+                          .join("、")}。${
+                          risky.includes("process")
+                            ? "本机程序不在沙箱内运行。"
+                            : ""
+                        }每次调用仍按当前权限请求批准。`,
+                        confirmLabel: "启用插件",
+                      }))
+                    )
+                      return;
+                    void toggle(record);
+                  }}
                 >
                   {record.enabled ? "禁用插件" : "启用插件"}
                 </Button>
@@ -765,6 +784,7 @@ export function PluginPanel() {
           </article>
         );
       })}
+      {confirmDialog}
     </section>
   );
 }

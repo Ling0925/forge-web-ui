@@ -20,7 +20,8 @@ function workspaceName(path: string): string {
 }
 
 /**
- * 「工作区」对话框：工作区文件浏览与项目指令 / 技能 / MCP。
+ * 「工作区」对话框：工作区文件浏览与项目指令 / 技能。MCP 服务器对所有
+ * 工作区生效，只在设置中管理，这里给出跳转。
  * 它们描述的是项目而不是某一次执行，因此从会话详情移到这里；
  * 侧栏工作区行与会话详情底部都能打开，并绑定当前选中的会话。
  */
@@ -82,7 +83,12 @@ export function WorkspaceResourcesDialog() {
               {
                 id: "resources",
                 label: "项目资源",
-                content: <ProjectResources key={`resources:${snapshot.id}`} />,
+                content: (
+                  <ProjectResources
+                    key={`resources:${snapshot.id}`}
+                    onLeave={() => setTab(null)}
+                  />
+                ),
               },
             ]}
           />

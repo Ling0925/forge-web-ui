@@ -18,6 +18,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { selectableModelIds } from "../../state/composer-model";
 import {
   shallowEqual,
   useWorkbenchActions,
@@ -30,6 +31,7 @@ import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
 import { Tag } from "../primitives/Tag";
+import { useConfirm } from "./ConfirmDialog";
 import { Dialog } from "./Dialog";
 import {
   type AccessDraft,
@@ -44,7 +46,6 @@ import {
   SourceCardModelPanel,
   accessDraft,
   aliasesObject,
-  countModelOverrides,
   credentialRows,
   describedFailure,
   endpointProblem,
@@ -54,6 +55,13 @@ import {
   protocolLabel,
   selectionDraft,
 } from "./ModelAccessPanels";
+import { sourceModelSaveInput } from "./model-access/model-window-migration";
+import {
+  SaveIndicator,
+  type SaveStatus,
+  SettingGroup,
+  SettingRow,
+} from "./settings/SettingRows";
 import "./provider-sources.css";
 import "./model-access.css";
 
@@ -244,7 +252,6 @@ export function ProviderSources({
   const [editorOpen, setEditorOpen] = useState(false);
   const [draft, setDraft] = useState<AccessDraft>(() => newDraft(sources));
   const [baseline, setBaseline] = useState<AccessDraft | null>(null);
-  const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -265,22 +272,11 @@ export function ProviderSources({
   const [tests, setTests] = useState<
     Readonly<Record<string, CatalogTestState | undefined>>
   >({});
-  const [confirmRemove, setConfirmRemove] = useState<Readonly<{
-    sourceId: string;
-    sessions: readonly string[];
-  }> | null>(null);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
-  const [cardDrafts, setCardDrafts] = useState<
-    Readonly<
-      Record<
-        string,
-        {
-          readonly model: string;
-          readonly selection: EditableModelSelection;
-        }
-      >
-    >
-  >({});
+  const [defaultStatus, setDefaultStatus] = useState<SaveStatus>({
+    state: "idle",
+  });
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const requestedCatalogs = useRef(new Set<string>());
   const pendingCatalogs = useRef(new Map<string, Promise<CatalogLoad>>());
   const testRequests = useRef(
@@ -288,7 +284,6 @@ export function ProviderSources({
   );
   const lock = useRef(false);
   const alive = useRef(true);
-  const closeConfirmation = useRef<HTMLFieldSetElement>(null);
   const id = useId();
   const effectiveTabId = useMemo(() => {
     if (activeTabId && sources.some((item) => item.id === activeTabId)) {
@@ -541,25 +536,14 @@ export function ProviderSources({
     if (state.isSettingsOpen || !editorOpen || lock.current) return;
     cancelAllTests();
     setEditorOpen(false);
-    setConfirmClose(false);
-    setConfirmRemove(null);
     setDraft(newDraft(sources));
     setBaseline(null);
     setSelected(null);
   }, [state.isSettingsOpen, editorOpen, sources, cancelAllTests]);
 
-  useEffect(() => {
-    if (confirmClose)
-      closeConfirmation.current
-        ?.querySelector<HTMLButtonElement>("[data-keep-editing]")
-        ?.focus();
-  }, [confirmClose]);
-
   const resetEditor = () => {
     cancelAllTests();
     setEditorOpen(false);
-    setConfirmClose(false);
-    setConfirmRemove(null);
     setDraft(newDraft(sources));
     setBaseline(null);
     setSelected(null);
@@ -571,16 +555,7 @@ export function ProviderSources({
       setSelected(saved?.id ?? null);
       if (saved) {
         const base = accessDraft(saved);
-        const pendingCard = cardDrafts[saved.id];
-        setDraft(
-          pendingCard
-            ? {
-                ...base,
-                model: pendingCard.model,
-                modelSelection: pendingCard.selection,
-              }
-            : base,
-        );
+        setDraft(base);
         setBaseline(base);
       } else {
         setDraft(newDraft(sources));
@@ -588,10 +563,8 @@ export function ProviderSources({
       }
       setError("");
       setMessage("");
-      setConfirmRemove(null);
-      setConfirmClose(false);
     },
-    [sources, cardDrafts],
+    [sources],
   );
 
   const openEditor = (sourceId: string | null) => {
@@ -602,22 +575,26 @@ export function ProviderSources({
       void loadCatalog(saved.id).catch(() => undefined);
   };
 
-  const requestClose = () => {
+  const requestClose = async () => {
     if (lock.current) return;
-    if (confirmRemove) {
-      setConfirmRemove(null);
+    if (
+      dirty &&
+      !(await confirm({
+        title: "放弃未保存的修改？",
+        body: "关闭后，这次对来源的修改不会保存。",
+        confirmLabel: "放弃修改",
+        cancelLabel: "继续编辑",
+        tone: "danger",
+      }))
+    )
       return;
-    }
-    if (dirty) setConfirmClose(true);
-    else resetEditor();
+    resetEditor();
   };
 
   const change = (patch: Partial<AccessDraft>) => {
     setDraft((old) => ({ ...old, ...patch }));
     setError("");
     setMessage("");
-    setConfirmClose(false);
-    setConfirmRemove(null);
   };
 
   const changeBaseUrl = (value: string) => {
@@ -779,77 +756,65 @@ export function ProviderSources({
       const result = await updateSettings(parsed.data);
       if (!result.ok) throw new Error(result.error);
       if (!alive.current) return "";
-      setCardDrafts((old) => {
-        if (!old[draft.id]) return old;
-        const next = { ...old };
-        delete next[draft.id];
-        return next;
-      });
       adopt(result.settings, draft.id);
       setEditorOpen(false);
       void loadCatalog(draft.id, true).catch(() => undefined);
       return "来源已保存。";
     });
 
-  const saveCardModelConfig = (item: PublicProviderSource) =>
-    operation(async () => {
-      const pending = cardDrafts[item.id];
-      const nextModel = (pending?.model ?? item.model).trim();
-      const nextSelection = pending?.selection ?? selectionDraft(item);
-      const credentials = credentialRows(item).map((credential) => ({
-        id: credential.id,
-        label: credential.label.trim() || "API 密钥",
-        enabled: credential.enabled,
-        type: credential.type,
-        ...(credential.protocol ? { protocol: credential.protocol } : {}),
-      }));
-      const parsed = configureInputSchema.safeParse({
-        source: {
-          type: "save",
-          source: {
-            id: item.id,
-            label: item.label.trim(),
-            baseUrl: item.baseUrl.trim(),
-            model: nextModel,
-            apiMode: item.apiMode ?? "chat-completions",
-            preset: item.preset ?? "",
-            endpoints: normalizedEndpoints(item.endpoints ?? {}),
-            modelSelection: modelSelectionObject(nextSelection),
-            modelAliases: item.modelAliases ?? {},
-            credentialRouting: item.credentialRouting ?? "order",
-            sticky: item.sticky === true,
-            ...(item.activeCredentialId
-              ? { activeCredentialId: item.activeCredentialId }
-              : {}),
-          },
-          credentials,
-          ...(item.revision === undefined
-            ? {}
-            : { expectedRevision: item.revision }),
-        },
-      });
-      if (!parsed.success)
-        throw new Error(
-          parsed.error.issues
-            .map(
-              (issue) => `${issue.path.slice(2).join(".")}：${issue.message}`,
-            )
-            .join("\n"),
-        );
-      const result = await updateSettings(parsed.data);
+  /** Model cards save immediately: default model, list and per-model params. */
+  const saveCardModelConfig = async (
+    item: PublicProviderSource,
+    nextModel: string,
+    nextSelection: EditableModelSelection,
+  ): Promise<boolean> => {
+    let ok = false;
+    await operation(async () => {
+      const result = await updateSettings(
+        sourceModelSaveInput(item, nextModel, nextSelection),
+      );
       if (!result.ok) throw new Error(result.error);
+      ok = true;
       if (!alive.current) return "";
-      setCardDrafts((old) => {
-        const next = { ...old };
-        delete next[item.id];
-        return next;
-      });
-      if (selected === item.id) {
-        adopt(result.settings, item.id);
-      }
+      if (selected === item.id) adopt(result.settings, item.id);
       void loadCatalog(item.id, true).catch(() => undefined);
-      return "模型参数已保存。";
+      return "模型设置已保存。";
     });
+    return ok;
+  };
+
+  const chooseDefaultModel = async (value: string) => {
+    const [sourceId, model] = value.split("\u0000");
+    const target = sources.find((item) => item.id === sourceId);
+    if (!target || !model) return;
+    setDefaultStatus({ state: "saving" });
+    let failure = "";
+    await operation(async () => {
+      try {
+        if (target.model !== model) {
+          const saved = await updateSettings(
+            sourceModelSaveInput(target, model, selectionDraft(target)),
+          );
+          if (!saved.ok) throw new Error(saved.error);
+        }
+        if (settings?.activeSourceId !== target.id) {
+          const activated = await updateSettings({
+            source: { type: "activate", id: target.id },
+          });
+          if (!activated.ok) throw new Error(activated.error);
+        }
+      } catch (error) {
+        failure = describedFailure(error);
+      }
+      return "";
+    });
+    if (alive.current)
+      setDefaultStatus(
+        failure
+          ? { state: "error", message: `保存失败：${failure}` }
+          : { state: "saved" },
+      );
+  };
 
   const remove = (sourceId: string, forgottenSessionIds?: readonly string[]) =>
     operation(async () => {
@@ -864,8 +829,12 @@ export function ProviderSources({
         const pinned = state.sessions
           .filter((item) => item.providerSourceId === sourceId)
           .map((item) => item.id);
-        if (!forgottenSessionIds && pinned.length > 0)
-          setConfirmRemove({ sourceId, sessions: pinned });
+        if (!forgottenSessionIds && pinned.length > 0) {
+          // Core refuses while sessions still pin this source; ask again with
+          // the list and remove them from the source on a second confirmation.
+          void confirmRemoval(sourceId, pinned);
+          return "";
+        }
         throw new Error(result.error);
       }
       if (!alive.current) return "";
@@ -873,6 +842,28 @@ export function ProviderSources({
       setEditorOpen(false);
       return "来源已删除。";
     });
+
+  const confirmRemoval = async (
+    sourceId: string,
+    sessions: readonly string[] = [],
+  ) => {
+    const target = sources.find((item) => item.id === sourceId);
+    const name = target?.label ?? sourceId;
+    const ok = await confirm({
+      title: `删除来源“${name}”？`,
+      body: sessions.length
+        ? `仍有 ${sessions.length} 个会话绑定这个来源：${sessions
+            .slice(0, 5)
+            .join(
+              "、",
+            )}${sessions.length > 5 ? " 等" : ""}。删除后这些会话需要重新选择模型。`
+        : "来源的地址、密钥和模型设置会被删除，无法恢复。",
+      confirmLabel: "删除来源",
+      tone: "danger",
+      requireText: name,
+    });
+    if (ok) void remove(sourceId, sessions.length ? sessions : undefined);
+  };
 
   const reloadAfterLogin = async () => {
     const next = await loadSettings();
@@ -908,308 +899,159 @@ export function ProviderSources({
     void loadCatalog(saved.id, true).catch(() => undefined);
   };
 
-  const removeTarget = confirmRemove
-    ? sources.find((item) => item.id === confirmRemove.sourceId)
-    : undefined;
+  const tabSource = sources.find((item) => item.id === effectiveTabId);
+  const defaultOptions = sources.flatMap((item) =>
+    selectableModelIds(item).map((model) => ({
+      value: `${item.id}\u0000${model}`,
+      label: `${item.label} · ${model}`,
+    })),
+  );
+  const defaultValue =
+    settings?.activeSourceId && settings.model
+      ? `${settings.activeSourceId}\u0000${settings.model}`
+      : "";
 
   return (
     <section
       className="settings-section provider-sources"
       aria-label="模型来源管理"
     >
-      <div className="provider-heading">
-        <h3>模型来源</h3>
-        <Button
-          size="sm"
-          variant="secondary"
-          icon={<Plus size={14} />}
-          disabled={!settings || busy || sources.length >= 20}
-          onClick={() => openEditor(null)}
-        >
-          添加来源
-        </Button>
-      </div>
+      {sources.length > 0 && (
+        <SettingGroup title="默认">
+          <SettingRow
+            id="defaultModel"
+            label="默认模型"
+            description="新会话使用的模型；每个会话仍可在输入框中切换。"
+            control={
+              <Select
+                aria-label="默认模型"
+                value={
+                  defaultOptions.some((item) => item.value === defaultValue)
+                    ? defaultValue
+                    : ""
+                }
+                placeholder="选择默认模型"
+                disabled={busy || !defaultOptions.length}
+                options={defaultOptions}
+                onValueChange={(value) => void chooseDefaultModel(value)}
+              />
+            }
+            status={<SaveIndicator status={defaultStatus} />}
+          />
+        </SettingGroup>
+      )}
 
-      {sources.length > 0 ? (
-        <div className="provider-sources-tabbed">
-          <div
-            className="provider-source-tabs"
-            role="tablist"
-            aria-label="模型来源切换"
+      <SettingGroup
+        id="setting-row-sources"
+        title="来源"
+        description="地址、密钥和凭据在“编辑来源”中修改并保存。"
+        actions={
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={<Plus size={14} />}
+            disabled={!settings || busy || sources.length >= 20}
+            onClick={() => openEditor(null)}
           >
-            {sources.map((item, index) => {
-              const isTabActive = item.id === effectiveTabId;
-              const isDefault = settings?.activeSourceId === item.id;
-              const savedSelection = selectionDraft(item);
-              const effectiveSelection =
-                cardDrafts[item.id]?.selection ?? savedSelection;
-              const overrideCount = countModelOverrides(
-                effectiveSelection.overrides,
-              );
-              const hasUnsaved = cardDrafts[item.id] !== undefined;
-              return (
-                <button
-                  key={item.id}
-                  id={`${id}-tab-${item.id}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={isTabActive}
-                  aria-controls={`${id}-panel-${item.id}`}
-                  tabIndex={isTabActive ? 0 : -1}
-                  className={`provider-source-tab${isTabActive ? " is-active" : ""}${isDefault ? " is-current" : ""}`}
-                  onClick={() => setActiveTabId(item.id)}
-                  onKeyDown={(event) => {
-                    if (sources.length <= 1) return;
-                    let nextIndex = -1;
-                    if (event.key === "ArrowRight") {
-                      nextIndex = (index + 1) % sources.length;
-                    } else if (event.key === "ArrowLeft") {
-                      nextIndex = (index - 1 + sources.length) % sources.length;
-                    } else if (event.key === "Home") {
-                      nextIndex = 0;
-                    } else if (event.key === "End") {
-                      nextIndex = sources.length - 1;
-                    }
-                    if (nextIndex >= 0) {
-                      event.preventDefault();
-                      const target = sources[nextIndex];
-                      if (target) {
-                        setActiveTabId(target.id);
-                        document
-                          .getElementById(`${id}-tab-${target.id}`)
-                          ?.focus();
-                      }
-                    }
-                  }}
-                >
-                  <span
-                    className={`provider-source-tab-dot${isDefault ? " is-current" : ""}`}
-                    aria-hidden="true"
-                  />
-                  <span className="provider-source-tab-label">
-                    {item.label}
-                  </span>
-                  {isDefault && (
-                    <span className="provider-source-tab-badge is-default">
-                      默认
-                    </span>
-                  )}
-                  {overrideCount > 0 && (
-                    <span
-                      className="provider-source-tab-badge is-custom"
-                      title={`已定制 ${overrideCount} 个模型`}
-                    >
-                      {overrideCount}
-                    </span>
-                  )}
-                  {hasUnsaved && (
-                    <span
-                      className="provider-source-tab-unsaved"
-                      title="有未保存的模型配置"
-                      aria-hidden="true"
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <ul className="provider-source-list" aria-label="已保存的来源">
+            添加来源
+          </Button>
+        }
+      >
+        {sources.length > 0 ? (
+          <ul
+            className="provider-source-list"
+            aria-label="已保存的来源"
+            data-setting="sources"
+          >
             {sources.map((item) => {
-              const isTabActive = item.id === effectiveTabId;
               const isDefault = settings?.activeSourceId === item.id;
               const loading = catalogLoading[item.id] ?? false;
               const catalog = catalogs[item.id];
               const meta = catalogMeta[item.id];
-              const savedSelection = selectionDraft(item);
-              const cardDraft = cardDrafts[item.id];
-              const effectiveModel = cardDraft?.model ?? item.model;
-              const effectiveSelection = cardDraft?.selection ?? savedSelection;
-              const overrideCount = countModelOverrides(
-                effectiveSelection.overrides,
-              );
-              const cardDirty =
-                cardDraft !== undefined &&
-                JSON.stringify({
-                  model: cardDraft.model.trim(),
-                  selection: modelSelectionObject(cardDraft.selection),
-                }) !==
-                  JSON.stringify({
-                    model: item.model.trim(),
-                    selection: modelSelectionObject(savedSelection),
-                  });
-
+              const selection = selectionDraft(item);
               return (
                 <li
                   key={item.id}
-                  id={`${id}-panel-${item.id}`}
-                  hidden={!isTabActive}
-                  className={`provider-source-card${isDefault ? " is-current" : ""}${isTabActive ? " is-active-tab" : ""}`}
+                  className={`provider-source-row${isDefault ? " is-current" : ""}`}
                 >
-                  <div className="provider-source-summary-bar">
-                    <div className="provider-source-summary-info">
-                      <div className="provider-source-head">
-                        <span className="provider-source-title">
-                          <strong>{item.label}</strong>
-                          {isDefault && (
-                            <span className="provider-current">默认</span>
-                          )}
-                          <Tag>{item.credentials?.length ?? 1} 凭据</Tag>
-                          <Tag tone="muted">
-                            {item.hasApiKey ? "已保存密钥" : "无密钥"}
-                          </Tag>
-                          {overrideCount > 0 && (
-                            <Tag tone="accent">
-                              已定制 {overrideCount} 个模型
-                            </Tag>
-                          )}
-                          {meta?.stale && catalog && catalog.length > 0 && (
-                            <Tag tone="warning">已过期</Tag>
-                          )}
-                        </span>
-                        <span className="provider-source-protocol">
-                          {protocolLabel(item.apiMode)}
-                        </span>
-                      </div>
-                      <div className="provider-source-meta-line">
-                        <span className="provider-source-url">
-                          {item.baseUrl}
-                        </span>
-                        <span className="model-access-separator">·</span>
-                        <span className="provider-source-detail">
-                          默认模型 <code>{effectiveModel || "未选择"}</code>
-                          <span className="model-access-separator">·</span>
-                          {effectiveSelection.mode === "all"
-                            ? "全部模型"
-                            : effectiveSelection.mode === "none"
-                              ? "不提供模型"
-                              : `${effectiveSelection.models.length} 个模型`}
-                          {catalogLoading[item.id] && (
-                            <span className="model-access-separator">
-                              · 加载中
-                            </span>
-                          )}
-                          {catalog && (
-                            <span className="model-access-separator">
-                              · 目录 {catalog.length}
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="provider-source-actions">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        icon={<PencilSimple size={14} />}
-                        aria-label={`编辑${item.label}`}
-                        disabled={busy}
-                        onClick={() => openEditor(item.id)}
-                      >
-                        编辑来源
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        icon={<ArrowClockwise size={14} />}
-                        aria-label={`刷新${item.label}的模型`}
-                        loading={loading || catalogLoading[item.id] === true}
-                        disabled={busy}
-                        onClick={() =>
-                          void operation(async () => {
-                            const loaded = await loadCatalog(item.id, true);
-                            return refreshNotice(loaded);
-                          })
-                        }
-                      >
-                        刷新目录
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="provider-delete"
-                        icon={<Trash size={14} />}
-                        disabled={busy}
-                        onClick={() =>
-                          setConfirmRemove({ sourceId: item.id, sessions: [] })
-                        }
-                      >
-                        删除
-                      </Button>
-                    </div>
-                  </div>
-
-                  {catalogErrors[item.id] && (
-                    <p
-                      className="provider-feedback provider-error"
-                      role="alert"
-                    >
-                      {catalogErrors[item.id]}
-                    </p>
-                  )}
-
-                  <SourceCardModelPanel
-                    sourceLabel={item.label}
-                    catalog={catalog ?? []}
-                    loading={loading}
-                    error={catalogErrors[item.id]}
-                    model={effectiveModel}
-                    selection={effectiveSelection}
-                    dirty={cardDirty}
-                    saving={busy}
-                    disabled={busy}
-                    onModel={(nextModel) => {
-                      setCardDrafts((old) => ({
-                        ...old,
-                        [item.id]: {
-                          model: nextModel,
-                          selection: effectiveSelection,
-                        },
-                      }));
-                      if (selected === item.id) {
-                        change({ model: nextModel });
-                      }
-                    }}
-                    onSelection={(nextSelection) => {
-                      setCardDrafts((old) => ({
-                        ...old,
-                        [item.id]: {
-                          model: effectiveModel,
-                          selection: nextSelection,
-                        },
-                      }));
-                      if (selected === item.id) {
-                        change({ modelSelection: nextSelection });
-                      }
-                    }}
-                    onResetDraft={() => {
-                      setCardDrafts((old) => {
-                        const next = { ...old };
-                        delete next[item.id];
-                        return next;
-                      });
-                      if (selected === item.id) {
-                        change({
-                          model: item.model,
-                          modelSelection: savedSelection,
-                        });
-                      }
-                    }}
-                    onSave={() => void saveCardModelConfig(item)}
+                  <span
+                    className="wb-status-dot"
+                    data-status={
+                      catalogErrors[item.id]
+                        ? "awaiting_approval"
+                        : loading
+                          ? "running"
+                          : "ready"
+                    }
+                    aria-hidden="true"
                   />
+                  <div className="provider-source-row-main">
+                    <span className="provider-source-title">
+                      <strong>{item.label}</strong>
+                      {isDefault && <Tag tone="accent">默认</Tag>}
+                      {!item.hasApiKey &&
+                        !item.credentials?.some(
+                          (credential) => credential.type !== "api-key",
+                        ) && <Tag tone="muted">无密钥</Tag>}
+                      {meta?.stale && catalog && catalog.length > 0 && (
+                        <Tag tone="warning">目录已过期</Tag>
+                      )}
+                    </span>
+                    <span className="provider-source-meta-line">
+                      {protocolLabel(item.apiMode)} · {item.baseUrl} ·{" "}
+                      {selection.mode === "none"
+                        ? "不提供模型"
+                        : `${selectableModelIds(item).length} 个模型`}
+                      {(item.credentials?.length ?? 1) > 1
+                        ? ` · ${item.credentials?.length} 个凭据`
+                        : ""}
+                    </span>
+                    {catalogErrors[item.id] && (
+                      <span className="provider-source-row-error" role="alert">
+                        {catalogErrors[item.id]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="provider-source-actions">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      icon={<ArrowClockwise size={14} />}
+                      aria-label={`刷新${item.label}的模型`}
+                      loading={loading}
+                      disabled={busy}
+                      onClick={() =>
+                        void operation(async () => {
+                          const loaded = await loadCatalog(item.id, true);
+                          return refreshNotice(loaded);
+                        })
+                      }
+                    >
+                      刷新
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={<PencilSimple size={14} />}
+                      aria-label={`编辑${item.label}`}
+                      disabled={busy}
+                      onClick={() => openEditor(item.id)}
+                    >
+                      编辑来源
+                    </Button>
+                  </div>
                 </li>
               );
             })}
           </ul>
-        </div>
-      ) : (
-        <EmptyState
-          variant="inline"
-          title="尚无模型来源"
-          description="点击右上角“添加来源”，或在下方“导入来源”中粘贴 JSON 配置。"
-        />
-      )}
+        ) : (
+          <EmptyState
+            variant="inline"
+            title="尚无模型来源"
+            description="点击“添加来源”，或在下方“导入来源”中粘贴 JSON 配置。"
+          />
+        )}
+      </SettingGroup>
 
       {!editorOpen && message && (
         <output className="provider-feedback">{message}</output>
@@ -1220,62 +1062,67 @@ export function ProviderSources({
         </p>
       )}
 
-      {removeTarget && !editorOpen && (
-        <fieldset className="provider-remove-confirm" aria-label="确认删除来源">
-          <p>
-            删除“{removeTarget.label}”？
-            {confirmRemove && confirmRemove.sessions.length > 0 && (
-              <>
-                {` ${confirmRemove.sessions.length} 个会话仍绑定此来源：`}
-                {confirmRemove.sessions.slice(0, 5).join("、")}
-                {confirmRemove.sessions.length > 5 ? " 等" : ""}。
-              </>
-            )}
-          </p>
-          <div className="provider-confirm-actions">
-            <Button
-              variant="danger"
+      {tabSource && (
+        <SettingGroup
+          title="模型"
+          description="每个模型的上下文窗口、最大输出和思考等级在卡片的“编辑参数”中设置，保存后立即生效。"
+          actions={
+            sources.length > 1 ? (
+              <Select
+                aria-label="查看来源的模型"
+                value={tabSource.id}
+                options={sources.map((item) => ({
+                  value: item.id,
+                  label: item.label,
+                }))}
+                onValueChange={setActiveTabId}
+              />
+            ) : undefined
+          }
+        >
+          <div className="provider-models-body" data-setting="modelCards">
+            <SourceCardModelPanel
+              key={tabSource.id}
+              sourceLabel={tabSource.label}
+              catalog={catalogs[tabSource.id] ?? []}
+              loading={catalogLoading[tabSource.id] ?? false}
+              error={catalogErrors[tabSource.id]}
+              protocol={protocolLabel(tabSource.apiMode)}
+              model={tabSource.model}
+              selection={selectionDraft(tabSource)}
               disabled={busy}
-              onClick={() =>
-                void remove(
-                  removeTarget.id,
-                  confirmRemove && confirmRemove.sessions.length > 0
-                    ? confirmRemove.sessions
-                    : undefined,
-                )
+              legacyWindows={settings?.modelContextWindows}
+              onCommit={(nextModel, nextSelection) =>
+                saveCardModelConfig(tabSource, nextModel, nextSelection)
               }
-            >
-              确认删除来源
-            </Button>
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => setConfirmRemove(null)}
-            >
-              取消
-            </Button>
+            />
           </div>
-        </fieldset>
+        </SettingGroup>
       )}
 
-      <ImportPanel
-        onApplied={async (ids) => {
-          const next = await loadSettings();
-          for (const imported of ids)
-            if (next?.providerSources?.some((item) => item.id === imported))
-              void loadCatalog(imported).catch(() => undefined);
-          setMessage(`已导入 ${ids.length} 个来源。`);
-        }}
-      />
+      <div data-setting="import">
+        <ImportPanel
+          onApplied={async (ids) => {
+            const next = await loadSettings();
+            for (const imported of ids)
+              if (next?.providerSources?.some((item) => item.id === imported))
+                void loadCatalog(imported).catch(() => undefined);
+            setMessage(`已导入 ${ids.length} 个来源。`);
+          }}
+        />
+      </div>
 
-      <RouteGroupsPanel catalogs={catalogs} />
+      <div data-setting="routeGroups">
+        <RouteGroupsPanel catalogs={catalogs} />
+      </div>
 
       {editorOpen && (
         <Dialog
           title={source ? `编辑来源 · ${source.label}` : "添加来源"}
-          onClose={requestClose}
+          onClose={() => void requestClose()}
           dismissible={!busy}
           initialFocus="input"
+          className="provider-editor-dialog"
         >
           <div className="provider-editor modal-content">
             <fieldset disabled={busy || !settings} className="provider-fields">
@@ -1325,6 +1172,19 @@ export function ProviderSources({
                 </Field>
               </div>
 
+              <CredentialsEditor
+                sourceId={draft.id}
+                sourceReady={Boolean(source)}
+                credentials={draft.credentials}
+                activeCredentialId={draft.activeCredentialId}
+                disabled={busy}
+                onCredentials={(credentials) => change({ credentials })}
+                onActive={(activeCredentialId) =>
+                  change({ activeCredentialId })
+                }
+                onCompleted={reloadAfterLogin}
+              />
+
               <ModelSelectionEditor
                 catalog={catalogs[draft.id] ?? []}
                 loading={catalogLoading[draft.id] ?? false}
@@ -1355,58 +1215,55 @@ export function ProviderSources({
                 onCancelTest={() => cancelTest(draft.id)}
               />
 
-              <section className="model-access-section" aria-label="凭据路由">
-                <div className="model-access-heading">
-                  <h4>凭据路由</h4>
-                </div>
-                <div className="model-access-form-grid">
-                  <Field id={`${id}-credential-routing`} label="策略">
-                    <Select
+              <details className="provider-advanced">
+                <summary>高级设置</summary>
+                <p className="setting-hint">
+                  多凭据的轮换方式、认证头、额外请求参数与代理。大多数来源无需修改。
+                </p>
+                <section className="model-access-section" aria-label="凭据路由">
+                  <div className="model-access-heading">
+                    <h4>凭据路由</h4>
+                  </div>
+                  <div className="model-access-form-grid">
+                    <Field
                       id={`${id}-credential-routing`}
-                      value={draft.credentialRouting ?? "order"}
-                      options={[
-                        { value: "order", label: "顺序" },
-                        { value: "rotate", label: "轮换" },
-                        { value: "usage", label: "用量" },
-                        { value: "smart", label: "智能" },
-                        { value: "pace", label: "节流" },
-                      ]}
-                      onValueChange={(value) =>
-                        change({
-                          credentialRouting:
-                            value as AccessDraft["credentialRouting"],
-                        })
-                      }
-                    />
-                  </Field>
-                  <label className="model-access-check">
-                    <Checkbox
-                      checked={draft.sticky}
-                      onCheckedChange={(checked) => change({ sticky: checked })}
-                    />
-                    黏性
-                  </label>
-                </div>
-              </section>
-
-              <CredentialsEditor
-                sourceId={draft.id}
-                sourceReady={Boolean(source)}
-                credentials={draft.credentials}
-                activeCredentialId={draft.activeCredentialId}
-                disabled={busy}
-                onCredentials={(credentials) => change({ credentials })}
-                onActive={(activeCredentialId) =>
-                  change({ activeCredentialId })
-                }
-                onCompleted={reloadAfterLogin}
-              />
-
-              <ConnectionEditor
-                connection={draft.connection}
-                disabled={busy}
-                onChange={(connection) => change({ connection })}
-              />
+                      label="多个凭据时的使用顺序"
+                    >
+                      <Select
+                        id={`${id}-credential-routing`}
+                        value={draft.credentialRouting ?? "order"}
+                        options={[
+                          { value: "order", label: "顺序" },
+                          { value: "rotate", label: "轮换" },
+                          { value: "usage", label: "用量" },
+                          { value: "smart", label: "智能" },
+                          { value: "pace", label: "节流" },
+                        ]}
+                        onValueChange={(value) =>
+                          change({
+                            credentialRouting:
+                              value as AccessDraft["credentialRouting"],
+                          })
+                        }
+                      />
+                    </Field>
+                    <label className="model-access-check">
+                      <Checkbox
+                        checked={draft.sticky}
+                        onCheckedChange={(checked) =>
+                          change({ sticky: checked })
+                        }
+                      />
+                      同一会话尽量保持同一凭据
+                    </label>
+                  </div>
+                </section>
+                <ConnectionEditor
+                  connection={draft.connection}
+                  disabled={busy}
+                  onChange={(connection) => change({ connection })}
+                />
+              </details>
             </fieldset>
 
             {error && (
@@ -1417,67 +1274,25 @@ export function ProviderSources({
             {message && (
               <output className="provider-feedback">{message}</output>
             )}
-            {confirmClose && (
-              <fieldset
-                ref={closeConfirmation}
-                className="provider-remove-confirm"
-                disabled={busy}
-                aria-label="放弃未保存修改"
-              >
-                <p>放弃未保存的修改？</p>
-                <div className="provider-confirm-actions">
-                  <Button variant="danger" onClick={resetEditor}>
-                    放弃修改并关闭
-                  </Button>
-                  <Button
-                    data-keep-editing
-                    variant="secondary"
-                    onClick={() => setConfirmClose(false)}
-                  >
-                    继续编辑
-                  </Button>
-                </div>
-              </fieldset>
-            )}
-            {confirmRemove && (
-              <fieldset
-                className="provider-remove-confirm"
-                aria-label="确认删除来源"
-              >
-                <p>
-                  删除“{removeTarget?.label ?? confirmRemove.sourceId}”？
-                  {confirmRemove.sessions.length > 0 && (
-                    <>
-                      {` ${confirmRemove.sessions.length} 个会话仍绑定此来源：`}
-                      {confirmRemove.sessions.slice(0, 5).join("、")}
-                      {confirmRemove.sessions.length > 5 ? " 等" : ""}。
-                    </>
-                  )}
-                </p>
-                <div className="provider-confirm-actions">
-                  <Button
-                    variant="danger"
-                    disabled={busy}
-                    onClick={() =>
-                      void remove(
-                        confirmRemove.sourceId,
-                        confirmRemove.sessions.length > 0
-                          ? confirmRemove.sessions
-                          : undefined,
-                      )
-                    }
-                  >
-                    确认删除来源
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    disabled={busy}
-                    onClick={() => setConfirmRemove(null)}
-                  >
-                    取消
-                  </Button>
-                </div>
-              </fieldset>
+            {source && (
+              <SettingGroup title="危险操作" tone="danger">
+                <SettingRow
+                  label="删除来源"
+                  description="删除地址、密钥和这个来源下的模型设置，无法恢复。"
+                  control={
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      icon={<Trash size={14} />}
+                      disabled={busy || dirty}
+                      title={dirty ? "先保存或放弃修改" : undefined}
+                      onClick={() => void confirmRemoval(source.id)}
+                    >
+                      删除来源…
+                    </Button>
+                  }
+                />
+              </SettingGroup>
             )}
             <div className="provider-actions">
               <Button
@@ -1487,7 +1302,11 @@ export function ProviderSources({
               >
                 保存来源
               </Button>
-              <Button variant="ghost" disabled={busy} onClick={requestClose}>
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void requestClose()}
+              >
                 关闭
               </Button>
               {dirty && (
@@ -1499,23 +1318,11 @@ export function ProviderSources({
                   放弃修改
                 </Button>
               )}
-              {source && (
-                <Button
-                  className="provider-delete"
-                  variant="ghost"
-                  icon={<Trash size={15} />}
-                  disabled={busy || dirty}
-                  onClick={() =>
-                    setConfirmRemove({ sourceId: source.id, sessions: [] })
-                  }
-                >
-                  删除来源
-                </Button>
-              )}
             </div>
           </div>
         </Dialog>
       )}
+      {confirmDialog}
     </section>
   );
 }

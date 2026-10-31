@@ -3,16 +3,19 @@ import { Button } from "../../primitives/Button";
 import { EmptyState } from "../../primitives/EmptyState";
 import { Field } from "../../primitives/Field";
 import { Input } from "../../primitives/Input";
+import { SaveIndicator } from "./SettingRows";
 import type { SettingsForm } from "./useSettingsForm";
 
 export function LanguageSection({ form }: { readonly form: SettingsForm }) {
-  const { draft, change } = form;
+  const { draft, changeLsp, saveLsp, resetLsp, lspDirty, lspStatus } = form;
+  const change = (_name: "lspServers", value: typeof draft.lspServers) =>
+    changeLsp(value);
   return (
     <section className="settings-section" aria-label="语言服务配置">
       <div className="settings-flat-group">
         <p className="settings-section-hint">
-          最多 8 个服务。ID
-          和文件扩展名必须唯一；保存不安装服务。后续使用时会执行本机命令，请仅配置可信程序。
+          最多 8 个服务，服务 ID
+          和文件扩展名不能重复。保存不会安装服务；使用时会执行本机命令，请只配置可信程序。
         </p>
         {!draft.lspServers.length && (
           <EmptyState
@@ -75,10 +78,15 @@ export function LanguageSection({ form }: { readonly form: SettingsForm }) {
               </Field>
             </div>
             <div className="settings-columns">
-              <Field id={`lsp-${index}-args`} label="参数（JSON 字符串数组）">
+              <Field
+                id={`lsp-${index}-args`}
+                label="启动参数"
+                helper="JSON 字符串数组"
+              >
                 <Input
                   id={`lsp-${index}-args`}
                   placeholder='["--stdio"]'
+                  aria-describedby={`lsp-${index}-args-helper`}
                   value={row.args}
                   onChange={(e) =>
                     change(
@@ -112,6 +120,21 @@ export function LanguageSection({ form }: { readonly form: SettingsForm }) {
           </article>
         ))}
         <div className="settings-card-action-row">
+          <SaveIndicator status={lspStatus} />
+          {lspDirty && (
+            <Button size="sm" variant="ghost" onClick={resetLsp}>
+              放弃修改
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={!lspDirty || lspStatus.state === "saving"}
+            loading={lspStatus.state === "saving"}
+            onClick={() => void saveLsp()}
+          >
+            保存语言服务
+          </Button>
           <Button
             size="sm"
             variant="secondary"
