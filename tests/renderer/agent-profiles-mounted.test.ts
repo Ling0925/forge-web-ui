@@ -190,6 +190,37 @@ describe("Agent Profiles Mounted Tests", () => {
       content: bundle.outputFiles.find((f: any) => f.path.endsWith(".js"))!
         .text,
     });
+    // Draft-discard prompts are in-app confirm dialogs now; accept them the way
+    // the native dialog handler above used to. Delete prompts stay explicit.
+    await page.evaluate(() => {
+      const accept = ["放弃智能体修改？", "重新读取并放弃草稿？"];
+      new MutationObserver(() => {
+        for (const node of document.querySelectorAll<HTMLDialogElement>(
+          "dialog.confirm-dialog",
+        )) {
+          if (!node.open) {
+            delete node.dataset.autoAccepted;
+            continue;
+          }
+          if (
+            node.dataset.autoAccepted ||
+            !accept.includes(node.getAttribute("aria-label") ?? "")
+          )
+            continue;
+          node.dataset.autoAccepted = "1";
+          node
+            .querySelector<HTMLButtonElement>(
+              ".confirm-dialog-actions button:not([data-confirm-cancel])",
+            )
+            ?.click();
+        }
+      }).observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["open"],
+      });
+    });
     return page;
   };
 
@@ -284,15 +315,20 @@ describe("Agent Profiles Mounted Tests", () => {
         .getByRole("button", { name: /删除智能体/ })
         .first();
       await deleteBtn.click();
-      expect(await page.getByText("确认删除？此操作不可逆").count()).toBe(1);
+      const deleteDialog = page.getByRole("dialog", { name: /^删除智能体“/ });
+      await deleteDialog.waitFor();
 
       // Click cancel
-      await page.getByRole("button", { name: "取消", exact: true }).click();
-      expect(await page.getByText("确认删除？此操作不可逆").count()).toBe(0);
+      await deleteDialog
+        .getByRole("button", { name: "取消", exact: true })
+        .click();
+      await deleteDialog.waitFor({ state: "hidden" });
 
       // Confirm delete
       await deleteBtn.click();
-      await page.getByRole("button", { name: "确定删除", exact: true }).click();
+      await deleteDialog
+        .getByRole("button", { name: "删除智能体", exact: true })
+        .click();
       await expect
         .poll(async () => {
           const calls = await page.evaluate(() => window.updateCalls);
@@ -643,16 +679,17 @@ describe("Agent Profiles Mounted Tests", () => {
       // Start delete
       const deleteBtn = page.getByRole("button", { name: /删除智能体/ });
       await deleteBtn.click();
-      expect(await page.getByText("确认删除？此操作不可逆").isVisible()).toBe(
-        true,
-      );
+      const deleteDialog = page.getByRole("dialog", { name: /^删除智能体“/ });
+      await deleteDialog.waitFor();
 
       // Inject conflict for delete
       await page.evaluate(() => {
         window.failWithConflict = true;
       });
 
-      await page.getByRole("button", { name: "确定删除", exact: true }).click();
+      await deleteDialog
+        .getByRole("button", { name: "删除智能体", exact: true })
+        .click();
 
       // Conflict appears in list
       await expect
@@ -679,14 +716,14 @@ describe("Agent Profiles Mounted Tests", () => {
         .click();
 
       // Verify previous deletion confirmation state was cleared upon refresh
-      expect(await page.getByText("确认删除？此操作不可逆").count()).toBe(0);
+      expect(await deleteDialog.count()).toBe(0);
 
       // Re-trigger delete with new revision (revision 3 after previous save & refresh)
       await page.getByRole("button", { name: /删除智能体/ }).click();
-      expect(await page.getByText("确认删除？此操作不可逆").isVisible()).toBe(
-        true,
-      );
-      await page.getByRole("button", { name: "确定删除", exact: true }).click();
+      await deleteDialog.waitFor();
+      await deleteDialog
+        .getByRole("button", { name: "删除智能体", exact: true })
+        .click();
 
       await expect
         .poll(async () => {

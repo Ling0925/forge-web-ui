@@ -156,23 +156,33 @@ it.each([
           allowedDomains: domains,
         },
       });
-      await page
-        .getByText(/配置已保存。status=configured 只表示配置已持久化/)
-        .waitFor();
+      await page.getByText(/配置已保存。保存不代表依赖可用/).waitFor();
       // Saving config is not a health check and still must not look ready.
       expect((await calls()).check).toBe(0);
       await card.getByText(/填写 \* 允许全部网站/).waitFor();
       if (domains.includes("*"))
         await card.getByText("全部网站（*）", { exact: true }).waitFor();
 
+      // High-capability plugins ask before enabling; cancelling changes nothing.
       await card.getByRole("button", { name: "启用插件", exact: true }).click();
+      const confirm = page.getByRole("dialog", {
+        name: "启用插件“Browser · agent-browser”？",
+      });
+      await confirm.getByText(/本机程序不在沙箱内运行/).waitFor();
+      await confirm.getByRole("button", { name: "取消", exact: true }).click();
+      await confirm.waitFor({ state: "hidden" });
+      expect((await calls()).configure).toBe(1);
+      await card.getByRole("button", { name: "启用插件", exact: true }).click();
+      await confirm
+        .getByRole("button", { name: "启用插件", exact: true })
+        .click();
       await expect.poll(async () => (await calls()).configure).toBe(2);
       expect((await calls()).inputs[1]).toEqual({
         pluginId: "browser",
         enabled: true,
       });
       await card.getByText("已配置 · 未检查", { exact: true }).waitFor();
-      await card.getByText(/未执行依赖检查前不能视为 ready/).waitFor();
+      await card.getByText(/配置已保存，但还没检查依赖/).waitFor();
       expect((await calls()).check).toBe(0);
 
       // Only the explicit button probes health.

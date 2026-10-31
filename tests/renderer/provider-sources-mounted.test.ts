@@ -144,12 +144,30 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
         .text,
     });
 
+    // Rare editor sections sit behind disclosures; open them idempotently.
+    const expand = async (selector: string) => {
+      const fold = page.locator(selector).first();
+      if (!(await fold.evaluate((node) => (node as HTMLDetailsElement).open)))
+        await fold.locator("summary").first().click();
+    };
+    const openConnection = async () => {
+      await expand("dialog[open] details.provider-advanced");
+      await expand("dialog[open] details.model-access-connection");
+    };
+    await page
+      .getByRole("navigation", { name: "设置分类" })
+      .getByRole("button", { name: "模型服务", exact: true })
+      .click();
     await expect
-      .poll(() => page.locator(".provider-source-card").count())
+      .poll(() => page.locator(".provider-source-row").count())
       .toBe(1);
     await expect
-      .poll(() => page.locator(".provider-source-card").first().innerText())
-      .toContain("目录 2");
+      .poll(async () =>
+        (await page.evaluate(() => Reflect.get(window, "calls"))).some(
+          (call: { type: string }) => call.type === "catalog",
+        ),
+      )
+      .toBe(true);
     // Initial catalog load must not be labeled as a refresh.
     expect(
       (await page.evaluate(() => Reflect.get(window, "calls"))).filter(
@@ -190,7 +208,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
     await page.getByText("来源已保存。").waitFor();
     await expect
-      .poll(() => page.locator(".provider-source-card").count())
+      .poll(() => page.locator(".provider-source-row").count())
       .toBe(2);
     const saved = await page.evaluate(() =>
       Reflect.get(window, "calls")
@@ -218,7 +236,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     // Vertex credentials are entered as JSON, never echoed, and can be cleared
     // explicitly with null while a blank field preserves the saved value.
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("checkbox", { name: "修改 Vertex" }).check();
     const vertex = page.locator("#model-access-vertex");
     await vertex.fill(
@@ -236,7 +254,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
       location: "us-central1",
     });
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     expect(await page.locator("#model-access-vertex").count()).toBe(0);
     await expect
       .poll(async () =>
@@ -262,7 +280,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     // Extra parameters: blank preserves, `{}` clears; request headers are
     // re-entered only when changed and can be cleared explicitly.
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("checkbox", { name: "修改额外参数" }).check();
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
     await page.getByText("来源已保存。").waitFor();
@@ -274,7 +292,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     expect(blankExtra.source.connection).toBeUndefined();
 
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("checkbox", { name: "修改额外参数" }).check();
     await page.locator("#model-access-extra-body").fill('{"temperature":0.2}');
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
@@ -287,7 +305,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     expect(withExtra.source.connection.extraBody).toEqual({ temperature: 0.2 });
 
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await expect
       .poll(async () =>
         page
@@ -310,7 +328,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     expect(clearedExtra.source.connection.extraBody).toEqual({});
 
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("checkbox", { name: "修改请求头" }).check();
     await page.getByRole("button", { name: "添加请求头" }).click();
     await page.getByLabel("请求头名称").fill("X-Extra");
@@ -327,7 +345,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     });
 
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("checkbox", { name: "修改请求头" }).check();
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
     await page.getByText("来源已保存。").waitFor();
@@ -339,7 +357,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     expect(untouchedHeader.source.connection).toBeUndefined();
 
     await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("button", { name: "清除全部请求头" }).click();
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
     await page.getByText("来源已保存。").waitFor();
@@ -359,7 +377,7 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     await page.getByRole("button", { name: "添加别名" }).click();
     await page.getByLabel("别名", { exact: true }).fill("fast");
     await page.getByLabel("别名目标模型").fill("a/one");
-    await page.locator("details.model-access-connection > summary").click();
+    await openConnection();
     await page.getByRole("checkbox", { name: "修改代理" }).check();
     await page.locator("#model-access-proxy").fill("http://127.0.0.1:7890");
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
@@ -391,25 +409,29 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     await page.getByRole("button", { name: "保存来源", exact: true }).click();
     await page.getByRole("alert").filter({ hasText: "其他窗口" }).waitFor();
     await page.getByRole("button", { name: "关闭", exact: true }).click();
-    await page.getByRole("button", { name: "放弃修改并关闭" }).click();
+    await page
+      .getByRole("dialog", { name: "放弃未保存的修改？" })
+      .getByRole("button", { name: "放弃修改", exact: true })
+      .click();
     expect(await page.getByRole("dialog").count()).toBe(0);
     await page.evaluate(() => Reflect.set(window, "conflict", false));
 
-    // Switch back to Source A tab; a stale refresh keeps the previous catalog and is not reported as success.
-    await page.getByRole("tab", { name: /源 A/ }).click();
+    // A stale refresh keeps the previous catalog and is not reported as success.
     await page.evaluate(() => Reflect.set(window, "stale", true));
     await page.getByRole("button", { name: "刷新源 A的模型" }).click();
     await page
       .getByText("刷新失败：目录请求失败。保留 2 个缓存模型。")
       .waitFor();
     expect(
-      await page.locator(".provider-source-card").first().innerText(),
-    ).toContain("已过期");
+      await page
+        .locator(".provider-source-row", { hasText: "源 A" })
+        .innerText(),
+    ).toContain("目录已过期");
     expect(
       await page.getByRole("alert").filter({ hasText: "目录请求失败" }).count(),
     ).toBeGreaterThan(0);
     await page.getByRole("button", { name: "编辑源 A", exact: true }).click();
-    await page.getByText("目录已过期").waitFor();
+    await page.getByRole("dialog").getByText("目录已过期").waitFor();
     expect(await page.locator(".model-access-model-row").count()).toBe(2);
     // A later successful refresh clears the stale state.
     await page.evaluate(() => Reflect.set(window, "stale", false));
@@ -452,52 +474,62 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     await page.waitForTimeout(100);
     expect(await page.getByText("目录测试已取消").count()).toBe(1);
 
-    // Per-model parameter configuration inside the dialog and inline source card.
-    await page.getByRole("button", { name: "配置模型参数 a/one" }).click();
-    const dialogParamPanel = page
-      .getByRole("dialog")
-      .getByRole("region", { name: "模型 a/one 参数配置面板" })
-      .or(
-        page
-          .getByRole("dialog")
-          .locator('[aria-label="模型 a/one 参数配置面板"]'),
-      );
-    await dialogParamPanel
-      .getByRole("group", { name: "模型 a/one 默认思考等级" })
-      .getByRole("button", { name: "high", exact: true })
-      .click();
-    await dialogParamPanel.getByRole("button", { name: "深度推理" }).click();
-    await dialogParamPanel.getByRole("button", { name: "256K" }).click();
-    await dialogParamPanel.getByRole("button", { name: "16K" }).click();
-    await expect
-      .poll(() => page.locator(".model-access-catalog").innerText())
-      .toContain("默认思考 high");
-    await expect
-      .poll(() => page.locator(".model-access-catalog").innerText())
-      .toContain("上下文 256K");
-    await page.getByRole("button", { name: "保存来源" }).click();
+    // The source editor no longer carries per-model parameters.
+    expect(
+      await page.getByRole("button", { name: "配置模型参数 a/one" }).count(),
+    ).toBe(0);
+    await page.getByRole("button", { name: "关闭", exact: true }).click();
     await expect.poll(() => page.getByRole("dialog").count()).toBe(0);
 
-    // Tabbed source panel reflects saved overrides, shows only configured model cards by default,
-    // and allows adding another model from the catalog on demand.
-    const cardA = page.locator(".provider-source-card", { hasText: "源 A" });
-    await expect.poll(() => cardA.innerText()).toContain("已定制 1 个模型");
-    expect(await cardA.locator(".configured-model-card").count()).toBe(1);
-    await page.getByRole("button", { name: "添加源 A的配置模型" }).click();
-    await page
-      .getByRole("button", { name: "添加模型 a/two 到配置卡片" })
+    // Model cards stay simple; parameters are edited in a dialog per model.
+    await chooseOption(page.getByLabel("查看来源的模型", { exact: true }), "a");
+    const models = page.locator(".provider-models-body");
+    expect(await models.locator(".configured-model-card").count()).toBe(1);
+    const cardOne = models.getByRole("article", { name: "模型 a/one" });
+    await expect.poll(() => cardOne.innerText()).toContain("128K（来源上报）");
+    await cardOne
+      .getByRole("button", { name: "编辑模型 a/one 的参数", exact: true })
       .click();
-    expect(await cardA.locator(".configured-model-card").count()).toBe(2);
-    const cardATwo = cardA.locator(".configured-model-card", {
-      hasText: "a/two",
-    });
-    await cardATwo
-      .getByRole("group", { name: "模型 a/two 默认思考等级" })
-      .getByRole("button", { name: "xhigh", exact: true })
+    const params = page.getByRole("dialog", { name: "模型参数 · a/one" });
+    await chooseOption(
+      params.getByLabel("默认思考等级", { exact: true }),
+      "high",
+    );
+    await chooseOption(
+      params.getByLabel("上下文窗口", { exact: true }),
+      "256000",
+    );
+    await chooseOption(params.getByLabel("最大输出", { exact: true }), "16384");
+    await params.getByText("高级", { exact: true }).click();
+    const efforts = params.getByRole("group", { name: "支持的思考档位" });
+    for (const label of ["中", "高", "超高", "最大"])
+      await efforts.getByRole("button", { name: label, exact: true }).click();
+    await params.getByRole("button", { name: "保存", exact: true }).click();
+    await expect.poll(() => params.count()).toBe(0);
+    await expect.poll(() => cardOne.innerText()).toContain("已自定义");
+    expect(await cardOne.innerText()).toContain("256K");
+    expect(
+      await cardOne.locator(".configured-model-card-facts").innerText(),
+    ).toMatch(/思考\s*高/);
+
+    // Another catalog model is added as a card and configured the same way.
+    await page.getByRole("button", { name: "为源 A添加模型" }).click();
+    await page.getByRole("button", { name: "添加模型 a/two" }).click();
+    expect(await models.locator(".configured-model-card").count()).toBe(2);
+    await models
+      .getByRole("button", { name: "编辑模型 a/two 的参数", exact: true })
       .click();
-    await cardATwo.getByRole("button", { name: "200K", exact: true }).click();
-    await page.getByRole("button", { name: "保存源 A的模型配置" }).click();
-    await expect.poll(() => cardA.innerText()).toContain("已定制 2 个模型");
+    const paramsTwo = page.getByRole("dialog", { name: "模型参数 · a/two" });
+    await chooseOption(
+      paramsTwo.getByLabel("默认思考等级", { exact: true }),
+      "xhigh",
+    );
+    await chooseOption(
+      paramsTwo.getByLabel("上下文窗口", { exact: true }),
+      "200000",
+    );
+    await paramsTwo.getByRole("button", { name: "保存", exact: true }).click();
+    await expect.poll(() => paramsTwo.count()).toBe(0);
     const lastSavedOverrides = await page.evaluate(() => {
       const calls = Reflect.get(window, "calls") as Array<{
         source?: { source?: { modelSelection?: { overrides?: unknown } } };
@@ -518,6 +550,30 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
         contextWindowTokens: 200000,
       },
     });
+
+    // Deleting a source sits in the editor's danger zone and needs its name typed.
+    await page.getByRole("button", { name: "编辑源 B", exact: true }).click();
+    await page.getByRole("button", { name: /删除来源/ }).click();
+    const removal = page.getByRole("dialog", { name: "删除来源“源 B”？" });
+    const confirmRemove = removal.getByRole("button", {
+      name: "删除来源",
+      exact: true,
+    });
+    expect(await confirmRemove.isDisabled()).toBe(true);
+    await removal.getByLabel(/以确认/).fill("源");
+    expect(await confirmRemove.isDisabled()).toBe(true);
+    await removal.getByLabel(/以确认/).fill("源 B");
+    await confirmRemove.click();
+    await expect
+      .poll(() => page.locator(".provider-source-row").count())
+      .toBe(1);
+    expect(
+      (await page.evaluate(() => Reflect.get(window, "calls"))).some(
+        (call: { source?: { type?: string; id?: string } }) =>
+          call.source?.type === "remove" && call.source.id !== "a",
+      ),
+    ).toBe(true);
+    await expect.poll(() => page.getByRole("dialog").count()).toBe(0);
 
     // Reopen dialog and clear holdTests before the unmount cancel check.
     await page.evaluate(() => Reflect.set(window, "holdTests", false));

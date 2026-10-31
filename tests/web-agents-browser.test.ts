@@ -71,23 +71,29 @@ it("persists role edits and renders real advisor requests, replies and reloads",
     await page
       .getByLabel("智能体名称", { exact: true })
       .fill("  界面创建角色  ");
+    // Leaving the editor asks in-app; "继续编辑" keeps the draft.
     for (const navigate of [
-      () => page.getByRole("button", { name: "外观", exact: true }).click(),
-      () => page.getByLabel("搜索设置", { exact: true }).fill("外观"),
+      () => page.getByRole("button", { name: "通用", exact: true }).click(),
       () =>
         page.getByRole("button", { name: "返回工作台", exact: true }).click(),
     ]) {
-      let prompted = false;
-      page.once("dialog", async (dialog) => {
-        prompted = true;
-        await dialog.dismiss();
-      });
       await navigate();
-      expect(prompted).toBe(true);
+      const prompt = page.getByRole("dialog", { name: "放弃智能体修改？" });
+      await prompt
+        .getByRole("button", { name: "继续编辑", exact: true })
+        .click();
+      await prompt.waitFor({ state: "hidden" });
       expect(
         await page.getByLabel("智能体名称", { exact: true }).inputValue(),
       ).toBe("  界面创建角色  ");
     }
+    // Searching only overlays results; the editor and its draft stay mounted.
+    await page.getByLabel("搜索设置", { exact: true }).fill("主题");
+    expect(await page.getByRole("dialog").count()).toBe(0);
+    await page.getByLabel("搜索设置", { exact: true }).fill("");
+    expect(
+      await page.getByLabel("智能体名称", { exact: true }).inputValue(),
+    ).toBe("  界面创建角色  ");
     // Choose a saved model without entering its ID; persist the source/model pair via real Core.
     await page
       .getByRole("combobox", { name: "模型模式选择", exact: true })

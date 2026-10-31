@@ -105,7 +105,10 @@ it("registers API keys through the built UI and Core, authenticates both transpo
     await page.goto(origin);
     await page.locator(".composer-textarea").waitFor();
     await page.keyboard.press("Control+,");
-    await page.getByRole("button", { name: /MCP 扩展/ }).click();
+    await page
+      .getByRole("navigation", { name: "设置分类" })
+      .getByRole("button", { name: "MCP 服务器", exact: true })
+      .click();
     await page.getByRole("button", { name: "注册服务器" }).click();
     await chooseOption(page.locator("#mcp-server-transport"), "http");
     await page.locator("#mcp-server-id").fill("exa-remote");

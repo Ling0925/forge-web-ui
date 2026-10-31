@@ -31,7 +31,7 @@ const skillDirectory = `/home/ling/services/desktop-harness/skills/${"s".repeat(
 // the measurement below really detects the pre-repair overflow.
 const controlToken = "c".repeat(260);
 
-it("mounted project resources dialog wraps a long MCP command and resource paths without horizontal overflow", async () => {
+it("mounted project resources dialog wraps long resource paths without horizontal overflow and links MCP to Settings", async () => {
   // In-memory test-only bundling that also emits the real component CSS; this
   // is not an application build and mutates no assets.
   const bundle = await build({
@@ -229,14 +229,27 @@ it("mounted project resources dialog wraps a long MCP command and resource paths
           Array.from(
             document.querySelectorAll("#tabpanel-resources code"),
           ).some((node) => node.textContent === expected),
-        commandLine,
+        instructionPath,
       );
+      // MCP servers live in Settings; the dialog only links there.
+      await resourcesPanel
+        .getByRole("button", { name: "在设置中管理 MCP 服务器", exact: true })
+        .waitFor();
+      expect(
+        await page.evaluate(
+          (expected) =>
+            Array.from(
+              document.querySelectorAll("#tabpanel-resources code"),
+            ).some((node) => node.textContent === expected),
+          commandLine,
+        ),
+      ).toBe(false);
       // Skill metadata sits behind a disclosure; open it so the long source
       // directory and id are rendered when measured.
       await resourcesPanel.locator("details > summary").click();
 
       const report = await page.evaluate(
-        ({ expectedCommand, expectedPath, controlText }) => {
+        ({ expectedPath, controlText }) => {
           const element = (selector: string): HTMLElement => {
             const found = document.querySelector(selector);
             if (!(found instanceof HTMLElement))
@@ -267,14 +280,10 @@ it("mounted project resources dialog wraps a long MCP command and resource paths
           const codes = Array.from(
             document.querySelectorAll("#tabpanel-resources code"),
           ).filter((node): node is HTMLElement => node instanceof HTMLElement);
-          const commandCode = codes.find(
-            (node) => node.textContent === expectedCommand,
-          );
           const pathCode = codes.find(
             (node) => node.textContent === expectedPath,
           );
-          if (!commandCode || !pathCode)
-            throw new Error("command/path code nodes are not mounted");
+          if (!pathCode) throw new Error("path code node is not mounted");
           const directoryNode = Array.from(
             document.querySelectorAll("#tabpanel-resources p"),
           ).find((node) => node.textContent?.startsWith("workspace-agents ·"));
@@ -307,7 +316,6 @@ it("mounted project resources dialog wraps a long MCP command and resource paths
             },
             inspectorScroll: box(scroll),
             resourcesPanel: box(element("#tabpanel-resources")),
-            command: metrics(commandCode),
             path: metrics(pathCode),
             skillDirectory: metrics(directoryNode),
             controlPane: box(controlPane),
@@ -318,7 +326,6 @@ it("mounted project resources dialog wraps a long MCP command and resource paths
           };
         },
         {
-          expectedCommand: commandLine,
           expectedPath: instructionPath,
           controlText: controlToken,
         },
@@ -365,21 +372,6 @@ it("mounted project resources dialog wraps a long MCP command and resource paths
 
       // Full text is retained, wrapped and selectable: not clipped, hidden,
       // truncated or shrunk.
-      expect(report.command.text).toBe(commandLine);
-      expect(report.command.whiteSpace).toBe("normal");
-      expect(report.command.lineClamp).toMatch(/^(none)?$/);
-      expect(report.command.textOverflow).not.toBe("ellipsis");
-      expect(report.command.userSelect).not.toBe("none");
-      expect(report.command.right).toBeLessThanOrEqual(
-        report.resourcesPanel.right + 0.5,
-      );
-      // Wrapped over several lines at the unsmoothed base code font size.
-      expect(report.command.height).toBeGreaterThan(
-        report.command.lineHeightPx * 1.5,
-      );
-      expect(report.command.fontSize).toBe(report.controlCode.fontSize);
-
-      // Same treatment for resource path and skill metadata.
       expect(report.path.text).toBe(instructionPath);
       expect(report.path.right).toBeLessThanOrEqual(
         report.resourcesPanel.right + 0.5,

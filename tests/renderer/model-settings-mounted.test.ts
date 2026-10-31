@@ -3,7 +3,7 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
-it("model search requires selection and settings retain drafts and save once", async () => {
+it("model search requires selection and settings auto-save the request timeout", async () => {
   const bundle = await build({
     stdin: {
       resolveDir: resolve("."),
@@ -141,50 +141,36 @@ it("model search requires selection and settings retain drafts and save once", a
     await page.keyboard.press("Escape");
     expect(await page.locator("details[open]").count()).toBe(0);
     await page.getByRole("button", { name: "打开设置" }).click();
-    await page.getByRole("button", { name: "执行与权限", exact: true }).click();
+    await page.getByRole("button", { name: "通用", exact: true }).click();
     expect(await page.getByLabel("最大轮次", { exact: true }).count()).toBe(0);
     expect(await page.getByLabel("工具调用预算", { exact: true }).count()).toBe(
       0,
     );
-    expect(
-      await page
-        .getByText(/工具调用次数、子代理累计次数与任务总时长均不限/)
-        .count(),
-    ).toBe(1);
-    await page
-      .getByLabel("请求空闲超时（毫秒）", { exact: true })
-      .fill("13000");
+    expect(await page.getByText(/不限制任务总时长/).count()).toBe(1);
+    // A custom timeout saves on Enter; there is no draft to discard.
+    const timeout = page.getByRole("group", { name: "空闲超时" });
+    await timeout.getByRole("button", { name: "自定义", exact: true }).click();
+    const seconds = page.getByLabel("自定义空闲超时（秒）", { exact: true });
+    await seconds.fill("13");
+    await seconds.press("Enter");
+    await expect.poll(() => page.locator("#saves").innerText()).toBe("1");
     await page.keyboard.press("Escape");
+    await expect
+      .poll(() => page.locator(".settings-page").isVisible())
+      .toBe(false);
     await page.getByRole("button", { name: "打开设置" }).click();
-    expect(
-      await page
-        .getByLabel("请求空闲超时（毫秒）", { exact: true })
-        .inputValue(),
-    ).toBe("13000");
-    await page.getByRole("button", { name: "放弃未保存修改" }).click();
-    expect(
-      await page
-        .getByLabel("请求空闲超时（毫秒）", { exact: true })
-        .inputValue(),
-    ).toBe("60000");
-    await page
-      .getByLabel("请求空闲超时（毫秒）", { exact: true })
-      .fill("12000");
-    await page.getByRole("button", { name: "保存设置", exact: true }).click();
-    await page.keyboard.press("Escape");
-    expect(await page.locator(".settings-page").count()).toBe(1);
-    await page
-      .getByText("设置已保存。执行配置用于新的运行；当前运行不会被中断。")
-      .waitFor();
-    expect(await page.locator("#saves").innerText()).toBe("1");
+    expect(await seconds.inputValue()).toBe("13");
+    await timeout.getByRole("button", { name: "1 分钟", exact: true }).click();
+    await expect.poll(() => page.locator("#saves").innerText()).toBe("2");
     await page.getByRole("button", { name: "返回工作台" }).click();
     await page.getByRole("button", { name: "打开设置" }).click();
     expect(
-      await page
-        .getByLabel("请求空闲超时（毫秒）", { exact: true })
-        .inputValue(),
-    ).toBe("12000");
-    await page.getByRole("button", { name: "模型连接", exact: true }).click();
+      await timeout
+        .getByRole("button", { name: "1 分钟", exact: true })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(await seconds.count()).toBe(0);
+    await page.getByRole("button", { name: "模型服务", exact: true }).click();
     await page.getByRole("button", { name: "添加来源" }).click();
     expect(await page.getByLabel("来源名称", { exact: true }).count()).toBe(1);
   } finally {

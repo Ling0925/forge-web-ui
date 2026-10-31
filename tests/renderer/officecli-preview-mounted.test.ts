@@ -169,7 +169,9 @@ it("edits OfficeCLI config, keeps other plugins, and previews HTML directly", as
     expect(await calls()).toMatchObject({ list: 1, check: 0, configure: 0 });
     await office.getByText("已禁用", { exact: true }).waitFor();
     await office.getByText(/不自动安装、不下载、不升级/).waitFor();
-    await office.getByText(/不会修改模型或 provider/).waitFor();
+    await office
+      .getByText(/正在进行的运行不受影响，也不会改变所用模型/)
+      .waitFor();
     await office.getByLabel("OfficeCLI 可执行路径").fill("/opt/officecli");
     await office.getByLabel("单次执行超时（秒）").fill("90");
     await office.getByRole("button", { name: "保存配置", exact: true }).click();
@@ -198,6 +200,10 @@ it("edits OfficeCLI config, keeps other plugins, and previews HTML directly", as
 
     // Enabling is explicit; health stays untouched until its own button.
     await office.getByRole("button", { name: "启用插件", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "启用插件“OfficeCLI · Office documents”？" })
+      .getByRole("button", { name: "启用插件", exact: true })
+      .click();
     await expect.poll(async () => (await calls()).configure).toBe(3);
     expect((await calls()).inputs[2]).toEqual({
       pluginId: "officecli",
@@ -223,7 +229,7 @@ it("edits OfficeCLI config, keeps other plugins, and previews HTML directly", as
       .waitFor();
     const unknown = page.getByRole("article", { name: "插件 Vendor plugin" });
     await unknown.getByText("vendor-plugin", { exact: true }).waitFor();
-    await unknown.getByText(/不提供该插件的可视化配置编辑器/).waitFor();
+    await unknown.getByText(/这个插件暂不提供可视化配置/).waitFor();
     // Unknown plugins keep rendering but never receive a generic config form.
     expect(
       await unknown
