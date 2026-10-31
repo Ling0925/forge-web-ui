@@ -324,5 +324,11 @@
   width: min(960px, calc(100vw - var(--space-6)));
 }
 .workspace-resources-content {
+  --surface-card: var(--surface-elevated);
+  --border-default: var(--border-control);
   min-height: min(560px, 70dvh);
+}
+/* The dialog is wider than the pane: code keeps the body-relative size. */
+.workspace-resources-content.wb-inspector code {
+  font-size: 0.9em;
 }

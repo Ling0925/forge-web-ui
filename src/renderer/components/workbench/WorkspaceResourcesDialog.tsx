@@ -46,7 +46,8 @@ export function WorkspaceResourcesDialog() {
       className="workspace-resources-dialog"
       onClose={() => setTab(null)}
     >
-      <div className="modal-content workspace-resources-content">
+      {/* `wb-inspector` keeps the panels' existing scoped styles. */}
+      <div className="modal-content workspace-resources-content wb-inspector">
         {!snapshot ? (
           <EmptyState
             variant="compact"
