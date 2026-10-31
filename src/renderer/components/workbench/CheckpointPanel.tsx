@@ -1,4 +1,5 @@
 import type { CheckpointDto } from "@forge/core/shared/ipc";
+import { ArrowsCounterClockwise } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OperationScope } from "../../state/operation-scope";
 import {
@@ -6,7 +7,6 @@ import {
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
-import { ArrowsCounterClockwise } from "@phosphor-icons/react";
 import { Button } from "../primitives/Button";
 import { CodeBlock } from "../primitives/CodeBlock";
 import { IconButton } from "../primitives/IconButton";

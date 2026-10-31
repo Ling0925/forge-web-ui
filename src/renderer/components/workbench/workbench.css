@@ -281,7 +281,8 @@
   color: var(--text-muted);
 }
 
-.session-folder-create-btn {
+.session-folder-create-btn,
+.session-folder-resources-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -302,17 +303,21 @@
 }
 
 .session-folder-header-row:hover .session-folder-create-btn,
-.session-folder-create-btn:focus-visible {
+.session-folder-header-row:hover .session-folder-resources-btn,
+.session-folder-create-btn:focus-visible,
+.session-folder-resources-btn:focus-visible {
   opacity: 1;
 }
 
-.session-folder-create-btn:hover {
+.session-folder-create-btn:hover,
+.session-folder-resources-btn:hover {
   background-color: var(--surface-active);
   color: var(--text-primary);
   border-color: var(--border-subtle);
 }
 
-.session-folder-create-btn:active {
+.session-folder-create-btn:active,
+.session-folder-resources-btn:active {
   transform: scale(0.95);
 }
 
@@ -322,7 +327,8 @@
 }
 
 @media (hover: none) {
-  .session-folder-create-btn {
+  .session-folder-create-btn,
+  .session-folder-resources-btn {
     opacity: 0.85;
   }
 }

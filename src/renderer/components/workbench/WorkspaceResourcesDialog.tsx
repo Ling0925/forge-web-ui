@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { requestInspectorSection } from "../../state/inspector-sections";
 import {
-  type WorkspaceResourcesTab,
-  subscribeWorkspaceResources,
-} from "../../state/workspace-resources";
-import {
   shallowEqual,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
+import {
+  type WorkspaceResourcesTab,
+  subscribeWorkspaceResources,
+} from "../../state/workspace-resources";
 import { EmptyState } from "../primitives/EmptyState";
 import { Tabs } from "../primitives/Tabs";
 import { ProjectResources } from "./CatalogPanels";

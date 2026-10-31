@@ -4,9 +4,9 @@ import {
   ArrowClockwise,
   CaretRight,
   ChartBar,
+  Files,
   Folder,
   FolderOpen,
-  Files,
   Gear,
   MagnifyingGlass,
   Plus,
@@ -15,12 +15,12 @@ import {
 import { useState } from "react";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
-import { openWorkspaceResources } from "../../state/workspace-resources";
 import {
   shallowEqual,
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
+import { openWorkspaceResources } from "../../state/workspace-resources";
 import { EmptyState } from "../primitives/EmptyState";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { IconButton } from "../primitives/IconButton";
@@ -289,7 +289,7 @@ export function Sidebar() {
                   </button>
                   <button
                     type="button"
-                    className="session-folder-create-btn session-folder-resources-btn"
+                    className="session-folder-resources-btn"
                     onClick={async (e) => {
                       e.stopPropagation();
                       const inWorkspace = group.sessions.some(

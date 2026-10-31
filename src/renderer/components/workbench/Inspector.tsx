@@ -432,7 +432,12 @@ export function Inspector({
             <InspectorSection
               id="session"
               title="会话信息"
-              summary={permissionLabels[permission].split(" · ")[0]}
+              summary={[
+                model?.split("/").at(-1),
+                permissionLabels[permission].split(" · ")[0],
+              ]
+                .filter(Boolean)
+                .join(" · ")}
               action={
                 <IconButton
                   size="sm"
