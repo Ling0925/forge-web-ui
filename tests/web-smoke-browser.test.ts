@@ -89,7 +89,7 @@ it("keeps a streamed conversation alive across Web process death and reconnects 
     await page
       .getByRole("button", { name: "返回工作台", exact: true })
       .waitFor();
-    await page.getByRole("button", { name: "外观", exact: true }).click();
+    await page.getByRole("button", { name: "通用", exact: true }).click();
     await page.getByRole("button", { name: "返回工作台", exact: true }).click();
     await page.locator(".composer-textarea").waitFor();
     const before = await page.evaluate(() => {

@@ -306,7 +306,7 @@ export function describedFailure(error: unknown): string {
 }
 
 export function formatTokens(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "?";
+  if (value === null || value === undefined) return "未知";
   if (value >= 1_000_000) return `${Number((value / 1_000_000).toFixed(1))}M`;
   if (value >= 1_000) return `${Number((value / 1_000).toFixed(1))}K`;
   return String(value);

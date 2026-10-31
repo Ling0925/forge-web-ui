@@ -155,7 +155,7 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     });
 
     await expect
-      .poll(() => page.locator(".provider-source-card").count())
+      .poll(() => page.locator(".provider-source-row").count())
       .toBe(1);
     await expect
       .poll(() => page.locator(".model-access-route-card").count())
@@ -262,10 +262,10 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
       .toContain("工具 否");
     await expect
       .poll(() => page.locator(".model-access-catalog").innerText())
-      .toContain("视觉 ?");
+      .toContain("视觉 未知");
     await expect
       .poll(() => page.locator(".model-access-catalog").innerText())
-      .toContain("推理 low/high");
+      .toContain("思考档位 低/高");
     await expect
       .poll(() => page.locator(".model-access-catalog").innerText())
       .toContain("价格 1 USD / 2 USD · catalog");

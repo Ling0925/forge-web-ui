@@ -1,5 +1,6 @@
 import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
 import { formatTokens } from "./drafts";
+import { effortName } from "./model-overrides";
 
 function price(
   value: number | undefined,
@@ -16,28 +17,24 @@ export function ModelMetadata({
     price(entry.pricing?.input, entry.pricing?.currency),
     price(entry.pricing?.output, entry.pricing?.currency),
   ].filter(Boolean);
-  const provenance = Object.entries(entry.provenance ?? {});
   return (
     <span className="model-access-meta">
       <span>上下文 {formatTokens(entry.contextWindowTokens)}</span>
       <span>输出 {formatTokens(entry.maxOutputTokens)}</span>
       <span>
-        工具 {entry.tools === undefined ? "?" : entry.tools ? "是" : "否"}
+        工具 {entry.tools === undefined ? "未知" : entry.tools ? "是" : "否"}
       </span>
       <span>
-        视觉 {entry.vision === undefined ? "?" : entry.vision ? "是" : "否"}
+        视觉 {entry.vision === undefined ? "未知" : entry.vision ? "是" : "否"}
       </span>
       {entry.reasoningEffort && (
         <span className="model-access-meta-effort">
-          默认思考{" "}
-          {entry.reasoningEffort === "default" ? "默认" : entry.reasoningEffort}
+          默认思考 {effortName(entry.reasoningEffort)}
         </span>
       )}
       {entry.reasoningEfforts?.length ? (
-        <span>推理 {entry.reasoningEfforts.join("/")}</span>
-      ) : (
-        <span>推理 ?</span>
-      )}
+        <span>思考档位 {entry.reasoningEfforts.map(effortName).join("/")}</span>
+      ) : null}
       {prices.length > 0 && (
         <span>
           价格 {prices.join(" / ")}
@@ -45,11 +42,6 @@ export function ModelMetadata({
           {entry.pricing?.updatedAt ? ` · ${entry.pricing.updatedAt}` : ""}
         </span>
       )}
-      {provenance.map(([field, source]) => (
-        <span key={field}>
-          {field}={source}
-        </span>
-      ))}
     </span>
   );
 }

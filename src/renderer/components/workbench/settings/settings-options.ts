@@ -1,13 +1,14 @@
 import {
+  Brain,
   Code,
-  Cpu,
   DeviceMobile,
+  HardDrives,
   Lock,
-  Palette,
   Plugs,
   PuzzlePiece,
   ShieldCheck,
   ShieldWarning,
+  SlidersHorizontal,
   Users,
 } from "@phosphor-icons/react";
 import type { SettingsDraft } from "../../../state/settings-draft";
@@ -28,50 +29,50 @@ export const GLOBAL_REASONING_EFFORT_OPTIONS: readonly {
   },
   {
     value: "none",
-    label: "关闭 (none)",
+    label: "关闭",
     shortLabel: "关闭",
     desc: "显式关闭深度思考，追求最快首字响应与最低 Token 消耗。",
     bars: 0,
   },
   {
     value: "minimal",
-    label: "极低 (minimal)",
-    shortLabel: "minimal",
+    label: "极低",
+    shortLabel: "极低",
     desc: "仅保留极轻量内部校验，适合简单问答、格式转换与快速补全。",
     bars: 1,
   },
   {
     value: "low",
-    label: "低 (low)",
-    shortLabel: "low",
+    label: "低",
+    shortLabel: "低",
     desc: "轻量级思考预算，适合常规代码修改、检索总结与日常指令。",
     bars: 2,
   },
   {
     value: "medium",
-    label: "中 (medium)",
-    shortLabel: "medium",
+    label: "中",
+    shortLabel: "中",
     desc: "均衡速度与推理深度，适合大多数多步编码与问题排查任务。",
     bars: 3,
   },
   {
     value: "high",
-    label: "高 (high)",
-    shortLabel: "high",
+    label: "高",
+    shortLabel: "高",
     desc: "投入充足思考预算，适合复杂架构设计、棘手 Bug 诊断与重构。",
     bars: 4,
   },
   {
     value: "xhigh",
-    label: "超高 (xhigh)",
-    shortLabel: "xhigh",
+    label: "超高",
+    shortLabel: "超高",
     desc: "深度多步推演与自检，适合高难度算法、严密逻辑与长链路规划。",
     bars: 5,
   },
   {
     value: "max",
-    label: "MAX",
-    shortLabel: "MAX",
+    label: "最大",
+    shortLabel: "最大",
     desc: "解锁模型允许的最大推理深度预算，耗时与 Token 消耗最高。",
     bars: 5,
   },
@@ -111,7 +112,7 @@ export const EXECUTION_PERMISSION_OPTIONS = [
   {
     value: "unrestricted",
     title: "无限制模式",
-    subtitle: "可执行命令（非 OS 沙箱）",
+    subtitle: "命令直接执行，不在沙箱内",
     badge: "高权限",
     tone: "unrestricted",
     icon: ShieldWarning,
@@ -233,29 +234,33 @@ export function formatTimeoutDuration(raw: string): {
 
 export const sections = [
   {
-    id: "connection",
-    title: "模型连接",
-    description: "连接你的模型服务，选择协议与默认模型。",
+    id: "general",
+    group: "常规",
+    title: "通用",
+    description: "外观与新运行的默认行为。修改即时保存，不影响正在进行的运行。",
+    keywords: "主题 深色 浅色 系统 外观 权限 只读 工作区 无限制 超时 theme",
+    icon: SlidersHorizontal,
+  },
+  {
+    id: "models",
+    group: "模型",
+    title: "模型服务",
+    description: "连接模型服务、选择默认模型，并按模型调整参数。",
     keywords:
-      "API 端点 密钥 model reasoning 思考强度 默认思考等级 路由组 导入来源",
+      "API 端点 地址 密钥 凭据 来源 模型 协议 上下文窗口 最大输出 路由组 导入",
     icon: Plugs,
   },
   {
-    id: "appearance",
-    title: "外观",
-    description: "让工作台适应你的使用习惯与色彩偏好。",
-    keywords: "主题 深色 浅色 系统 theme",
-    icon: Palette,
-  },
-  {
-    id: "execution",
-    title: "执行与权限",
-    description: "为新的运行设置权限边界与请求超时。",
-    keywords: "只读 工作区 无限制 工具调用 子代理 不限 超时",
-    icon: ShieldCheck,
+    id: "reasoning",
+    group: "模型",
+    title: "推理与上下文",
+    description: "全局思考等级与上下文压缩预算，作用于所有模型。",
+    keywords: "思考 推理 reasoning token 压缩 compact 预算 字符",
+    icon: Brain,
   },
   {
     id: "agents",
+    group: "代理与工具",
     title: "智能体",
     description: "配置子代理角色、模型绑定与权限工具边界。",
     keywords:
@@ -263,35 +268,32 @@ export const sections = [
     icon: Users,
   },
   {
-    id: "context",
-    title: "上下文与记忆",
-    description: "控制输入预算与模型窗口，平衡连续性和成本。",
-    keywords: "token 压缩 compact 字符预算 模型窗口",
-    icon: Cpu,
-  },
-  {
-    id: "language",
-    title: "语言服务",
-    description: "配置本机 LSP 服务器，为代码提供智能诊断与语义能力。",
-    keywords: "LSP 命令 参数 扩展名",
-    icon: Code,
+    id: "mcp",
+    group: "代理与工具",
+    title: "MCP 服务器",
+    description: "外部工具服务器，对所有工作区生效。",
+    keywords: "MCP stdio HTTP 服务器 工具 注册",
+    icon: HardDrives,
   },
   {
     id: "plugins",
+    group: "代理与工具",
     title: "插件",
-    description: "显式启用、配置并检查 Core 注册的插件，例如隔离浏览器。",
+    description: "启用、配置并检查内置插件，例如隔离浏览器。",
     keywords: "plugin 浏览器 browser 插件 启用 配置 依赖 检查 域名 权限",
     icon: PuzzlePiece,
   },
   {
-    id: "mcp",
-    title: "MCP 扩展",
-    description: "管理外部工具服务器及其连接。",
-    keywords: "stdio 服务器 工具 注册",
-    icon: PuzzlePiece,
+    id: "language",
+    group: "代理与工具",
+    title: "语言服务",
+    description: "配置本机 LSP 服务器，为代码提供诊断与语义能力。",
+    keywords: "LSP 语言服务器 命令 参数 扩展名",
+    icon: Code,
   },
   {
     id: "pairing",
+    group: "连接",
     title: "手机连接",
     description: "在同一局域网公开当前核心，让 Android 扫码配对。",
     keywords: "手机 Android 扫码 二维码 局域网 LAN 配对 端口 地址",
@@ -299,9 +301,123 @@ export const sections = [
   },
 ] as const;
 
+export const SECTION_GROUPS = ["常规", "模型", "代理与工具", "连接"] as const;
+
+/**
+ * Individual settings that search can jump to. `id` matches the
+ * `SettingRow id` (rendered as `#setting-row-<id>`); entries without a row
+ * land on the page itself.
+ */
+export const SETTING_INDEX: readonly {
+  readonly id: string;
+  readonly section: Section;
+  readonly label: string;
+  readonly keywords: string;
+}[] = [
+  {
+    id: "theme",
+    section: "general",
+    label: "主题",
+    keywords: "外观 深色 浅色 跟随系统 theme dark light",
+  },
+  {
+    id: "defaultPermission",
+    section: "general",
+    label: "新运行的默认权限",
+    keywords:
+      "权限 只读 工作区 无限制 审批 命令 readonly workspace unrestricted",
+  },
+  {
+    id: "requestTimeoutMs",
+    section: "general",
+    label: "请求空闲超时",
+    keywords: "超时 timeout 流式 空闲 等待",
+  },
+  {
+    id: "defaultModel",
+    section: "models",
+    label: "默认模型",
+    keywords: "默认 模型 model 来源",
+  },
+  {
+    id: "sources",
+    section: "models",
+    label: "模型来源",
+    keywords: "来源 API 地址 密钥 凭据 key endpoint 协议 添加来源",
+  },
+  {
+    id: "modelCards",
+    section: "models",
+    label: "模型参数（上下文窗口、最大输出、思考档位）",
+    keywords:
+      "上下文窗口 窗口 token 最大输出 协议 思考档位 覆盖 context window",
+  },
+  {
+    id: "routeGroups",
+    section: "models",
+    label: "路由组",
+    keywords: "路由 回退 轮询 route group",
+  },
+  {
+    id: "import",
+    section: "models",
+    label: "导入来源",
+    keywords: "导入 JSON 链接 import",
+  },
+  {
+    id: "reasoningEffort",
+    section: "reasoning",
+    label: "默认思考等级",
+    keywords: "思考 推理 reasoning effort 等级",
+  },
+  {
+    id: "contextBudgetTokens",
+    section: "reasoning",
+    label: "上下文压缩预算",
+    keywords: "上下文 token 压缩 预算 compact budget",
+  },
+  {
+    id: "contextBudgetChars",
+    section: "reasoning",
+    label: "旧版字符预算",
+    keywords: "兼容 字符 chars legacy",
+  },
+  {
+    id: "agents",
+    section: "agents",
+    label: "智能体列表",
+    keywords: "智能体 agent 角色 模板 子代理",
+  },
+  {
+    id: "mcp",
+    section: "mcp",
+    label: "MCP 服务器",
+    keywords: "MCP 工具 服务器 stdio http",
+  },
+  {
+    id: "plugins",
+    section: "plugins",
+    label: "插件",
+    keywords: "插件 浏览器 browser office 依赖",
+  },
+  {
+    id: "lspServers",
+    section: "language",
+    label: "语言服务器",
+    keywords: "LSP 语言 诊断 命令 扩展名",
+  },
+  {
+    id: "pairing",
+    section: "pairing",
+    label: "手机配对",
+    keywords: "手机 Android 扫码 局域网 配对",
+  },
+];
+
 /** Android shell variant of the same `pairing` section: no LAN controls. */
 export const mobilePairingSection = {
   id: "pairing",
+  group: "连接",
   title: "服务器连接",
   description: "查看当前服务器地址，编辑或更换 Android 应用连接的服务器。",
   keywords: "当前服务器 编辑 更换 扫码 二维码 最近连接 地址 Android",
@@ -312,3 +428,34 @@ export type Section = (typeof sections)[number]["id"];
 export type TextKey = {
   [K in keyof SettingsDraft]: SettingsDraft[K] extends string ? K : never;
 }[keyof SettingsDraft];
+
+const SECTION_EVENT = "forge:settings-section";
+// Settings loads lazily, so a request made before it mounts is kept here.
+let requestedSection: Section | null = null;
+
+/** Ask Settings to show a page; used by links from outside Settings. */
+export function requestSettingsSection(section: Section): void {
+  requestedSection = section;
+  window.dispatchEvent(new CustomEvent(SECTION_EVENT, { detail: section }));
+}
+
+/** The page requested before Settings mounted, if any (read once). */
+export function takeRequestedSettingsSection(): Section | null {
+  const section = requestedSection;
+  requestedSection = null;
+  return section;
+}
+
+export function subscribeSettingsSection(
+  listener: (section: Section) => void,
+): () => void {
+  const handler = (event: Event) => {
+    const section = (event as CustomEvent<unknown>).detail;
+    if (sections.some((item) => item.id === section)) {
+      requestedSection = null;
+      listener(section as Section);
+    }
+  };
+  window.addEventListener(SECTION_EVENT, handler);
+  return () => window.removeEventListener(SECTION_EVENT, handler);
+}

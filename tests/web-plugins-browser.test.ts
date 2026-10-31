@@ -118,6 +118,10 @@ it("manages the built-in browser plugin and previews its absence from the produc
     // Real Core rejects enabling with an empty allowlist before any config save.
     await card.getByRole("button", { name: "启用插件", exact: true }).click();
     await page
+      .getByRole("dialog", { name: /^启用插件“/ })
+      .getByRole("button", { name: "启用插件", exact: true })
+      .click();
+    await page
       .getByRole("alert")
       .filter({ hasText: /allowedDomains/ })
       .waitFor();
@@ -126,16 +130,18 @@ it("manages the built-in browser plugin and previews its absence from the produc
     await card.getByLabel("agent-browser 可执行路径").fill(MISSING_EXECUTABLE);
     await card.getByLabel("允许访问的主机名").fill("example.com");
     await card.getByRole("button", { name: "保存配置", exact: true }).click();
-    await page
-      .getByText(/配置已保存。status=configured 只表示配置已持久化/)
-      .waitFor();
+    await page.getByText(/配置已保存。保存不代表依赖可用/).waitFor();
     await card.getByLabel("允许访问的主机名").waitFor();
     expect(await page.locator(".plugin-health").count()).toBe(0);
 
     // Explicit enable is a separate action; Core now reports `configured`.
     await card.getByRole("button", { name: "启用插件", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: /^启用插件“/ })
+      .getByRole("button", { name: "启用插件", exact: true })
+      .click();
     await card.getByText("已配置 · 未检查", { exact: true }).waitFor();
-    await card.getByText(/未执行依赖检查前不能视为 ready/).waitFor();
+    await card.getByText(/配置已保存，但还没检查依赖/).waitFor();
     expect(await card.getByText(/依赖检查通过/).count()).toBe(0);
 
     // Only the explicit button probes, and the real check reports unavailable

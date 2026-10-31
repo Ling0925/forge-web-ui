@@ -24,6 +24,7 @@ import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
 import { Select, type SelectOption } from "../primitives/Select";
 import { Textarea } from "../primitives/Textarea";
+import { useConfirm } from "./ConfirmDialog";
 import { Dialog } from "./Dialog";
 import "./mcp-panel.css";
 
@@ -31,8 +32,8 @@ type McpTransportType = "stdio" | "http" | "sse";
 
 const TRANSPORT_OPTIONS: readonly SelectOption[] = [
   { value: "stdio", label: "stdio（本地进程）" },
-  { value: "http", label: "Streamable HTTP" },
-  { value: "sse", label: "Legacy SSE" },
+  { value: "http", label: "HTTP（Streamable）" },
+  { value: "sse", label: "SSE（旧版）" },
 ];
 
 function resolveMcpCardVisuals(server: McpRecordDto, isRemote: boolean) {
@@ -92,6 +93,7 @@ export function McpPanel({ showHeader = true }: { showHeader?: boolean } = {}) {
   >({});
   const [health, setHealth] = useState<Record<string, string>>({});
   const scope = useRef(new OperationScope());
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const report = useCallback(
     (err: unknown) => setError(err instanceof Error ? err.message : "操作失败"),
     [],
@@ -278,16 +280,25 @@ export function McpPanel({ showHeader = true }: { showHeader?: boolean } = {}) {
                     className="mcp-btn-remove"
                     icon={<Trash size={13} />}
                     disabled={busy}
-                    onClick={() =>
+                    onClick={async () => {
+                      if (
+                        !(await confirm({
+                          title: `移除 MCP 服务器“${server.label || server.id}”？`,
+                          body: "移除后，所有工作区的会话和智能体都无法再调用它的工具。服务器本身不会被卸载，之后可以重新添加。",
+                          confirmLabel: "移除服务器",
+                          tone: "danger",
+                        }))
+                      )
+                        return;
                       void action(async (valid) => {
                         await window.forge.removeMcpServer(server.id);
                         const servers = await window.forge.listMcpServers();
                         if (!valid()) return;
                         setServers(servers);
-                      })
-                    }
+                      });
+                    }}
                   >
-                    移除注册
+                    移除
                   </Button>
                 </div>
               </article>
@@ -685,6 +696,7 @@ export function McpPanel({ showHeader = true }: { showHeader?: boolean } = {}) {
           </Button>
         </form>
       </Dialog>
+      {confirmDialog}
     </>
   );
 }

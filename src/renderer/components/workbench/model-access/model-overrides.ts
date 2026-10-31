@@ -16,23 +16,32 @@ export const REASONING_EFFORT_OPTIONS: readonly {
 }[] = [
   { value: "", label: "跟随全局", shortLabel: "全局", bars: 0 },
   { value: "default", label: "模型默认", shortLabel: "默认", bars: 0 },
-  { value: "none", label: "关闭 (none)", shortLabel: "关闭", bars: 0 },
-  { value: "minimal", label: "极低 (minimal)", shortLabel: "minimal", bars: 1 },
-  { value: "low", label: "低 (low)", shortLabel: "low", bars: 2 },
-  { value: "medium", label: "中 (medium)", shortLabel: "medium", bars: 3 },
-  { value: "high", label: "高 (high)", shortLabel: "high", bars: 4 },
-  { value: "xhigh", label: "超高 (xhigh)", shortLabel: "xhigh", bars: 5 },
-  { value: "max", label: "MAX (max)", shortLabel: "MAX", bars: 5 },
+  { value: "none", label: "关闭", shortLabel: "关闭", bars: 0 },
+  { value: "minimal", label: "极低", shortLabel: "极低", bars: 1 },
+  { value: "low", label: "低", shortLabel: "低", bars: 2 },
+  { value: "medium", label: "中", shortLabel: "中", bars: 3 },
+  { value: "high", label: "高", shortLabel: "高", bars: 4 },
+  { value: "xhigh", label: "超高", shortLabel: "超高", bars: 5 },
+  { value: "max", label: "最大", shortLabel: "最大", bars: 5 },
 ];
 
+/** Chinese name for a reasoning effort value. */
+export function effortName(value: string): string {
+  if (value === "default") return "模型默认";
+  return (
+    REASONING_EFFORT_OPTIONS.find((item) => item.value === value)?.label ??
+    value
+  );
+}
+
 export const SUPPORTED_EFFORT_LEVELS = [
-  { value: "none", label: "关闭 (none)", shortLabel: "none" },
-  { value: "minimal", label: "极低 (minimal)", shortLabel: "minimal" },
-  { value: "low", label: "低 (low)", shortLabel: "low" },
-  { value: "medium", label: "中 (medium)", shortLabel: "medium" },
-  { value: "high", label: "高 (high)", shortLabel: "high" },
-  { value: "xhigh", label: "超高 (xhigh)", shortLabel: "xhigh" },
-  { value: "max", label: "MAX (max)", shortLabel: "max" },
+  { value: "none", label: "关闭", shortLabel: "关闭" },
+  { value: "minimal", label: "极低", shortLabel: "极低" },
+  { value: "low", label: "低", shortLabel: "低" },
+  { value: "medium", label: "中", shortLabel: "中" },
+  { value: "high", label: "高", shortLabel: "高" },
+  { value: "xhigh", label: "超高", shortLabel: "超高" },
+  { value: "max", label: "最大", shortLabel: "最大" },
 ] as const;
 
 export const CONTEXT_WINDOW_PRESETS = [

@@ -100,14 +100,14 @@ it("loads the production workbench over a slow link and opens secondary panels",
       .locator(".composer-textarea")
       .fill("Draft survives opening settings");
     await page.getByRole("button", { name: "设置", exact: true }).click();
-    await page.getByRole("button", { name: "外观", exact: true }).click();
-    await page.getByRole("button", { name: "执行与权限", exact: true }).click();
+    await page.getByRole("button", { name: "通用", exact: true }).click();
     expect(await page.getByLabel("工具调用预算", { exact: true }).count()).toBe(
       0,
     );
     await page
-      .getByLabel("请求空闲超时（毫秒）", { exact: true })
-      .fill("30000");
+      .getByRole("group", { name: "空闲超时" })
+      .getByRole("button", { name: "30 秒", exact: true })
+      .click();
     await page.getByLabel("搜索设置", { exact: true }).fill("超时");
     await page.getByRole("button", { name: "返回工作台", exact: true }).click();
     expect(await page.locator(".composer-textarea").inputValue()).toBe(
@@ -117,11 +117,15 @@ it("loads the production workbench over a slow link and opens secondary panels",
     expect(
       await page.getByLabel("搜索设置", { exact: true }).inputValue(),
     ).toBe("超时");
+    await page
+      .getByRole("list", { name: "搜索结果" })
+      .getByRole("button", { name: /请求空闲超时/ })
+      .waitFor();
     expect(
-      await page
-        .getByLabel("请求空闲超时（毫秒）", { exact: true })
-        .inputValue(),
-    ).toBe("30000");
+      await page.evaluate(
+        async () => (await window.forge.getSettings()).requestTimeoutMs,
+      ),
+    ).toBe(30000);
     await page.getByRole("button", { name: "返回工作台", exact: true }).click();
     await page.getByRole("button", { name: "用量看板", exact: true }).click();
     await page.getByRole("dialog", { name: "用量看板", exact: true }).waitFor();

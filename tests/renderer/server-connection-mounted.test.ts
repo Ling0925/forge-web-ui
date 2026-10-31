@@ -135,8 +135,11 @@ it("Android settings expose explicit connection editing and protect unsaved draf
         expect(
           await page.evaluate(() => Reflect.get(window, "nativeEntries")),
         ).toEqual([`http://forge.test:5174${CONNECTION_SETTINGS_PATH}`]);
-        await nav("外观").click();
-        await page.getByRole("button", { name: "深色", exact: true }).click();
+        // Simple preferences auto-save, so only an unsaved editor (LSP) is a draft.
+        await nav("语言服务").click();
+        await page
+          .getByRole("button", { name: "添加语言服务", exact: true })
+          .click();
         await nav("服务器连接").click();
         await edit().click();
         await page
@@ -151,7 +154,7 @@ it("Android settings expose explicit connection editing and protect unsaved draf
         await page.getByRole("button", { name: "取消，留在设置页" }).click();
         expect(await edit().count()).toBe(1);
         expect(
-          await page.getByText("有未保存的修改", { exact: true }).count(),
+          await page.getByLabel("有未保存的修改", { exact: true }).count(),
         ).toBe(1);
         await edit().click();
         await page.getByRole("link", { name: "继续打开连接编辑页" }).click();

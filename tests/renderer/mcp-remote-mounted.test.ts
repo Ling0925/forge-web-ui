@@ -384,6 +384,36 @@ describe("McpPanel mounted browser integration", () => {
       await chooseOption(page.locator("#mcp-server-transport"), "stdio");
       await chooseOption(page.locator("#mcp-server-transport"), "http");
       expect(await page.locator("#mcp-server-auth").inputValue()).toBe("");
+
+      await page.getByRole("button", { name: "关闭面板" }).click();
+
+      // Removing a server asks first; cancelling keeps it registered.
+      const weatherCard = page.locator("article.mcp-card", {
+        hasText: "Weather Service",
+      });
+      const hasWeather = () =>
+        page.evaluate(() =>
+          Reflect.get(window, "mockServers").some(
+            (server: { id: string }) => server.id === "weather-api",
+          ),
+        );
+      await weatherCard
+        .getByRole("button", { name: "移除", exact: true })
+        .click();
+      const removal = page.getByRole("dialog", {
+        name: "移除 MCP 服务器“Weather Service”？",
+      });
+      await removal.getByRole("button", { name: "取消", exact: true }).click();
+      await removal.waitFor({ state: "hidden" });
+      expect(await hasWeather()).toBe(true);
+      await weatherCard
+        .getByRole("button", { name: "移除", exact: true })
+        .click();
+      await removal
+        .getByRole("button", { name: "移除服务器", exact: true })
+        .click();
+      await expect.poll(hasWeather).toBe(false);
+      await expect.poll(() => weatherCard.count()).toBe(0);
     } finally {
       await browser.close();
     }
