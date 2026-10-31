@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { subscribeInspectorSection } from "../../state/inspector-sections";
 import { useGlobalModalShortcuts } from "../../state/modal-shortcuts";
 import { WorkbenchProvider } from "../../state/workbench-context";
 import {
@@ -16,6 +17,7 @@ import { Sidebar } from "./Sidebar";
 import { Transcript } from "./Transcript";
 import { Welcome } from "./Welcome";
 import { WorkbenchHeader } from "./WorkbenchHeader";
+import { WorkspaceResourcesDialog } from "./WorkspaceResourcesDialog";
 import "./workbench.css";
 import "./app.css";
 import "./workbench-header.css";
@@ -93,6 +95,17 @@ function Workbench() {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, [setMobileTab]);
+  useEffect(() => {
+    // 1001px ~ 1280px: the inspector is an overlay drawer, so crossing into
+    // this range collapses it instead of squeezing the reading column.
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const media = window.matchMedia("(max-width: 1280px)");
+    const update = (e: MediaQueryListEvent) => {
+      if (e.matches) setInspectorCollapsed(true);
+    };
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   const revealInspector = () => {
     setInspectorCollapsed(false);
     setMobileTab("inspector");
@@ -102,6 +115,26 @@ function Workbench() {
     setInspectorCollapsed(true);
     setMobileTab("task");
   };
+  // The selected session's request is decided in the transcript; jump there.
+  const locateApproval = () => {
+    setMobileTab("task");
+    requestAnimationFrame(() => {
+      const target = document.querySelector(
+        ".workbench-main [data-approval-id]",
+      );
+      if (target instanceof HTMLElement)
+        target.scrollIntoView({ block: "center", behavior: "auto" });
+    });
+  };
+  const revealRef = useRef(revealInspector);
+  revealRef.current = revealInspector;
+  useEffect(
+    () =>
+      subscribeInspectorSection(() => {
+        revealRef.current();
+      }),
+    [],
+  );
   return (
     <>
       <div
@@ -122,6 +155,8 @@ function Workbench() {
           <WorkbenchHeader
             isNew={isNew}
             pending={pending}
+            backgroundPending={backgroundPending}
+            onLocateApproval={locateApproval}
             inspector={{
               collapsed: inspectorCollapsed,
               toggleRef: detailsToggleRef,
@@ -155,6 +190,15 @@ function Workbench() {
               {isNew ? <Welcome /> : <Transcript />}
               <Composer isNew={isNew} />
             </main>
+            {!inspectorCollapsed && (
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-hidden="true"
+                className="wb-inspector-scrim"
+                onClick={closeInspector}
+              />
+            )}
             <Inspector
               focusToken={focusToken}
               onRequestCollapse={() => {
@@ -173,6 +217,7 @@ function Workbench() {
         onClose={() => openSettings(false)}
         load={loadSettingsPanel}
       />
+      <WorkspaceResourcesDialog />
       <DeferredPanel
         open={state.isUsageDashboardOpen}
         label="用量看板"

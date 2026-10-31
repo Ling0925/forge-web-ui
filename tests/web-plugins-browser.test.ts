@@ -177,8 +177,16 @@ it("manages the built-in browser plugin and previews its absence from the produc
       .getByRole("button", { name: /浏览器烟测会话/ })
       .first()
       .click();
-    await page.getByRole("tab", { name: "会话信息", exact: true }).click();
-    await page.getByRole("tab", { name: "浏览器", exact: true }).click();
+    await page
+      .locator(
+        'section.inspector-sec[aria-label="会话信息"] .inspector-sec-toggle',
+      )
+      .click();
+    await page
+      .locator("details.inspector-row-disclosure summary", {
+        hasText: "浏览器",
+      })
+      .click();
     const panel = page.getByRole("region", { name: "浏览器预览与接管" });
     await panel.waitFor();
     // No agent run opened a browser, so Core reports it unavailable; the page

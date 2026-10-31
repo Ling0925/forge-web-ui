@@ -203,7 +203,7 @@ it("keeps session-specific configuration honest, compact and navigable in both t
           .getByRole("button", { name: "展开详情", exact: true })
           .click();
         await page
-          .getByRole("tab", { name: "计划与进度", exact: true })
+          .locator('section.inspector-sec[aria-label="进度"]')
           .waitFor();
         expect(
           await page
@@ -215,7 +215,8 @@ it("keeps session-specific configuration honest, compact and navigable in both t
             .getByRole("button", { name: "收起详情，返回任务", exact: true })
             .click();
         } else {
-          // Open details forces the 232px compact sidebar at the screenshot's width.
+          // ≤1280px opens details as an overlay drawer; wider screens dock it
+          // and force the compact sidebar. The footer must fit either way.
           await assertFooterFits(page);
           await page.locator(".wb-inspector-close").click();
           expect(
