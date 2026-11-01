@@ -1,3 +1,4 @@
+import { isPrimarySession, sessionOriginWorkspace } from "@forge/core/shared";
 import {
   Archive,
   ArrowClockwise,
@@ -12,7 +13,6 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isPrimarySession, sessionOriginWorkspace } from "@forge/core/shared";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
 import {

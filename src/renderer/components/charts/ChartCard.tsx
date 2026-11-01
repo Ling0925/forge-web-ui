@@ -1,3 +1,4 @@
+import type { ChartSpec } from "@forge/core/shared";
 import {
   ArrowClockwise,
   ChartBar,
@@ -8,7 +9,6 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ChartSpec } from "@forge/core/shared";
 import { Button } from "../primitives/Button";
 import { buildChartOption } from "./build-option";
 import { type EchartsModule, loadEcharts } from "./load-echarts";

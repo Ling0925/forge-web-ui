@@ -1,3 +1,4 @@
+import { matchSlashCommands } from "@forge/core/shared";
 import {
   type KeyboardEvent,
   type RefObject,
@@ -5,7 +6,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { matchSlashCommands } from "@forge/core/shared";
 import {
   type DesktopSlashHost,
   type DesktopSlashResult,

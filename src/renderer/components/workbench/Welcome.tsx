@@ -1,5 +1,5 @@
-import { ArrowUpRight } from "@phosphor-icons/react";
 import { isPrimarySession } from "@forge/core/shared";
+import { ArrowUpRight } from "@phosphor-icons/react";
 import {
   shallowEqual,
   useWorkbenchActions,

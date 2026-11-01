@@ -1,8 +1,8 @@
 import {
+  type ImageAttachment,
   MAX_IMAGES,
   MAX_IMAGE_BYTES,
   imageAttachmentSchema,
-  type ImageAttachment,
 } from "@forge/core/shared";
 import { X } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
