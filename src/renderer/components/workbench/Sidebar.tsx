@@ -12,7 +12,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isPrimarySession } from "@forge/core/shared";
+import { isPrimarySession, sessionOriginWorkspace } from "@forge/core/shared";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
 import {
@@ -83,7 +83,9 @@ export function Sidebar() {
   const matched = sessions.filter(
     (session) =>
       (showArchived || !session.archived) &&
-      `${session.title} ${session.workspace}`.toLowerCase().includes(needle),
+      `${session.title} ${sessionOriginWorkspace(session)}`
+        .toLowerCase()
+        .includes(needle),
   );
   // Super-agent Router/Worker sessions get their own group (by core agentRole).
   const filtered = matched.filter((session) => !session.agentRole);
@@ -93,9 +95,10 @@ export function Sidebar() {
   const groups: readonly SessionGroup[] = (() => {
     const byWorkspace = new Map<string, SessionSummary[]>();
     for (const session of filtered) {
-      const existing = byWorkspace.get(session.workspace);
+      const workspace = sessionOriginWorkspace(session);
+      const existing = byWorkspace.get(workspace);
       if (existing) existing.push(session);
-      else byWorkspace.set(session.workspace, [session]);
+      else byWorkspace.set(workspace, [session]);
     }
     return [...byWorkspace]
       .map(([workspace, sessions]) => ({
@@ -136,7 +139,7 @@ export function Sidebar() {
     setCreatingWorkspace(workspace);
     try {
       const allSessionsInWorkspace = state.sessions.filter(
-        (s) => s.workspace === workspace,
+        (s) => sessionOriginWorkspace(s) === workspace,
       );
       const latest = allSessionsInWorkspace[0];
       const candidateModel =

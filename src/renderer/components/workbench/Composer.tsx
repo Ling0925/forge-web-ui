@@ -2,6 +2,7 @@ import {
   type ImageAttachment,
   type ModelCatalog,
   imageAttachmentsSchema,
+  sessionOriginWorkspace,
 } from "@forge/core/shared";
 import {
   type RunInput,
@@ -1050,7 +1051,7 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
         <WorkspacePicker
           workspace={workspace}
           recentWorkspaces={state.sessions
-            .map((session) => session.workspace)
+            .map((session) => sessionOriginWorkspace(session))
             .filter(Boolean)}
           chooseWorkspace={chooseWorkspace}
           onChange={setWorkspace}
