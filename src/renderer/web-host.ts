@@ -1,22 +1,18 @@
+import { htmlPreviewResponseSchema } from "@forge/core/shared";
+import { applySessionDelta } from "@forge/core/shared";
+import { workspaceBrowseRequestSchema } from "@forge/core/shared";
 import { createTransportBridge } from "@forge/core/shared/bridge";
 import { coreBuildInfo } from "@forge/core/shared/build-info";
-import { htmlPreviewResponseSchema } from "@forge/core/shared/html-preview";
 import {
   externalUrlSchema,
+  hostEventSchema,
   rpcResponseSchema,
-  runEventSchema,
 } from "@forge/core/shared/ipc";
-import { type ForgeLanBridge, lanStatusSchema } from "@forge/core/shared/lan";
 import type { SessionSnapshot } from "@forge/core/shared/schemas";
-import {
-  applySessionDelta,
-  sessionDeltaSchema,
-} from "@forge/core/shared/session-delta";
-import {
-  workspaceBrowseRequestSchema,
-  workspaceDirectoryPageSchema,
-} from "@forge/core/shared/workspaces";
 import { z } from "zod";
+import { type ForgeLanBridge, lanStatusSchema } from "./core-compat";
+import { sessionDeltaSchema } from "./core-compat";
+import { workspaceDirectoryPageSchema } from "./core-compat";
 import { versionNotice } from "./version-notice";
 
 const handshakeSchema = z.object({
@@ -24,11 +20,14 @@ const handshakeSchema = z.object({
   restrictWorkspace: z.boolean().default(true),
   cursor: z.number().int().nonnegative(),
   clientId: z.string().uuid(),
-  recovery: z.array(runEventSchema).default([]),
+  recovery: z.array(hostEventSchema).default([]),
 });
+// Host events: run events plus flat super-agent events. Parsing only run events
+// rejected every batch carrying a super-agent event, and the resumed socket got
+// the same batch again: an endless reconnect loop with no live events.
 const batchSchema = z.object({
   cursor: z.number().int().nonnegative(),
-  events: z.array(runEventSchema),
+  events: z.array(hostEventSchema),
 });
 // protocol remains stable across HMR module re-evaluation after window.forge is installed.
 export const hostCapabilities = {

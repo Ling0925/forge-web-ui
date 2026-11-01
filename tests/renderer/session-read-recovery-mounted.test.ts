@@ -23,7 +23,7 @@ beforeAll(async () => {
         import {WorkbenchProvider,useWorkbench} from './src/renderer/state/workbench-context';
         import {createTransportBridge} from '@forge/core/shared/bridge';
         import {defaultPublicSettings} from '@forge/core/shared/schemas';
-        import {paginateSession} from '@forge/core/shared/session-page';
+        import {paginateSession} from '@forge/core/shared';
         import {ErrorState} from './src/renderer/components/primitives/ErrorState';
         import {Button} from './src/renderer/components/primitives/Button';
         import './src/renderer/styles/global.css';
@@ -40,6 +40,7 @@ beforeAll(async () => {
             const ok=result=>({id:input.id,method:input.method,ok:true,result});
             const fail=(code,message,retryable)=>({id:input.id,method:input.method,ok:false,error:{code,message,retryable}});
             if(input.method==='getSettings') return ok({...defaultPublicSettings,isConfigured:true,baseUrl:'https://example.invalid',theme:'light',model:'fixture'});
+            if(input.method==='getSuperAgentState') return fail('not_found','Super-agent is disabled.',false);
             if(input.method==='listSessions') return ok(snapshots.map(({messages,events,changes,...s})=>s));
             if(input.method==='getSession'||input.method==='getSessionPage'){
               fixture.reads.push(input.sessionId);

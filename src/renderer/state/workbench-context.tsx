@@ -1,5 +1,4 @@
-import { ForgeError } from "@forge/core/shared/errors";
-import type { ImageAttachment } from "@forge/core/shared/images";
+import { ForgeError } from "@forge/core/shared";
 import {
   type RunInput,
   configureInputSchema,
@@ -17,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { ImageAttachment } from "../core-compat";
 import type {
   ConfigureInput,
   CreateSessionInput,
@@ -29,6 +29,7 @@ import { modelServiceStatus } from "./model-service-status";
 import { shouldRefreshTranscript } from "./refresh-events";
 import { RunInputQueue } from "./run-input-queue";
 import { pageSnapshot } from "./session-pages";
+import { isRunEvent, superAgentStore } from "./superagent";
 import {
   type WorkbenchAction,
   initialWorkbenchState,
@@ -292,7 +293,12 @@ function useController() {
     const lifetime = new AbortController();
     readLifetime.current = lifetime;
     const titleRefreshes = new Map<string, ReturnType<typeof setTimeout>>();
-    const off = window.forge.onEvent((event) => {
+    const off = window.forge.onEvent((hostEvent) => {
+      if (!isRunEvent(hostEvent)) {
+        superAgentStore.apply(hostEvent);
+        return;
+      }
+      const event = hostEvent;
       const id = event.event.sessionId;
       if (event.event.type === "run_started") {
         terminalSessions.current.delete(id);
@@ -344,6 +350,7 @@ function useController() {
     });
     void loadSettings();
     void loadSessions();
+    void superAgentStore.load();
     return () => {
       alive.current = false;
       lifetime.abort();
