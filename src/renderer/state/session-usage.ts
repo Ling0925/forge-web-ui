@@ -2,9 +2,8 @@
 // in the shared module so the host can summarize event prefixes for paged reads.
 export {
   appendSessionEvent,
-  compactTokens,
   seedSessionUsage,
   sessionUsage,
   summarizeUsageState,
-} from "@forge/core/shared/session-usage";
-export type { SessionUsageState } from "@forge/core/shared/session-usage";
+} from "@forge/core/shared";
+export { compactTokens, type SessionUsageState } from "../core-compat";

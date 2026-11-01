@@ -1,5 +1,5 @@
-import type { RouteGroup, RouteMember } from "@forge/core/shared/model-access";
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
+import type { RouteGroup, RouteMember } from "@forge/core/shared";
+import type { ModelCatalog } from "@forge/core/shared";
 import { FloppyDisk, Plus, Trash } from "@phosphor-icons/react";
 import { useState } from "react";
 import {

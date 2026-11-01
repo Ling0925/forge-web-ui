@@ -1,7 +1,4 @@
-import type {
-  ModelCatalog,
-  ModelCatalogEntry,
-} from "@forge/core/shared/model-catalog";
+import type { ModelCatalog, ModelCatalogEntry } from "@forge/core/shared";
 import type {
   ConfigureInput,
   PublicProviderSource,

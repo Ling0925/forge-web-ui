@@ -3,10 +3,10 @@ import {
   type BrowserCommandResult,
   type BrowserRequest,
   type BrowserResponse,
-  browserImageSchema,
   browserRequestSchema,
   browserResponseSchema,
-} from "@forge/core/shared/plugins";
+} from "@forge/core/shared";
+import { browserImageSchema } from "../core-compat";
 
 /** Human browser RPC is only present on hosts that expose the plugin bridge. */
 export function browserPanelAvailable(): boolean {

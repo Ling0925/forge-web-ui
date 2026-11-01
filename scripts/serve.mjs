@@ -30,7 +30,7 @@ if (values.help) {
       "Renderer index.html is missing. Run pnpm build first or supply --renderer.",
     );
   // The gateway implementation belongs to Core, but owns no runtime or store.
-  const { createWebGateway } = await import("@forge/core/web/gateway");
+  const { createWebGateway } = await import("@forge/core/web");
   const gateway = await createWebGateway({
     host: values.host,
     port: Number(values.port),

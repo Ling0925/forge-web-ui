@@ -13,7 +13,7 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
       contents: `
         import {createRoot} from 'react-dom/client';
         import {ProviderSources} from './src/renderer/components/workbench/ProviderSources';
-        import {providerPresets} from '@forge/core/provider/presets';
+        import {providerPresets} from './node_modules/@forge/core/src/provider/presets';
         import {TestProvider} from './src/renderer/state/workbench-context';
         import './src/renderer/styles/global.css';
         import './src/renderer/components/workbench/model-access.css';

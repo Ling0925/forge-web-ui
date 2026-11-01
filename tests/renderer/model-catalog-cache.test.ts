@@ -1,4 +1,4 @@
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
+import type { ModelCatalog } from "@forge/core/shared";
 import { expect, it, vi } from "vitest";
 import {
   createModelCatalogCache,

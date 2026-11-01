@@ -1,5 +1,4 @@
-import type { PublicProviderPreset } from "@forge/core/shared/model-access";
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
+import type { ModelCatalog } from "@forge/core/shared";
 import {
   type PublicProviderSource,
   configureInputSchema,
@@ -18,6 +17,7 @@ import {
   useRef,
   useState,
 } from "react";
+import type { PublicProviderPreset } from "../../core-compat";
 import { selectableModelIds } from "../../state/composer-model";
 import {
   shallowEqual,

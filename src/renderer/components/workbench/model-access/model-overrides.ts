@@ -1,4 +1,4 @@
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ModelCatalogEntry } from "@forge/core/shared";
 import type { EditableModelSelection, ProviderProtocol } from "./drafts";
 
 export type ModelReasoningEffort = NonNullable<

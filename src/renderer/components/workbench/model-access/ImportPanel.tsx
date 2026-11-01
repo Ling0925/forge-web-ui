@@ -1,7 +1,4 @@
-import type {
-  ModelAccessRequest,
-  ModelAccessResult,
-} from "@forge/core/shared/model-access";
+import type { ModelAccessRequest, ModelAccessResult } from "@forge/core/shared";
 import { CaretDown, Plugs } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Button } from "../../primitives/Button";

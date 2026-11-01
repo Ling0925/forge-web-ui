@@ -1,4 +1,4 @@
-import { isHtmlPath } from "@forge/core/shared/html-preview";
+import { isHtmlPath } from "@forge/core/shared";
 import { CaretRight, FileCode } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { FileChange } from "../../shared-types";

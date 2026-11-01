@@ -1,10 +1,10 @@
+import { type AgentEvent, agentEventSchema } from "@forge/core/shared/schemas";
+import { expect, it } from "vitest";
 import {
   advanceContextDisplay,
   emptyContextDisplay,
   replayContextDisplay,
-} from "@forge/core/shared/context-display";
-import { type AgentEvent, agentEventSchema } from "@forge/core/shared/schemas";
-import { expect, it } from "vitest";
+} from "../../src/renderer/core-compat";
 import {
   appendSessionEvent,
   sessionUsage,

@@ -1,15 +1,15 @@
 import type { ForgeBridge } from "@forge/core/shared/ipc";
 import { parseSessionId } from "@forge/core/shared/schemas";
-import {
-  SLASH_COMMANDS,
-  parseSlashCommand,
-} from "@forge/core/shared/slash-commands";
 import { describe, expect, it, vi } from "vitest";
 import {
   type DesktopSlashHost,
   desktopSlashLimitation,
   executeDesktopSlash,
 } from "../../src/renderer/components/workbench/desktop-slash";
+import {
+  SLASH_COMMANDS,
+  parseSlashCommand,
+} from "../../src/renderer/core-compat";
 import { reviewSession } from "../fixtures/review-session";
 const id = parseSessionId("11111111-1111-4111-8111-111111111111");
 function fixture() {

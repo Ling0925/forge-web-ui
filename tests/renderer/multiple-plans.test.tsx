@@ -1,10 +1,6 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  listWorkspaceDirectory,
-  readWorkspaceFilePreview,
-} from "@forge/core/core/workspace-files";
 import { runIdSchema } from "@forge/core/shared/ipc";
 import {
   type TaskPlan,
@@ -13,6 +9,11 @@ import {
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+// Not on core's public export map since 8c07c87; read from the package source.
+import {
+  listWorkspaceDirectory,
+  readWorkspaceFilePreview,
+} from "../../node_modules/@forge/core/src/core/workspace-files";
 import { ToolDisclosure } from "../../src/renderer/components/primitives/ToolDisclosure";
 import {
   ContextMemoryView,

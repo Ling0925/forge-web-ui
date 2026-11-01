@@ -1,4 +1,4 @@
-import { sessionPlans } from "@forge/core/shared/plans";
+import { sessionPlans } from "@forge/core/shared";
 import {
   type Message,
   type SessionSnapshot,

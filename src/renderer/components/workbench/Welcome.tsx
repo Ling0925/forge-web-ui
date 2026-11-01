@@ -1,5 +1,5 @@
-import { isPrimarySession } from "@forge/core/shared/sessions";
 import { ArrowUpRight } from "@phosphor-icons/react";
+import { isPrimarySession } from "../../core-compat";
 import {
   shallowEqual,
   useWorkbenchActions,

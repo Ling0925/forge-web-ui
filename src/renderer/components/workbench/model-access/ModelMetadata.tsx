@@ -1,4 +1,4 @@
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ModelCatalogEntry } from "@forge/core/shared";
 import { formatTokens } from "./drafts";
 import { effortName } from "./model-overrides";
 

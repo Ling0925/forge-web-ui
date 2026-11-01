@@ -1,4 +1,4 @@
-import type { PluginHealth, PluginRecord } from "@forge/core/shared/plugins";
+import type { PluginHealth, PluginRecord } from "@forge/core/shared";
 import {
   ArrowClockwise,
   CheckCircle,

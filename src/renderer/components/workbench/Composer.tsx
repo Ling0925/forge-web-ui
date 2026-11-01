@@ -1,3 +1,9 @@
+import type { ModelCatalog } from "@forge/core/shared";
+import {
+  type RunInput,
+  permissionSchema,
+  settingsFields,
+} from "@forge/core/shared/schemas";
 import {
   ArrowUp,
   Check,
@@ -22,37 +28,31 @@ import {
 } from "react";
 import { z } from "zod";
 import {
-  permissionSchema,
-  type RunInput,
-  settingsFields,
-} from "@forge/core/shared/schemas";
-import type { SessionId } from "../../shared-types";
-import {
   type ImageAttachment,
   imageAttachmentsSchema,
-} from "@forge/core/shared/images";
-import { parseDrafts } from "../../state/drafts";
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
-import {
-  modelCatalogCache,
-  modelCatalogKey,
-} from "../../state/model-catalog-cache";
+} from "../../core-compat";
+import type { SessionId } from "../../shared-types";
 import {
   composerEffortUpdate,
   composerModelMetadata,
   composerReasoningEffort,
   selectableModelIds,
 } from "../../state/composer-model";
+import { parseDrafts } from "../../state/drafts";
+import {
+  modelCatalogCache,
+  modelCatalogKey,
+} from "../../state/model-catalog-cache";
 import { useWorkbench } from "../../state/workbench-context";
 import { useWorkbenchActions } from "../../state/workbench-store";
 import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
 import { IconButton } from "../primitives/IconButton";
-import { WorkspacePicker } from "./WorkspacePicker";
 import { ComposerDropdown } from "./ComposerDropdown";
+import { ImageAttachments, useImageAttachments } from "./ImageAttachments";
 import { ModelPicker } from "./ModelPicker";
 import { UsagePopover } from "./UsagePopover";
-import { ImageAttachments, useImageAttachments } from "./ImageAttachments";
+import { WorkspacePicker } from "./WorkspacePicker";
 import { useAutosizePrompt } from "./useAutosizePrompt";
 import { useSlashCommands } from "./useSlashCommands";
 import "./composer-layout.css";

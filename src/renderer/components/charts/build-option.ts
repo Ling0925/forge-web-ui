@@ -1,4 +1,4 @@
-import type { ChartSpec } from "@forge/core/shared/chart-spec";
+import type { ChartSpec } from "../../core-compat";
 import type { ChartTheme } from "./theme";
 
 /**

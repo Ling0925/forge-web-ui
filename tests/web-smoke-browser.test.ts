@@ -2,11 +2,11 @@ import { createHash } from "node:crypto";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import type { RunEvent } from "@forge/core/shared/ipc";
 import {
   PUBLISHED_FILE_MAX_BYTES,
   collectPublishedFiles,
-} from "@forge/core/shared/published-files";
+} from "@forge/core/shared";
+import type { RunEvent } from "@forge/core/shared/ipc";
 import { type Browser, chromium } from "playwright";
 import { expect, it } from "vitest";
 

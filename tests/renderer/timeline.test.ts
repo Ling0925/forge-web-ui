@@ -1,4 +1,4 @@
-import { createDiffPatch } from "@forge/core/shared/diff";
+import { createDiffPatch } from "@forge/core/shared";
 import {
   type AgentEvent,
   type Message,

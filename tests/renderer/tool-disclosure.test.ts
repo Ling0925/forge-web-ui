@@ -1,4 +1,4 @@
-import { createDiffPatch } from "@forge/core/shared/diff";
+import { createDiffPatch } from "@forge/core/shared";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";

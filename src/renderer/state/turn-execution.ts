@@ -1,4 +1,4 @@
-import { executionTurns } from "@forge/core/shared/execution";
+import { executionTurns } from "@forge/core/shared";
 import type { SessionSnapshot } from "../shared-types";
 import { sessionUsage } from "./session-usage";
 

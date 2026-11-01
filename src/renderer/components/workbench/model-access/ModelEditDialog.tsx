@@ -1,4 +1,4 @@
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ModelCatalogEntry } from "@forge/core/shared";
 import { useState } from "react";
 import { Button } from "../../primitives/Button";
 import { Input } from "../../primitives/Input";

@@ -1,11 +1,13 @@
 import {
-  PUBLISHED_HTML_PREVIEW_MAX_BYTES,
-  PUBLISHED_PREVIEW_MAX_BYTES,
   type PublishedFile,
   publishedFileResponseSchema,
-} from "@forge/core/shared/published-files";
+} from "@forge/core/shared";
 import { DownloadSimple, Eye, FileText } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  PUBLISHED_HTML_PREVIEW_MAX_BYTES,
+  PUBLISHED_PREVIEW_MAX_BYTES,
+} from "../../core-compat";
 import type { SessionId } from "../../shared-types";
 import { htmlPreviewAvailable } from "../../state/html-preview";
 import { Button } from "../primitives/Button";

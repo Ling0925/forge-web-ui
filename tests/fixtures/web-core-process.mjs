@@ -2,8 +2,8 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHarness } from "@forge/core/core/harness";
-import { PUBLISHED_FILE_MAX_BYTES } from "@forge/core/shared/published-files";
-import { createWebHost } from "@forge/core/web/server";
+import { PUBLISHED_FILE_MAX_BYTES } from "@forge/core/shared";
+import { createWebHost } from "@forge/core/web";
 
 const [directory, port] = process.argv.slice(2);
 await writeFile(

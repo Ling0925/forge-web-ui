@@ -9,7 +9,7 @@ import {
   pluginConfigureInputSchema,
   pluginHealthSchema,
   pluginRecordSchema,
-} from "@forge/core/shared/plugins";
+} from "@forge/core/shared";
 
 /** Core manifest ids for the two officially supported visual editors. */
 export const BROWSER_PLUGIN_ID = "browser";

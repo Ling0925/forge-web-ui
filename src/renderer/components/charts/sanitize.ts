@@ -1,4 +1,4 @@
-import type { ChartSpec } from "@forge/core/shared/chart-spec";
+import type { ChartSpec } from "../../core-compat";
 
 /**
  * Raw ECharts options arrive as JSON from model output. JSON cannot carry

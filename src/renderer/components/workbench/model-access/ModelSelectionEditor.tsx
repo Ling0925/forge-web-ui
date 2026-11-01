@@ -1,10 +1,7 @@
-import type { PublicProviderPreset } from "@forge/core/shared/model-access";
-import type {
-  ModelCatalog,
-  ModelCatalogEntry,
-} from "@forge/core/shared/model-catalog";
+import type { ModelCatalog, ModelCatalogEntry } from "@forge/core/shared";
 import { ArrowClockwise, Plus, Trash, X } from "@phosphor-icons/react";
 import { useId, useState } from "react";
+import type { PublicProviderPreset } from "../../../core-compat";
 import { configuredModelIds } from "../../../state/composer-model";
 import { Button } from "../../primitives/Button";
 import { Checkbox } from "../../primitives/Checkbox";

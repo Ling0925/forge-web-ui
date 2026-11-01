@@ -1,5 +1,5 @@
-import type { ExecutionTurn } from "@forge/core/shared/execution";
 import type { AgentEvent, Message } from "@forge/core/shared/schemas";
+import type { ExecutionTurn } from "../core-compat";
 import type { SessionSnapshot } from "../shared-types";
 
 type ToolStart = Extract<AgentEvent, { type: "tool_started" }>;

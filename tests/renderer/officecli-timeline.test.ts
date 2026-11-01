@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { collectPublishedFiles } from "@forge/core/shared/published-files";
+import { collectPublishedFiles } from "@forge/core/shared";
 import {
   parseSessionId,
   sessionSnapshotSchema,

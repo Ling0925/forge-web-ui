@@ -1,5 +1,4 @@
-import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ModelCatalogEntry } from "@forge/core/shared";
 import {
   type ModelPrice,
   type TokenRates,
@@ -9,13 +8,14 @@ import {
   modelCatalogPricingToPrice,
   normalizePricingModelId,
   resolveRequestRates,
-} from "@forge/core/shared/model-pricing";
+} from "@forge/core/shared";
+import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
 import type {
   AgentEvent,
   PublicProviderSource,
 } from "@forge/core/shared/schemas";
-import type { SessionUsage } from "@forge/core/shared/session-usage";
 import { useEffect, useState } from "react";
+import type { SessionUsage } from "../core-compat";
 import { composerModelMetadata } from "./composer-model";
 
 interface PricingStoreState {

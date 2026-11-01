@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createHarness } from "@forge/core/core/harness";
 import type { Message } from "@forge/core/shared/schemas";
-import { createWebHost } from "@forge/core/web/server";
+import { createWebHost } from "@forge/core/web";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
