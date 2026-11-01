@@ -13,7 +13,7 @@ import {
 } from "@forge/core/shared/ipc";
 import type { SessionSnapshot } from "@forge/core/shared/schemas";
 import { z } from "zod";
-import { type ForgeLanBridge, lanStatusSchema } from "./core-compat/lan";
+import { type ForgeLanBridge, lanStatusSchema } from "./lan";
 import { versionNotice } from "./version-notice";
 
 const handshakeSchema = z.object({

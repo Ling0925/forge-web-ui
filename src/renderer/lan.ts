@@ -1,6 +1,7 @@
 /**
- * Copied from forge-core src/shared/lan.ts (deleted in e99bc6a, PR #8). The LAN
- * channel is provided by the desktop/web hosts, so the renderer owns this contract.
+ * Frontend-owned LAN pairing contract. The renderer owns this contract because
+ * core removed src/shared/lan.ts in PR #8; the desktop and web hosts provide the
+ * channel that this contract validates.
  */
 import { z } from "zod";
 
