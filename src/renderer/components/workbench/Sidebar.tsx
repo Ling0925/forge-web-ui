@@ -1,4 +1,3 @@
-import { isPrimarySession } from "@forge/core/shared/sessions";
 import {
   Archive,
   ArrowClockwise,
@@ -13,6 +12,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { isPrimarySession } from "../../core-compat";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
 import {
@@ -25,6 +25,7 @@ import { EmptyState } from "../primitives/EmptyState";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { IconButton } from "../primitives/IconButton";
 import { SessionListItem } from "./SessionListItem";
+import { SuperAgentSessions } from "./SuperAgentSessions";
 
 /** Folder label for a workspace path; the full path stays available as a tooltip. */
 function workspaceName(workspace: string) {
@@ -39,6 +40,8 @@ interface SessionGroup {
 }
 
 const DEFAULT_VISIBLE_COUNT = 10;
+/** Collapse-state key; workspace keys are absolute paths, so this never clashes. */
+const SUPER_AGENT_FOLDER = "superagent:";
 const PAGE_SIZE = 10;
 
 export function Sidebar() {
@@ -77,11 +80,14 @@ export function Sidebar() {
   const needle = query.trim().toLowerCase();
   const searching = needle.length > 0;
   const sessions = state.sessions.filter(isPrimarySession);
-  const filtered = sessions.filter(
+  const matched = sessions.filter(
     (session) =>
       (showArchived || !session.archived) &&
       `${session.title} ${session.workspace}`.toLowerCase().includes(needle),
   );
+  // Super-agent Router/Worker sessions get their own group (by core agentRole).
+  const filtered = matched.filter((session) => !session.agentRole);
+  const agentSessions = matched.filter((session) => session.agentRole);
   // Keep navigation independent of activity-ordered API results: folders follow
   // their names and sessions follow creation time, with fixed tie-breakers.
   const groups: readonly SessionGroup[] = (() => {
@@ -216,6 +222,13 @@ export function Sidebar() {
       </div>
 
       <div className="sidebar-sessions-list">
+        <SuperAgentSessions
+          sessions={agentSessions}
+          collapsed={
+            !searching && Boolean(collapsedFolders[SUPER_AGENT_FOLDER])
+          }
+          onToggle={() => toggleFolder(SUPER_AGENT_FOLDER)}
+        />
         {state.isSessionsLoading && sessions.length === 0 ? (
           <p className="wb-muted sidebar-empty">正在加载会话...</p>
         ) : sessions.length === 0 ? (
@@ -224,7 +237,7 @@ export function Sidebar() {
             className="sidebar-empty"
             title="暂无历史任务"
           />
-        ) : groups.length === 0 ? (
+        ) : groups.length === 0 && agentSessions.length === 0 ? (
           <EmptyState
             variant="compact"
             className="sidebar-empty"

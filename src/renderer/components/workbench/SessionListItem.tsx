@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SessionSummary } from "../../shared-types";
 import { readSessionInfo } from "../../state/session-info-cache";
@@ -22,7 +22,15 @@ const labels: Readonly<Record<string, string>> = {
 
 export function SessionListItem({
   session,
-}: { readonly session: SessionSummary }) {
+  badge,
+  displayTitle,
+}: {
+  readonly session: SessionSummary;
+  /** Role tag shown after the title (super-agent Router/Worker rows). */
+  readonly badge?: ReactNode;
+  /** Readable title when the stored one is an internal id (Worker `wrk_…`). */
+  readonly displayTitle?: string | undefined;
+}) {
   const { selectSession, setMobileSidebar } = useWorkbenchActions();
   // Select only what the row shows so streamed tokens for this session (which
   // replace its run object) do not re-render every row.
@@ -138,8 +146,9 @@ export function SessionListItem({
         )}
         <span className="session-item-title">
           {session.archived ? "归档 · " : ""}
-          {session.title}
+          {displayTitle ?? session.title}
         </span>
+        {badge}
       </button>
       <SessionActions
         session={session}
@@ -161,7 +170,7 @@ export function SessionListItem({
               maxHeight: `calc(100dvh - ${position.top + 8}px)`,
             }}
           >
-            <strong>{session.title}</strong>
+            <strong>{displayTitle ?? session.title}</strong>
             <dl>
               <dt>状态</dt>
               <dd>{labels[status] ?? status}</dd>
