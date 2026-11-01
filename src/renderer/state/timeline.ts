@@ -1,4 +1,9 @@
-import { executionTurns, type ImageAttachment } from "@forge/core/shared";
+import {
+  type ImageAttachment,
+  type SuperAgentMessageRef,
+  executionTurns,
+  superAgentMessageRefSchema,
+} from "@forge/core/shared";
 import type {
   ErrorInfo,
   FileChange,
@@ -35,6 +40,7 @@ export type TimelineItem = {
         | undefined;
       readonly streaming?: boolean;
       readonly origin?: "agent_reconciliation";
+      readonly superagent?: SuperAgentMessageRef;
       readonly incomplete?: boolean;
       readonly truncated?: boolean | undefined;
     }
@@ -325,6 +331,18 @@ export function reduceTimeline(
           (message.role === "user" && message.images?.length) ||
           (message.role === "assistant" && message.reasoning),
       );
+      // Super-agent deliveries carry a trusted marker (origin + ref); keep the
+      // ref on the item but never set `origin`, so turn/stage grouping still
+      // treats them like any other human-authored user message.
+      const superagent =
+        message.role === "user" && message.origin === "superagent"
+          ? (() => {
+              const parsed = superAgentMessageRefSchema.safeParse(
+                message.superagent,
+              );
+              return parsed.success ? parsed.data : undefined;
+            })()
+          : undefined;
       if (shouldPushMessage)
         items.push({
           kind: "message",
@@ -354,6 +372,7 @@ export function reduceTimeline(
           message.origin === "agent_reconciliation"
             ? { origin: message.origin }
             : {}),
+          ...(superagent ? { superagent } : {}),
         });
       if (message.role === "assistant")
         for (const [callIndex, call] of (message.tool_calls ?? []).entries()) {

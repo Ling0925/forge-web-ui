@@ -7,7 +7,10 @@ import {
 } from "@forge/core/shared/schemas";
 import { describe, expect, it } from "vitest";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
-import { reduceTimeline } from "../../src/renderer/state/timeline";
+import {
+  type TimelineItem,
+  reduceTimeline,
+} from "../../src/renderer/state/timeline";
 const id = sessionIdSchema.parse("11111111-1111-4111-8111-111111111111");
 it("reuses timeline for the same immutable snapshot and rebuilds replacements", () => {
   const first = reduceTimeline(base);
@@ -483,6 +486,28 @@ it("metadata-only child joins preserve human run alignment and repeated call cor
     role: "user",
     content: '子代理汇总：{"result":1}',
   });
+});
+
+it("carries the super-agent ref on user messages without setting origin", () => {
+  const snapshot = sessionSnapshotSchema.parse({
+    ...base,
+    messages: [
+      {
+        role: "user",
+        origin: "superagent",
+        superagent: { kind: "work_brief", workId: "wrk_1" },
+        content: "Work item: wrk_1\nBrief:\n修复登录",
+      },
+    ],
+    events: [],
+  });
+  const timeline = reduceTimeline(snapshot);
+  const user = timeline.find(
+    (item): item is TimelineItem & { kind: "message"; role: "user" } =>
+      item.kind === "message" && item.role === "user",
+  );
+  expect(user?.superagent).toEqual({ kind: "work_brief", workId: "wrk_1" });
+  expect(user?.origin).toBeUndefined();
 });
 
 it("indexes a long execution turn without revisiting history for each tool call", () => {

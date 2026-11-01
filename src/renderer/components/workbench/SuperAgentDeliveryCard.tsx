@@ -28,7 +28,7 @@ export function SuperAgentDeliveryCard({
 }) {
   const trigger = delivery.kind === "batch" || delivery.kind === "updates";
   const work = "work" in delivery ? delivery.work : undefined;
-  const workId = work?.id ?? ("workId" in delivery ? delivery.workId : "");
+  const workId = work?.id ?? delivery.workId ?? "";
   return (
     <details
       className={`${embedded ? "" : "message message-internal "}agent-reconciliation-card superagent-delivery`}
@@ -66,7 +66,7 @@ export function SuperAgentDeliveryCard({
         {delivery.kind === "assignment" && delivery.brief && (
           <p className="superagent-delivery-text">{delivery.brief}</p>
         )}
-        {"triggers" in delivery && delivery.triggers.length > 0 && (
+        {"triggers" in delivery && (delivery.triggers?.length ?? 0) > 0 && (
           <ul className="superagent-delivery-list" aria-label="触发">
             {delivery.triggers.map((item) => (
               <li key={item.id}>
@@ -80,7 +80,7 @@ export function SuperAgentDeliveryCard({
             ))}
           </ul>
         )}
-        {"threads" in delivery && delivery.threads.length > 0 && (
+        {"threads" in delivery && (delivery.threads?.length ?? 0) > 0 && (
           <ul className="superagent-delivery-list" aria-label="线程">
             {delivery.threads.map((thread) => (
               <li key={thread.id} title={thread.url}>

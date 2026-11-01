@@ -735,8 +735,12 @@ function renderTimelineEntry(
     );
   }
   const delivery =
-    item.kind === "message" && item.role === "user" && snapshot.agentRole
-      ? parseSuperAgentDelivery(item.content)
+    item.kind === "message" && item.role === "user" && item.superagent
+      ? parseSuperAgentDelivery({
+          content: item.content,
+          origin: "superagent",
+          superagent: item.superagent,
+        })
       : null;
   if (item.kind === "message" && delivery)
     return (
@@ -1018,10 +1022,13 @@ export const StoredTranscript = memo(function StoredTranscript({
       {turns.map((turn) => {
         const isCollapsed = Boolean(collapsedTurns[turn.id]);
         const userItem = turn.userEntry?.item;
-        const delivery =
-          userItem && snapshot.agentRole
-            ? parseSuperAgentDelivery(userItem.content)
-            : null;
+        const delivery = userItem?.superagent
+          ? parseSuperAgentDelivery({
+              content: userItem.content,
+              origin: "superagent",
+              superagent: userItem.superagent,
+            })
+          : null;
         const recordIndex = executionRecords.findIndex(
           (record) => record.turn === turn.turnNumber,
         );
@@ -1824,8 +1831,12 @@ export function Transcript() {
           )}
           {snapshot?.pendingSteering?.map((message, index) => {
             const delivery =
-              message.role === "user" && snapshot.agentRole
-                ? parseSuperAgentDelivery(message.content)
+              message.role === "user"
+                ? parseSuperAgentDelivery({
+                    content: message.content,
+                    origin: message.origin,
+                    superagent: message.superagent,
+                  })
                 : null;
             if (delivery)
               return (

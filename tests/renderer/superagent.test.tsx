@@ -293,7 +293,7 @@ describe("router/worker grouping", () => {
   });
 });
 
-describe("trigger/hand-off card heuristic", () => {
+describe("super-agent delivery marker", () => {
   const data = (value: unknown) =>
     `<untrusted_data>\n${JSON.stringify(value).replaceAll("<", "\\u003c")}\n</untrusted_data>`;
   const trigger = {
@@ -317,50 +317,134 @@ describe("trigger/hand-off card heuristic", () => {
     lastTriggerAt: T,
   };
   const triggers = { triggers: [trigger], threads: [thread] };
+  const marked = (content: string, superagent: unknown) => ({
+    content,
+    origin: "superagent" as const,
+    superagent,
+  });
 
-  it("recognizes core's exact delivery prompts", () => {
+  it("maps each valid marker kind to its card kind, workId and details", () => {
     expect(
-      parseSuperAgentDelivery(`Route this batch:\n${data(triggers)}`),
+      parseSuperAgentDelivery(
+        marked(`Route this batch:\n${data(triggers)}`, {
+          kind: "route_batch",
+          triggerIds: ["trg_1"],
+        }),
+      ),
     ).toMatchObject({
       kind: "batch",
       triggers: [{ summary: "<b>please</b> fix" }],
+      threads: [{ id: "gh:o/r#1" }],
     });
     expect(
       parseSuperAgentDelivery(
-        `Work item: wrk_1\nBrief:\n修复登录\n\n${data(triggers)}`,
+        marked(`Work item: wrk_1\nBrief:\n修复登录\n\n${data(triggers)}`, {
+          kind: "work_brief",
+          workId: "wrk_1",
+        }),
       ),
-    ).toMatchObject({ kind: "assignment", workId: "wrk_1", brief: "修复登录" });
-    expect(
-      parseSuperAgentDelivery(`Updates for wrk_1:\n${data(triggers)}`),
     ).toMatchObject({
-      kind: "updates",
+      kind: "assignment",
       workId: "wrk_1",
+      brief: "修复登录",
+      triggers: [{ id: "trg_1" }],
     });
     expect(
-      parseSuperAgentDelivery(`Worker report:\n${data(work())}`),
-    ).toMatchObject({
-      kind: "report",
-    });
+      parseSuperAgentDelivery(
+        marked(`Updates for wrk_1:\n${data(triggers)}`, {
+          kind: "work_updates",
+          workId: "wrk_1",
+        }),
+      ),
+    ).toMatchObject({ kind: "updates", workId: "wrk_1" });
     expect(
-      parseSuperAgentDelivery(`Work item changed:\n${data(work())}`),
-    ).toMatchObject({
-      kind: "work_changed",
-    });
+      parseSuperAgentDelivery(
+        marked(`Worker report:\n${data(work())}`, {
+          kind: "worker_report",
+          workId: "wrk_1",
+        }),
+      ),
+    ).toMatchObject({ kind: "report", work: { id: "wrk_1" } });
+    expect(
+      parseSuperAgentDelivery(
+        marked(`Work item changed:\n${data(work())}`, {
+          kind: "work_changed",
+          workId: "wrk_1",
+        }),
+      ),
+    ).toMatchObject({ kind: "work_changed", work: { id: "wrk_1" } });
   });
 
-  it("falls back to the raw message for anything else", () => {
+  it("falls back to a detail-less card when the content block is missing or invalid", () => {
+    expect(
+      parseSuperAgentDelivery(
+        marked(
+          "Route this batch:\n<untrusted_data>\n{not json\n</untrusted_data>",
+          {
+            kind: "route_batch",
+          },
+        ),
+      ),
+    ).toEqual({ kind: "batch" });
+    expect(
+      parseSuperAgentDelivery(
+        marked(
+          "Work item: wrk_1\nBrief:\n修复登录\n\n<untrusted_data>\n{nope\n</untrusted_data>",
+          { kind: "work_brief", workId: "wrk_1" },
+        ),
+      ),
+    ).toEqual({ kind: "assignment", workId: "wrk_1", brief: "修复登录" });
+    expect(
+      parseSuperAgentDelivery(
+        marked("Worker report:\n(no block)", {
+          kind: "worker_report",
+          workId: "wrk_1",
+        }),
+      ),
+    ).toEqual({ kind: "report", workId: "wrk_1" });
+    expect(
+      parseSuperAgentDelivery(
+        marked(
+          'Work item changed:\n<untrusted_data>\n{"id":"wrk_1"}\n</untrusted_data>',
+          { kind: "work_changed", workId: "wrk_1" },
+        ),
+      ),
+    ).toEqual({ kind: "work_changed", workId: "wrk_1" });
+  });
+
+  it("ignores look-alike content without a marker", () => {
     for (const content of [
-      "Route this batch: please",
-      `Route this batch:\n${data({ triggers: [], threads: [], extra: 1 })}`,
-      "Route this batch:\n<untrusted_data>\n{not json\n</untrusted_data>",
-      `Please route this batch:\n${data(triggers)}`,
-      `Route this batch:\n${data(triggers)}\nthanks`,
-      `Worker report:\n${data({ id: "wrk_1" })}`,
-      "",
-      null,
-      undefined,
+      `Route this batch:\n${data(triggers)}`,
+      `Work item: wrk_1\nBrief:\n修复登录\n\n${data(triggers)}`,
+      `Updates for wrk_1:\n${data(triggers)}`,
+      `Worker report:\n${data(work())}`,
+      `Work item changed:\n${data(work())}`,
     ])
-      expect(parseSuperAgentDelivery(content)).toBeNull();
+      expect(parseSuperAgentDelivery({ content })).toBeNull();
+    expect(
+      parseSuperAgentDelivery({
+        content: `Route this batch:\n${data(triggers)}`,
+        origin: "agent_reconciliation",
+        superagent: { kind: "route_batch" },
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects invalid markers", () => {
+    for (const superagent of [
+      { kind: "nope" },
+      { kind: "route_batch", extra: true },
+      { kind: "route_batch", workId: "" },
+      {},
+      null,
+    ])
+      expect(
+        parseSuperAgentDelivery({
+          content: `Route this batch:\n${data(triggers)}`,
+          origin: "superagent",
+          superagent,
+        }),
+      ).toBeNull();
   });
 });
 
