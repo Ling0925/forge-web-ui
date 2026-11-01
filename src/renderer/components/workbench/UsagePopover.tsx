@@ -9,11 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentEvent, SessionSnapshot } from "../../shared-types";
 import { composerModelMetadata } from "../../state/composer-model";
 import { persistentUsageCache } from "../../state/persistent-usage-cache";
-import {
-  compactTokens,
-  sessionUsage,
-  summarizeUsageState,
-} from "../../state/session-usage";
+import { compactTokens, sessionUsage } from "../../state/session-usage";
 import {
   collectSessionModels,
   computeSessionCostMetrics,
@@ -128,7 +124,6 @@ export function UsagePopover({
         : sessionUsage(events),
     [events, snapshot],
   );
-  const usageState = useMemo(() => summarizeUsageState(events), [events]);
   const ref = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(false);
   // Historical events/cache contain the window at request time. Apply current
@@ -214,15 +209,15 @@ export function UsagePopover({
   }, [liveSpeed, activeRun?.sessionId, usage.speed.requestStartedAt]);
 
   const speedMetrics = useMemo(
-    () => computeSessionSpeedMetrics(events, usageState, activeRun, now),
-    [events, usageState, activeRun, now],
+    () => computeSessionSpeedMetrics(events, usage, activeRun, now),
+    [events, usage, activeRun, now],
   );
 
   const costMetrics = useMemo(
     () =>
       computeSessionCostMetrics({
         events,
-        usage: usageState,
+        usage,
         sessionId: snapshot?.id,
         model,
         snapshotModel: snapshot?.model,
@@ -234,7 +229,7 @@ export function UsagePopover({
       }),
     [
       events,
-      usageState,
+      usage,
       snapshot?.id,
       model,
       snapshot?.model,
