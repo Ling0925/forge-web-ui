@@ -1,4 +1,4 @@
-import type { FileChange } from "@forge/core/shared/schemas";
+import { type FileChange, sessionIdSchema } from "@forge/core/shared/schemas";
 import {
   ArrowSquareOut,
   ArrowsCounterClockwise,
@@ -18,6 +18,12 @@ import {
   subscribeInspectorSection,
 } from "../../state/inspector-sections";
 import { permissionLabels } from "../../state/permission-labels";
+import {
+  pendingOutbox,
+  pendingSuggestions,
+  useSuperAgent,
+  workItemsForRouter,
+} from "../../state/superagent";
 import {
   shallowArrayEqual,
   shallowEqual,
@@ -42,6 +48,8 @@ import {
   SubAgentsPanel,
   planOverviewSummary,
 } from "./RuntimePanels";
+import { SuperAgentAttention } from "./SuperAgentAttention";
+import { SuperAgentWorkList } from "./SuperAgentWorkList";
 import "./inspector.css";
 import "./inspector-sections.css";
 
@@ -206,7 +214,18 @@ export function Inspector({
   const failedChildren = children.filter((child) =>
     FAILED_CHILD.has(child.status),
   );
-  const attentionCount = drawerApprovals.length + failedChildren.length;
+  const superAgent = useSuperAgent();
+  const outbox = pendingOutbox(superAgent);
+  const suggestions = pendingSuggestions(superAgent);
+  const routerWork =
+    snapshot?.agentRole?.kind === "router"
+      ? workItemsForRouter(superAgent, snapshot.id)
+      : [];
+  const attentionCount =
+    drawerApprovals.length +
+    failedChildren.length +
+    outbox.length +
+    suggestions.length;
   const runningChildren = children.filter(
     (child) =>
       child.status === "running" || child.status === "awaiting_approval",
@@ -217,6 +236,7 @@ export function Inspector({
   const hasSubtasks = Boolean(
     snapshot &&
       (children.length > 0 ||
+        routerWork.length > 0 ||
         snapshot.parentSessionId ||
         snapshot.agentTask ||
         snapshot.agentProfile),
@@ -233,6 +253,14 @@ export function Inspector({
     snapshot && (snapshot.parentSessionId || children.length > 0),
   );
   const sessionOpen = section("session");
+  const approvalSource = (sessionId: string) => {
+    const session = state.sessions.find((item) => item.id === sessionId);
+    if (session?.agentRole?.kind !== "worker") return "后台会话待批准";
+    const work = superAgent.workItems.find(
+      (item) => item.id === session.agentRole?.ownerId,
+    );
+    return `Worker 待批准 · ${work?.title || session.agentRole.ownerId}`;
+  };
 
   return (
     <aside
@@ -296,7 +324,7 @@ export function Inspector({
                         <span>
                           {request.childSessionId
                             ? `子任务审批 · ${request.childSessionId}`
-                            : "后台会话待批准"}
+                            : approvalSource(r.sessionId)}
                         </span>
                         {background && (
                           <Button
@@ -347,6 +375,11 @@ export function Inspector({
                     </div>
                   </div>
                 ))}
+                <SuperAgentAttention
+                  view={superAgent}
+                  outbox={outbox}
+                  suggestions={suggestions}
+                />
               </InspectorSection>
             )}
 
@@ -364,22 +397,37 @@ export function Inspector({
                 id="subtasks"
                 title="子任务"
                 summary={
-                  children.length === 0
-                    ? "当前为子任务"
-                    : [
-                        `${children.length} 个`,
-                        runningChildren > 0 ? `${runningChildren} 运行中` : "",
-                        doneChildren > 0 ? `${doneChildren} 完成` : "",
-                        failedChildren.length > 0
-                          ? `${failedChildren.length} 异常`
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")
+                  routerWork.length > 0 && children.length === 0
+                    ? `${routerWork.length} 个工作项`
+                    : children.length === 0
+                      ? "当前为子任务"
+                      : [
+                          `${children.length} 个`,
+                          runningChildren > 0
+                            ? `${runningChildren} 运行中`
+                            : "",
+                          doneChildren > 0 ? `${doneChildren} 完成` : "",
+                          failedChildren.length > 0
+                            ? `${failedChildren.length} 异常`
+                            : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")
                 }
                 {...section("subtasks")}
               >
-                <SubAgentsPanel key={`subagents:${snapshot.id}`} embedded />
+                {routerWork.length > 0 && (
+                  <SuperAgentWorkList
+                    items={routerWork}
+                    onOpen={(id) => {
+                      const parsed = sessionIdSchema.safeParse(id);
+                      if (parsed.success) void selectSession(parsed.data);
+                    }}
+                  />
+                )}
+                {(children.length > 0 || routerWork.length === 0) && (
+                  <SubAgentsPanel key={`subagents:${snapshot.id}`} embedded />
+                )}
               </InspectorSection>
             )}
 
