@@ -3,7 +3,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHarness } from "@forge/core/core/harness";
 import { coreBuildInfo } from "@forge/core/shared/build-info";
-import { createWebHost } from "@forge/core/web/server";
+import { createWebHost } from "@forge/core/web";
 import { type Browser, chromium } from "playwright";
 import { expect, it } from "vitest";
 import { freePort } from "./fixtures/web-process";

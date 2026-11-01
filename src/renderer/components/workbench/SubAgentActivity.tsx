@@ -1,4 +1,4 @@
-import { toolActivity } from "@forge/core/shared/tool-activity";
+import { toolActivity } from "@forge/core/shared";
 import {
   ArrowDown,
   ArrowSquareOut,

@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import {
   PUBLISHED_FILE_MAX_BYTES,
   collectPublishedFiles,
-} from "@forge/core/shared/published-files";
+} from "@forge/core/shared";
 import { type Browser, chromium } from "playwright";
 import { expect, it } from "vitest";
 import { freePort, launch } from "./fixtures/web-process";

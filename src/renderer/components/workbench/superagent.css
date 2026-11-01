@@ -1,0 +1,95 @@
+/* Super-agent Router/Worker rows in the sidebar and inspector. */
+.superagent-role-tag {
+  margin-left: auto;
+}
+
+.superagent-workers {
+  margin: 0;
+  padding: 0 0 0 var(--space-3);
+  list-style: none;
+  border-left: 1px solid var(--border-subtle);
+  margin-left: var(--space-2);
+}
+
+.superagent-workers.is-unassigned {
+  border-left: 0;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.superagent-delivery-id {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.superagent-delivery-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+.superagent-delivery-facts dt {
+  color: var(--text-muted);
+}
+
+.superagent-delivery-facts dd {
+  margin: 0;
+}
+
+.superagent-delivery-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.superagent-delivery-list {
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.superagent-delivery-raw summary {
+  cursor: pointer;
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
+.superagent-delivery-raw pre {
+  max-height: 240px;
+  overflow: auto;
+  font-size: var(--text-2xs);
+}
+
+.superagent-attention-sub {
+  font-size: var(--text-2xs);
+  overflow-wrap: anywhere;
+}
+
+.superagent-attention-actions {
+  display: flex;
+  gap: var(--space-1-5);
+}
+
+.superagent-attention-error {
+  margin: 0;
+  font-size: var(--text-2xs);
+  color: var(--error);
+}
+
+.superagent-work-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.superagent-work-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

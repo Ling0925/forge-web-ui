@@ -1,4 +1,4 @@
-import { isPrimarySession } from "@forge/core/shared/sessions";
+import { isPrimarySession } from "@forge/core/shared";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import {

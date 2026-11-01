@@ -1,7 +1,7 @@
-import { type LanStatus, lanRequestSchema } from "@forge/core/shared/lan";
 import { CopySimple, WarningCircle } from "@phosphor-icons/react";
 import * as QRCode from "qrcode";
 import { useEffect, useId, useRef, useState } from "react";
+import { type LanStatus, lanRequestSchema } from "../../lan";
 import { OperationScope } from "../../state/operation-scope";
 import {
   shallowEqual,

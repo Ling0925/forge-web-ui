@@ -1,4 +1,4 @@
-import { ForgeError } from "@forge/core/shared/errors";
+import { ForgeError } from "@forge/core/shared";
 import {
   type RunInput,
   type SessionId,

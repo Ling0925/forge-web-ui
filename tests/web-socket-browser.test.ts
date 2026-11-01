@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createHarness } from "@forge/core/core/harness";
 import { type RunEvent, runEventSchema } from "@forge/core/shared/ipc";
-import { createWebHost } from "@forge/core/web/server";
+import { createWebHost } from "@forge/core/web";
 import react from "@vitejs/plugin-react";
 import { build } from "esbuild";
 import { chromium } from "playwright";

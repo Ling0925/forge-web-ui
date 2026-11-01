@@ -5,6 +5,6 @@ export {
   compactTokens,
   seedSessionUsage,
   sessionUsage,
+  type SessionUsageState,
   summarizeUsageState,
-} from "@forge/core/shared/session-usage";
-export type { SessionUsageState } from "@forge/core/shared/session-usage";
+} from "@forge/core/shared";

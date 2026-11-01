@@ -1,4 +1,4 @@
-import { publishedFilesSchema } from "@forge/core/shared/published-files";
+import { publishedFilesSchema } from "@forge/core/shared";
 import { fileChangeSchema, toolResultSchema } from "@forge/core/shared/schemas";
 import type { FileChange, PublishedFile } from "../shared-types";
 

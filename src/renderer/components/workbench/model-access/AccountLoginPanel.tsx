@@ -1,4 +1,4 @@
-import type { PublicAccountLogin } from "@forge/core/shared/model-access";
+import type { PublicAccountLogin } from "@forge/core/shared";
 import { Plugs } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../../primitives/Button";

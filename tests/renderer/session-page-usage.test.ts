@@ -1,15 +1,15 @@
 import { resolve } from "node:path";
 import {
+  type SessionPageInfo,
+  sessionUsageStateSchema,
+  summarizeUsageState,
+} from "@forge/core/shared";
+import {
   type AgentEvent,
   agentEventSchema,
   parseSessionId,
   sessionSnapshotSchema,
 } from "@forge/core/shared/schemas";
-import type { SessionPageInfo } from "@forge/core/shared/session-page";
-import {
-  sessionUsageStateSchema,
-  summarizeUsageState,
-} from "@forge/core/shared/session-usage";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";

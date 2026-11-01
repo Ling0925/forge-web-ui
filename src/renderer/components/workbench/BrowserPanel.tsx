@@ -1,7 +1,4 @@
-import type {
-  BrowserCommand,
-  BrowserResponse,
-} from "@forge/core/shared/plugins";
+import type { BrowserCommand, BrowserResponse } from "@forge/core/shared";
 import {
   ArrowClockwise,
   ArrowsLeftRight,

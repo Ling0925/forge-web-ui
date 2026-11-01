@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHarness } from "@forge/core/core/harness";
 import { agentProfileTemplates } from "@forge/core/shared/agent-profiles";
-import { createWebHost } from "@forge/core/web/server";
+import { createWebHost } from "@forge/core/web";
 
 const [directory, port] = process.argv.slice(2);
 const call = (id, name, args) => ({

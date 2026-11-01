@@ -1,9 +1,6 @@
+import { SLASH_COMMANDS, parseSlashCommand } from "@forge/core/shared";
 import type { ForgeBridge } from "@forge/core/shared/ipc";
 import { parseSessionId } from "@forge/core/shared/schemas";
-import {
-  SLASH_COMMANDS,
-  parseSlashCommand,
-} from "@forge/core/shared/slash-commands";
 import { describe, expect, it, vi } from "vitest";
 import {
   type DesktopSlashHost,

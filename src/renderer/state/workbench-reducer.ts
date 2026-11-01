@@ -1,7 +1,9 @@
+import {
+  type SessionPage,
+  estimateTokens,
+  recordPlan,
+} from "@forge/core/shared";
 import type { AdvisorRequest } from "@forge/core/shared/agent-coordination";
-import { estimateTokens } from "@forge/core/shared/context-usage";
-import { recordPlan } from "@forge/core/shared/plans";
-import type { SessionPage } from "@forge/core/shared/session-page";
 import type {
   AgentEvent,
   ApprovalRequest,
@@ -48,7 +50,7 @@ export interface ActiveRunState {
    */
   readonly toolPreviews?: readonly ToolPreviewEntry[];
   readonly webSearch?:
-    | import("@forge/core/shared/web-search").WebSearchProgress
+    | import("@forge/core/shared").WebSearchProgress
     | undefined;
   readonly providerRetry?: number | undefined;
   readonly generationId?: string | undefined;

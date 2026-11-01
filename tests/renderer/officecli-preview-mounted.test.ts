@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { PUBLISHED_HTML_PREVIEW_MAX_BYTES } from "@forge/core/shared/published-files";
+import { PUBLISHED_HTML_PREVIEW_MAX_BYTES } from "@forge/core/shared";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";

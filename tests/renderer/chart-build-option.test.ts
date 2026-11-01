@@ -1,4 +1,4 @@
-import type { ChartSpec } from "@forge/core/shared/chart-spec";
+import type { ChartSpec } from "@forge/core/shared";
 import { describe, expect, it } from "vitest";
 import { buildChartOption } from "../../src/renderer/components/charts/build-option";
 import type { ChartTheme } from "../../src/renderer/components/charts/theme";

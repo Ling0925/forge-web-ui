@@ -1,7 +1,7 @@
 // Offline persisted chart sessions. The test launcher supplies isolated HOME/FORGE_HOME.
 import { join } from "node:path";
 import { createHarness } from "@forge/core/core/harness";
-import { createWebHost } from "@forge/core/web/server";
+import { createWebHost } from "@forge/core/web";
 
 const [directory, port] = process.argv.slice(2);
 const specs = [

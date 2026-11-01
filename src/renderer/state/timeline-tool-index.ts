@@ -1,4 +1,4 @@
-import type { ExecutionTurn } from "@forge/core/shared/execution";
+import type { ExecutionTurn } from "@forge/core/shared";
 import type { AgentEvent, Message } from "@forge/core/shared/schemas";
 import type { SessionSnapshot } from "../shared-types";
 

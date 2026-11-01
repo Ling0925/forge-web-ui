@@ -1,9 +1,9 @@
-import { executionTurns } from "@forge/core/shared/execution";
+import { executionTurns } from "@forge/core/shared";
+import { paginateSession } from "@forge/core/shared";
 import {
   parseSessionId,
   sessionSnapshotSchema,
 } from "@forge/core/shared/schemas";
-import { paginateSession } from "@forge/core/shared/session-page";
 import { expect, it } from "vitest";
 import {
   pageSnapshot,

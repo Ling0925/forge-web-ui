@@ -1,4 +1,4 @@
-import { createDiffPatch } from "@forge/core/shared/diff";
+import { createDiffPatch } from "@forge/core/shared";
 import type { FileChange } from "../shared-types";
 
 export const SAMPLE_CODE = `// 示例只读代码（非运行时核心）

@@ -1,5 +1,4 @@
-import type { PublicProviderPreset } from "@forge/core/shared/model-access";
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
+import type { ModelCatalog, PublicProviderPreset } from "@forge/core/shared";
 import {
   type PublicProviderSource,
   configureInputSchema,

@@ -1,7 +1,4 @@
-import {
-  type ModelCatalog,
-  modelCatalogSchema,
-} from "@forge/core/shared/model-catalog";
+import { type ModelCatalog, modelCatalogSchema } from "@forge/core/shared";
 import { z } from "zod";
 
 const modelsSchema = modelCatalogSchema;

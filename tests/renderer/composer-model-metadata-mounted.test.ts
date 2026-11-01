@@ -792,8 +792,9 @@ it("does not revive a historical override after clearing an unknown model's curr
     await page.evaluate(() => window.__selectSession("idle-session"));
     await expect.poll(() => footer(page).innerText()).toBe("256K");
     await page.evaluate(() => window.__saveSourceOverrides({}));
-    // The host's unknown-model fallback is 300K, not this event's old 50K.
-    await expect.poll(() => footer(page).innerText()).toBe("300K");
+    // The host's unknown-model fallback (128K since core 7451023), not this
+    // event's old 50K.
+    await expect.poll(() => footer(page).innerText()).toBe("128K");
     await page.locator(".composer-usage > summary").click();
     await expect
       .poll(() => page.locator(".usage-panel").innerText())

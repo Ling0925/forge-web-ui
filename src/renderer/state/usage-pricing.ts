@@ -1,5 +1,4 @@
-import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ModelCatalogEntry, sessionUsage } from "@forge/core/shared";
 import {
   type ModelPrice,
   type TokenRates,
@@ -9,14 +8,16 @@ import {
   modelCatalogPricingToPrice,
   normalizePricingModelId,
   resolveRequestRates,
-} from "@forge/core/shared/model-pricing";
+} from "@forge/core/shared";
+import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
 import type {
   AgentEvent,
   PublicProviderSource,
 } from "@forge/core/shared/schemas";
-import type { SessionUsage } from "@forge/core/shared/session-usage";
 import { useEffect, useState } from "react";
 import { composerModelMetadata } from "./composer-model";
+
+type SessionUsageSummary = ReturnType<typeof sessionUsage>;
 
 interface PricingStoreState {
   readonly prices: ReadonlyMap<string, ModelPrice>;
@@ -270,7 +271,7 @@ export function collectSessionModels(
 
 export function computeSessionSpeedMetrics(
   events: readonly AgentEvent[],
-  usage: SessionUsage,
+  usage: SessionUsageSummary,
   liveRun?: {
     readonly status?: string | undefined;
     readonly unreportedOutputTokens?: number | undefined;
@@ -361,7 +362,7 @@ export function computeSessionSpeedMetrics(
 
 export function computeSessionCostMetrics(options: {
   readonly events: readonly AgentEvent[];
-  readonly usage: SessionUsage;
+  readonly usage: SessionUsageSummary;
   readonly sessionId?: string | undefined;
   readonly model?: string | undefined;
   readonly snapshotModel?: string | undefined;

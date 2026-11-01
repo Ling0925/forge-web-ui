@@ -1,5 +1,5 @@
-import type { PluginRecord } from "@forge/core/shared/plugins";
-import { browserCommandSchema } from "@forge/core/shared/plugins";
+import type { PluginRecord } from "@forge/core/shared";
+import { browserCommandSchema } from "@forge/core/shared";
 import { describe, expect, it } from "vitest";
 import {
   browserCommandMutatesPage,

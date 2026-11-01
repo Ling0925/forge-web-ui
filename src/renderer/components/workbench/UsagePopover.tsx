@@ -1,10 +1,10 @@
-import { contextDisplayLabel } from "@forge/core/shared/context-display";
 import {
   budgetUsage,
+  contextDisplayLabel,
   resolveContextBudget,
   resolveContextWindow,
-} from "@forge/core/shared/context-usage";
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+} from "@forge/core/shared";
+import type { ModelCatalogEntry } from "@forge/core/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AgentEvent, SessionSnapshot } from "../../shared-types";
 import { composerModelMetadata } from "../../state/composer-model";

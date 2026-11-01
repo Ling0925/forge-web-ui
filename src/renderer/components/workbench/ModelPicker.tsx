@@ -1,4 +1,4 @@
-import { reasoningEffortSchema } from "@forge/core/shared/model-access";
+import { reasoningEffortSchema } from "@forge/core/shared";
 import { CaretDown, CaretLeft, CaretRight, Cpu } from "@phosphor-icons/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { ModelCatalog, type ModelCatalogGroup } from "./ModelCatalog";

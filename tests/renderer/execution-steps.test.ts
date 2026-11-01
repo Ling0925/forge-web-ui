@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { executionTurns } from "@forge/core/shared/execution";
+import { executionTurns } from "@forge/core/shared";
 import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 import { build } from "esbuild";
 import { chromium } from "playwright";

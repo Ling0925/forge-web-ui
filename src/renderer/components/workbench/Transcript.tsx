@@ -1,9 +1,6 @@
-import { executionLabel, executionTurns } from "@forge/core/shared/execution";
-import {
-  commandActivity,
-  toolActivity,
-} from "@forge/core/shared/tool-activity";
-import { webSearchStatus } from "@forge/core/shared/web-search-display";
+import { executionLabel, executionTurns } from "@forge/core/shared";
+import { commandActivity, toolActivity } from "@forge/core/shared";
+import { webSearchStatus } from "@forge/core/shared";
 import {
   ArrowDown,
   CaretDown,
@@ -29,6 +26,7 @@ import type {
   SessionSnapshot,
 } from "../../shared-types";
 import { publishesPublishedFiles } from "../../state/published-file-tools";
+import { parseSuperAgentDelivery } from "../../state/superagent-delivery";
 import { type TimelineItem, reduceTimeline } from "../../state/timeline";
 import { TranscriptScrollState } from "../../state/transcript-scroll";
 import {
@@ -63,6 +61,7 @@ import { Markdown } from "./Markdown";
 import { PublishedFiles } from "./PublishedFiles";
 import { Reasoning } from "./Reasoning";
 import { StreamingMarkdown } from "./StreamingMarkdown";
+import { SuperAgentDeliveryCard } from "./SuperAgentDeliveryCard";
 import "./transcript.css";
 import "./tool-live.css";
 export { phaseMarkers, foldedTool } from "../../state/transcript-stages";
@@ -735,6 +734,21 @@ function renderTimelineEntry(
       </div>
     );
   }
+  const delivery =
+    item.kind === "message" && item.role === "user" && item.superagent
+      ? parseSuperAgentDelivery({
+          content: item.content,
+          origin: "superagent",
+          superagent: item.superagent,
+        })
+      : null;
+  if (item.kind === "message" && delivery)
+    return (
+      <Fragment key={item.id}>
+        {headers[index] && <StageHeader stage={headers[index]} />}
+        <SuperAgentDeliveryCard delivery={delivery} raw={item.content} />
+      </Fragment>
+    );
   if (item.kind === "message")
     return (
       <Fragment key={item.id}>
@@ -1008,6 +1022,13 @@ export const StoredTranscript = memo(function StoredTranscript({
       {turns.map((turn) => {
         const isCollapsed = Boolean(collapsedTurns[turn.id]);
         const userItem = turn.userEntry?.item;
+        const delivery = userItem?.superagent
+          ? parseSuperAgentDelivery({
+              content: userItem.content,
+              origin: "superagent",
+              superagent: userItem.superagent,
+            })
+          : null;
         const recordIndex = executionRecords.findIndex(
           (record) => record.turn === turn.turnNumber,
         );
@@ -1046,7 +1067,9 @@ export const StoredTranscript = memo(function StoredTranscript({
           >
             {userItem && (
               <article className="message message-user">
-                <div className="message-header">你</div>
+                <div className="message-header">
+                  {delivery ? "Super-agent" : "你"}
+                </div>
                 {turn.turnNumber > 0 && (
                   <div className="transcript-turn-actions">
                     <span className="transcript-turn-badge">
@@ -1092,10 +1115,18 @@ export const StoredTranscript = memo(function StoredTranscript({
                     images={userItem.images}
                   />
                 )}
-                {userItem.content && (
-                  <div className="message-body">
-                    <Markdown source={userItem.content} />
-                  </div>
+                {delivery ? (
+                  <SuperAgentDeliveryCard
+                    delivery={delivery}
+                    raw={userItem.content}
+                    embedded
+                  />
+                ) : (
+                  userItem.content && (
+                    <div className="message-body">
+                      <Markdown source={userItem.content} />
+                    </div>
+                  )
                 )}
               </article>
             )}
@@ -1798,8 +1829,24 @@ export function Transcript() {
               />
             )
           )}
-          {snapshot?.pendingSteering?.map(
-            (message, index) =>
+          {snapshot?.pendingSteering?.map((message, index) => {
+            const delivery =
+              message.role === "user"
+                ? parseSuperAgentDelivery({
+                    content: message.content,
+                    origin: message.origin,
+                    superagent: message.superagent,
+                  })
+                : null;
+            if (delivery)
+              return (
+                <SuperAgentDeliveryCard
+                  key={`steering:${snapshot.id}:${index}`}
+                  delivery={delivery}
+                  raw={message.content ?? ""}
+                />
+              );
+            return (
               message.role === "user" && (
                 <article
                   className="message message-user"
@@ -1815,8 +1862,9 @@ export function Transcript() {
                     </div>
                   )}
                 </article>
-              ),
-          )}
+              )
+            );
+          })}
         </div>
       </div>
       {hasNewContent && (

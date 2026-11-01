@@ -1,7 +1,4 @@
-import type {
-  ModelCatalog,
-  ModelCatalogEntry,
-} from "@forge/core/shared/model-catalog";
+import type { ModelCatalog, ModelCatalogEntry } from "@forge/core/shared";
 import { PencilSimple, Plus, X } from "@phosphor-icons/react";
 import { useState } from "react";
 import {

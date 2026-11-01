@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { SLASH_COMMANDS } from "@forge/core/shared/slash-commands";
+import { SLASH_COMMANDS } from "@forge/core/shared";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";

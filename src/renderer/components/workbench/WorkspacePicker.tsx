@@ -1,7 +1,7 @@
 import {
   type WorkspaceDirectoryPage,
   isAbsoluteWorkspacePath,
-} from "@forge/core/shared/workspaces";
+} from "@forge/core/shared";
 import {
   ArrowElbowDownLeft,
   ArrowUp,

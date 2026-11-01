@@ -6,7 +6,7 @@ import {
   browserImageSchema,
   browserRequestSchema,
   browserResponseSchema,
-} from "@forge/core/shared/plugins";
+} from "@forge/core/shared";
 
 /** Human browser RPC is only present on hosts that expose the plugin bridge. */
 export function browserPanelAvailable(): boolean {

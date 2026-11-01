@@ -1,4 +1,4 @@
-import { matchSlashCommands } from "@forge/core/shared/slash-commands";
+import { matchSlashCommands } from "@forge/core/shared";
 import {
   type KeyboardEvent,
   type RefObject,

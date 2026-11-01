@@ -1,4 +1,4 @@
-import { isHtmlPath } from "@forge/core/shared/html-preview";
+import { isHtmlPath } from "@forge/core/shared";
 import type {
   WorkspaceDirectoryListingDto,
   WorkspaceFileEntryDto,

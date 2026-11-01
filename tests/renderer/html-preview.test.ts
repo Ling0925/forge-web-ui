@@ -1,9 +1,9 @@
-import { createDiffPatch } from "@forge/core/shared/diff";
+import { createDiffPatch } from "@forge/core/shared";
 import {
   HTML_PREVIEW_CSP,
   isHtmlLanguage,
   isHtmlPath,
-} from "@forge/core/shared/html-preview";
+} from "@forge/core/shared";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { ForgeError } from "@forge/core/shared";
 import { createTransportBridge, requestId } from "@forge/core/shared/bridge";
-import { ForgeError } from "@forge/core/shared/errors";
 import type { RpcRequest } from "@forge/core/shared/ipc";
 import { sessionIdSchema } from "@forge/core/shared/schemas";
 import { describe, expect, it, vi } from "vitest";

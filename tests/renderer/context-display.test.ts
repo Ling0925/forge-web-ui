@@ -2,7 +2,7 @@ import {
   advanceContextDisplay,
   emptyContextDisplay,
   replayContextDisplay,
-} from "@forge/core/shared/context-display";
+} from "@forge/core/shared";
 import { type AgentEvent, agentEventSchema } from "@forge/core/shared/schemas";
 import { expect, it } from "vitest";
 import {

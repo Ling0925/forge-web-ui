@@ -1,10 +1,10 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createHarness } from "@forge/core/core/harness";
-import { createRuntimeHub } from "@forge/core/host/runtime";
-import { startLanServer } from "@forge/core/web/lan";
+import { createRuntimeHub } from "@forge/core/host";
+import { createWebHost } from "@forge/core/web";
 import { type Page, chromium } from "playwright";
 import { expect, it } from "vitest";
 
@@ -63,15 +63,26 @@ it("loads the production workbench over a slow link and opens secondary panels",
     settings: { baseUrl: "http://localhost:1234/v1", model: "fixture" },
   });
   const runtime = createRuntimeHub(service);
-  const server = await startLanServer({
+  // Core PR #8 removed the startLanServer wrapper; bind createWebHost directly.
+  const server = await createWebHost({
     runtime,
     host: "127.0.0.1",
     port: address.port,
-    workspace: directory,
+    workspace: await realpath(directory),
     rendererRoot: resolve("dist/renderer"),
+    restrictWorkspace: false,
     trustedLan: true,
     stateDir: join(directory, "state"),
   });
+  server.server.on("request", (request, response) => {
+    void server.handle(request, response, () => {
+      response.writeHead(404);
+      response.end();
+    });
+  });
+  await new Promise<void>((done) =>
+    server.server.listen(address.port, "127.0.0.1", done),
+  );
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext();

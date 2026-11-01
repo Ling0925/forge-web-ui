@@ -1,5 +1,5 @@
-import type { ModelAccessResult } from "@forge/core/shared/model-access";
-import type { ModelCatalog } from "@forge/core/shared/model-catalog";
+import type { ModelAccessResult } from "@forge/core/shared";
+import type { ModelCatalog } from "@forge/core/shared";
 import type { PublicProviderSource } from "@forge/core/shared/schemas";
 import { cleanModelOverrides } from "./model-overrides";
 
