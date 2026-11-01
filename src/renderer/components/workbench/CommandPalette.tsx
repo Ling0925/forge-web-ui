@@ -1,6 +1,6 @@
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { isPrimarySession } from "../../core-compat";
+import { isPrimarySession } from "@forge/core/shared";
 import {
   afterModalsClosed,
   findOpenModalDialog,

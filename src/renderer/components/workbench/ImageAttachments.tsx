@@ -1,8 +1,11 @@
-import { MAX_IMAGE_BYTES, imageAttachmentSchema } from "@forge/core/shared";
+import {
+  MAX_IMAGES,
+  MAX_IMAGE_BYTES,
+  imageAttachmentSchema,
+  type ImageAttachment,
+} from "@forge/core/shared";
 import { X } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ImageAttachment } from "../../core-compat";
-import { MAX_IMAGES } from "../../core-compat";
 import { Button } from "../primitives/Button";
 import { Dialog } from "./Dialog";
 import "./image-attachments.css";

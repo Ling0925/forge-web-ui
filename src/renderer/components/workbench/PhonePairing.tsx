@@ -1,7 +1,7 @@
 import { CopySimple, WarningCircle } from "@phosphor-icons/react";
 import * as QRCode from "qrcode";
 import { useEffect, useId, useRef, useState } from "react";
-import { type LanStatus, lanRequestSchema } from "../../core-compat";
+import { type LanStatus, lanRequestSchema } from "../../core-compat/lan";
 import { OperationScope } from "../../state/operation-scope";
 import {
   shallowEqual,

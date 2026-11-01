@@ -1,9 +1,9 @@
-import { officecliPluginConfigSchema } from "@forge/core/shared";
-import { describe, expect, it } from "vitest";
 import {
   PUBLISHED_HTML_PREVIEW_MAX_BYTES,
   PUBLISHED_PREVIEW_MAX_BYTES,
-} from "../../src/renderer/core-compat";
+  officecliPluginConfigSchema,
+} from "@forge/core/shared";
+import { describe, expect, it } from "vitest";
 import {
   BROWSER_PLUGIN_ID,
   OFFICECLI_PLUGIN_ID,

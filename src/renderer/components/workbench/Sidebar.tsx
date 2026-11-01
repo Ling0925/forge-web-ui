@@ -12,7 +12,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isPrimarySession } from "../../core-compat";
+import { isPrimarySession } from "@forge/core/shared";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
 import {

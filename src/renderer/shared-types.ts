@@ -16,7 +16,7 @@ export type {
 } from "@forge/core/shared/schemas";
 
 // View-only paging metadata never enters the persisted session schema.
-export type { TranscriptSnapshot as SessionSnapshot } from "./core-compat";
+export type { TranscriptSnapshot as SessionSnapshot } from "@forge/core/shared";
 
 export type {
   PublishedFile,

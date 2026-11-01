@@ -1,4 +1,4 @@
-import type { ModelCatalogEntry } from "@forge/core/shared";
+import type { ModelCatalogEntry, SessionUsageState } from "@forge/core/shared";
 import {
   type ModelPrice,
   type TokenRates,
@@ -15,7 +15,6 @@ import type {
   PublicProviderSource,
 } from "@forge/core/shared/schemas";
 import { useEffect, useState } from "react";
-import type { SessionUsage } from "../core-compat";
 import { composerModelMetadata } from "./composer-model";
 
 interface PricingStoreState {
@@ -270,26 +269,25 @@ export function collectSessionModels(
 
 export function computeSessionSpeedMetrics(
   events: readonly AgentEvent[],
-  usage: SessionUsage,
+  usage: SessionUsageState,
   liveRun?: {
     readonly status?: string | undefined;
     readonly unreportedOutputTokens?: number | undefined;
   },
   now = Date.now(),
 ): SessionSpeedMetrics {
-  const { speed } = usage;
   const live =
-    liveRun?.status === "running" && speed.requestStartedAt !== undefined;
+    liveRun?.status === "running" && usage.request?.startedAt !== undefined;
   const liveTokens = live ? (liveRun?.unreportedOutputTokens ?? 0) : 0;
-  const liveElapsedMs = live ? Math.max(0, now - speed.requestStartedAt!) : 0;
-  const durationMs = speed.durationMs + liveElapsedMs;
-  const outputTokens = speed.outputTokens + liveTokens;
+  const liveElapsedMs = live ? Math.max(0, now - usage.request!.startedAt) : 0;
+  const durationMs = usage.speedDurationMs + liveElapsedMs;
+  const outputTokens = usage.speedTokens + liveTokens;
   const avgTps =
     durationMs > 0 && outputTokens > 0
       ? (outputTokens * 1000) / durationMs
       : undefined;
   const estimated =
-    speed.partial || (live && (liveRun?.unreportedOutputTokens ?? 0) > 0);
+    usage.speedPartial || (live && (liveRun?.unreportedOutputTokens ?? 0) > 0);
 
   let latestTps: number | undefined;
   let peakTps: number | undefined;
@@ -361,7 +359,7 @@ export function computeSessionSpeedMetrics(
 
 export function computeSessionCostMetrics(options: {
   readonly events: readonly AgentEvent[];
-  readonly usage: SessionUsage;
+  readonly usage: SessionUsageState;
   readonly sessionId?: string | undefined;
   readonly model?: string | undefined;
   readonly snapshotModel?: string | undefined;

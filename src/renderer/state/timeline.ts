@@ -1,5 +1,4 @@
-import { executionTurns } from "@forge/core/shared";
-import type { ImageAttachment } from "../core-compat";
+import { executionTurns, type ImageAttachment } from "@forge/core/shared";
 import type {
   ErrorInfo,
   FileChange,

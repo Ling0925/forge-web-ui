@@ -1,5 +1,5 @@
 import { fileChangeSchema, toolResultSchema } from "@forge/core/shared/schemas";
-import { publishedFilesSchema } from "../core-compat";
+import { publishedFilesSchema } from "@forge/core/shared";
 import type { FileChange, PublishedFile } from "../shared-types";
 
 const envelopeSchema = toolResultSchema

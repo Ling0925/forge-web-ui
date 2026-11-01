@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { matchSlashCommands } from "../../core-compat";
+import { matchSlashCommands } from "@forge/core/shared";
 import {
   type DesktopSlashHost,
   type DesktopSlashResult,

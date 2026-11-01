@@ -1,15 +1,19 @@
 import {
   budgetUsage,
+  contextDisplayLabel,
   resolveContextBudget,
   resolveContextWindow,
 } from "@forge/core/shared";
 import type { ModelCatalogEntry } from "@forge/core/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { contextDisplayLabel } from "../../core-compat";
 import type { AgentEvent, SessionSnapshot } from "../../shared-types";
 import { composerModelMetadata } from "../../state/composer-model";
 import { persistentUsageCache } from "../../state/persistent-usage-cache";
-import { compactTokens, sessionUsage } from "../../state/session-usage";
+import {
+  compactTokens,
+  sessionUsage,
+  summarizeUsageState,
+} from "../../state/session-usage";
 import {
   collectSessionModels,
   computeSessionCostMetrics,
@@ -124,6 +128,7 @@ export function UsagePopover({
         : sessionUsage(events),
     [events, snapshot],
   );
+  const usageState = useMemo(() => summarizeUsageState(events), [events]);
   const ref = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(false);
   // Historical events/cache contain the window at request time. Apply current
@@ -209,15 +214,15 @@ export function UsagePopover({
   }, [liveSpeed, activeRun?.sessionId, usage.speed.requestStartedAt]);
 
   const speedMetrics = useMemo(
-    () => computeSessionSpeedMetrics(events, usage, activeRun, now),
-    [events, usage, activeRun, now],
+    () => computeSessionSpeedMetrics(events, usageState, activeRun, now),
+    [events, usageState, activeRun, now],
   );
 
   const costMetrics = useMemo(
     () =>
       computeSessionCostMetrics({
         events,
-        usage,
+        usage: usageState,
         sessionId: snapshot?.id,
         model,
         snapshotModel: snapshot?.model,
@@ -229,7 +234,7 @@ export function UsagePopover({
       }),
     [
       events,
-      usage,
+      usageState,
       snapshot?.id,
       model,
       snapshot?.model,

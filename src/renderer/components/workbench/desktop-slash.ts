@@ -6,9 +6,12 @@ import {
   permissionSchema,
   settingsFields,
 } from "@forge/core/shared/schemas";
-import type { SessionReviewInput } from "../../core-compat";
-import { createSlashActions } from "../../core-compat";
-import { SLASH_COMMANDS, parseSlashCommand } from "../../core-compat";
+import {
+  type SessionReviewInput,
+  SLASH_COMMANDS,
+  createSlashActions,
+  parseSlashCommand,
+} from "@forge/core/shared";
 import { pageSnapshot } from "../../state/session-pages";
 
 // Limitations of the current desktop bridge, not a second command catalog.

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildChartOption } from "../../src/renderer/components/charts/build-option";
 import type { ChartTheme } from "../../src/renderer/components/charts/theme";
-import type { ChartSpec } from "../../src/renderer/core-compat";
+import type { ChartSpec } from "@forge/core/shared";
 
 const theme: ChartTheme = {
   ink: "#292824",

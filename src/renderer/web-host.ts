@@ -1,6 +1,9 @@
 import { htmlPreviewResponseSchema } from "@forge/core/shared";
-import { applySessionDelta } from "@forge/core/shared";
-import { workspaceBrowseRequestSchema } from "@forge/core/shared";
+import { applySessionDelta, sessionDeltaSchema } from "@forge/core/shared";
+import {
+  workspaceBrowseRequestSchema,
+  workspaceDirectoryPageSchema,
+} from "@forge/core/shared";
 import { createTransportBridge } from "@forge/core/shared/bridge";
 import { coreBuildInfo } from "@forge/core/shared/build-info";
 import {
@@ -10,9 +13,7 @@ import {
 } from "@forge/core/shared/ipc";
 import type { SessionSnapshot } from "@forge/core/shared/schemas";
 import { z } from "zod";
-import { type ForgeLanBridge, lanStatusSchema } from "./core-compat";
-import { sessionDeltaSchema } from "./core-compat";
-import { workspaceDirectoryPageSchema } from "./core-compat";
+import { type ForgeLanBridge, lanStatusSchema } from "./core-compat/lan";
 import { versionNotice } from "./version-notice";
 
 const handshakeSchema = z.object({

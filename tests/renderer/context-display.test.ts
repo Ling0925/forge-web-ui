@@ -4,7 +4,7 @@ import {
   advanceContextDisplay,
   emptyContextDisplay,
   replayContextDisplay,
-} from "../../src/renderer/core-compat";
+} from "@forge/core/shared";
 import {
   appendSessionEvent,
   sessionUsage,

@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import {
+  type SessionPageInfo,
   sessionUsageStateSchema,
   summarizeUsageState,
 } from "@forge/core/shared";
@@ -12,7 +13,6 @@ import {
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import type { SessionPageInfo } from "../../src/renderer/core-compat";
 import type { SessionSnapshot } from "../../src/renderer/shared-types";
 import { createPersistentUsageCache } from "../../src/renderer/state/persistent-usage-cache";
 import {

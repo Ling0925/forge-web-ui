@@ -1,4 +1,4 @@
-import { ForgeError } from "@forge/core/shared";
+import { ForgeError, type ImageAttachment } from "@forge/core/shared";
 import {
   type RunInput,
   configureInputSchema,
@@ -16,7 +16,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type { ImageAttachment } from "../core-compat";
 import type {
   ConfigureInput,
   CreateSessionInput,

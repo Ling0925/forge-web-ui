@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { SLASH_COMMANDS } from "../../src/renderer/core-compat";
+import { SLASH_COMMANDS } from "@forge/core/shared";
 
 it("desktop uses the CLI catalog and executes arguments without sending prompts", async () => {
   const bundle = await build({

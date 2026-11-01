@@ -1,4 +1,4 @@
-import type { SessionPage } from "../core-compat";
+import type { SessionPage } from "@forge/core/shared";
 import type { SessionSnapshot } from "../shared-types";
 import { seedSessionUsage } from "./session-usage";
 

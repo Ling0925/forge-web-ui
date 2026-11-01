@@ -6,10 +6,7 @@ import {
   desktopSlashLimitation,
   executeDesktopSlash,
 } from "../../src/renderer/components/workbench/desktop-slash";
-import {
-  SLASH_COMMANDS,
-  parseSlashCommand,
-} from "../../src/renderer/core-compat";
+import { SLASH_COMMANDS, parseSlashCommand } from "@forge/core/shared";
 import { reviewSession } from "../fixtures/review-session";
 const id = parseSessionId("11111111-1111-4111-8111-111111111111");
 function fixture() {

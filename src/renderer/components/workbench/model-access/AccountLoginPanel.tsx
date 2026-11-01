@@ -1,6 +1,6 @@
 import { Plugs } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import type { PublicAccountLogin } from "../../../core-compat";
+import type { PublicAccountLogin } from "@forge/core/shared";
 import { Button } from "../../primitives/Button";
 import { Select } from "../../primitives/Select";
 import { Tag } from "../../primitives/Tag";

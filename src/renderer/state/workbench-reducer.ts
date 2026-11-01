@@ -1,7 +1,9 @@
-import { estimateTokens } from "@forge/core/shared";
-import { recordPlan } from "@forge/core/shared";
+import {
+  estimateTokens,
+  recordPlan,
+  type SessionPage,
+} from "@forge/core/shared";
 import type { AdvisorRequest } from "@forge/core/shared/agent-coordination";
-import type { SessionPage } from "../core-compat";
 import type {
   AgentEvent,
   ApprovalRequest,

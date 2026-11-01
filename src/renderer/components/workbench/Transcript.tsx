@@ -1,4 +1,4 @@
-import { executionTurns } from "@forge/core/shared";
+import { executionLabel, executionTurns } from "@forge/core/shared";
 import { commandActivity, toolActivity } from "@forge/core/shared";
 import { webSearchStatus } from "@forge/core/shared";
 import {
@@ -20,7 +20,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { executionLabel } from "../../core-compat";
 import type {
   ApprovalRequest,
   SessionId,

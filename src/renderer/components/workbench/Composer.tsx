@@ -1,4 +1,8 @@
-import type { ModelCatalog } from "@forge/core/shared";
+import {
+  type ImageAttachment,
+  type ModelCatalog,
+  imageAttachmentsSchema,
+} from "@forge/core/shared";
 import {
   type RunInput,
   permissionSchema,
@@ -27,10 +31,6 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
-import {
-  type ImageAttachment,
-  imageAttachmentsSchema,
-} from "../../core-compat";
 import type { SessionId } from "../../shared-types";
 import {
   composerEffortUpdate,

@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { PUBLISHED_HTML_PREVIEW_MAX_BYTES } from "../../src/renderer/core-compat";
+import { PUBLISHED_HTML_PREVIEW_MAX_BYTES } from "@forge/core/shared";
 
 declare global {
   interface Window {

@@ -1,9 +1,8 @@
-import { parseChartFence } from "@forge/core/shared";
+import { isHtmlLanguage, parseChartFence } from "@forge/core/shared";
 import { externalUrlSchema } from "@forge/core/shared/ipc";
 import { Component, type ReactNode, memo, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { isHtmlLanguage } from "../../core-compat";
 import { ChartCard } from "../charts/ChartCard";
 import { CodeBlock } from "../primitives/CodeBlock";
 
