@@ -20,6 +20,7 @@ import {
   TerminalWindow,
   Wrench,
 } from "@phosphor-icons/react";
+import { SUPER_AGENT_TOOL_LABELS, isSuperAgentTool } from "./superagent";
 
 const friendlyLabels: Readonly<Record<string, string>> = {
   read_file: "读取文件",
@@ -71,7 +72,7 @@ const friendlyLabels: Readonly<Record<string, string>> = {
 };
 
 export function friendlyLabel(name: string): string {
-  const known = friendlyLabels[name];
+  const known = friendlyLabels[name] ?? SUPER_AGENT_TOOL_LABELS[name];
   if (known) return known;
   if (name.startsWith("mcp_")) return "MCP 工具";
   return "工具调用";
@@ -107,6 +108,9 @@ export function getToolIcon(name: string) {
   ) {
     return <Robot size={16} weight="regular" />;
   }
+  if (name === "superagent_send")
+    return <PaperPlaneTilt size={16} weight="regular" />;
+  if (isSuperAgentTool(name)) return <Robot size={16} weight="regular" />;
   if (name === "answer_advisor" || name === "advisor") {
     return <Question size={16} weight="regular" />;
   }

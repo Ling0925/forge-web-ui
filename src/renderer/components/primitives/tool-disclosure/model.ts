@@ -2,6 +2,7 @@ import { diffStats } from "../DiffViewer";
 import { decodeCommandConsole } from "./commands";
 import { extractPlanData } from "./plans";
 import { formatClock, formatStamp, friendlyLabel } from "./presentation";
+import { superAgentToolSummary } from "./superagent";
 import { type ToolDisclosureProps } from "./types";
 import { parseParams, parseResult } from "./values";
 
@@ -250,6 +251,9 @@ export function createToolDisclosureModel({
       planSummaryTarget ||
       agentTarget ||
       webSearchTarget ||
+      (target
+        ? undefined
+        : superAgentToolSummary(toolName, parsedParams, status)) ||
       (isRunCommand ? command : undefined);
   const showParameters =
     !writesFiles &&

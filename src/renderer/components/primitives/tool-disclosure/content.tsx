@@ -1,4 +1,4 @@
-import { chartFenceBody, parseChartFence } from "@forge/core/shared/chart-spec";
+import { chartFenceBody, parseChartFence } from "@forge/core/shared";
 import { CaretRight, WarningCircle } from "@phosphor-icons/react";
 import { ChartCard } from "../../charts/ChartCard";
 import { DiffViewer } from "../DiffViewer";
