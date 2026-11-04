@@ -1,6 +1,7 @@
 import { ArrowDown, CaretDown, CaretRight, Check, Copy, Robot, WarningCircle } from "@phosphor-icons/react";
 import { Fragment, memo, useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Collapsible } from "../primitives/Collapsible";
+import { ForgeMark } from "../primitives/ForgeMark";
 import { commandActivity, toolActivity } from "@forge/core/shared/tool-activity";
 import { executionLabel, executionTurns } from "@forge/core/shared/execution";
 import { webSearchStatus } from "@forge/core/shared/web-search-display";
@@ -36,6 +37,7 @@ import { PublishedFiles } from "./PublishedFiles";
 import { foldedTool, transcriptStages, type TranscriptStage } from "../../state/transcript-stages";
 import "./transcript.css";
 import "./tool-live.css";
+import "./transcript-v2.css";
 export { phaseMarkers, foldedTool } from "../../state/transcript-stages";
 export { partitionTurns, groupTurnEntries, computeTurnSummary };
 
@@ -590,6 +592,9 @@ function renderTimelineEntry(
           {item.role === "user" && <div className="message-header">你</div>}
           {item.role === "assistant" && item.content && (
             <div className="message-header message-author-row">
+              <span className="message-author-avatar" aria-hidden="true">
+                <ForgeMark className="message-author-mark" />
+              </span>
               <span>{item.streaming ? "Forge · 实时草稿" : item.incomplete ? "Forge · 未完成回复" : "Forge"}</span>
               {item.content && <MessageCopyButton text={item.content} />}
             </div>
@@ -685,17 +690,17 @@ function ExecutionProcess({
           className={`transcript-execution-caret ${expanded ? "is-expanded" : ""}`}
           aria-hidden="true"
         />
-        <Check size={13} aria-hidden="true" />
-        <span>done</span>
+        <Check size={13} weight="bold" className="transcript-execution-check" aria-hidden="true" />
+        <span className="transcript-execution-state">已完成</span>
         {counts && (
           <>
-            <span aria-hidden="true">·</span>
+            <span className="transcript-execution-sep" aria-hidden="true">·</span>
             <span>{counts}</span>
           </>
         )}
-        <span aria-hidden="true">·</span>
+        <span className="transcript-execution-sep" aria-hidden="true">·</span>
         <span>总耗时 {execution.duration}</span>
-        <span aria-hidden="true">·</span>
+        <span className="transcript-execution-sep" aria-hidden="true">·</span>
         <span>{execution.speed}</span>
       </button>
       <Collapsible open={expanded}>

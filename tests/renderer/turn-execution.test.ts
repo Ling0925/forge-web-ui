@@ -46,7 +46,7 @@ describe("completed turn execution", () => {
       { finalMessageId: "message:3", duration: "10.0s", speed: "50 tok/s" },
     ]);
     const html = renderToStaticMarkup(createElement(StoredTranscript, { snapshot }));
-    expect(html).toContain("done");
+    expect(html).toContain("已完成");
     expect(html).toContain("总耗时 10.0s");
     expect(html).toContain("50 tok/s");
     expect(html).toContain('aria-expanded="false"');

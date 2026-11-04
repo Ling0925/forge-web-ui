@@ -1,0 +1,233 @@
+/*
+ * Conversation view (v2). Transcript.tsx evaluates before app.css,
+ * motion.css and workspace-theme.css, so every rule is scoped under
+ * `.wb-app .conversation-inner` and wins on specificity rather than order.
+ * Tokens only: docs/WEB_UI_LAYOUT_SPEC.md §2 and §4.6.
+ */
+
+/* ---------- Author rows ---------- */
+.wb-app .conversation-inner .message-header::before {
+  display: none;
+}
+.wb-app .conversation-inner .message-header {
+  gap: var(--space-2);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+.wb-app .conversation-inner .message-author-row {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.wb-app .conversation-inner .message-author-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--surface-elevated);
+}
+.wb-app .conversation-inner .message-author-mark {
+  width: 14px;
+  height: 14px;
+}
+.wb-app .conversation-inner .message-streaming .message-author-avatar {
+  border-color: var(--accent-border);
+  animation: fx-breathe 1.6s var(--ease-in-out) infinite;
+}
+
+/* ---------- User turn ---------- */
+.wb-app .conversation-inner .message-user {
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-soft);
+  padding: var(--space-2-5) var(--space-4) var(--space-3);
+}
+.wb-app .conversation-inner .message-user .message-header {
+  margin-bottom: 2px;
+}
+.wb-app .conversation-inner .transcript-turn-actions {
+  top: var(--space-2);
+}
+.wb-app .conversation-inner .transcript-turn-toggle:hover {
+  border-color: transparent;
+}
+
+/* Turn controls and the copy action are metadata: on a mouse they appear with
+   the message they belong to; touch keeps them visible. Opacity only, so the
+   rows never change height. */
+@media (hover: hover) and (pointer: fine) {
+  .wb-app .conversation-inner .transcript-turn-actions,
+  .wb-app .conversation-inner .message-copy {
+    opacity: 0;
+    transition: opacity var(--dur-short) var(--ease-out),
+      background-color var(--dur-micro) var(--ease-out),
+      color var(--dur-micro) var(--ease-out);
+  }
+  .wb-app .conversation-inner .message-user:hover .transcript-turn-actions,
+  .wb-app .conversation-inner .transcript-turn-actions:focus-within,
+  .wb-app .conversation-inner .message-assistant:hover .message-copy,
+  .wb-app .conversation-inner .message-copy:focus-visible,
+  .wb-app .conversation-inner .message-copy.is-copied {
+    opacity: 1;
+  }
+}
+
+/* ---------- Completed execution summary ---------- */
+.wb-app .conversation-inner .transcript-execution-summary {
+  gap: var(--space-1-5);
+  min-height: 26px;
+  padding: 2px var(--space-3) 2px var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-muted);
+  transition: background-color var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.wb-app .conversation-inner .transcript-execution-summary:hover {
+  border-color: var(--border-hover);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+}
+.wb-app .conversation-inner .transcript-execution-summary:active {
+  transform: scale(0.98);
+}
+.wb-app .conversation-inner .transcript-execution-check {
+  flex-shrink: 0;
+  color: var(--success);
+}
+.wb-app .conversation-inner .transcript-execution-state {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.wb-app .conversation-inner .transcript-execution-sep {
+  color: var(--text-disabled);
+}
+/* Expanded process hangs off the summary on one quiet rail. */
+.wb-app .conversation-inner .transcript-execution-items {
+  width: auto;
+  gap: var(--space-2);
+  margin-left: 13px;
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  border-left: 1px solid var(--border-subtle);
+}
+
+/* ---------- Tool rows ---------- */
+.wb-app .conversation-inner .tool-disclosure-label {
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+.wb-app
+  .conversation-inner
+  .tool-disclosure:not([data-status="failed"])
+  .tool-disclosure-target {
+  color: var(--text-muted);
+}
+.wb-app
+  .conversation-inner
+  .tool-disclosure:not([data-status="failed"])
+  .tool-disclosure-header:hover {
+  border-color: transparent;
+  background-color: var(--surface-hover);
+}
+
+/* ---------- Reasoning ---------- */
+.wb-app .conversation-inner .reasoning-done .reasoning-head:hover {
+  background-color: var(--surface-hover);
+}
+.wb-app .conversation-inner .reasoning-done .reasoning-head:hover .reasoning-summary {
+  color: var(--text-secondary);
+}
+
+/* ---------- Markdown prose ---------- */
+.wb-app .conversation-inner .markdown-content code {
+  padding: 0.1em 0.38em;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  background: var(--surface-soft);
+  font-size: 0.86em;
+}
+.wb-app .conversation-inner .markdown-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.wb-app .conversation-inner .markdown-content a {
+  text-decoration-color: var(--accent-border);
+  transition: text-decoration-color var(--dur-micro) var(--ease-out);
+}
+.wb-app .conversation-inner .markdown-content a:hover {
+  text-decoration-color: currentColor;
+}
+.wb-app .conversation-inner .markdown-content li::marker {
+  color: var(--text-muted);
+}
+.wb-app .conversation-inner .markdown-content blockquote {
+  padding: 2px 0 2px var(--space-4);
+  border-left-color: var(--accent-border);
+}
+.wb-app .conversation-inner .markdown-content hr {
+  height: 1px;
+  margin: 1.5em 0;
+  border: 0;
+  background: var(--border-subtle);
+}
+.wb-app .conversation-inner .markdown-table-scroll {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.wb-app .conversation-inner .markdown-content th {
+  background: var(--surface-soft);
+}
+
+/* Code blocks: one soft slab with a quiet header. */
+.wb-app .conversation-inner .code-block {
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-xs);
+}
+.wb-app .conversation-inner .code-block-header {
+  padding: 3px var(--space-1) 3px var(--space-3);
+}
+.wb-app .conversation-inner .code-block-lang {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted);
+}
+.wb-app .conversation-inner .code-line:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Inside the user card (soft surface) nested slabs flip to elevated. */
+.wb-app .conversation-inner .message-user .markdown-content code,
+.wb-app .conversation-inner .message-user .code-block,
+.wb-app .conversation-inner .message-user .code-block-header {
+  background: var(--surface-elevated);
+}
+
+/* ---------- History boundary ---------- */
+.wb-app .conversation-inner .transcript-history-status.is-end {
+  gap: var(--space-3);
+  width: min(100%, 360px);
+  color: var(--text-disabled);
+  font-size: var(--text-2xs);
+}
+.wb-app .conversation-inner .transcript-history-status.is-end::before,
+.wb-app .conversation-inner .transcript-history-status.is-end::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-app .conversation-inner .message-streaming .message-author-avatar {
+    animation: none;
+  }
+}
