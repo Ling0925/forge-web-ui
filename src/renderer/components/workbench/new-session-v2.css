@@ -371,10 +371,6 @@
     transform: none;
   }
 }
-  .wb-app
-    .composer-split
-    .composer-submit-col
-    .composer-run:not(:disabled):hover {
 
 /* Type scale: the composer toolbar reads at 13px like every other control. */
 .wb-app .composer-card .composer-model-summary,
