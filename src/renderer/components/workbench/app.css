@@ -137,9 +137,8 @@
   line-height: var(--prose-leading);
   font-size: var(--prose-size);
 }
-/* Claude Code-style conversation flow: no right-aligned chat bubble. User turns
-   read as compact, full-width blocks on a quiet surface; assistant turns are
-   plain borderless prose. Both share one left reading rail. */
+/* Base message rhythm. The reading model (right-aligned user request,
+   plain assistant prose) is owned by transcript-v2.css. */
 .wb-app .message {
   display: flex;
   flex-direction: column;

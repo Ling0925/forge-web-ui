@@ -100,18 +100,20 @@ it("renders live step counts, persisted retries and independent folding at deskt
         await page.setContent(`<html data-theme="${theme}"><body><div id="root"></div></body></html>`);
         await page.addStyleTag({ content: css.text });
         await page.addScriptTag({ content: js.text });
-        await page.getByText("进行到第 2 步 · 1 次工具调用 · 1 次请求重试", { exact: true }).waitFor();
+        // A live turn shows its process inline, without raw step counters.
+        await page.locator(".transcript-turn .tool-disclosure").first().waitFor();
+        expect(await page.getByText("进行到第 2 步", { exact: false }).count()).toBe(0);
         expect(await page.locator(".transcript-turn").count()).toBe(1);
         await page.getByRole("button", { name: "完成", exact: true }).click();
-        await page.getByText("2 步 · 1 次工具调用 · 1 次请求重试", { exact: true }).waitFor();
         const toggle = page.getByRole("button", { name: "展开本轮执行过程", exact: true });
+        await toggle.waitFor();
+        expect(await toggle.getAttribute("title")).toContain("2 步 · 1 次工具调用 · 1 次请求重试");
         await toggle.click();
         expect(await page.getByText("也检查失败情况", { exact: true }).isVisible()).toBe(true);
         // Assert actual process contents rather than a nonexistent step wrapper.
         expect(await page.locator(".transcript-execution-items .tool-disclosure").count()).toBe(1);
         expect(await page.locator(".transcript-execution-items").innerText()).toContain("先读取文件。");
-        await page.getByRole("button", { name: "收起第 1 轮对话", exact: true }).click();
-        await page.getByRole("button", { name: "展开第 1 轮执行与回复", exact: true }).click();
+        await page.getByRole("button", { name: "收起本轮执行过程", exact: true }).click();
         await page.getByRole("button", { name: "展开本轮执行过程", exact: true }).click();
         expect(await page.locator(".tool-disclosure").isVisible()).toBe(true);
         await expect.poll(() => page.locator(".tool-disclosure").evaluate(node => getComputedStyle(node).opacity)).toBe("1");

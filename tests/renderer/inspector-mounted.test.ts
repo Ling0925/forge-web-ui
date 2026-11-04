@@ -80,9 +80,7 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
     await page.setContent('<div id="root"></div>');
     await page.addScriptTag({ content: bundle.outputFiles[0]?.text ?? "" });
 
-    const changesTab = page.getByRole("tab", { name: "文件", exact: true });
-    await changesTab.click();
-    await page.getByRole("tab", { name: "变更与检查点", exact: true }).click();
+    await page.getByRole("button", { name: "变更与检查点", exact: true }).click();
 
     // Forward/back across all four sessions, revisiting parents so an
     // accumulating sibling navigation would surface as a duplicate section.
@@ -137,7 +135,6 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
           ).checkpointReads.at(-1) === selected,
         id,
       );
-      expect(await changesTab.getAttribute("aria-selected")).toBe("true");
     }
 
     await page.getByText("关联任务的变更", { exact: true }).click();

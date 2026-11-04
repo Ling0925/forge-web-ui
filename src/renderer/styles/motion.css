@@ -138,8 +138,7 @@
 
 .tool-disclosure-chevron,
 .reasoning-caret,
-.transcript-execution-caret,
-.transcript-turn-collapsed-caret {
+.transcript-execution-caret {
   transition: transform var(--transition-fast) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -175,21 +174,6 @@
   }
   to {
     opacity: 1;
-  }
-}
-
-.transcript-turn-collapsed-bar {
-  animation: turn-bar-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes turn-bar-enter {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -374,7 +358,6 @@
   .tool-disclosure-body,
   .tool-call-group,
   .transcript-execution-items,
-  .transcript-turn-collapsed-bar,
   .transcript-turn:last-child .message-user,
   .transcript-turn:last-child .message-assistant,
   .reasoning,

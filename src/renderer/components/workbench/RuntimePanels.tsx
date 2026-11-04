@@ -51,7 +51,7 @@ function planProgress(plan: TaskPlan) {
   return { completed, inProgress, pending, total, label, tone };
 }
 
-function PlanSteps({ plan }: { readonly plan: TaskPlan }) {
+export function PlanSteps({ plan }: { readonly plan: TaskPlan }) {
   return (
     <ol className="wb-plan-progress">
       {plan.steps.map((step, position) => (
@@ -84,7 +84,7 @@ function PlanSteps({ plan }: { readonly plan: TaskPlan }) {
   );
 }
 
-function resolveDisplayPlans(snapshot: Pick<SessionSnapshot, "plan" | "plans">) {
+export function resolveDisplayPlans(snapshot: Pick<SessionSnapshot, "plan" | "plans">) {
   const plans = sessionPlans(snapshot);
   const currentId = snapshot.plan ? (snapshot.plan.id ?? "legacy") : null;
   const current = currentId ? (plans.find((plan) => plan.id === currentId) ?? null) : null;

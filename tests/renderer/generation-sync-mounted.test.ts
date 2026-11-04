@@ -112,8 +112,7 @@ it("renders generation-ordered reasoning through both snapshot races, failure an
       expect(await page.locator('[data-turn="1"] .reasoning[data-reasoning-status="failed"]').count()).toBe(1);
       expect(await page.locator('[data-turn="2"] .reasoning').count()).toBe(0);
       expect(await page.getByRole("alert").last().innerText()).toContain("provider");
-      await page.getByRole("button", { name: "收起第 1 轮对话", exact: true }).click();
-      await page.getByRole("button", { name: "展开第 1 轮对话", exact: true }).click();
+      expect(await page.getByRole("button", { name: "收起第 1 轮对话", exact: true }).count()).toBe(0);
       expect(await firstMessage.locator(".reasoning-head").getAttribute("aria-expanded")).toBe("true");
       expect(errors).toEqual([]);
       await page.close();
@@ -127,7 +126,8 @@ it("renders generation-ordered reasoning through both snapshot races, failure an
     await event(page, { type: "generation_finished", generationId: first, status: "completed" });
     expect(await page.locator(".reasoning").count()).toBe(1);
     expect(await page.locator(".reasoning-live").count()).toBe(0);
-    expect(await page.locator(".message-author-row").innerText()).toContain("Forge");
+    // A settled answer carries no author label; copy sits after the answer.
+    expect(await page.locator(".message-author-row").count()).toBe(0);
     await page.getByRole("button", { name: "复制整段回答" }).click();
     expect(await page.evaluate(() => (window as unknown as HarnessWindow).copied)).toBe("answer **only**");
     await page.close();

@@ -118,13 +118,15 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         );
         await page.addStyleTag({ content: css });
         await page.addScriptTag({ content: js });
-        const runtime = page.getByRole("tab", {
-          name: "计划与进度",
-          exact: true,
-        });
-        await expect
-          .poll(() => runtime.getAttribute("aria-selected"))
-          .toBe("true");
+        // One summary page: progress, subtasks and session facts in order.
+        // Section headers read "标题 计数", e.g. "进度 1/3" and "子任务 1".
+        await page.getByRole("button", { name: "进度 1/3", exact: true }).waitFor();
+        expect(
+          await page.getByRole("button", { name: "子任务 1", exact: true }).isVisible(),
+        ).toBe(true);
+        expect(
+          await page.getByText("独立子代理：收集仓库结构与测试配置并输出简要结论", { exact: true }).isVisible(),
+        ).toBe(true);
         expect(
           await page
             .getByText("检查会话数据与执行状态", { exact: true })
@@ -137,7 +139,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
             ".wb-plan-progress .plan-pending",
           );
           const titleRow = document.querySelector(
-            ".inspector-plan-progress-panel .inspector-title-row",
+            ".inspector-summary-head",
           );
           const listStyle = list ? getComputedStyle(list) : null;
           const pendingStyle = pending ? getComputedStyle(pending) : null;
@@ -164,23 +166,18 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           path: resolve(output, `forge-inspector-plan-${width}-${theme}.png`),
           animations: "disabled",
         });
-        await page.getByRole("tab", { name: "Plan", exact: true }).click();
+        const back = page.getByRole("button", { name: "返回概要", exact: true });
+        await page.getByRole("button", { name: "说明", exact: true }).click();
         expect(
           await page.getByText("真实计划说明", { exact: true }).isVisible(),
         ).toBe(true);
-        await page.getByRole("tab", { name: "计划进度", exact: true }).click();
-        await runtime.focus();
-        await page.keyboard.press("ArrowRight");
-        await page.keyboard.press("Enter");
-        await expect
-          .poll(() =>
-            page
-              .getByRole("tab", { name: "文件", exact: true })
-              .getAttribute("aria-selected"),
-          )
-          .toBe("true");
+        // The drill-in moves focus to its back button and returns on click.
+        expect(await back.evaluate((el) => el === document.activeElement)).toBe(true);
+        await back.click();
+        await page.getByRole("button", { name: "工作区文件", exact: true }).click();
+        // The drill-in header names the view; the panel does not repeat it.
         expect(
-          await page.getByText("工作区文件", { exact: true }).isVisible(),
+          await page.locator(".wb-inspector-head").getByText("工作区文件", { exact: true }).isVisible(),
         ).toBe(true);
         await page.getByText("README.md", { exact: true }).click();
         expect(
@@ -188,8 +185,9 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
             .getByText("# Workspace Preview Content", { exact: true })
             .isVisible(),
         ).toBe(true);
+        await back.click();
         await page
-          .getByRole("tab", { name: "变更与检查点", exact: true })
+          .getByRole("button", { name: "变更与检查点", exact: true })
           .click();
         expect(
           await page.getByRole("button", { name: "刷新检查点" }).isVisible(),
@@ -197,10 +195,15 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         expect(
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(0);
-        await page.getByRole("tab", { name: "会话信息", exact: true }).click();
+        await back.click();
         expect(
           await page.getByText("无限制", { exact: true }).isVisible(),
         ).toBe(true);
+        // Context diagnostics load only when their view is opened.
+        expect(
+          await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
+        ).toBe(0);
+        await page.getByRole("button", { name: "上下文与用量", exact: true }).click();
         await expect
           .poll(() =>
             page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
@@ -234,7 +237,8 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           path: resolve(output, `forge-inspector-${width}-${theme}.png`),
           animations: "disabled",
         });
-        await page.getByRole("tab", { name: "项目资源", exact: true }).click();
+        await back.click();
+        await page.getByRole("button", { name: "项目资源", exact: true }).click();
         expect(
           await page.getByText("项目指令与技能", { exact: true }).isVisible(),
         ).toBe(true);

@@ -124,10 +124,9 @@ it("binds the browser panel to the selected session and probes only when opened"
         }[]
       >;
 
-    await page.getByRole("tab", { name: "会话信息", exact: true }).click();
-    // The default subtab is the overview: the browser tab has not been opened.
+    // The summary is the default view: the browser view has not been opened.
     expect(await rpc()).toEqual([]);
-    await page.getByRole("tab", { name: "浏览器", exact: true }).click();
+    await page.getByRole("button", { name: "浏览器", exact: true }).click();
     const panel = page.getByRole("region", { name: "浏览器预览与接管" });
     await expect.poll(() => panel.isVisible()).toBe(true);
     // Only a read-only status probe, scoped to the selected session.

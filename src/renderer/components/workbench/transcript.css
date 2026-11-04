@@ -313,142 +313,12 @@
   margin-top: var(--space-4);
 }
 
-/* Relative container for the user message and right-aligned turn actions */
-.wb-app .message-user {
-  position: relative;
-}
-
-.wb-app .transcript-turn .message-user .message-header {
-  padding-right: 136px;
-}
-
-.transcript-turn-actions {
-  position: absolute;
-  top: 10px;
-  right: var(--space-3);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  z-index: 1;
-}
-
-.transcript-execution-counts {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  margin-block: var(--space-2);
-  overflow-wrap: anywhere;
-}
-
-.transcript-turn-badge {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  font-size: var(--text-2xs);
-  font-weight: 500;
-  line-height: 1;
-  color: var(--text-muted);
-  background: transparent;
-  border-radius: var(--radius-sm);
-  padding: 0 4px;
-  user-select: none;
-}
-
-.transcript-turn-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  height: 22px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-2xs);
-  font-weight: 500;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
-}
-
-.transcript-turn-toggle:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-  border-color: var(--border-subtle);
-}
-
-.transcript-turn-toggle:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
-}
-
 /* Expanded turn body */
 .transcript-turn-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
-}
-
-/* Collapsed summary banner */
-.transcript-turn-collapsed-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card);
-  background: var(--surface-soft);
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: var(--text-xs);
-  text-align: left;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-}
-
-.transcript-turn-collapsed-bar:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-hover);
-  color: var(--text-primary);
-}
-
-.transcript-turn-collapsed-bar:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
-}
-
-.transcript-turn-collapsed-caret {
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.transcript-turn-collapsed-title {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.transcript-turn-collapsed-sep {
-  color: var(--text-muted);
-}
-
-.transcript-turn-collapsed-meta {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-muted);
-}
-
-.transcript-turn-collapsed-action {
-  flex-shrink: 0;
-  margin-left: auto;
-  font-weight: 500;
-  color: var(--accent);
 }
 
 /* Completed execution: one quiet summary, with the final answer kept outside. */
@@ -614,8 +484,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .reasoning-full,
-  .transcript-turn-body,
-  .transcript-turn-collapsed-bar {
+  .transcript-turn-body {
     animation: none;
   }
 

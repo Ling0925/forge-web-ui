@@ -220,14 +220,13 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
         }, scenario.shellWidth);
       }
 
-      await page.getByRole("tab", { name: "会话信息", exact: true }).click();
-      await page.getByRole("tab", { name: "项目资源", exact: true }).click();
-      const resourcesPanel = page.locator("#tabpanel-inspector-resources");
+      await page.getByRole("button", { name: "项目资源", exact: true }).click();
+      const resourcesPanel = page.locator('.inspector-subview[data-view="resources"]');
       await resourcesPanel.waitFor({ state: "visible" });
       await page.waitForFunction(
         (expected) =>
           Array.from(
-            document.querySelectorAll("#tabpanel-inspector-resources code"),
+            document.querySelectorAll('.inspector-subview[data-view="resources"] code'),
           ).some((node) => node.textContent === expected),
         commandLine,
       );
@@ -265,7 +264,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
             };
           };
           const codes = Array.from(
-            document.querySelectorAll("#tabpanel-inspector-resources code"),
+            document.querySelectorAll('.inspector-subview[data-view="resources"] code'),
           ).filter((node): node is HTMLElement => node instanceof HTMLElement);
           const commandCode = codes.find(
             (node) => node.textContent === expectedCommand,
@@ -276,7 +275,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
           if (!commandCode || !pathCode)
             throw new Error("command/path code nodes are not mounted");
           const directoryNode = Array.from(
-            document.querySelectorAll("#tabpanel-inspector-resources p"),
+            document.querySelectorAll('.inspector-subview[data-view="resources"] p'),
           ).find((node) => node.textContent?.startsWith("workspace-agents ·"));
           if (!(directoryNode instanceof HTMLElement))
             throw new Error("skill source directory node is not mounted");
@@ -306,7 +305,7 @@ it("mounted narrow inspector wraps a long MCP command and resource paths without
               ),
             },
             inspectorScroll: box(scroll),
-            resourcesPanel: box(element("#tabpanel-inspector-resources")),
+            resourcesPanel: box(element('.inspector-subview[data-view="resources"]')),
             command: metrics(commandCode),
             path: metrics(pathCode),
             skillDirectory: metrics(directoryNode),

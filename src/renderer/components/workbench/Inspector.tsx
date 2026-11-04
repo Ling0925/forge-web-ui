@@ -1,115 +1,36 @@
 import {
+  ArrowLeft,
+  ArrowSquareOut,
   ArrowsCounterClockwise,
+  Browser,
   CaretRight,
-  Cpu,
+  ClockCounterClockwise,
   FileCode,
-  Folder,
-  ShieldCheck,
+  FolderOpen,
+  Gauge,
+  PuzzlePiece,
   SidebarSimple,
-  SlidersHorizontal,
 } from "@phosphor-icons/react";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { permissionLabels } from "../../state/permission-labels";
 import { useWorkbench } from "../../state/workbench-context";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
 import { Button } from "../primitives/Button";
 import { DiffViewer, diffStats } from "../primitives/DiffViewer";
 import { StatusBadge } from "../primitives/StatusBadge";
-import { Tabs } from "../primitives/Tabs";
 import { CheckpointPanel, ProjectResources } from "./CatalogPanels";
 import { BrowserPanel } from "./BrowserPanel";
 import { ChangeSessionNavigation } from "./ChangeSessionNavigation";
 import {
   ContextManagementPanel,
   PlanDocumentPanel,
-  PlanProgressPanel,
+  PlanSteps,
   SubAgentsPanel,
+  resolveDisplayPlans,
 } from "./RuntimePanels";
 import { WorkspaceFileManager, changeKindMeta } from "./WorkspaceFileManager";
 import "./inspector.css";
 import "./inspector-v2.css";
-
-interface SubTabItem<T extends string> {
-  readonly id: T;
-  readonly label: string;
-  readonly badge?: number | string | undefined;
-}
-
-function InspectorSubTabs<T extends string>({
-  ariaLabel,
-  items,
-  activeId,
-  onChange,
-}: {
-  readonly ariaLabel: string;
-  readonly items: readonly SubTabItem<T>[];
-  readonly activeId: T;
-  readonly onChange: (id: T) => void;
-}) {
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const handleKeyDown = (
-    event: KeyboardEvent<HTMLButtonElement>,
-    index: number,
-  ) => {
-    let targetIndex: number | undefined;
-    if (event.key === "ArrowRight") {
-      event.preventDefault();
-      targetIndex = (index + 1) % items.length;
-    } else if (event.key === "ArrowLeft") {
-      event.preventDefault();
-      targetIndex = (index - 1 + items.length) % items.length;
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      targetIndex = 0;
-    } else if (event.key === "End") {
-      event.preventDefault();
-      targetIndex = items.length - 1;
-    }
-    if (targetIndex !== undefined) {
-      const target = items[targetIndex];
-      if (target) {
-        onChange(target.id);
-        const buttons =
-          listRef.current?.querySelectorAll<HTMLButtonElement>(
-            '[role="tab"]',
-          );
-        buttons?.[targetIndex]?.focus();
-      }
-    }
-  };
-
-  return (
-    <div
-      ref={listRef}
-      role="tablist"
-      aria-label={ariaLabel}
-      className="inspector-subtabs"
-    >
-      {items.map((item, index) => {
-        const isActive = item.id === activeId;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            tabIndex={isActive ? 0 : -1}
-            className={`inspector-subtab-btn${isActive ? " is-active" : ""}`}
-            onClick={() => onChange(item.id)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-          >
-            <span>{item.label}</span>
-            {item.badge !== undefined && (
-              <span aria-hidden="true" className="inspector-subtab-badge">
-                {item.badge}
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 // The Transcript renders the selected session's live request inline; the
 // Inspector owns every other request (background, child, other session).
@@ -119,6 +40,102 @@ function scrollToInlineApproval(approvalId: string) {
     target.scrollIntoView({ block: "center", behavior: "auto" });
 }
 
+type InspectorView =
+  | "summary"
+  | "files"
+  | "changes"
+  | "plan-history"
+  | "subagents"
+  | "context"
+  | "browser"
+  | "resources";
+
+const viewTitles: Readonly<Record<Exclude<InspectorView, "summary">, string>> = {
+  files: "工作区文件",
+  changes: "变更与检查点",
+  "plan-history": "计划说明与历史",
+  subagents: "子任务",
+  context: "上下文与用量",
+  browser: "浏览器",
+  resources: "项目资源",
+};
+
+/** One collapsible summary section: "标题 计数 ⌄". Empty sections never render. */
+function SummarySection({
+  title,
+  count,
+  action,
+  children,
+}: {
+  readonly title: string;
+  readonly count?: number | string | undefined;
+  readonly action?: ReactNode;
+  readonly children: ReactNode;
+}) {
+  const [open, setOpen] = useState(true);
+  const id = `inspector-section-${title}`;
+  return (
+    <section className="inspector-summary-section" data-open={open}>
+      <div className="inspector-summary-head">
+        <button
+          type="button"
+          className="inspector-summary-toggle"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <h3>{title}</h3>
+          {count !== undefined && <span className="inspector-summary-count">{count}</span>}
+          <CaretRight size={12} weight="bold" className="inspector-summary-caret" aria-hidden="true" />
+        </button>
+        {action}
+      </div>
+      <div className="inspector-summary-collapse" id={id} hidden={!open}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SummaryRow({
+  icon,
+  label,
+  meta,
+  onClick,
+  title,
+}: {
+  readonly icon: ReactNode;
+  readonly label: ReactNode;
+  readonly meta?: ReactNode;
+  readonly onClick?: () => void;
+  readonly title?: string;
+}) {
+  const content = (
+    <>
+      <span className="inspector-row-icon" aria-hidden="true">{icon}</span>
+      <span className="inspector-row-label" title={title}>{label}</span>
+      {meta !== undefined && <span className="inspector-row-meta">{meta}</span>}
+    </>
+  );
+  return onClick ? (
+    <button type="button" className="inspector-row is-interactive" onClick={onClick}>
+      {content}
+      <CaretRight size={11} weight="bold" className="inspector-row-caret" aria-hidden="true" />
+    </button>
+  ) : (
+    <div className="inspector-row">{content}</div>
+  );
+}
+
+const childStatusTone = (status: string) =>
+  status === "completed"
+    ? "done"
+    : status === "running" || status === "awaiting_approval"
+      ? "active"
+      : status === "failed" || status === "interrupted" || status === "cancelled"
+        ? "failed"
+        : "idle";
+
 export function Inspector({
   onRequestCollapse,
   focusToken,
@@ -126,20 +143,17 @@ export function Inspector({
   readonly onRequestCollapse?: (() => void) | undefined;
   readonly focusToken?: number | undefined;
 }) {
-  const [section, setSection] = useState("inspector-runtime");
-  const [planSubTab, setPlanSubTab] = useState<"progress" | "plan">("progress");
-  const [filesSubTab, setFilesSubTab] = useState<"browser" | "changes">(
-    "browser",
-  );
-  const [sessionSubTab, setSessionSubTab] = useState<
-    "overview" | "browser" | "resources"
-  >("overview");
+  const [view, setView] = useState<InspectorView>("summary");
   const { state, answerApproval, selectSession, refreshActiveSession, setMobileTab } =
     useWorkbench();
   const paneRef = useRef<HTMLElement | null>(null);
+  const backRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     if (focusToken && focusToken > 0) paneRef.current?.focus();
   }, [focusToken]);
+  useEffect(() => {
+    if (view !== "summary") backRef.current?.focus();
+  }, [view]);
   // Never show another session's provenance while selection/read is in flight.
   const snapshot =
     state.activeSnapshot?.id === state.activeSessionId
@@ -174,6 +188,20 @@ export function Inspector({
     (started?.type === "run_started"
       ? started.permission
       : (state.settings?.defaultPermission ?? "workspace"));
+  const model = started?.type === "run_started" ? started.model : snapshot?.model;
+  const plans = snapshot ? resolveDisplayPlans(snapshot) : null;
+  const children = snapshot
+    ? state.sessions
+        .filter((session) => session.parentSessionId === snapshot.id)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+    : [];
+  const hasRelatedChanges = Boolean(
+    snapshot &&
+      (snapshot.parentSessionId ||
+        state.sessions.some((session) => session.parentSessionId === snapshot.id)),
+  );
+  const isSummary = view === "summary";
+
   return (
     <aside
       ref={paneRef}
@@ -183,9 +211,26 @@ export function Inspector({
     >
       <div className="inspector-header wb-inspector-head">
         <div className="inspector-title-row">
-          <SlidersHorizontal size={14} weight="bold" className="inspector-title-icon" />
-          <span>执行详情</span>
-          {snapshot && <StatusBadge status={run?.status ?? snapshot.status} />}
+          {isSummary ? (
+            <>
+              <span>概要</span>
+              {snapshot && <StatusBadge status={run?.status ?? snapshot.status} />}
+            </>
+          ) : (
+            <>
+              <button
+                ref={backRef}
+                type="button"
+                className="wb-icon-btn inspector-back"
+                aria-label="返回概要"
+                title="返回概要"
+                onClick={() => setView("summary")}
+              >
+                <ArrowLeft size={14} weight="bold" />
+              </button>
+              <span>{viewTitles[view]}</span>
+            </>
+          )}
         </div>
         <div className="inspector-head-actions">
           {onRequestCollapse && (
@@ -196,9 +241,7 @@ export function Inspector({
               title="收起详情"
               onClick={onRequestCollapse}
             >
-              <SidebarSimple size={14} className="wb-inspector-close-icon" />
-              <span className="wb-inspector-close-label">收起</span>
-              <CaretRight size={11} weight="bold" className="wb-inspector-close-caret" />
+              <SidebarSimple size={15} className="wb-inspector-close-icon" />
             </button>
           )}
         </div>
@@ -289,368 +332,254 @@ export function Inspector({
               ? "正在读取执行记录…"
               : "选择一个会话，查看执行详情"}
           </p>
-        ) : (
-          <Tabs
-            className="inspector-tabs"
-            ariaLabel="检查详情分类"
-            activeId={section}
-            onChange={setSection}
-            keepMounted
-            tabs={[
-              {
-                id: "inspector-runtime",
-                label: "计划与进度",
-                badge:
-                  pendingApprovals.length > 0 ? (
-                    <span className="inspector-tab-badge-warn">
-                      {pendingApprovals.length}
-                    </span>
-                  ) : snapshot.plan && snapshot.plan.steps.length > 0 ? (
-                    <span className="inspector-tab-badge-num">
-                      {
-                        snapshot.plan.steps.filter(
-                          (s) => s.status === "completed",
-                        ).length
-                      }
-                      /{snapshot.plan.steps.length}
-                    </span>
-                  ) : undefined,
-                content: (
-                  <div className="inspector-sections">
-                    <InspectorSubTabs
-                      ariaLabel="计划与进度视图"
-                      activeId={planSubTab}
-                      onChange={setPlanSubTab}
-                      items={[
-                        { id: "progress", label: "计划进度" },
-                        { id: "plan", label: "Plan" },
-                      ]}
-                    />
-                    <div
-                      className="inspector-subtabpanel wb-stack"
-                      hidden={planSubTab !== "progress"}
-                      style={
-                        planSubTab !== "progress"
-                          ? { display: "none" }
-                          : undefined
-                      }
+        ) : isSummary ? (
+          <div className="inspector-summary">
+            {plans?.currentPlan && plans.currentProgress && (
+              <SummarySection
+                title="进度"
+                count={`${plans.currentProgress.completed}/${plans.currentProgress.total}`}
+                action={
+                  plans.currentPlan.explanation || plans.historical.length > 0 ? (
+                    <button
+                      type="button"
+                      className="inspector-summary-link"
+                      onClick={() => setView("plan-history")}
                     >
-                      <PlanProgressPanel snapshot={snapshot} />
-                      <SubAgentsPanel
-                        key={`subagents:${state.activeSessionId ?? "none"}`}
-                      />
-                    </div>
-                    <div
-                      className="inspector-subtabpanel wb-stack"
-                      hidden={planSubTab !== "plan"}
-                      style={
-                        planSubTab !== "plan"
-                          ? { display: "none" }
-                          : undefined
-                      }
-                    >
-                      <PlanDocumentPanel snapshot={snapshot} />
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                id: "inspector-changes",
-                label: "文件",
-                badge:
-                  snapshot.changes.length > 0 ? (
-                    <span className="inspector-tab-badge-num">
-                      {snapshot.changes.length}
-                    </span>
-                  ) : undefined,
-                content: (
-                  <div className="inspector-sections">
-                    <InspectorSubTabs
-                      ariaLabel="文件面板视图"
-                      activeId={filesSubTab}
-                      onChange={setFilesSubTab}
-                      items={[
-                        { id: "browser", label: "文件管理" },
-                        {
-                          id: "changes",
-                          label: "变更与检查点",
-                          badge:
-                            snapshot.changes.length > 0
-                              ? snapshot.changes.length
-                              : undefined,
-                        },
-                      ]}
-                    />
-                    <div
-                      className="inspector-subtabpanel wb-stack"
-                      hidden={filesSubTab !== "browser"}
-                      style={
-                        filesSubTab !== "browser"
-                          ? { display: "none" }
-                          : undefined
-                      }
-                    >
-                      <WorkspaceFileManager
-                        session={snapshot}
-                        liveEvents={[]}
-                        active={
-                          section === "inspector-changes" &&
-                          filesSubTab === "browser"
-                        }
-                        onSelectChangesTab={() => setFilesSubTab("changes")}
-                      />
-                    </div>
-                    <div
-                      className="inspector-subtabpanel wb-stack"
-                      hidden={filesSubTab !== "changes"}
-                      style={
-                        filesSubTab !== "changes"
-                          ? { display: "none" }
-                          : undefined
-                      }
-                    >
-                      {(snapshot.parentSessionId ||
-                        state.sessions.some(
-                          (session) => session.parentSessionId === snapshot.id,
-                        )) && (
-                        <details className="wb-disclosure">
-                          <summary>关联任务的变更</summary>
-                          <div className="wb-disclosure-body">
-                            <ChangeSessionNavigation
-                              key={`changes-navigation:${snapshot.id}`}
-                              sessionId={snapshot.id}
-                              parentSessionId={snapshot.parentSessionId}
-                              sessions={state.sessions}
-                              onOpenChanges={(id) => {
-                                setSection("inspector-changes");
-                                setFilesSubTab("changes");
-                                void selectSession(id);
-                              }}
-                            />
-                          </div>
-                        </details>
-                      )}
-                      <section className="wb-stack inspector-changes-section">
-                        <div className="inspector-section-header">
-                          <h3>
-                            文件变更{" "}
-                            <span className="wb-muted">
-                              {snapshot.changes.length}
-                            </span>
-                          </h3>
-                        </div>
-                        {snapshot?.changes.length ? (
-                          <div className="inspector-files-list">
-                            {snapshot.changes.map((change, i) => {
-                              const stats = diffStats(change);
-                              const lastSlash = change.path.lastIndexOf("/");
-                              const dir =
-                                lastSlash >= 0
-                                  ? change.path.slice(0, lastSlash + 1)
-                                  : "";
-                              const name =
-                                lastSlash >= 0
-                                  ? change.path.slice(lastSlash + 1)
-                                  : change.path;
-                              return (
-                                <details
-                                  open
-                                  key={`${change.path}-${i}`}
-                                  className="wb-disclosure inspector-file-card"
-                                >
-                                  <summary className="inspector-file-summary">
-                                    <div className="inspector-file-info">
-                                      <FileCode
-                                        size={14}
-                                        className="inspector-file-icon"
-                                      />
-                                      <span
-                                        className="inspector-file-path"
-                                        title={change.path}
-                                      >
-                                        {dir && (
-                                          <span className="inspector-file-dir">
-                                            {dir}
-                                          </span>
-                                        )}
-                                        <span className="inspector-file-name">
-                                          {name}
-                                        </span>
-                                      </span>
-                                    </div>
-                                    <div className="inspector-file-badges">
-                                      {stats && (
-                                        <span className="diff-stats-pill">
-                                          {stats.added > 0 && (
-                                            <span className="diff-stats-add">
-                                              +{stats.added}
-                                            </span>
-                                          )}
-                                          {stats.removed > 0 && (
-                                            <span className="diff-stats-del">
-                                              -{stats.removed}
-                                            </span>
-                                          )}
-                                        </span>
-                                      )}
-                                      <span
-                                        className={`inspector-file-kind ${changeKindMeta(change.kind).className}`}
-                                      >
-                                        {changeKindMeta(change.kind).label}
-                                      </span>
-                                    </div>
-                                  </summary>
-                                  <div className="inspector-diff-container">
-                                    <DiffViewer
-                                      change={change}
-                                      isSuggested={false}
-                                      embedded
-                                    />
-                                  </div>
-                                </details>
-                              );
-                            })}
-                          </div>
+                      {plans.historical.length > 0 ? `说明与历史 ${plans.historical.length}` : "说明"}
+                    </button>
+                  ) : undefined
+                }
+              >
+                {plans.currentPlan.title && (
+                  <p className="inspector-summary-caption">{plans.currentPlan.title}</p>
+                )}
+                <PlanSteps plan={plans.currentPlan} />
+              </SummarySection>
+            )}
+            {children.length > 0 && (
+              <SummarySection
+                title="子任务"
+                count={children.length}
+                action={
+                  <button
+                    type="button"
+                    className="inspector-summary-link"
+                    onClick={() => setView("subagents")}
+                  >
+                    详情
+                  </button>
+                }
+              >
+                {children.map((child) => (
+                  <SummaryRow
+                    key={child.id}
+                    icon={<span className={`inspector-row-dot is-${childStatusTone(child.status)}`} />}
+                    label={child.title}
+                    title={child.title}
+                    meta={child.agentProfileName}
+                    onClick={() => void selectSession(child.id)}
+                  />
+                ))}
+              </SummarySection>
+            )}
+            {snapshot.parentSessionId && (
+              <SummarySection title="父任务">
+                <SummaryRow
+                  icon={<ArrowSquareOut size={14} />}
+                  label="打开父任务"
+                  onClick={() => void selectSession(snapshot.parentSessionId!)}
+                />
+              </SummarySection>
+            )}
+            {snapshot.changes.length > 0 && (
+              <SummarySection
+                title="文件"
+                count={snapshot.changes.length}
+                action={
+                  <button
+                    type="button"
+                    className="inspector-summary-link"
+                    onClick={() => setView("changes")}
+                  >
+                    查看变更
+                  </button>
+                }
+              >
+                {snapshot.changes.map((change, i) => {
+                  const stats = diffStats(change);
+                  const name = change.path.slice(change.path.lastIndexOf("/") + 1);
+                  return (
+                    <SummaryRow
+                      key={`${change.path}-${i}`}
+                      icon={<FileCode size={14} />}
+                      label={name}
+                      title={change.path}
+                      meta={
+                        stats ? (
+                          <span className="diff-stats-pill">
+                            {stats.added > 0 && <span className="diff-stats-add">+{stats.added}</span>}
+                            {stats.removed > 0 && <span className="diff-stats-del">-{stats.removed}</span>}
+                          </span>
                         ) : (
-                          <div className="inspector-empty-card">
-                            <p className="wb-muted">本会话尚无直接文件变更</p>
-                          </div>
-                        )}
-                      </section>
-                      <details open className="wb-disclosure">
-                        <summary>文件检查点与恢复</summary>
-                        <div className="wb-disclosure-body">
-                          <CheckpointPanel
-                            key={`changes-checkpoints:${state.activeSessionId ?? "none"}`}
-                          />
-                        </div>
-                      </details>
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                id: "inspector-resources",
-                label: "会话信息",
-                content: (
-                  <div className="inspector-sections">
-                    <InspectorSubTabs
-                      ariaLabel="会话信息视图"
-                      activeId={sessionSubTab}
-                      onChange={setSessionSubTab}
-                      items={[
-                        { id: "overview", label: "会话概览" },
-                        { id: "browser", label: "浏览器" },
-                        { id: "resources", label: "项目资源" },
-                      ]}
-                    />
-                    {section === "inspector-resources" &&
-                    sessionSubTab === "overview" ? (
-                      <div className="inspector-subtabpanel wb-stack">
-                        <section className="inspector-overview inspector-card">
-                          <div className="inspector-card-header">
-                            <span className="inspector-card-title">
-                              会话概览
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="inspector-refresh-mini"
-                              title="刷新记录"
-                              aria-label="刷新记录"
-                              onClick={() => void refreshActiveSession()}
-                            >
-                              <ArrowsCounterClockwise size={12} weight="bold" />
-                              <span>刷新</span>
-                            </Button>
-                          </div>
-                          <dl className="wb-details">
-                            <dt>
-                              <Cpu size={13} className="dt-icon" />
-                              <span>模型</span>
-                            </dt>
-                            <dd
-                              className="wb-val-mono"
-                              title={
-                                started?.type === "run_started"
-                                  ? started.model
-                                  : snapshot.model
-                              }
-                            >
-                              <code>
-                                {started?.type === "run_started"
-                                  ? started.model
-                                  : snapshot.model}
-                              </code>
-                            </dd>
-                            <dt>
-                              <ShieldCheck size={13} className="dt-icon" />
-                              <span>权限</span>
-                            </dt>
-                            <dd>
-                              <span className="inspector-permission-pill">
-                                {permissionLabels[permission].split(" · ")[0]}
-                              </span>
-                            </dd>
-                            <dt>
-                              <Folder size={13} className="dt-icon" />
-                              <span>工作区</span>
-                            </dt>
-                            <dd
-                              className="wb-val-mono"
-                              title={snapshot.workspace}
-                            >
-                              <code>{snapshot.workspace}</code>
-                            </dd>
-                          </dl>
-                          {storedActive && (
-                            <p className="wb-muted inspector-stored-notice">
-                              已保存的状态，本窗口没有运行句柄。刷新可查看最新记录；取消操作由主机确认。
-                            </p>
-                          )}
-                        </section>
-                        <ContextManagementPanel
-                          key={`context:${state.activeSessionId ?? "none"}`}
-                        />
-                      </div>
-                    ) : null}
-                    <div
-                      className="inspector-subtabpanel wb-stack"
-                      hidden={sessionSubTab !== "browser"}
-                      style={
-                        sessionSubTab !== "browser"
-                          ? { display: "none" }
-                          : undefined
+                          changeKindMeta(change.kind).label
+                        )
                       }
-                    >
-                      {/* Same-session binding: the panel is keyed and scoped to
-                          the selected session and only probes while visible. */}
-                      <BrowserPanel
-                        key={`browser:${state.activeSessionId ?? "none"}`}
-                        sessionId={state.activeSessionId ?? undefined}
-                        permission={permission}
-                        active={
-                          section === "inspector-resources" &&
-                          sessionSubTab === "browser"
-                        }
+                      onClick={() => setView("changes")}
+                    />
+                  );
+                })}
+              </SummarySection>
+            )}
+            <SummarySection title="会话">
+              <dl className="inspector-facts">
+                <dt>模型</dt>
+                <dd title={model}>{model}</dd>
+                <dt>权限</dt>
+                <dd>{permissionLabels[permission].split(" · ")[0]}</dd>
+                <dt>工作区</dt>
+                <dd title={snapshot.workspace}>
+                  {snapshot.workspace.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || snapshot.workspace}
+                </dd>
+              </dl>
+              {storedActive && (
+                <p className="wb-muted inspector-stored-notice">
+                  已保存的状态，本窗口没有运行句柄。刷新可查看最新记录；取消操作由主机确认。
+                </p>
+              )}
+            </SummarySection>
+            {!plans?.currentPlan && children.length === 0 && snapshot.changes.length === 0 && (
+              <p className="inspector-summary-empty">
+                执行计划、子任务和文件变更出现后会显示在这里。
+              </p>
+            )}
+            <nav className="inspector-more" aria-label="更多工具">
+              <SummaryRow icon={<FolderOpen size={14} />} label="工作区文件" onClick={() => setView("files")} />
+              <SummaryRow icon={<ClockCounterClockwise size={14} />} label="变更与检查点" onClick={() => setView("changes")} />
+              <SummaryRow icon={<Gauge size={14} />} label="上下文与用量" onClick={() => setView("context")} />
+              <SummaryRow icon={<Browser size={14} />} label="浏览器" onClick={() => setView("browser")} />
+              <SummaryRow icon={<PuzzlePiece size={14} />} label="项目资源" onClick={() => setView("resources")} />
+              <button
+                type="button"
+                className="inspector-row is-interactive inspector-refresh-row"
+                onClick={() => void refreshActiveSession()}
+              >
+                <span className="inspector-row-icon" aria-hidden="true">
+                  <ArrowsCounterClockwise size={14} />
+                </span>
+                <span className="inspector-row-label">刷新记录</span>
+              </button>
+            </nav>
+          </div>
+        ) : (
+          <div className="inspector-subview" data-view={view}>
+            {view === "files" && (
+              <WorkspaceFileManager
+                session={snapshot}
+                liveEvents={[]}
+                active
+                onSelectChangesTab={() => setView("changes")}
+              />
+            )}
+            {view === "changes" && (
+              <div className="wb-stack">
+                {hasRelatedChanges && (
+                  <details className="wb-disclosure">
+                    <summary>关联任务的变更</summary>
+                    <div className="wb-disclosure-body">
+                      <ChangeSessionNavigation
+                        key={`changes-navigation:${snapshot.id}`}
+                        sessionId={snapshot.id}
+                        parentSessionId={snapshot.parentSessionId}
+                        sessions={state.sessions}
+                        onOpenChanges={(id) => {
+                          void selectSession(id);
+                        }}
                       />
                     </div>
-                    <div
-                      className="inspector-subtabpanel wb-stack"
-                      hidden={sessionSubTab !== "resources"}
-                      style={
-                        sessionSubTab !== "resources"
-                          ? { display: "none" }
-                          : undefined
-                      }
-                    >
-                      <ProjectResources key={state.activeSessionId ?? "none"} />
-                    </div>
+                  </details>
+                )}
+                <section className="wb-stack inspector-changes-section">
+                  <div className="inspector-section-header">
+                    <h3>
+                      文件变更{" "}
+                      <span className="wb-muted">{snapshot.changes.length}</span>
+                    </h3>
                   </div>
-                ),
-              },
-            ]}
-          />
+                  {snapshot.changes.length ? (
+                    <div className="inspector-files-list">
+                      {snapshot.changes.map((change, i) => {
+                        const stats = diffStats(change);
+                        const lastSlash = change.path.lastIndexOf("/");
+                        const dir = lastSlash >= 0 ? change.path.slice(0, lastSlash + 1) : "";
+                        const name = lastSlash >= 0 ? change.path.slice(lastSlash + 1) : change.path;
+                        return (
+                          <details
+                            open
+                            key={`${change.path}-${i}`}
+                            className="wb-disclosure inspector-file-card"
+                          >
+                            <summary className="inspector-file-summary">
+                              <div className="inspector-file-info">
+                                <FileCode size={14} className="inspector-file-icon" />
+                                <span className="inspector-file-path" title={change.path}>
+                                  {dir && <span className="inspector-file-dir">{dir}</span>}
+                                  <span className="inspector-file-name">{name}</span>
+                                </span>
+                              </div>
+                              <div className="inspector-file-badges">
+                                {stats && (
+                                  <span className="diff-stats-pill">
+                                    {stats.added > 0 && <span className="diff-stats-add">+{stats.added}</span>}
+                                    {stats.removed > 0 && <span className="diff-stats-del">-{stats.removed}</span>}
+                                  </span>
+                                )}
+                                <span className={`inspector-file-kind ${changeKindMeta(change.kind).className}`}>
+                                  {changeKindMeta(change.kind).label}
+                                </span>
+                              </div>
+                            </summary>
+                            <div className="inspector-diff-container">
+                              <DiffViewer change={change} isSuggested={false} embedded />
+                            </div>
+                          </details>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="inspector-empty-card">
+                      <p className="wb-muted">本会话尚无直接文件变更</p>
+                    </div>
+                  )}
+                </section>
+                <details open className="wb-disclosure">
+                  <summary>文件检查点与恢复</summary>
+                  <div className="wb-disclosure-body">
+                    <CheckpointPanel key={`changes-checkpoints:${state.activeSessionId ?? "none"}`} />
+                  </div>
+                </details>
+              </div>
+            )}
+            {view === "plan-history" && <PlanDocumentPanel snapshot={snapshot} />}
+            {view === "subagents" && (
+              <SubAgentsPanel key={`subagents:${state.activeSessionId ?? "none"}`} />
+            )}
+            {view === "context" && (
+              <ContextManagementPanel key={`context:${state.activeSessionId ?? "none"}`} />
+            )}
+            {view === "browser" && (
+              // Same-session binding: the panel is keyed and scoped to the
+              // selected session and only probes while this view is open.
+              <BrowserPanel
+                key={`browser:${state.activeSessionId ?? "none"}`}
+                sessionId={state.activeSessionId ?? undefined}
+                permission={permission}
+                active
+              />
+            )}
+            {view === "resources" && (
+              <ProjectResources key={state.activeSessionId ?? "none"} />
+            )}
+          </div>
         )}
       </div>
     </aside>

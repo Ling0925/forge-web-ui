@@ -2,72 +2,87 @@
  * Conversation view (v2). Transcript.tsx evaluates before app.css,
  * motion.css and workspace-theme.css, so every rule is scoped under
  * `.wb-app .conversation-inner` and wins on specificity rather than order.
- * Tokens only: docs/WEB_UI_LAYOUT_SPEC.md §2 and §4.6.
+ * Tokens only: docs/WEB_UI_LAYOUT_SPEC.md §2, §4.6 and §4.7.
+ *
+ * Reading model: the user's request is a soft bubble on the right; the
+ * assistant's work and answer are plain prose on the left. Run metrics live
+ * in hover detail, never in the reading flow.
  */
 
-/* ---------- Author rows ---------- */
+.wb-app .conversation-inner {
+  gap: var(--space-4);
+}
+.wb-app .conversation-inner .transcript-turn,
+.wb-app .conversation-inner .transcript-turn-body {
+  gap: var(--space-3);
+}
+.wb-app .conversation-inner .transcript-turn + .transcript-turn {
+  margin-top: var(--space-2);
+}
+
+/* ---------- User request: right-aligned soft bubble ---------- */
+.wb-app .conversation-inner .message-user {
+  align-self: flex-end;
+  width: auto;
+  max-width: min(84%, 620px);
+  margin-top: 0;
+  padding: var(--space-2-5) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-xs)
+    var(--radius-lg);
+  background: var(--surface-active);
+}
+.wb-app .conversation-inner .message-user .message-body {
+  font-size: var(--text-md);
+  line-height: 1.65;
+}
+.wb-app .conversation-inner .message-user .markdown-content code,
+.wb-app .conversation-inner .message-user .code-block,
+.wb-app .conversation-inner .message-user .code-block-header {
+  background: var(--surface-elevated);
+}
+
+/* ---------- Assistant ---------- */
 .wb-app .conversation-inner .message-header::before {
   display: none;
 }
-.wb-app .conversation-inner .message-header {
-  gap: var(--space-2);
+/* Only live or unfinished replies carry a label; a settled answer has none. */
+.wb-app .conversation-inner .message-author-row {
+  min-height: 0;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xs);
   font-weight: 500;
-  letter-spacing: 0;
   color: var(--text-muted);
 }
-.wb-app .conversation-inner .message-author-row {
-  font-weight: 600;
-  color: var(--text-secondary);
+.wb-app .conversation-inner .message-streaming .message-author-row {
+  background: linear-gradient(
+      90deg,
+      var(--text-muted) 0%,
+      var(--text-primary) 50%,
+      var(--text-muted) 100%
+    )
+    0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: fx-shimmer 2.4s linear infinite;
 }
-.wb-app .conversation-inner .message-author-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  background: var(--surface-elevated);
+.wb-app .conversation-inner .message-actions {
+  display: flex;
+  min-height: 24px;
+  margin-top: var(--space-1);
 }
-.wb-app .conversation-inner .message-author-mark {
-  width: 14px;
-  height: 14px;
+.wb-app .conversation-inner .message-copy {
+  margin-left: -6px;
+  color: var(--text-muted);
 }
-.wb-app .conversation-inner .message-streaming .message-author-avatar {
-  border-color: var(--accent-border);
-  animation: fx-breathe 1.6s var(--ease-in-out) infinite;
-}
-
-/* ---------- User turn ---------- */
-.wb-app .conversation-inner .message-user {
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-soft);
-  padding: var(--space-2-5) var(--space-4) var(--space-3);
-}
-.wb-app .conversation-inner .message-user .message-header {
-  margin-bottom: 2px;
-}
-.wb-app .conversation-inner .transcript-turn-actions {
-  top: var(--space-2);
-}
-.wb-app .conversation-inner .transcript-turn-toggle:hover {
-  border-color: transparent;
-}
-
-/* Turn controls and the copy action are metadata: on a mouse they appear with
-   the message they belong to; touch keeps them visible. Opacity only, so the
-   rows never change height. */
 @media (hover: hover) and (pointer: fine) {
-  .wb-app .conversation-inner .transcript-turn-actions,
   .wb-app .conversation-inner .message-copy {
     opacity: 0;
     transition: opacity var(--dur-short) var(--ease-out),
       background-color var(--dur-micro) var(--ease-out),
       color var(--dur-micro) var(--ease-out);
   }
-  .wb-app .conversation-inner .message-user:hover .transcript-turn-actions,
-  .wb-app .conversation-inner .transcript-turn-actions:focus-within,
   .wb-app .conversation-inner .message-assistant:hover .message-copy,
   .wb-app .conversation-inner .message-copy:focus-visible,
   .wb-app .conversation-inner .message-copy.is-copied {
@@ -75,69 +90,141 @@
   }
 }
 
-/* ---------- Completed execution summary ---------- */
+/* ---------- Completed execution: "工作了 22s · 4 个操作 ⌄" ---------- */
+.wb-app .conversation-inner .transcript-execution {
+  gap: var(--space-1);
+}
 .wb-app .conversation-inner .transcript-execution-summary {
   gap: var(--space-1-5);
-  min-height: 26px;
-  padding: 2px var(--space-3) 2px var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-elevated);
-  box-shadow: var(--shadow-xs);
+  min-height: 28px;
+  margin-left: calc(-1 * var(--space-2));
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  box-shadow: none;
   color: var(--text-muted);
+  font-size: var(--text-sm);
   transition: background-color var(--dur-micro) var(--ease-out),
-    border-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out),
-    transform var(--dur-micro) var(--ease-out);
+    color var(--dur-micro) var(--ease-out);
 }
 .wb-app .conversation-inner .transcript-execution-summary:hover {
-  border-color: var(--border-hover);
-  background: var(--surface-raised);
-  color: var(--text-secondary);
-}
-.wb-app .conversation-inner .transcript-execution-summary:active {
-  transform: scale(0.98);
-}
-.wb-app .conversation-inner .transcript-execution-check {
-  flex-shrink: 0;
-  color: var(--success);
-}
-.wb-app .conversation-inner .transcript-execution-state {
-  font-weight: 600;
+  background: var(--surface-hover);
   color: var(--text-secondary);
 }
 .wb-app .conversation-inner .transcript-execution-sep {
   color: var(--text-disabled);
 }
-/* Expanded process hangs off the summary on one quiet rail. */
+.wb-app .conversation-inner .transcript-execution-caret {
+  transform: rotate(90deg);
+}
+.wb-app .conversation-inner .transcript-execution-caret.is-expanded {
+  transform: rotate(-90deg);
+}
 .wb-app .conversation-inner .transcript-execution-items {
-  width: auto;
   gap: var(--space-2);
-  margin-left: 13px;
-  padding: var(--space-1) 0 var(--space-1) var(--space-3);
-  border-left: 1px solid var(--border-subtle);
+  padding: var(--space-1) 0 var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-/* ---------- Tool rows ---------- */
-.wb-app .conversation-inner .tool-disclosure-label {
-  font-size: var(--text-xs);
-  font-weight: 500;
+/* Intermediate commentary inside the process reads as quiet narration. */
+.wb-app .conversation-inner .transcript-execution-items .message-assistant .message-body {
+  color: var(--text-secondary);
+  font-size: var(--text-md);
 }
-.wb-app
-  .conversation-inner
-  .tool-disclosure:not([data-status="failed"])
-  .tool-disclosure-target {
+
+/* ---------- Tool actions: "动作 · 目标", no per-row chrome ---------- */
+.wb-app .conversation-inner .tool-call-group {
+  gap: 0;
+}
+.wb-app .conversation-inner .tool-disclosure-header {
+  min-height: 30px;
+  margin-left: calc(-1 * var(--space-2));
+  width: calc(100% + var(--space-2));
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+.wb-app .conversation-inner .tool-disclosure-summary {
+  gap: var(--space-2);
+}
+.wb-app .conversation-inner .tool-disclosure-icon {
   color: var(--text-muted);
 }
+.wb-app .conversation-inner .tool-disclosure-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.wb-app .conversation-inner .tool-disclosure-label {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.wb-app .conversation-inner .tool-disclosure-target {
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.wb-app .conversation-inner .tool-disclosure-target::before {
+  content: "· ";
+  color: var(--text-disabled);
+}
+/* Timing and the success tick are noise on a finished action: shown on
+   hover only. Running, failed and diff counts stay visible. */
+.wb-app .conversation-inner .tool-disclosure-time,
+.wb-app .conversation-inner .tool-disclosure-status[data-status="completed"] {
+  opacity: 0;
+  transition: opacity var(--dur-micro) var(--ease-out);
+}
+.wb-app .conversation-inner .tool-disclosure-header:hover .tool-disclosure-time,
+.wb-app .conversation-inner .tool-disclosure-header:focus-visible .tool-disclosure-time,
+.wb-app .conversation-inner .tool-disclosure-header:hover .tool-disclosure-status,
+.wb-app .conversation-inner .tool-disclosure[data-expanded="true"] .tool-disclosure-time {
+  opacity: 1;
+}
+.wb-app .conversation-inner .tool-disclosure-chevron {
+  color: var(--text-disabled);
+}
 .wb-app
   .conversation-inner
   .tool-disclosure:not([data-status="failed"])
-  .tool-disclosure-header:hover {
-  border-color: transparent;
+  .tool-disclosure-header:hover,
+.wb-app
+  .conversation-inner
+  .tool-disclosure[data-expanded="true"]:not([data-status="failed"])
+  .tool-disclosure-header {
   background-color: var(--surface-hover);
+}
+.wb-app .conversation-inner .tool-disclosure-header:hover .tool-disclosure-label {
+  color: var(--text-primary);
+}
+.wb-app .conversation-inner .tool-diff-stat {
+  background: transparent;
+  padding: 0 2px;
+}
+/* A failed action keeps its tint and word; it is the one row that must be
+   findable while scrolling. */
+.wb-app .conversation-inner .tool-disclosure[data-status="failed"] .tool-disclosure-header {
+  border: 0;
 }
 
 /* ---------- Reasoning ---------- */
+.wb-app .conversation-inner .reasoning {
+  font-size: var(--text-sm);
+}
+.wb-app .conversation-inner .reasoning-head {
+  margin-left: calc(-1 * var(--space-2));
+  width: calc(100% + var(--space-2));
+  min-height: 28px;
+}
+.wb-app .conversation-inner .reasoning-summary,
+.wb-app .conversation-inner .reasoning-label {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.wb-app .conversation-inner .reasoning-glyph {
+  color: var(--text-muted);
+}
 .wb-app .conversation-inner .reasoning-done .reasoning-head:hover {
   background-color: var(--surface-hover);
 }
@@ -145,12 +232,17 @@
   color: var(--text-secondary);
 }
 
+/* ---------- Plan stage divider ---------- */
+.wb-app .conversation-inner .transcript-stage-bar {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
 /* ---------- Markdown prose ---------- */
 .wb-app .conversation-inner .markdown-content code {
-  padding: 0.1em 0.38em;
-  border: 1px solid var(--border-subtle);
+  padding: 0.1em 0.36em;
   border-radius: var(--radius-xs);
-  background: var(--surface-soft);
+  background: var(--surface-active);
   font-size: 0.86em;
 }
 .wb-app .conversation-inner .markdown-content strong {
@@ -169,7 +261,7 @@
 }
 .wb-app .conversation-inner .markdown-content blockquote {
   padding: 2px 0 2px var(--space-4);
-  border-left-color: var(--accent-border);
+  border-left-color: var(--border-control);
 }
 .wb-app .conversation-inner .markdown-content hr {
   height: 1px;
@@ -184,18 +276,15 @@
 .wb-app .conversation-inner .markdown-content th {
   background: var(--surface-soft);
 }
-
-/* Code blocks: one soft slab with a quiet header. */
 .wb-app .conversation-inner .code-block {
   border-color: var(--border-subtle);
-  box-shadow: var(--shadow-xs);
 }
 .wb-app .conversation-inner .code-block-header {
   padding: 3px var(--space-1) 3px var(--space-3);
 }
 .wb-app .conversation-inner .code-block-lang {
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
   color: var(--text-muted);
@@ -204,19 +293,12 @@
   background-color: var(--surface-hover);
 }
 
-/* Inside the user card (soft surface) nested slabs flip to elevated. */
-.wb-app .conversation-inner .message-user .markdown-content code,
-.wb-app .conversation-inner .message-user .code-block,
-.wb-app .conversation-inner .message-user .code-block-header {
-  background: var(--surface-elevated);
-}
-
 /* ---------- History boundary ---------- */
 .wb-app .conversation-inner .transcript-history-status.is-end {
   gap: var(--space-3);
   width: min(100%, 360px);
   color: var(--text-disabled);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
 }
 .wb-app .conversation-inner .transcript-history-status.is-end::before,
 .wb-app .conversation-inner .transcript-history-status.is-end::after {
@@ -226,8 +308,16 @@
   background: var(--border-subtle);
 }
 
+@media (max-width: 640px) {
+  .wb-app .conversation-inner .message-user {
+    max-width: 92%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .wb-app .conversation-inner .message-streaming .message-author-avatar {
+  .wb-app .conversation-inner .message-streaming .message-author-row {
     animation: none;
+    background: none;
+    color: var(--text-muted);
   }
 }

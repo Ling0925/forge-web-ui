@@ -4,8 +4,6 @@ import {
   CaretRight,
   ChartBar,
   CheckCircle,
-  Folder,
-  FolderOpen,
   Gear,
   MagnifyingGlass,
   Plus,
@@ -244,33 +242,18 @@ export function Sidebar() {
                     aria-controls={bodyId}
                     title={group.workspace}
                   >
-                    <CaretRight
-                      size={11}
-                      weight="bold"
-                      className="session-folder-caret"
-                      aria-hidden="true"
-                    />
-                    {isCollapsed ? (
-                      <Folder
-                        size={13}
-                        weight="regular"
-                        className="session-folder-icon"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <FolderOpen
-                        size={13}
-                        weight="regular"
-                        className="session-folder-icon"
-                        aria-hidden="true"
-                      />
-                    )}
                     <span className="session-folder-name">
                       {workspaceName(group.workspace)}
                     </span>
                     <span className="session-folder-count">
                       {group.sessions.length}
                     </span>
+                    <CaretRight
+                      size={10}
+                      weight="bold"
+                      className="session-folder-caret"
+                      aria-hidden="true"
+                    />
                   </button>
                   <button
                     type="button"

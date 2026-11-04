@@ -133,7 +133,7 @@ it("keeps session-specific configuration honest, compact and navigable in both t
         await page.screenshot({ path: resolve(output, `workbench-${width}-${theme}.png`), animations: 'disabled' });
         if (width === 390) await page.getByRole('button', { name: '关闭侧边栏' }).click();
         await page.getByRole('button', { name: '展开详情', exact: true }).click();
-        await page.getByRole('tab', { name: '计划与进度', exact: true }).waitFor();
+        await page.locator('.inspector-summary, .inspector-empty').first().waitFor();
         expect(await page.locator('.inspector-scroll').evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
         if (width === 390) {
           await page.getByRole('button', { name: '收起详情，返回任务', exact: true }).click();
