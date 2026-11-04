@@ -185,7 +185,7 @@ export function ModelPicker(props: {
         <div className="composer-model-panel">
           {!modelsOpen && (
             <div className="model-picker-heading">
-              <span>{props.reasoning ? "思考等级" : "模型"}</span>
+              <span>模型</span>
               <button
                 type="button"
                 className="model-picker-current"
