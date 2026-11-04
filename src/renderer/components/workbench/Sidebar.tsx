@@ -165,7 +165,7 @@ export function Sidebar() {
               title="新建会话 (Ctrl+N / Cmd+N)"
               aria-label="新建会话"
             >
-              <Plus size={15} weight="bold" />
+              <Plus size={16} weight="bold" />
               <span>新任务</span>
               <kbd className="sidebar-new-kbd" aria-hidden="true">
                 {newSessionShortcut}
@@ -186,7 +186,7 @@ export function Sidebar() {
 
       <div className="sidebar-search">
         <div className="sidebar-search-input-wrap">
-          <MagnifyingGlass size={13} className="sidebar-search-icon" />
+          <MagnifyingGlass size={14} className="sidebar-search-icon" />
           <input
             className="sidebar-search-input"
             aria-label="搜索会话"
@@ -194,16 +194,16 @@ export function Sidebar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          <button
+            type="button"
+            className={`sidebar-archive-toggle ${showArchived ? "is-active" : ""}`}
+            onClick={() => setShowArchived(!showArchived)}
+            title={showArchived ? "隐藏归档会话" : "显示归档会话"}
+            aria-pressed={showArchived}
+          >
+            <Archive size={14} weight={showArchived ? "fill" : "regular"} />
+          </button>
         </div>
-        <button
-          type="button"
-          className={`sidebar-archive-toggle ${showArchived ? "is-active" : ""}`}
-          onClick={() => setShowArchived(!showArchived)}
-          title={showArchived ? "隐藏归档会话" : "显示归档会话"}
-          aria-pressed={showArchived}
-        >
-          <Archive size={13} weight={showArchived ? "fill" : "regular"} />
-        </button>
       </div>
 
       <div className="sidebar-sessions-list">
