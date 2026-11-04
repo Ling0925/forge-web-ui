@@ -409,7 +409,7 @@
   justify-content: space-between;
   gap: 6px;
   margin-bottom: 0;
-  padding-bottom: 5px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -485,7 +485,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   background: var(--surface-soft);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   display: inline-block;
@@ -510,7 +510,7 @@
 
 .wb-inspector .inspector-stored-notice {
   margin-top: 4px;
-  padding: 5px 8px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   border-left: 3px solid var(--warning);
@@ -538,7 +538,7 @@
 }
 
 .wb-app .wb-inspector details > summary {
-  padding: 5px 8px;
+  padding: 6px 8px;
   min-height: 24px;
   cursor: pointer;
   font-size: var(--text-xs);
@@ -559,7 +559,7 @@
 .wb-inspector .inspector-disclosure-head {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-weight: 500;
   color: var(--text-primary);
 }
@@ -610,7 +610,7 @@
 .wb-inspector .inspector-usage-content {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .wb-inspector .inspector-usage-dl {
@@ -627,8 +627,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 5px;
-  padding-top: 5px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -665,7 +665,7 @@
   font-variant-numeric: tabular-nums;
   font-size: var(--text-2xs);
   font-weight: 600;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   background: var(--surface-soft);
   color: var(--text-secondary);
@@ -721,7 +721,7 @@
   display: inline-flex;
   align-items: center;
   height: 17px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -936,7 +936,7 @@
   display: inline-flex;
   align-items: center;
   height: 16px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 600;
@@ -1042,7 +1042,7 @@
 .wb-inspector .inspector-plan-history-header {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .wb-inspector .inspector-plan-history-icon {
@@ -1073,7 +1073,7 @@
 .wb-inspector .inspector-plan-history-summary-main {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -1082,7 +1082,7 @@
   display: inline-flex;
   align-items: center;
   height: 17px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -1166,7 +1166,7 @@
   justify-content: center;
   min-width: 18px;
   height: 16px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-full);
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
@@ -1180,7 +1180,7 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
   margin-left: auto;
 }
 
@@ -1193,7 +1193,7 @@
 .wb-inspector .inspector-parent-jump-btn {
   height: 22px;
   min-height: 22px;
-  padding: 0 7px;
+  padding: 0 8px;
   font-size: var(--text-2xs);
   font-weight: 500;
   gap: 3px;
@@ -1210,7 +1210,7 @@
 }
 
 .wb-inspector .inspector-subagent-context-card {
-  padding: 7px 9px;
+  padding: 8px 8px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
@@ -1240,7 +1240,7 @@
 .wb-inspector .inspector-subagent-meta-code {
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -1254,14 +1254,14 @@
   align-self: flex-start;
   height: 24px;
   min-height: 24px;
-  padding: 0 9px;
+  padding: 0 8px;
   font-size: var(--text-2xs);
 }
 
 .wb-inspector .inspector-subagents-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
 .wb-inspector .inspector-subagents-empty {
@@ -1297,7 +1297,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--surface-soft);
-  padding: 8px 9px;
+  padding: 8px 8px;
   min-width: 0;
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -1350,7 +1350,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 7px 10px 6px;
+  padding: 8px 10px 6px;
   background: var(--surface-elevated);
   border-bottom: 1px solid var(--border-subtle);
   min-width: 0;
@@ -1404,7 +1404,7 @@
 .wb-inspector .child-card-badges .status-badge {
   font-size: var(--text-2xs);
   font-weight: 600;
-  padding: 0 7px;
+  padding: 0 8px;
   height: 20px;
   min-height: 20px;
   border-radius: var(--radius-full);
@@ -1425,7 +1425,7 @@
 .wb-inspector .child-session-card .child-cancel-btn {
   height: 20px;
   min-height: 20px;
-  padding: 0 7px;
+  padding: 0 8px;
   font-size: var(--text-2xs);
   font-weight: 600;
   border-radius: var(--radius-full);
@@ -1506,7 +1506,7 @@
   align-items: center;
   gap: 3.5px;
   max-width: 170px;
-  padding: 0 5px;
+  padding: 0 6px;
   height: 17px;
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);
@@ -1559,7 +1559,7 @@
 .wb-inspector .child-activity-mode-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -1609,7 +1609,7 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   height: 33px;
-  margin: 7px 10px;
+  margin: 8px 10px;
   padding-left: 8px;
   border-left: 2px solid var(--border-control);
   font-size: var(--text-2xs);
@@ -1711,7 +1711,7 @@
 
 .wb-inspector .child-conversation-message + *,
 .wb-inspector .child-conversation-scroll > * + .child-conversation-message {
-  margin-top: 7px;
+  margin-top: 8px;
 }
 
 .wb-inspector .child-conversation-speaker {
@@ -1734,7 +1734,7 @@
 }
 
 .wb-inspector .child-conversation-current {
-  padding: 4px 7px;
+  padding: 4px 8px;
   margin-top: 6px !important;
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
@@ -1747,11 +1747,11 @@
 }
 
 .wb-inspector .child-conversation-scroll .tool-disclosure {
-  margin-block: 5px;
+  margin-block: 6px;
 }
 
 .wb-inspector .child-conversation-scroll .tool-disclosure-header {
-  padding: 5px 6px;
+  padding: 6px 6px;
   gap: 4px;
 }
 
@@ -1803,7 +1803,7 @@
 .wb-inspector .child-activity-toggle-btn {
   height: 21px;
   min-height: 21px;
-  padding: 0 7px;
+  padding: 0 8px;
   font-size: var(--text-2xs);
   font-weight: 500;
   gap: 3px;
@@ -1876,11 +1876,11 @@
 .wb-inspector .inspector-ownership-tag {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-2xs);
   color: var(--text-secondary);
   background: var(--surface-elevated);
-  padding: 4px 7px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
@@ -1893,7 +1893,7 @@
 .wb-inspector .inspector-control-output {
   font-size: var(--text-2xs);
   color: var(--text-secondary);
-  padding: 4px 7px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -1945,7 +1945,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 8px;
+  padding: 6px 8px;
   gap: 6px;
   cursor: pointer;
 }
@@ -1953,7 +1953,7 @@
 .wb-inspector .inspector-file-info {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
   flex: 1;
 }
@@ -1985,7 +1985,7 @@
 .wb-inspector .inspector-file-badges {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -2010,7 +2010,7 @@
   font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   color: var(--text-secondary);
@@ -2141,7 +2141,7 @@
 .wb-inspector .inspector-file-manager-actions {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -2199,8 +2199,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 7px;
+  gap: 6px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
@@ -2309,7 +2309,7 @@
 .wb-inspector .inspector-file-tree-meta {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -2321,7 +2321,7 @@
 
 .wb-inspector .inspector-file-tree-diff-btn {
   flex-shrink: 0;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-size: var(--text-2xs);
   font-weight: 600;
   border-radius: var(--radius-sm);
@@ -2406,7 +2406,7 @@
 .wb-inspector .inspector-memory-role-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-size: var(--text-2xs);
   font-weight: 600;
   border-radius: var(--radius-sm);
@@ -2418,7 +2418,7 @@
 .wb-inspector .inspector-memory-ref-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -2431,7 +2431,7 @@
 .wb-inspector .inspector-memory-trunc-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-size: var(--text-2xs);
   font-weight: 600;
   border-radius: var(--radius-full);
@@ -2462,7 +2462,7 @@
 .wb-inspector .inspector-memory-ref-btn {
   display: inline-flex;
   align-items: center;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -2510,7 +2510,7 @@
   flex-direction: column;
   gap: 4px;
   margin-top: 3px;
-  padding: 5px 7px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -2539,7 +2539,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .wb-inspector .inspector-memory-block-title {
@@ -2596,7 +2596,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -2720,7 +2720,7 @@
   font-size: var(--text-2xs);
   color: var(--text-secondary);
   background: var(--surface-elevated);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }

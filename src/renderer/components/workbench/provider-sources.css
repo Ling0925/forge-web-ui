@@ -105,7 +105,7 @@
 .provider-tag {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   background-color: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -498,7 +498,7 @@
   justify-content: space-between;
   gap: 6px;
   min-width: 0;
-  padding: 9px 11px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--surface-elevated);
@@ -547,7 +547,7 @@
 .provider-inference-option-tag {
   display: inline-flex;
   align-items: center;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-xs);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -574,7 +574,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  padding: 9px 14px;
+  padding: 8px 14px;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-soft);
   font-size: var(--text-xs);

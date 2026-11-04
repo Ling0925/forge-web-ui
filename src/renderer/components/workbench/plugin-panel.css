@@ -12,7 +12,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 11px 14px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
@@ -37,8 +37,8 @@
 .plugin-panel-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 7px;
+  gap: 6px;
+  padding: 2px 8px;
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -100,7 +100,7 @@
   align-items: flex-start;
   gap: 8px;
   margin: 0;
-  padding: 9px 12px;
+  padding: 8px 12px;
   border: 1px solid
     color-mix(in srgb, var(--success) 28%, var(--border-subtle));
   border-radius: var(--radius-md);
@@ -255,7 +255,7 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
@@ -385,7 +385,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
-  padding: 9px 10px;
+  padding: 8px 10px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
@@ -408,7 +408,7 @@
 }
 
 .plugin-capability-head code {
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -426,7 +426,7 @@
   align-items: flex-start;
   gap: 8px;
   margin: 0;
-  padding: 9px 11px;
+  padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border-subtle));
   border-left: 2.5px solid var(--accent);
   border-radius: var(--radius-sm);
@@ -470,7 +470,7 @@
 .plugin-domains {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -565,7 +565,7 @@
 
 .plugin-schema summary {
   cursor: pointer;
-  padding: 7px 11px;
+  padding: 8px 12px;
   color: var(--text-secondary);
   font-size: var(--text-2xs);
   font-weight: 600;
@@ -581,9 +581,9 @@
 .plugin-schema ul {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   margin: 0;
-  padding: 8px 11px 10px;
+  padding: 8px 12px 10px;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-elevated);
   list-style: none;
@@ -599,7 +599,7 @@
 }
 
 .plugin-schema li code {
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-xs);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -609,7 +609,7 @@
 }
 
 .plugin-schema-type {
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-full);
   background: var(--surface-soft);
   color: var(--text-muted);
@@ -654,7 +654,7 @@
   align-items: flex-start;
   gap: 6px;
   margin: 0;
-  padding: 7px 10px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   font-size: var(--text-2xs);

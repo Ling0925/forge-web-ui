@@ -680,7 +680,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--radius-xs);
   background-color: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -830,7 +830,7 @@
 
 .tool-file-type-badge {
   display: inline-block;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-xs);
   background-color: var(--surface-raised, rgba(255, 255, 255, 0.06));
   color: var(--text-muted);
@@ -1263,7 +1263,7 @@
 .agent-meta-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   padding: 2px 8px;
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -1390,7 +1390,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 600;
@@ -1538,7 +1538,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -1608,7 +1608,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 600;

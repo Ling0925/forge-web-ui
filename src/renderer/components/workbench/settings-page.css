@@ -141,7 +141,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 8px 12px;
   background: transparent;
   color: var(--text-secondary);
   border: 0;
@@ -252,11 +252,11 @@
 .settings-status {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   border: 1px solid var(--border-subtle);
   background-color: var(--surface-soft);
   border-radius: var(--radius-full);
-  padding: 5px 12px;
+  padding: 6px 12px;
   color: var(--text-secondary);
   font-size: var(--text-xs);
   font-weight: 500;
@@ -555,7 +555,7 @@
   padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   background: #ffffff;
 }
 
@@ -687,7 +687,7 @@
 .execution-panel-head-main {
   display: flex;
   align-items: flex-start;
-  gap: 11px;
+  gap: 12px;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -732,7 +732,7 @@
 .execution-panel-tag {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
@@ -833,7 +833,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
-  padding: 13px 14px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
   border: 1.5px solid var(--border-subtle);
   background: var(--canvas-bg);
@@ -918,7 +918,7 @@
 .execution-permission-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
   background: var(--surface-elevated);
@@ -1002,8 +1002,8 @@
 .execution-capability-list {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding-top: 9px;
+  gap: 6px;
+  padding-top: 8px;
   border-top: 1px dashed var(--border-subtle);
 }
 
@@ -1133,7 +1133,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  padding: 11px 12px;
+  padding: 12px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--surface-elevated);
@@ -1189,7 +1189,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  padding: 9px 11px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
@@ -1240,7 +1240,7 @@
 .context-window-entry {
   background: var(--canvas-bg);
   border-radius: var(--radius-md);
-  padding: 13px 14px;
+  padding: 12px 14px;
   gap: 12px;
 }
 
@@ -1259,7 +1259,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -1331,7 +1331,7 @@
   align-items: center;
   justify-content: center;
   height: 24px;
-  padding: 0 7px;
+  padding: 0 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: var(--surface-elevated);
@@ -1376,7 +1376,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 13px 18px;
+  padding: 12px 18px;
   background: var(--surface-soft);
   cursor: pointer;
   user-select: none;
@@ -1459,7 +1459,7 @@
 
 @media (max-width: 600px) {
   .execution-panel-card {
-    padding: 13px 14px;
+    padding: 12px 14px;
   }
   .execution-panel-head {
     flex-direction: column;
@@ -1506,14 +1506,14 @@
 .settings-check {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   font-size: var(--text-sm);
   color: var(--text-secondary);
   cursor: pointer;
 }
 
 .settings-danger-check {
-  padding: 9px 12px;
+  padding: 8px 12px;
   border: 1px dashed var(--border-control);
   background-color: var(--surface-soft);
   border-radius: var(--radius-md);
@@ -1719,7 +1719,7 @@
 
   .settings-nav-item {
     flex-shrink: 0;
-    padding: 7px 11px;
+    padding: 8px 12px;
     font-size: var(--text-xs);
   }
 
@@ -2245,7 +2245,7 @@
   align-items: center;
   gap: 4px;
   font-size: var(--text-2xs);
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--radius-sm);
   font-weight: 500;
   background-color: var(--surface-soft);
@@ -2345,7 +2345,7 @@
 
 .agent-draft-badge {
   font-size: var(--text-2xs);
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--radius-sm);
   background-color: color-mix(in srgb, var(--warning) 14%, transparent);
   color: var(--warning);

@@ -248,7 +248,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -260,7 +260,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  gap: 5px var(--space-3, 12px);
+  gap: 6px var(--space-3, 12px);
   margin: 6px 0 0;
 }
 .usage-panel dt {

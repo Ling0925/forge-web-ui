@@ -104,7 +104,7 @@
 }
 
 .wb-inspector .mcp-card-top {
-  gap: 9px;
+  gap: 8px;
 }
 
 .mcp-card-icon {
@@ -185,7 +185,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -266,7 +266,7 @@
 .mcp-card-cred {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   margin: 0;
   font-size: var(--text-xs);
   color: var(--text-secondary);

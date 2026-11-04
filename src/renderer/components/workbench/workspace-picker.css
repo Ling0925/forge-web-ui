@@ -6,7 +6,7 @@
 .composer-project .composer-project-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   max-width: min(100%, 420px);
   min-height: 30px;
   padding: 4px 10px 4px 8px;
@@ -202,7 +202,7 @@
 .workspace-picker-state-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -325,7 +325,7 @@
 .workspace-picker-section-label {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--text-secondary);
@@ -574,7 +574,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-directories-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-2xs);
   font-weight: 500;
   color: var(--text-muted);
@@ -613,7 +613,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-directory {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
   min-height: 36px;
   padding: 6px 10px;
@@ -789,7 +789,7 @@ button.workspace-picker-crumb:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 18px;
+  padding: 12px 18px;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-soft);
   gap: 12px;
@@ -814,7 +814,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-selection-target {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
   padding: 2px 8px;
   border-radius: var(--radius-sm);

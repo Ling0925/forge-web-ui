@@ -147,7 +147,7 @@
 .composer-queue-item {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-height: 30px;
   padding: 3px 6px 3px 8px;
   border-radius: var(--radius-md);
@@ -223,7 +223,7 @@
   flex-shrink: 0;
   min-width: 18px;
   height: 18px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--radius-full);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -262,7 +262,7 @@
   background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
   color: var(--accent);
   height: 22px;
-  padding: 0 7px;
+  padding: 0 8px;
   border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;

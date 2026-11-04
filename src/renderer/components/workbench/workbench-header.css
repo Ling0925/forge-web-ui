@@ -99,7 +99,7 @@
     padding: 0 var(--space-2-5) 0 var(--space-2);
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     background: var(--surface-elevated);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);

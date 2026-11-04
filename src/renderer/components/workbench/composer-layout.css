@@ -102,7 +102,7 @@
   height: 44px;
   min-height: 44px;
   padding: 0 12px;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
@@ -137,7 +137,7 @@
   .wb-app .composer-split .composer-submit-col .composer-steer-btn,
   .wb-app .composer-split .composer-submit-col .composer-queue-btn {
     min-width: 54px;
-    padding: 0 9px;
+    padding: 0 8px;
     font-size: var(--text-xs);
     gap: 4px;
   }
