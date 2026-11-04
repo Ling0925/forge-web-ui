@@ -17,7 +17,10 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 1. [tokens.css](../src/renderer/styles/tokens.css)：定义字体栈、字号阶梯、4px 间距刻度、圆角刻度，以及基础语义状态色（`--success`、`--warning`、`--error`）。
 2. [workspace-theme.css](../src/renderer/styles/workspace-theme.css)：**工作台最终生效的主题覆盖**，将背景、文字、边框、主强调色（`--accent`）及控件高度覆盖为暖纸/石墨体系。
 3. [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 与 [app.css](../src/renderer/components/workbench/app.css)：负责主框架、侧栏紧凑密度与响应式断点。
-4. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现。
+4. [design-foundation.css](../src/renderer/styles/design-foundation.css)：**v2 设计基础，最后加载，覆盖前三层**。表面层级、暖色阴影、主色衍生色（`--accent-subtle/soft/border/glow`）、焦点光晕与动画 token 只在这里定义。
+5. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现，只消费上述 token，不另定义颜色、阴影或动画曲线。
+
+> UI 正在按页面重做（v2）。新页面一律使用 `design-foundation.css` 的 token；旧页面的写死值在重做该页时清除。
 
 ---
 
@@ -45,11 +48,18 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 | 层级 | Token | 浅色值 | 深色值 | 典型用途 |
 | :--- | :--- | :--- | :--- | :--- |
-| 画布底色 | `var(--canvas-bg)` | `#faf9f6` | `#171716` | 主对话阅读区、设置主背景 |
-| 侧栏底色 | `var(--sidebar-bg)` | `#f2f1ed` | `#121211` | 左侧会话栏、设置左侧导航 |
-| 一级卡片 / 浮层 | `var(--surface-elevated)` | `#ffffff` | `#222221` | Inspector 顶层卡片、Popover 面板、输入框主体、独立子任务卡 |
-| 二级内嵌槽位 | `var(--surface-soft)` | `#f0efeb` | `#252524` | 卡片内部的概览子卡、代码块底色、空状态底框、表头或统计槽 |
-| 悬停 / 选中 | `var(--surface-hover)` / `var(--surface-selected)` | `#e8e6e0` / `#e6e3dc` | `#30302e` / `#343330` | 列表项悬停、当前激活会话或选项 |
+| 外壳 | `var(--surface-shell)` | `#ebe9e3` | `#0f0e0d` | 应用最外层背景 |
+| 画布底色 | `var(--canvas-bg)` | `#f9f8f5` | `#181715` | 主对话阅读区、设置主背景 |
+| 侧栏底色 | `var(--sidebar-bg)` | `#f1efea` | `#131211` | 左侧会话栏、设置左侧导航 |
+| 一级卡片 / 浮层 | `var(--surface-elevated)` | `#ffffff` | `#211f1d` | 卡片、Popover、输入框主体 |
+| 抬升层 | `var(--surface-raised)` | `#fffefc` | `#272522` | 卡片上的悬停态、浮层内的突出块 |
+| 二级内嵌槽位 | `var(--surface-soft)` | `#f3f1ec` | `#1d1c1a` | 卡片内子块、代码块、空状态底框 |
+| 下沉槽位 | `var(--surface-sunken)` | `#eceae4` | `#141312` | 输入槽、进度条底轨 |
+| 悬停 / 按下 / 选中 | `--surface-hover` / `--surface-active` / `--surface-selected` | 暖墨色 6% / 10% / 8% 透明叠加 | 暖白 5% / 9% / 7% 透明叠加 | 列表项、菜单项、幽灵按钮 |
+
+- **边框**：`--border-subtle`（分隔线、卡片描边）→ `--border-control`（输入框、次按钮）→ `--border-hover`（悬停）→ `--border-strong`（强调），都是暖墨色半透明，不写死灰色。
+- **阴影**：只用 `--shadow-xs / sm / card / composer / dropdown / overlay` 六档，暖色调分层阴影（环境阴影 + 贴合阴影）。浮层（下拉、Popover）用 `--shadow-dropdown`，不再加边框；对话框用 `--shadow-overlay`。卡片顶部可叠加 `var(--edge-highlight)` 表现纸面受光。
+- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`（14%）、描边 `--accent-border`、光晕 `--accent-glow`。主色按钮用 `.btn-accent`（`--accent` 底 + `--accent-ink` 字）。
 
 - **表面交替铁律**：当卡片内部需要再分组时，外层用 `--surface-elevated`，内层子块必须用 `--surface-soft`（反之亦然），通过明度差建立秩序。
 - **反套娃铁律**：严禁出现「外层带边框大卡片 → 中层带边框分组卡 → 内层带边框表单卡」的 3 层以上无意义边框套娃（尤其是在 `SettingsModal` 中，右侧页面级容器不得再包裹多余的外层 `.settings-card`）。
@@ -149,6 +159,31 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ---
 
+## 4.6 动画与动效（v2）
+
+动画要流畅、可感知，但不抢内容。只使用 `design-foundation.css` 中的 token 和关键帧，不在组件里另写曲线或时长。
+
+| Token | 值 | 用途 |
+| :--- | :--- | :--- |
+| `--dur-micro` | 120ms | 悬停、按下、颜色变化 |
+| `--dur-short` | 180ms | Popover、下拉、开关、Tooltip |
+| `--dur-medium` | 260ms | 对话框、面板展开、折叠区、列表入场 |
+| `--dur-long` | 380ms | 页面切换、侧栏/详情栏大幅位移 |
+| `--ease-out` | `cubic-bezier(0.22, 1, 0.36, 1)` | 所有入场 |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | 状态互换、位置移动 |
+| `--ease-in` | `cubic-bezier(0.55, 0, 1, 0.45)` | 离场（离场时长取入场的 70%） |
+| `--ease-spring` | `cubic-bezier(0.34, 1.32, 0.64, 1)` | 小元素的物理反馈（勾选、徽标弹出），过冲不超过 4% |
+
+- **共享关键帧**：`fx-pop-in`（浮层：上移 6px + 缩放 0.97 → 1）、`fx-pop-in-down`（向下展开的浮层）、`fx-rise`（内容入场：上移 10px）、`fx-fade`、`fx-slide-in-right`（右侧面板）、`fx-shimmer`（骨架屏、思考中文字）、`fx-breathe`（执行中的主色呼吸光晕）。
+- **工具类**：`.fx-pop-in`、`.fx-rise`、`.fx-fade`、`.fx-skeleton`；列表入场用 `.fx-stagger`，子元素设置 `--i` 序号，每项延迟 32ms，最多 8 项。
+- **只动画 `transform` 与 `opacity`**（以及颜色、阴影）；不动画 `width`、`height`、`top`、`left`。折叠区用 `grid-template-rows: 0fr → 1fr`。
+- **按下反馈**：按钮与可点击卡片 `:active` 缩放到 0.97–0.98；悬停只改颜色与阴影，不位移超过 1px。
+- **焦点**：键盘焦点用 `outline: 2px solid var(--focus-ring)`；输入框聚焦用主色描边 + `var(--focus-halo)` 光晕。程序设置焦点的非交互元素（`tabindex="-1"` 的标题、区域）不显示焦点环。
+- **减少动态效果**：`prefers-reduced-motion: reduce` 时所有时长 token 归零，循环动画停止；新增的循环动画必须在该媒体查询中关闭。
+- **固定定位浮层**：390px 手机视口的 `position: fixed` 浮层，其祖先不得带 `transform`，否则会改变定位参照。
+
+---
+
 ## 5. 空间尺度、响应式断点与品牌资源
 
 - **桌面尺度**：标题栏高度 `44px`，主阅读列最大宽度 `760px`，左侧栏 `264px`（`1001–1366px` 紧凑模式下为 `232px`），右侧详情栏基础宽度 `380px`（紧凑模式 `320px`）。宽屏详情栏收起后不接收指针与焦点。
@@ -165,6 +200,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 每次完成界面或样式修改后，必须在真实浏览器（Playwright Chromium）与聚焦测试中完成以下核对：
 
+1. **Token 合规**：新增样式的颜色、阴影、圆角、动画时长与曲线全部来自 token；有新循环动画时已在 reduced-motion 中关闭。
 1. **色彩合规**：检查是否误用 `--accent-sage` 表示绿色、是否混入 `#16a34a` 亮绿或 `rgba(59, 130, 246, ...)` 蓝色、是否有红绿直接渐变。
 2. **控件合规**：检查是否引入了原生 `<select>`、裸 `<input type="checkbox">`、无表面对比的同色卡片堆叠或冗余的 3 层边框套娃。
 3. **极端文本防崩**：检查长工作区路径、长模型名、多段费用/TPS 公式下，`<dl>` 标签列是否保持 `nowrap` 不竖排、卡片是否无水平溢出。

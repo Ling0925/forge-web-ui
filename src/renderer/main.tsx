@@ -5,6 +5,7 @@ import { DeferredPanel } from "./components/primitives/DeferredPanel";
 import "./styles/global.css";
 import "./styles/workspace-theme.css";
 import "./styles/sidebar-compact.css";
+import "./styles/design-foundation.css";
 import { installWebHost } from "./web-host";
 
 const loadPrimitiveShowcase = () => import("./showcase/PrimitiveShowcase").then((module) => ({ default: module.PrimitiveShowcase }));
