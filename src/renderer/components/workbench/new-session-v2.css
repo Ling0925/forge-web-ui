@@ -377,12 +377,3 @@
     transform: none;
   }
 }
-
-/* Type scale: the composer toolbar reads at 13px like every other control. */
-.wb-app .composer-card .composer-model-summary,
-.wb-app .composer-card .composer-dropdown-label {
-  font-size: var(--text-sm);
-}
-.wb-app .composer-card .composer-model-source {
-  font-size: var(--text-xs);
-}
