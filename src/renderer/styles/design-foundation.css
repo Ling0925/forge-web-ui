@@ -44,18 +44,18 @@
   /* Warm, layered shadows: an ambient wash plus a tight contact shadow. */
   --shadow-color: 32deg 22% 28%;
   --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 5%);
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 6%),
-    0 1px 1px hsl(var(--shadow-color) / 4%);
-  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 5%),
-    0 4px 12px -4px hsl(var(--shadow-color) / 8%);
-  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 5%),
-    0 8px 24px -8px hsl(var(--shadow-color) / 14%);
-  --shadow-dropdown: 0 0 0 1px hsl(var(--shadow-color) / 6%),
-    0 4px 8px -2px hsl(var(--shadow-color) / 8%),
-    0 16px 32px -8px hsl(var(--shadow-color) / 16%);
-  --shadow-overlay: 0 0 0 1px hsl(var(--shadow-color) / 6%),
-    0 12px 24px -6px hsl(var(--shadow-color) / 12%),
-    0 32px 64px -16px hsl(var(--shadow-color) / 22%);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 6%), 0 1px 1px
+    hsl(var(--shadow-color) / 4%);
+  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 4px 12px -4px
+    hsl(var(--shadow-color) / 8%);
+  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 8px 24px -8px
+    hsl(var(--shadow-color) / 14%);
+  --shadow-dropdown: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 4px 8px -2px
+    hsl(var(--shadow-color) / 8%), 0 16px 32px -8px
+    hsl(var(--shadow-color) / 16%);
+  --shadow-overlay: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 12px 24px -6px
+    hsl(var(--shadow-color) / 12%), 0 32px 64px -16px
+    hsl(var(--shadow-color) / 22%);
 }
 
 [data-theme="dark"] {
@@ -94,16 +94,16 @@
   --shadow-color: 30deg 30% 2%;
   --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 30%);
   --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 40%);
-  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 35%),
-    0 4px 12px -4px hsl(var(--shadow-color) / 45%);
-  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 40%),
-    0 10px 28px -8px hsl(var(--shadow-color) / 60%);
-  --shadow-dropdown: 0 0 0 1px rgb(255 244 228 / 7%),
-    0 4px 8px -2px hsl(var(--shadow-color) / 45%),
-    0 18px 36px -8px hsl(var(--shadow-color) / 65%);
-  --shadow-overlay: 0 0 0 1px rgb(255 244 228 / 8%),
-    0 12px 24px -6px hsl(var(--shadow-color) / 50%),
-    0 32px 64px -16px hsl(var(--shadow-color) / 70%);
+  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 35%), 0 4px 12px -4px
+    hsl(var(--shadow-color) / 45%);
+  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 40%), 0 10px 28px -8px
+    hsl(var(--shadow-color) / 60%);
+  --shadow-dropdown: 0 0 0 1px rgb(255 244 228 / 7%), 0 4px 8px -2px
+    hsl(var(--shadow-color) / 45%), 0 18px 36px -8px
+    hsl(var(--shadow-color) / 65%);
+  --shadow-overlay: 0 0 0 1px rgb(255 244 228 / 8%), 0 12px 24px -6px
+    hsl(var(--shadow-color) / 50%), 0 32px 64px -16px
+    hsl(var(--shadow-color) / 70%);
 }
 
 /* ---------- 2. Motion ---------- */
@@ -242,14 +242,43 @@
 }
 /* Headings and regions focused programmatically for screen readers
    (tabindex=-1) are not interactive and must not draw a ring. */
-:where(h1, h2, h3, section, main, [role="region"], [role="dialog"])[tabindex="-1"]:focus,
-:root [tabindex="-1"]:not(button, a, input, select, textarea, [role="option"], [role="menuitem"], [role="tab"]):focus,
-:root [tabindex="-1"]:not(button, a, input, select, textarea, [role="option"], [role="menuitem"], [role="tab"]):focus-visible {
+:where(
+    h1,
+    h2,
+    h3,
+    section,
+    main,
+    [role="region"],
+    [role="dialog"]
+  )[tabindex="-1"]:focus,
+:root
+  [tabindex="-1"]:not(
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    [role="option"],
+    [role="menuitem"],
+    [role="tab"]
+  ):focus,
+:root
+  [tabindex="-1"]:not(
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    [role="option"],
+    [role="menuitem"],
+    [role="tab"]
+  ):focus-visible {
   outline: none;
 }
 
 .btn {
-  transition: background-color var(--dur-micro) var(--ease-out),
+  transition:
+    background-color var(--dur-micro) var(--ease-out),
     border-color var(--dur-micro) var(--ease-out),
     color var(--dur-micro) var(--ease-out),
     box-shadow var(--dur-short) var(--ease-out),
@@ -286,9 +315,9 @@
 .form-select,
 .form-textarea {
   border-color: var(--border-control);
-  transition: border-color var(--dur-micro) var(--ease-out),
-    box-shadow var(--dur-short) var(--ease-out),
-    background-color var(--dur-micro) var(--ease-out);
+  transition: border-color var(--dur-micro) var(--ease-out), box-shadow
+    var(--dur-short) var(--ease-out), background-color var(--dur-micro)
+    var(--ease-out);
 }
 .form-input:hover:not(:disabled),
 .form-textarea:hover:not(:disabled) {
