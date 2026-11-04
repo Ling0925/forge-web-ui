@@ -39,7 +39,7 @@
   position: relative;
   width: 80px;
   height: 80px;
-  border-radius: var(--radius-card, 12px);
+  border-radius: var(--radius-card);
   background: var(--surface-hover);
   border: 1px solid var(--border-subtle);
   box-sizing: border-box;
@@ -81,7 +81,7 @@
   min-width: var(--touch-min-target, 44px);
   min-height: var(--touch-min-target, 44px);
   padding: 0;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   background-color: var(--surface-elevated);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
@@ -103,7 +103,7 @@
   display: block;
   width: 100%;
   margin-top: var(--space-1);
-  font-size: var(--text-xs, 12px);
+  font-size: var(--text-xs);
   line-height: var(--leading-xs, 18px);
   color: var(--text-secondary);
   text-align: center;
@@ -158,7 +158,7 @@
   max-width: 100%;
   max-height: 70vh;
   object-fit: contain;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: var(--radius-sm);
   user-select: none;
 }
 
@@ -167,7 +167,7 @@
   min-width: var(--touch-min-target, 44px);
   height: var(--touch-min-target, 44px);
   min-height: var(--touch-min-target, 44px);
-  border-radius: var(--radius-composer, 12px);
+  border-radius: var(--radius-composer);
   padding: 0;
   display: inline-flex;
   align-items: center;

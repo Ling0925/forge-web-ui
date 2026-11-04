@@ -44,10 +44,10 @@
 /* Live diff stats: dynamic badges matching finalized tool cards */
 .tool-live-diff {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   padding: 1px 5px;
-  border-radius: var(--radius-xs, 3px);
+  border-radius: var(--radius-xs);
   letter-spacing: -0.02em;
   animation: tool-live-pulse 1.6s ease-in-out infinite;
 }
@@ -68,7 +68,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: 4px 8px;
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   background-color: var(--surface-soft);
   min-width: 0;
 }
@@ -86,7 +86,7 @@
 .tool-live-skeleton {
   flex: 1 1 auto;
   height: 8px;
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm);
   background: linear-gradient(
     90deg,
     var(--border-subtle) 0%,

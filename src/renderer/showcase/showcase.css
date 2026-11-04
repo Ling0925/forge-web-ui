@@ -23,7 +23,7 @@
 }
 
 .showcase-badge {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-family: var(--font-sans);
   font-weight: 600;
   padding: 2px 8px;
@@ -77,7 +77,7 @@
   }
   .showcase-seg-btn {
     padding: 2px 5px;
-    font-size: 11px;
+    font-size: var(--text-2xs);
   }
 }
 

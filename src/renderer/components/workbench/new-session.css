@@ -129,7 +129,7 @@
   background: var(--surface-soft);
   color: var(--text-secondary);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-family: var(--font-mono);
   cursor: pointer;
   transition: all var(--transition-fast);
