@@ -19,6 +19,12 @@ import { useWorkbench } from "../../state/workbench-context";
 import { modelServiceStatus } from "../../state/model-service-status";
 import { ForgeMark } from "../primitives/ForgeMark";
 import { SessionListItem } from "./SessionListItem";
+import "./sidebar-v2.css";
+
+const newSessionShortcut =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+    ? "⌘N"
+    : "Ctrl N";
 
 /** Folder label for a workspace path; the full path stays available as a tooltip. */
 function workspaceName(workspace: string) {
@@ -163,6 +169,9 @@ export function Sidebar() {
             >
               <Plus size={15} weight="bold" />
               <span>新任务</span>
+              <kbd className="sidebar-new-kbd" aria-hidden="true">
+                {newSessionShortcut}
+              </kbd>
             </button>
             <button
               type="button"
@@ -294,7 +303,7 @@ export function Sidebar() {
                         }
                         aria-label={`查看更多会话（当前已显示 ${visibleSessions.length}/${group.sessions.length}）`}
                       >
-                        <span>See more</span>
+                        <span>查看更多</span>
                       </button>
                     )}
                   </div>

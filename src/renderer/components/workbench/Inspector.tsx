@@ -25,8 +25,9 @@ import {
   PlanProgressPanel,
   SubAgentsPanel,
 } from "./RuntimePanels";
-import { WorkspaceFileManager } from "./WorkspaceFileManager";
+import { WorkspaceFileManager, changeKindMeta } from "./WorkspaceFileManager";
 import "./inspector.css";
+import "./inspector-v2.css";
 
 interface SubTabItem<T extends string> {
   readonly id: T;
@@ -493,9 +494,9 @@ export function Inspector({
                                         </span>
                                       )}
                                       <span
-                                        className={`inspector-file-kind kind-${change.kind}`}
+                                        className={`inspector-file-kind ${changeKindMeta(change.kind).className}`}
                                       >
-                                        {change.kind}
+                                        {changeKindMeta(change.kind).label}
                                       </span>
                                     </div>
                                   </summary>

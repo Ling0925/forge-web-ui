@@ -31,7 +31,7 @@ function formatFileSize(bytes: number | undefined): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 }
 
-function changeKindMeta(kind: FileChange["kind"]): {
+export function changeKindMeta(kind: FileChange["kind"]): {
   readonly label: string;
   readonly className: string;
 } {

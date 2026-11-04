@@ -1,0 +1,270 @@
+/*
+ * Inspector (v2). inspector.css carries the component detail; this sheet
+ * re-skins the shell, tabs, cards and empty states on the v2 tokens. Imported
+ * after inspector.css and scoped one class deeper than it, so it wins on both
+ * order and specificity. Tokens only: docs/WEB_UI_LAYOUT_SPEC.md §2.3, §4.4.
+ */
+
+/* ---------- Shell & header ---------- */
+.wb-app .workbench-inspector.wb-inspector {
+  background: var(--sidebar-bg);
+}
+.wb-app .wb-inspector .wb-inspector-head {
+  padding: 0 var(--space-2) 0 var(--space-3);
+  background: transparent;
+}
+.wb-app .wb-inspector .inspector-title-row {
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.wb-app .wb-inspector .wb-inspector-head .inspector-title-icon {
+  color: var(--text-muted);
+}
+.wb-app .wb-inspector .wb-inspector-head .status-badge {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  line-height: 18px;
+}
+.wb-app .wb-inspector .wb-inspector-close {
+  height: var(--control-height);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  transition: background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+.wb-app .wb-inspector .wb-inspector-close:hover {
+  border-color: transparent;
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.wb-app .wb-inspector .wb-inspector-close-caret {
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+.wb-app .wb-inspector .wb-inspector-close:hover .wb-inspector-close-caret {
+  transform: translateX(1px);
+}
+
+.wb-app .wb-inspector .inspector-scroll {
+  padding: 0 var(--space-3) var(--space-3);
+}
+.wb-app .wb-inspector .inspector-scroll > .wb-stack,
+.wb-app .wb-inspector .wb-stack,
+.wb-app .wb-inspector .inspector-sections {
+  gap: var(--space-2);
+}
+
+/* ---------- Primary tabs: one sunken track, a raised paper thumb ---------- */
+.wb-app .wb-inspector .inspector-tabs .tablist {
+  margin: var(--space-2) 0 var(--space-1);
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 1px hsl(var(--shadow-color) / 5%);
+}
+.wb-app .wb-inspector .inspector-tabs .tab-btn {
+  height: 26px;
+  min-height: 26px;
+  color: var(--text-muted);
+  transition: color var(--dur-micro) var(--ease-out);
+}
+.wb-app .wb-inspector .inspector-tabs .tab-btn:hover {
+  color: var(--text-secondary);
+}
+.wb-app .wb-inspector .inspector-tabs .tab-btn.is-active {
+  color: var(--text-primary);
+}
+.wb-app .wb-inspector .inspector-tabs .tabs-indicator {
+  top: 3px;
+  height: calc(100% - 6px);
+  border: 0;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm), 0 0 0 1px var(--border-subtle);
+  transition: transform var(--dur-medium) var(--ease-out),
+    width var(--dur-medium) var(--ease-out);
+}
+.wb-app .wb-inspector .inspector-tab-badge-num,
+.wb-app .wb-inspector .inspector-subtab-badge {
+  border: 0;
+  background: var(--surface-active);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.wb-app .wb-inspector .inspector-tabs .tab-btn.is-active .inspector-tab-badge-num {
+  border: 0;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.wb-app .wb-inspector .inspector-tab-badge-warn {
+  color: var(--surface-elevated);
+}
+
+/* ---------- Sub-tabs: quiet text pills, no second boxed track ---------- */
+.wb-app .wb-inspector .inspector-subtabs {
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.wb-app .wb-inspector .inspector-subtab-btn {
+  flex: 0 1 auto;
+  height: 24px;
+  min-height: 24px;
+  padding: 0 var(--space-2-5);
+  border: 0;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  transition: background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+.wb-app .wb-inspector .inspector-subtab-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+.wb-app .wb-inspector .inspector-subtab-btn.is-active {
+  background: var(--surface-active);
+  box-shadow: none;
+  color: var(--text-primary);
+}
+.wb-app .wb-inspector .inspector-subtabpanel:not([hidden]) {
+  animation: fx-fade var(--dur-short) var(--ease-out) both;
+}
+
+/* ---------- Cards: one paper surface, hairline edge, no hover jump ---------- */
+.wb-app .wb-inspector .inspector-section,
+.wb-app .wb-inspector .inspector-card,
+.wb-app .wb-inspector .wb-disclosure {
+  border-color: var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs), var(--edge-highlight);
+  transition: border-color var(--dur-micro) var(--ease-out);
+}
+.wb-app .wb-inspector .inspector-section,
+.wb-app .wb-inspector .inspector-card {
+  padding: var(--space-2-5) var(--space-3);
+}
+.wb-app .wb-inspector .inspector-section:hover,
+.wb-app .wb-inspector .inspector-card:hover,
+.wb-app .wb-inspector .wb-disclosure[open] {
+  border-color: var(--border-subtle);
+  box-shadow: var(--shadow-xs), var(--edge-highlight);
+}
+.wb-app .wb-inspector .inspector-card-header {
+  min-height: 24px;
+  padding-bottom: var(--space-2);
+}
+.wb-app .wb-inspector .inspector-card-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-primary);
+}
+.wb-app .wb-inspector .inspector-card-header .inspector-title-icon {
+  color: var(--text-muted);
+}
+.wb-app .wb-inspector .inspector-refresh-mini {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+.wb-app .wb-inspector .inspector-refresh-mini:hover {
+  border-color: transparent;
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.wb-app .wb-inspector details > summary {
+  min-height: 32px;
+  padding: var(--space-1-5) var(--space-3);
+  transition: background-color var(--dur-micro) var(--ease-out);
+}
+.wb-app .wb-inspector .wb-disclosure-body {
+  padding: var(--space-2) var(--space-3);
+}
+
+/* ---------- Key/value list ---------- */
+.wb-app .wb-inspector .inspector-scroll .wb-details {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-2);
+}
+.wb-app .wb-inspector .inspector-scroll .wb-details dt {
+  white-space: nowrap;
+}
+.wb-app .wb-inspector .wb-val-mono code {
+  border-color: transparent;
+  border-radius: var(--radius-xs);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+}
+.wb-app .wb-inspector .inspector-permission-pill {
+  border: 0;
+  background: var(--accent-subtle);
+}
+
+/* ---------- Empty states: one dashed guide card ---------- */
+.wb-app .wb-inspector .inspector-plan-empty,
+.wb-app .wb-inspector .inspector-empty-card {
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-4) var(--space-3);
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-card);
+  background: transparent;
+  text-align: center;
+}
+.wb-app .wb-inspector .inspector-plan-empty.is-compact {
+  padding: var(--space-3);
+}
+.wb-app .wb-inspector .inspector-plan-empty-hint {
+  color: var(--text-muted);
+}
+/* Scoped through .inspector-scroll to beat inspector.css's `p { margin: 0 }`. */
+.wb-app .wb-inspector .inspector-scroll .inspector-empty {
+  margin-top: var(--space-3);
+  padding: var(--space-6) var(--space-3);
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-card);
+}
+
+/* ---------- Pending approvals ---------- */
+.wb-app .wb-inspector .wb-approvals-summary {
+  margin-top: var(--space-2);
+  padding: var(--space-2-5) var(--space-3);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-card);
+  background: var(--warning-bg);
+}
+.wb-app .wb-inspector .wb-approval-row {
+  border-radius: var(--radius-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-app .wb-inspector .inspector-subtabpanel:not([hidden]) {
+    animation: none;
+  }
+}
+
+/* ---------- Changed-file kind ---------- */
+.wb-app .wb-inspector .inspector-file-kind {
+  border: 0;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+  text-transform: none;
+}
+.wb-app .wb-inspector .inspector-file-kind.kind-modified {
+  background: var(--warning-bg);
+}
+.wb-app .wb-inspector .inspector-file-kind.kind-added {
+  color: var(--success);
+  background: var(--success-bg);
+}
+.wb-app .wb-inspector .inspector-file-kind.kind-deleted {
+  color: var(--error);
+  background: var(--error-bg);
+}

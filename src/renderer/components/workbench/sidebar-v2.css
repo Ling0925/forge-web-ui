@@ -1,0 +1,330 @@
+/*
+ * Session sidebar (v2). Sidebar.tsx evaluates before workspace-theme.css,
+ * app.css and motion.css, so rules are scoped under `.wb-app
+ * .workbench-sidebar` and win on specificity. Tokens only:
+ * docs/WEB_UI_LAYOUT_SPEC.md §2, §4.6 and §5.
+ */
+
+/* ---------- Header ---------- */
+.wb-app .workbench-sidebar .sidebar-header {
+  padding: var(--space-3) var(--space-3) var(--space-1);
+  border-bottom: 0;
+}
+.wb-app .workbench-sidebar .sidebar-logo {
+  gap: var(--space-2);
+  padding-inline: 2px;
+}
+.wb-app .workbench-sidebar .sidebar-mark {
+  width: 24px;
+  height: 24px;
+}
+.wb-app .workbench-sidebar .sidebar-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* New task: a raised paper button, the one primary action in the rail. */
+.wb-app .workbench-sidebar .sidebar-new-btn {
+  justify-content: flex-start;
+  gap: var(--space-2);
+  padding: 0 var(--space-2-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs), var(--edge-highlight);
+  color: var(--text-primary);
+  transition: border-color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-short) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.wb-app .workbench-sidebar .sidebar-new-btn:hover {
+  border-color: var(--border-control);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-card), var(--edge-highlight);
+}
+.wb-app .workbench-sidebar .sidebar-new-btn:active {
+  background: var(--surface-elevated);
+  transform: scale(0.98);
+}
+.wb-app .workbench-sidebar .sidebar-new-btn > svg {
+  color: var(--accent);
+}
+.wb-app .workbench-sidebar .sidebar-new-kbd {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 400;
+  color: var(--text-disabled);
+}
+
+/* ---------- Search ---------- */
+.wb-app .workbench-sidebar .sidebar-search {
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+}
+.wb-app .workbench-sidebar .sidebar-search-input {
+  height: var(--control-height);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  font-size: var(--text-xs);
+}
+.wb-app .workbench-sidebar .sidebar-search-input:hover {
+  background: var(--surface-active);
+}
+.wb-app .workbench-sidebar .sidebar-search-input:focus {
+  border-color: var(--border-control);
+  background: var(--surface-elevated);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.wb-app .workbench-sidebar .sidebar-archive-toggle {
+  width: var(--control-height);
+  height: var(--control-height);
+  border-radius: var(--radius-sm);
+  background: transparent;
+}
+.wb-app .workbench-sidebar .sidebar-archive-toggle.is-active {
+  background: var(--accent-subtle);
+}
+
+/* ---------- Workspace folders ---------- */
+.wb-app .workbench-sidebar .sidebar-sessions-list {
+  padding: 0 var(--space-2) var(--space-2);
+}
+.wb-app .workbench-sidebar .session-folder + .session-folder {
+  margin-top: var(--space-1);
+}
+.wb-app .workbench-sidebar .session-folder-header-row:hover {
+  background: transparent;
+}
+.wb-app .workbench-sidebar .session-folder-header {
+  gap: var(--space-1-5);
+  padding: var(--space-1-5) var(--space-1) var(--space-1) var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.wb-app .workbench-sidebar .session-folder-header-row:hover .session-folder-header {
+  color: var(--text-secondary);
+}
+.wb-app .workbench-sidebar .session-folder-caret {
+  opacity: 0;
+  transition: opacity var(--dur-micro) var(--ease-out),
+    transform var(--dur-short) var(--ease-out);
+}
+.wb-app .workbench-sidebar .session-folder-header-row:hover .session-folder-caret,
+.wb-app .workbench-sidebar .session-folder-header:focus-visible .session-folder-caret,
+.wb-app .workbench-sidebar .session-folder-header.is-collapsed .session-folder-caret {
+  opacity: 1;
+}
+.wb-app .workbench-sidebar .session-folder-icon {
+  opacity: 0.6;
+}
+.wb-app .workbench-sidebar .session-folder-count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+  line-height: 16px;
+  text-align: center;
+}
+.wb-app .workbench-sidebar .session-folder-create-btn {
+  border-radius: var(--radius-sm);
+}
+.wb-app .workbench-sidebar .session-folder-create-btn:hover {
+  border-color: transparent;
+  background: var(--surface-active);
+}
+.wb-app .workbench-sidebar .session-folder-body {
+  padding-left: 0;
+}
+.wb-app .workbench-sidebar .session-folder-more {
+  justify-content: flex-start;
+  padding-left: var(--space-3);
+  opacity: 1;
+  color: var(--text-muted);
+}
+
+/* ---------- Session rows ---------- */
+.wb-app .workbench-sidebar .session-item {
+  border: 0;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-short) var(--ease-out);
+}
+/* The status dot sits in a fixed left slot, so every title starts on the
+   same line (under the folder icon) whether or not it carries a dot. */
+.wb-app .workbench-sidebar .session-item-main {
+  position: relative;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-1) 27px;
+}
+.wb-app .workbench-sidebar .session-item-title {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.wb-app .workbench-sidebar .session-item:hover .session-item-title {
+  color: var(--text-primary);
+}
+/* Selected: a raised paper row, the same surface as cards elsewhere. */
+.wb-app .workbench-sidebar .session-item.is-active {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs), 0 0 0 1px var(--border-subtle);
+}
+.wb-app .workbench-sidebar .session-item.is-active .session-item-title {
+  color: var(--text-primary);
+}
+.wb-app .workbench-sidebar .session-item:active {
+  transform: none;
+}
+.wb-app .workbench-sidebar .session-item-main:active {
+  transform: scale(0.99);
+}
+.wb-app .workbench-sidebar .session-action-btn {
+  background: transparent;
+}
+.wb-app .workbench-sidebar .session-item.is-active .session-action-btn {
+  opacity: 0;
+}
+.wb-app .workbench-sidebar .session-item:hover .session-action-btn,
+.wb-app .workbench-sidebar .session-item.is-menu-open .session-action-btn,
+.wb-app .workbench-sidebar .session-action-btn:focus-visible {
+  opacity: 0.85;
+}
+
+/* Status: a steady dot for terminal states, a soft halo for live work. */
+.wb-app .workbench-sidebar .session-item-main > .wb-status-dot {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+}
+.wb-app .workbench-sidebar .wb-status-dot[data-status="idle"],
+.wb-app .workbench-sidebar .wb-status-dot[data-status="interrupted"] {
+  background: var(--border-strong);
+}
+.wb-app .workbench-sidebar .wb-status-dot[data-status="running"],
+.wb-app .workbench-sidebar .wb-status-dot.is-pending,
+.wb-app .workbench-sidebar .wb-status-dot[data-status="awaiting_approval"] {
+  animation: sidebar-dot-halo 1.8s var(--ease-in-out) infinite;
+}
+.wb-app .workbench-sidebar .wb-status-dot[data-status="running"] {
+  --dot-halo: var(--accent-glow);
+  box-shadow: none;
+}
+.wb-app .workbench-sidebar .wb-status-dot.is-pending,
+.wb-app .workbench-sidebar .wb-status-dot[data-status="awaiting_approval"] {
+  --dot-halo: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+@keyframes sidebar-dot-halo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--dot-halo);
+  }
+  50% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+/* ---------- Footer ---------- */
+.wb-app .workbench-sidebar .sidebar-footer {
+  gap: 2px;
+  padding: var(--space-1-5) var(--space-2) var(--space-2);
+}
+.wb-app .workbench-sidebar .sidebar-footer-actions {
+  gap: 2px;
+}
+.wb-app .workbench-sidebar .sidebar-settings-btn,
+.wb-app .workbench-sidebar .sidebar-refresh-btn {
+  color: var(--text-muted);
+  transition: background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+.wb-app .workbench-sidebar .sidebar-settings-btn:hover,
+.wb-app .workbench-sidebar .sidebar-refresh-btn:hover {
+  color: var(--text-primary);
+}
+.wb-app .workbench-sidebar .sidebar-refresh-btn svg {
+  transition: transform var(--dur-medium) var(--ease-out);
+}
+.wb-app .workbench-sidebar .sidebar-model-status {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-secondary);
+  transition: border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out);
+}
+.wb-app .workbench-sidebar .sidebar-model-status:hover {
+  border-color: var(--border-control);
+  background: var(--surface-raised);
+}
+.wb-app .workbench-sidebar .sidebar-model-status > svg:last-child {
+  color: var(--text-disabled);
+  transition: transform var(--dur-micro) var(--ease-out);
+}
+.wb-app .workbench-sidebar .sidebar-model-status:hover > svg:last-child {
+  transform: translateX(1px);
+}
+.wb-app .workbench-sidebar .sidebar-model-status:not([data-state="configured"]) > svg:first-child {
+  color: var(--warning);
+}
+
+/* ---------- Session hover card ---------- */
+.session-hover-info {
+  padding: var(--space-3) var(--space-3) var(--space-2-5);
+  border: 0;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-dropdown);
+  animation: fx-pop-in var(--dur-short) var(--ease-out) both;
+  transform-origin: left top;
+}
+.session-hover-info > strong {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-sm);
+}
+.session-hover-info dl {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+  column-gap: var(--space-3);
+}
+.session-hover-info dt {
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+.session-hover-info p {
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+}
+
+@media (pointer: coarse) {
+  .wb-app .workbench-sidebar .sidebar-search-input,
+  .wb-app .workbench-sidebar .sidebar-archive-toggle {
+    height: var(--touch-min-target);
+  }
+  .wb-app .workbench-sidebar .sidebar-archive-toggle {
+    width: var(--touch-min-target);
+  }
+  .wb-app .workbench-sidebar .sidebar-new-kbd {
+    display: none;
+  }
+  .wb-app .workbench-sidebar .session-folder-caret,
+  .wb-app .workbench-sidebar .session-item.is-active .session-action-btn {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-app .workbench-sidebar .wb-status-dot,
+  .session-hover-info {
+    animation: none !important;
+  }
+}
