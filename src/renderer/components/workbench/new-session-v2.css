@@ -208,8 +208,12 @@
     0 0 0 3px color-mix(in srgb, var(--accent) 5%, transparent),
     var(--edge-highlight);
 }
+/* Opacity only: the composer hosts the position:fixed workspace picker, and
+   any transform (even a finished `both`-fill rise) would make it the fixed
+   overlay's containing block, shrinking the backdrop and off-centring the
+   dialog. Spec §4.6: fixed overlays need transform-free ancestors. */
 .wb-new-session .composer-fresh {
-  animation: fx-rise var(--dur-long) var(--ease-out) 60ms both;
+  animation: fx-fade var(--dur-long) var(--ease-out) 60ms both;
 }
 .wb-app .composer-textarea::placeholder {
   color: var(--text-muted);
@@ -313,7 +317,9 @@
 .wb-app .composer-project-trigger-icon {
   border-radius: var(--radius-full);
 }
-.wb-app .composer-project-panel {
+/* Inline (non-modal) project panel only. The workspace picker dialog owns
+   its centring transform and entrance animation in workspace-picker.css. */
+.wb-app .composer-project-panel:not(.workspace-picker-panel) {
   border-color: transparent;
   box-shadow: var(--shadow-dropdown);
   transform-origin: top left;
