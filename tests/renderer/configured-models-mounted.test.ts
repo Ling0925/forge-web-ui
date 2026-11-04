@@ -402,6 +402,12 @@ const summaryTitle = (page: Page) =>
 const modelCard = (page: Page, id: string) =>
   page.getByLabel(`已配置模型卡片 ${id}`, { exact: true });
 
+// Cards rest collapsed; open one before reading its parameter controls.
+const openModelCard = async (page: Page, id: string) => {
+  const toggle = page.getByRole("button", { name: `展开模型 ${id} 参数`, exact: true });
+  if (await toggle.count()) await toggle.click();
+};
+
 const protocolSelect = (page: Page, id: string) =>
   page.getByLabel(`模型 ${id} 请求协议`, { exact: true });
 
@@ -634,6 +640,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
       ),
     ).toBe(true);
     await modelCard(page, "a/existing").waitFor();
+    await openModelCard(page, "a/existing");
 
     const existingProtocol = protocolSelect(page, "a/existing");
     await existingProtocol.waitFor();
@@ -716,6 +723,9 @@ it("saves added, protocol-overridden and removed models across a remount", async
     // A remount re-reads the saved settings, not component-local drafts.
     await remount(page);
     await modelCard(page, "a/existing").waitFor();
+    // A remount starts with every card collapsed again.
+    await openModelCard(page, "a/upstream");
+    await openModelCard(page, "a/existing");
     await expect
       .poll(() => protocolSelect(page, "a/upstream").inputValue())
       .toBe("responses");
@@ -746,6 +756,7 @@ it("saves added, protocol-overridden and removed models across a remount", async
 
     await remount(page);
     await modelCard(page, "a/upstream").waitFor();
+    await openModelCard(page, "a/upstream");
     await expect
       .poll(() => protocolSelect(page, "a/upstream").inputValue())
       .toBe("");
@@ -813,6 +824,7 @@ it("edits a model protocol at a phone viewport without settings content overflow
     { width: 390, height: 844 },
   );
   try {
+    await openModelCard(page, "a/mobile");
     const select = protocolSelect(page, "a/mobile");
     await select.waitFor();
     await select.selectOption("gemini");

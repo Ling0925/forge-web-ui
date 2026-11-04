@@ -407,13 +407,14 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
       await page.getByRole("alert").filter({ hasText: "目录请求失败" }).count(),
     ).toBeGreaterThan(0);
     await page.getByRole("button", { name: "编辑源 A", exact: true }).click();
-    await page.getByText("目录已过期").waitFor();
+    // The source card also says "目录已过期"; the editor's own notice is in the dialog.
+    await page.getByRole("dialog").getByText("目录已过期").waitFor();
     expect(await page.locator(".model-access-model-row").count()).toBe(2);
     // A later successful refresh clears the stale state.
     await page.evaluate(() => Reflect.set(window, "stale", false));
     await page.getByRole("button", { name: "刷新目录" }).click();
     await page.getByText("目录已刷新：2 个模型。").waitFor();
-    await expect.poll(() => page.getByText("目录已过期").count()).toBe(0);
+    await expect.poll(() => page.getByRole("dialog").getByText("目录已过期").count()).toBe(0);
     expect(await page.locator(".model-access-model-row").count()).toBe(2);
 
     // Catalog and inference tests are separate and report their own outcome.

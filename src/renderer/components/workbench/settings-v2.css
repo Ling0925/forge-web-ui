@@ -1,0 +1,626 @@
+/*
+ * Settings (v2). Shell, navigation and the model-connection page re-skinned
+ * on the v2 tokens. Imported after settings-page.css, model-access.css and
+ * provider-sources.css, and scoped under `.settings-page` so it wins on
+ * order and specificity. Tokens only: docs/WEB_UI_LAYOUT_SPEC.md §2, §4.5.
+ *
+ * Reading model: one quiet page column. Sources are a segmented control;
+ * each source is a title plus one facts line; models are one summary row
+ * each that opens into its parameters. Badges carry only state the user
+ * must act on (default, missing key, stale catalog, customised).
+ */
+
+/* ---------- Navigation ---------- */
+.settings-page .settings-navigation {
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-3);
+}
+.settings-page .settings-nav-header {
+  gap: var(--space-3);
+}
+.settings-page .settings-back-btn {
+  height: 28px;
+  padding: 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.settings-page .settings-brand {
+  gap: var(--space-2);
+  padding: 0 var(--space-1);
+}
+.settings-page .settings-brand-icon {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+.settings-page .settings-brand h1 {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.settings-page .settings-search input {
+  height: 32px;
+  border: 1px solid transparent;
+  background: var(--surface-hover);
+  font-size: var(--text-sm);
+}
+.settings-page .settings-search input:focus {
+  border-color: var(--border-control);
+  background: var(--surface-elevated);
+}
+.settings-page .settings-nav-menu {
+  gap: 1px;
+}
+.settings-page .settings-nav-item {
+  gap: var(--space-2-5);
+  min-height: 32px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+.settings-page .settings-nav-item .settings-nav-icon {
+  width: 16px;
+  height: 16px;
+}
+.settings-page .settings-nav-item.is-active,
+.settings-page .settings-nav-item[aria-current] {
+  background: var(--surface-active);
+  font-weight: 500;
+}
+.settings-page .settings-nav-item.is-active .settings-nav-icon,
+.settings-page .settings-nav-item[aria-current] .settings-nav-icon {
+  color: var(--text-primary);
+}
+.settings-page .settings-local-note {
+  margin: auto var(--space-2) 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+/* ---------- Page header & column ---------- */
+.settings-page .settings-page-header {
+  align-items: center;
+  padding: var(--space-6) var(--space-8) var(--space-4);
+  border-bottom: 0;
+}
+.settings-page .settings-header-meta h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.settings-page .settings-header-meta p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.settings-page .settings-status {
+  border: 0;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.settings-page .settings-status .wb-status-dot {
+  background: var(--warning);
+  animation: none;
+}
+.settings-page .settings-status[data-state="loading"] {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+.settings-page .settings-status[data-state="loading"] .wb-status-dot {
+  background: var(--text-muted);
+}
+/* One readable column instead of a full-bleed form. */
+.settings-page .settings-page-scroll {
+  padding: var(--space-2) var(--space-8) var(--space-12);
+}
+.settings-page .settings-page-scroll > * {
+  max-width: 820px;
+}
+
+/* ---------- Section headings ---------- */
+.settings-page .provider-heading h3,
+.settings-page .model-access-heading h4,
+.settings-page .provider-inference-title-row h3 {
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+/* ---------- Source switcher: a segmented control ---------- */
+.settings-page .provider-source-tabs {
+  gap: 2px;
+  margin-bottom: var(--space-4);
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 1px hsl(var(--shadow-color) / 5%);
+}
+.settings-page .provider-source-tab {
+  gap: var(--space-2);
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  transition: background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out), box-shadow var(--dur-short)
+    var(--ease-out);
+}
+.settings-page .provider-source-tab:hover:not(.is-active) {
+  background: transparent;
+  color: var(--text-primary);
+}
+.settings-page .provider-source-tab.is-active {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm), 0 0 0 1px var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.settings-page .provider-source-tab-dot {
+  width: 6px;
+  height: 6px;
+  opacity: 1;
+  background: var(--border-strong);
+}
+.settings-page .provider-source-tab-dot.is-current {
+  background: var(--success);
+}
+.settings-page .provider-source-tab-badge {
+  padding: 0 6px;
+  border: 0;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 18px;
+}
+.settings-page .provider-source-tab-badge.is-default {
+  background: var(--success-bg);
+  color: var(--success);
+}
+/* The customised count is shown in the model list; the tab stays a label. */
+.settings-page .provider-source-tab-badge.is-custom {
+  display: none;
+}
+
+/* ---------- Source summary: title + one facts line ---------- */
+.settings-page .provider-source-card {
+  gap: var(--space-5);
+}
+.settings-page .provider-source-summary-bar {
+  align-items: center;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.settings-page .provider-source-summary-info {
+  gap: 2px;
+}
+.settings-page .provider-source-title {
+  gap: var(--space-2);
+  font-size: var(--text-md);
+}
+.settings-page .provider-source-title strong {
+  font-weight: 600;
+}
+.settings-page .provider-current,
+.settings-page .provider-tag {
+  padding: 0 7px;
+  border: 0;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 20px;
+}
+.settings-page .provider-current {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.settings-page .provider-tag,
+.settings-page .provider-tag.is-muted {
+  background: var(--surface-active);
+  color: var(--text-secondary);
+}
+.settings-page .provider-tag.is-stale {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.settings-page .provider-source-meta-line,
+.settings-page .provider-source-url,
+.settings-page .provider-source-detail {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.settings-page .provider-source-url {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-page .provider-source-actions {
+  gap: 2px;
+}
+.settings-page .provider-icon-action {
+  width: 30px;
+  min-width: 30px;
+  padding: 0;
+  color: var(--text-muted);
+}
+.settings-page .provider-icon-action:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+.settings-page .provider-icon-action.provider-delete:hover:not(:disabled) {
+  background: var(--error-bg);
+  color: var(--error);
+}
+.settings-page .provider-source-actions .btn-secondary {
+  margin-left: var(--space-1);
+}
+
+/* ---------- Models: one summary row each ---------- */
+.settings-page .provider-card-models-panel {
+  gap: var(--space-2);
+}
+.settings-page .provider-configured-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.settings-page .provider-configured-count {
+  padding: 0 7px;
+  border: 0;
+  background: var(--surface-active);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 18px;
+}
+.settings-page .provider-configured-subtitle {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.settings-page .configured-models-grid {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs);
+}
+.settings-page .configured-model-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.settings-page .configured-model-card + .configured-model-card {
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-page .configured-model-card.is-customized {
+  border-color: var(--border-subtle);
+}
+.settings-page .configured-model-card-head {
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-2) 0 0;
+  border-bottom: 0;
+  background: transparent;
+}
+.settings-page .configured-model-card-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.settings-page .configured-model-card-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+.settings-page .configured-model-card:hover .configured-model-card-head,
+.settings-page .configured-model-card.is-open .configured-model-card-head {
+  background: var(--surface-soft);
+}
+.settings-page .configured-model-card-caret {
+  flex-shrink: 0;
+  color: var(--text-disabled);
+  transform: rotate(-90deg);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+.settings-page .configured-model-card.is-open .configured-model-card-caret {
+  transform: none;
+}
+.settings-page .configured-model-card-identity {
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.settings-page .provider-card-model-id {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.settings-page .provider-card-model-name {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.settings-page .configured-model-card-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.settings-page .configured-model-card-custom {
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  line-height: 18px;
+}
+/* Fixed-width action slot so every row's summary ends on the same line,
+   whether it shows "默认" or the hover-only "设为默认 ×". */
+.settings-page .configured-model-card-head-right {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 112px;
+}
+.settings-page .provider-model-badge,
+.settings-page .provider-model-action-pill {
+  padding: 0 7px;
+  border: 0;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 22px;
+}
+.settings-page .provider-model-badge.is-default {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.settings-page .provider-model-action-pill {
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+.settings-page .configured-model-card:hover .provider-model-action-pill,
+.settings-page .provider-model-action-pill:focus-visible {
+  opacity: 1;
+}
+.settings-page .provider-model-action-pill:hover:not(:disabled) {
+  background: var(--surface-active);
+  color: var(--text-primary);
+}
+.settings-page .configured-model-remove-btn,
+.settings-page .model-param-reset-btn {
+  border: 0;
+  color: var(--text-muted);
+}
+.settings-page .configured-model-remove-btn {
+  opacity: 0;
+  transition: opacity var(--dur-micro) var(--ease-out);
+}
+.settings-page .configured-model-card:hover .configured-model-remove-btn,
+.settings-page .configured-model-remove-btn:focus-visible {
+  opacity: 1;
+}
+.settings-page .configured-model-remove-btn:hover:not(:disabled) {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+/* Parameter editor: quiet rows on a soft inset, no dashed rules. */
+.settings-page .model-param-editor.is-card-body {
+  padding: var(--space-1) var(--space-4) var(--space-3) 38px;
+  background: var(--surface-soft);
+  animation: fx-fade var(--dur-short) var(--ease-out) both;
+}
+.settings-page .model-param-row {
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 0;
+}
+.settings-page .model-param-label {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.settings-page .model-param-sub {
+  font-size: var(--text-xs);
+}
+.settings-page .model-param-segmented {
+  border: 0;
+  background: var(--surface-active);
+}
+.settings-page .model-param-seg-btn,
+.settings-page .model-param-chip,
+.settings-page .model-param-link-btn {
+  font-size: var(--text-xs);
+}
+.settings-page .model-param-seg-btn.is-active {
+  border-color: transparent;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-primary);
+}
+.settings-page .model-param-chip {
+  border-color: transparent;
+  background: var(--surface-active);
+}
+.settings-page .model-param-chip.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---------- Model picker drawer ---------- */
+.settings-page .provider-model-picker-drawer {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-dropdown);
+  animation: fx-pop-in-down var(--dur-short) var(--ease-out) both;
+}
+
+/* ---------- Secondary sections below the sources ---------- */
+/* Import, route groups and the global effort grid are secondary: plain
+   sections separated by space, not cards stacked on cards. */
+.settings-page .model-access-import {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  background: transparent;
+  box-shadow: none;
+}
+.settings-page .model-access-import-icon {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+.settings-page .model-access-import-title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+.settings-page .model-access-import-subtitle,
+.settings-page .model-access-heading-sub {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.settings-page .model-access-routes,
+.settings-page .provider-inference {
+  margin-top: var(--space-8);
+  padding-top: 0;
+  border-top: 0;
+}
+.settings-page .model-access-route-empty {
+  padding: var(--space-4);
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-card);
+  background: transparent;
+}
+.settings-page .provider-inference-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+/* Global effort: one segmented row, like the per-model control. */
+.settings-page .provider-inference-head {
+  margin-bottom: var(--space-3);
+}
+.settings-page .provider-inference-info p {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.settings-page .provider-inference-grid {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.settings-page .provider-inference-option {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-height: 28px;
+  padding: 0 var(--space-2-5);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background-color var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
+}
+.settings-page .provider-inference-option:hover:not(.is-active) {
+  color: var(--text-primary);
+}
+.settings-page .provider-inference-option.is-active {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm), 0 0 0 1px var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.settings-page .provider-inference-option-name {
+  font-family: inherit;
+}
+.settings-page .provider-inference-summary {
+  display: block;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.settings-page .provider-inference-summary strong {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+@media (max-width: 760px) {
+  .settings-page .settings-page-header {
+    padding: var(--space-4) var(--space-4) var(--space-3);
+  }
+  .settings-page .settings-page-scroll {
+    padding: var(--space-2) var(--space-4) var(--space-8);
+  }
+  .settings-page .configured-model-card-summary {
+    display: none;
+  }
+  .settings-page .model-param-editor.is-card-body {
+    padding-left: var(--space-3);
+  }
+  .settings-page .model-param-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+
+@media (hover: none) {
+  .settings-page .provider-model-action-pill,
+  .settings-page .configured-model-remove-btn {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-page .model-param-editor.is-card-body,
+  .settings-page .provider-model-picker-drawer {
+    animation: none;
+  }
+}

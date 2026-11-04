@@ -1010,9 +1010,6 @@ export function ProviderSources({
               const cardDraft = cardDrafts[item.id];
               const effectiveModel = cardDraft?.model ?? item.model;
               const effectiveSelection = cardDraft?.selection ?? savedSelection;
-              const overrideCount = countModelOverrides(
-                effectiveSelection.overrides,
-              );
               const cardDirty =
                 cardDraft !== undefined &&
                 JSON.stringify({
@@ -1039,50 +1036,37 @@ export function ProviderSources({
                           {isDefault && (
                             <span className="provider-current">默认</span>
                           )}
-                          <span className="provider-tag">
-                            {item.credentials?.length ?? 1} 凭据
-                          </span>
-                          <span className="provider-tag is-muted">
-                            {item.hasApiKey ? "已保存密钥" : "无密钥"}
-                          </span>
-                          {overrideCount > 0 && (
-                            <span className="provider-tag is-customized">
-                              已定制 {overrideCount} 个模型
-                            </span>
+                          {!item.hasApiKey && (
+                            <span className="provider-tag is-muted">无密钥</span>
                           )}
                           {meta?.stale && catalog && catalog.length > 0 && (
                             <span className="provider-tag is-stale">
-                              已过期
+                              目录已过期
                             </span>
                           )}
                         </span>
-                        <span className="provider-source-protocol">
-                          {protocolLabel(item.apiMode)}
-                        </span>
                       </div>
+                      {/* One quiet facts line: endpoint, protocol, catalog size.
+                          Credentials and customisation counts live in the
+                          editor and the model list, not in the header. */}
                       <div className="provider-source-meta-line">
-                        <span className="provider-source-url">
-                          {item.baseUrl}
+                        <span className="provider-source-url" title={item.baseUrl}>
+                          {item.baseUrl.replace(/^https?:\/\//, "")}
                         </span>
                         <span className="model-access-separator">·</span>
                         <span className="provider-source-detail">
-                          默认模型 <code>{effectiveModel || "未选择"}</code>
-                          <span className="model-access-separator">·</span>
-                          {effectiveSelection.mode === "all"
-                            ? "全部模型"
-                            : effectiveSelection.mode === "none"
-                              ? "不提供模型"
-                              : `${effectiveSelection.models.length} 个模型`}
-                          {catalogLoading[item.id] && (
-                            <span className="model-access-separator">
-                              · 加载中
-                            </span>
+                          {protocolLabel(item.apiMode)}
+                          {(item.credentials?.length ?? 1) > 1 && (
+                            <>
+                              <span className="model-access-separator"> · </span>
+                              {item.credentials?.length} 个凭据
+                            </>
                           )}
-                          {catalog && (
-                            <span className="model-access-separator">
-                              · 目录 {catalog.length}
-                            </span>
-                          )}
+                          {catalogLoading[item.id] ? (
+                            <span className="model-access-separator"> · 加载目录…</span>
+                          ) : catalog ? (
+                            <span className="model-access-separator"> · 目录 {catalog.length} 个</span>
+                          ) : null}
                         </span>
                       </div>
                     </div>
@@ -1090,19 +1074,11 @@ export function ProviderSources({
                     <div className="provider-source-actions">
                       <Button
                         size="sm"
-                        variant="secondary"
-                        icon={<PencilSimple size={14} />}
-                        aria-label={`编辑${item.label}`}
-                        disabled={busy}
-                        onClick={() => openEditor(item.id)}
-                      >
-                        编辑来源
-                      </Button>
-                      <Button
-                        size="sm"
                         variant="ghost"
-                        icon={<ArrowClockwise size={14} />}
+                        className="provider-icon-action"
+                        icon={<ArrowClockwise size={15} />}
                         aria-label={`刷新${item.label}的模型`}
+                        title="刷新模型目录"
                         loading={loading || catalogLoading[item.id] === true}
                         disabled={busy}
                         onClick={() =>
@@ -1111,20 +1087,28 @@ export function ProviderSources({
                             return refreshNotice(loaded);
                           })
                         }
-                      >
-                        刷新目录
-                      </Button>
+                      />
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="provider-delete"
-                        icon={<Trash size={14} />}
+                        className="provider-icon-action provider-delete"
+                        icon={<Trash size={15} />}
+                        aria-label={`删除${item.label}`}
+                        title="删除来源"
                         disabled={busy}
                         onClick={() =>
                           setConfirmRemove({ sourceId: item.id, sessions: [] })
                         }
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={<PencilSimple size={14} />}
+                        aria-label={`编辑${item.label}`}
+                        disabled={busy}
+                        onClick={() => openEditor(item.id)}
                       >
-                        删除
+                        编辑
                       </Button>
                     </div>
                   </div>

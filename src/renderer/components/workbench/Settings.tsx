@@ -46,6 +46,7 @@ import { ProviderSources } from "./ProviderSources";
 import { ServerConnection } from "./ServerConnection";
 import "./settings-page.css";
 import "../../styles/settings-models.css";
+import "./settings-v2.css";
 
 const GLOBAL_REASONING_EFFORT_OPTIONS: readonly {
   readonly value: SettingsDraft["reasoningEffort"];
@@ -633,16 +634,14 @@ export function Settings() {
           })}
         </nav>
 
-        <div className="settings-local-note">
-          <div className="settings-local-note-badge">本机配置</div>
-          <p>配置与本机 CLI 共享 · 密钥受环境隔离保护，不会回显到页面。</p>
-        </div>
+        <p className="settings-local-note">
+          配置与本机 CLI 共享，密钥不会回显到页面。
+        </p>
       </aside>
 
       <div className="settings-body">
         <header className="settings-page-header">
           <div className="settings-header-meta">
-            <small>偏好设置 / {query ? "搜索" : selected.title}</small>
             <h2>{query ? "搜索结果" : selected.title}</h2>
             <p>
               {query
@@ -650,14 +649,18 @@ export function Settings() {
                 : selected.description}
             </p>
           </div>
-          <div className="settings-status" title={serviceStatus.hint}>
-            <span
-              className="wb-status-dot"
-              data-status={serviceStatus.state === "configured" ? "ready" : undefined}
-              aria-hidden="true"
-            />
-            <span>{serviceStatus.label}</span>
-          </div>
+          {/* Only a missing or loading service is worth a header signal; a
+              saved one is already visible as the source list below. */}
+          {serviceStatus.state !== "configured" && (
+            <div
+              className="settings-status"
+              data-state={serviceStatus.state}
+              title={serviceStatus.hint}
+            >
+              <span className="wb-status-dot" aria-hidden="true" />
+              <span>{serviceStatus.label}</span>
+            </div>
+          )}
         </header>
 
         <div className="settings-page-scroll">
@@ -700,19 +703,12 @@ export function Settings() {
                       <div className="provider-inference-info">
                         <div className="provider-inference-title-row">
                           <h3>默认思考等级</h3>
-                          <span className="provider-tag">通用推理偏好</span>
                         </div>
                         <p>
-                          适用于支持思考参数的模型；未单独定制思考等级的模型将跟随此设定，修改后通过底部保存设置。
+                          模型没有单独设置思考等级时使用。优先级：单模型设置 ＞ 这里 ＞ 模型默认。
                         </p>
                       </div>
                       <div className="provider-inference-status-wrap">
-                        <span className="provider-inference-current-pill">
-                          当前：
-                          {GLOBAL_REASONING_EFFORT_OPTIONS.find(
-                            (item) => item.value === draft.reasoningEffort,
-                          )?.label ?? "模型默认"}
-                        </span>
                         <div className="visually-hidden">
                           {select(
                             "reasoningEffort",
@@ -738,25 +734,16 @@ export function Settings() {
                               key={item.value}
                               type="button"
                               aria-pressed={active}
+                              aria-label={item.label}
+                              title={item.desc}
                               className={`provider-inference-option${active ? " is-active" : ""}`}
                               onClick={() =>
                                 change("reasoningEffort", item.value)
                               }
                             >
-                              <div className="provider-inference-option-top">
-                                <span className="provider-inference-option-name">
-                                  {item.shortLabel}
-                                </span>
-                                {item.bars > 0 ? (
-                                  <EffortBars bars={item.bars} />
-                                ) : (
-                                  <span className="provider-inference-option-tag">
-                                    {item.value === "default" ? "自动" : "0"}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="provider-inference-option-label">
-                                {item.label}
+                              {item.bars > 0 && <EffortBars bars={item.bars} />}
+                              <span className="provider-inference-option-name">
+                                {item.shortLabel}
                               </span>
                             </button>
                           );
@@ -768,16 +755,10 @@ export function Settings() {
                             (item) => item.value === draft.reasoningEffort,
                           ) ?? GLOBAL_REASONING_EFFORT_OPTIONS[0]!;
                         return (
-                          <div className="provider-inference-summary">
-                            <span className="provider-inference-summary-desc">
-                              当前设定：
-                              <strong>{activeOption.label}</strong> ·{" "}
-                              {activeOption.desc}
-                            </span>
-                            <span className="provider-inference-summary-rule">
-                              优先级：单模型覆盖 ＞ 全局默认 ＞ 模型默认
-                            </span>
-                          </div>
+                          <p className="provider-inference-summary">
+                            <strong>{activeOption.label}</strong>
+                            {activeOption.desc ? `：${activeOption.desc}` : ""}
+                          </p>
                         );
                       })()}
                     </div>

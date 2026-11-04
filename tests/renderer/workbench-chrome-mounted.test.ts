@@ -149,7 +149,9 @@ it("keeps session-specific configuration honest, compact and navigable in both t
     await page.setViewportSize({ width: 1172, height: 800 });
     expect(await page.getByRole('button', { name: '展开详情', exact: true }).getAttribute('aria-expanded')).toBe('false');
     await status.click();
-    await page.locator('.settings-status').getByText('模型服务已添加', { exact: true }).waitFor();
+    // A saved service needs no header signal in settings either.
+    await page.getByRole('region', { name: '设置工作区' }).waitFor();
+    expect(await page.locator('.settings-status').count()).toBe(0);
     await page.getByRole('button', { name: '返回工作台' }).click();
     await status.waitFor();
     expect(errors).toEqual([]);

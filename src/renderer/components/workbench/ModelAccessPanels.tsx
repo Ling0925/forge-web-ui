@@ -748,30 +748,23 @@ export function ModelParameterEditor({
         <div className="model-param-row">
           <div className="model-param-row-meta">
             <span className="model-param-label">请求协议</span>
-            <span className="model-param-sub">
-              仅影响此模型；使用来源中对应协议的端点和匹配凭据
-            </span>
           </div>
           <div className="model-param-row-control">
             <Select
               aria-label={`模型 ${entry.id} 请求协议`}
               value={override?.apiMode ?? ""}
               disabled={disabled}
-              options={[{ value: "", label: "继承来源（别名优先继承实际模型）" }, ...protocolOptions]}
+              options={[{ value: "", label: "跟随来源" }, ...protocolOptions]}
               onChange={(event) => onChange({ apiMode: event.target.value === "" ? undefined : event.target.value as ProviderProtocol })}
             />
           </div>
         </div>
         <div className="model-param-row">
           <div className="model-param-row-meta">
-            <span className="model-param-label">默认思考等级</span>
-            <span className="model-param-sub">
-              {override?.reasoningEffort !== undefined
-                ? `已固定为 ${override.reasoningEffort === "default" ? "模型默认" : override.reasoningEffort}`
-                : upstreamEffort
-                  ? `上游默认 ${upstreamEffort} · 跟随全局`
-                  : "跟随全局或模型默认"}
-            </span>
+            <span className="model-param-label">思考等级</span>
+            {upstreamEffort && override?.reasoningEffort === undefined && (
+              <span className="model-param-sub">上游默认 {upstreamEffort}</span>
+            )}
           </div>
           <div className="model-param-row-control">
             <fieldset
@@ -815,12 +808,7 @@ export function ModelParameterEditor({
 
         <div className="model-param-row">
           <div className="model-param-row-meta">
-            <span className="model-param-label">支持思考档位</span>
-            <span className="model-param-sub">
-              {currentEfforts.length > 0
-                ? `已启用 ${currentEfforts.length} 个档位`
-                : "使用默认档位范围"}
-            </span>
+            <span className="model-param-label">可选档位</span>
           </div>
           <div className="model-param-row-control is-split">
             <fieldset
@@ -899,12 +887,6 @@ export function ModelParameterEditor({
         <div className="model-param-row">
           <div className="model-param-row-meta">
             <span className="model-param-label">上下文窗口</span>
-            <span className="model-param-sub">
-              生效：
-              {formatTokens(
-                currentContext ?? upstreamContext ?? entry.contextWindowTokens,
-              )}
-            </span>
           </div>
           <div className="model-param-row-control is-token-control">
             <fieldset
@@ -917,7 +899,7 @@ export function ModelParameterEditor({
                 className={`model-param-seg-btn${currentContext === undefined ? " is-active" : ""}`}
                 onClick={() => onChange({ contextWindowTokens: undefined })}
               >
-                默认 ({formatTokens(upstreamContext)})
+                {upstreamContext ? `默认 ${formatTokens(upstreamContext)}` : "默认"}
               </button>
               {CONTEXT_WINDOW_PRESETS.map((preset) => (
                 <button
@@ -958,13 +940,7 @@ export function ModelParameterEditor({
 
         <div className="model-param-row">
           <div className="model-param-row-meta">
-            <span className="model-param-label">最大输出上限</span>
-            <span className="model-param-sub">
-              生效：
-              {formatTokens(
-                currentMaxOutput ?? upstreamMaxOutput ?? entry.maxOutputTokens,
-              )}
-            </span>
+            <span className="model-param-label">最大输出</span>
           </div>
           <div className="model-param-row-control is-token-control">
             <fieldset
@@ -977,7 +953,7 @@ export function ModelParameterEditor({
                 className={`model-param-seg-btn${currentMaxOutput === undefined ? " is-active" : ""}`}
                 onClick={() => onChange({ maxOutputTokens: undefined })}
               >
-                默认 ({formatTokens(upstreamMaxOutput)})
+                {upstreamMaxOutput ? `默认 ${formatTokens(upstreamMaxOutput)}` : "默认"}
               </button>
               {MAX_OUTPUT_PRESETS.map((preset) => (
                 <button
@@ -1506,6 +1482,16 @@ export function SourceCardModelPanel({
   const [query, setQuery] = useState("");
   const [manualInput, setManualInput] = useState("");
   const [visible, setVisible] = useState(24);
+  // Cards rest as one summary row; the parameter editor opens on demand. A
+  // card added in this session opens so its parameters can be set at once.
+  const [openCards, setOpenCards] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleCard = (id: string) =>
+    setOpenCards((old) => {
+      const next = new Set(old);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const byId = new Map<string, ModelCatalogEntry>();
   for (const entry of selection.manual) byId.set(entry.id, entry);
@@ -1551,6 +1537,7 @@ export function SourceCardModelPanel({
         ? selection.manual
         : [...selection.manual, { id: trimmed, contextWindowTokens: null }],
     });
+    setOpenCards((old) => new Set(old).add(trimmed));
     setPickerOpen(false);
     setQuery("");
   };
@@ -1575,17 +1562,20 @@ export function SourceCardModelPanel({
     >
       <div className="provider-configured-header">
         <div className="provider-configured-title-group">
-          <h4 className="provider-configured-title">已配置模型</h4>
+          <h4 className="provider-configured-title">模型</h4>
           <span className="provider-configured-count">
-            {configuredEntries.length} 个模型卡片
+            {configuredEntries.length}
           </span>
-          <span className="provider-configured-subtitle">
-            {selection.mode === "none"
-              ? "此来源设置为不提供模型；请在编辑连接中调整模型范围"
-              : selection.mode === "selected"
-                ? "选择器仅展示已保存且勾选的模型；添加后请保存模型配置"
-                : "选择器仅展示已保存的配置模型；添加后请保存模型配置"}
-          </span>
+          {countModelOverrides(selection.overrides) > 0 && (
+            <span className="provider-configured-subtitle">
+              已定制 {countModelOverrides(selection.overrides)} 个模型
+            </span>
+          )}
+          {selection.mode === "none" && (
+            <span className="provider-configured-subtitle">
+              此来源设置为不提供模型；在编辑来源中调整模型范围
+            </span>
+          )}
         </div>
         <div className="provider-configured-actions">
           {dirty && (
@@ -1620,7 +1610,7 @@ export function SourceCardModelPanel({
             disabled={disabled}
             onClick={() => setPickerOpen((open) => !open)}
           >
-            {pickerOpen ? "收起模型列表" : "添加配置模型"}
+            {pickerOpen ? "收起" : "添加模型"}
           </Button>
         </div>
       </div>
@@ -1745,27 +1735,55 @@ export function SourceCardModelPanel({
                 ? undefined
                 : entry.maxOutputTokens;
 
+            const effectiveContext =
+              override?.contextWindowTokens ?? upstreamContext;
+            const effectiveOutput =
+              override?.maxOutputTokens ?? upstreamMaxOutput;
+            const open = openCards.has(entry.id);
+            const summary = [
+              effectiveContext ? `上下文 ${formatTokens(effectiveContext)}` : "",
+              effectiveOutput ? `输出 ${formatTokens(effectiveOutput)}` : "",
+              override?.reasoningEffort && override.reasoningEffort !== "default"
+                ? `思考 ${override.reasoningEffort}`
+                : "",
+            ].filter(Boolean).join(" · ");
+
             return (
               <article
                 key={entry.id}
-                className={`configured-model-card${overridden ? " is-customized" : ""}${isDefaultModel ? " is-default" : ""}`}
+                className={`configured-model-card${overridden ? " is-customized" : ""}${isDefaultModel ? " is-default" : ""}${open ? " is-open" : ""}`}
                 aria-label={`已配置模型卡片 ${entry.id}`}
               >
                 <div className="configured-model-card-head">
-                  <div className="configured-model-card-identity">
+                  <button
+                    type="button"
+                    className="configured-model-card-toggle"
+                    aria-expanded={open}
+                    aria-label={`${open ? "收起" : "展开"}模型 ${entry.id} 参数`}
+                    onClick={() => toggleCard(entry.id)}
+                  >
+                    <CaretDown size={12} weight="bold" className="configured-model-card-caret" aria-hidden="true" />
+                    <span className="configured-model-card-identity">
+                      <code className="provider-card-model-id">{entry.id}</code>
+                      {entry.displayName && entry.displayName !== entry.id && (
+                        <span className="provider-card-model-name">
+                          {entry.displayName}
+                        </span>
+                      )}
+                    </span>
                     <span
-                      className={`provider-model-dot${overridden ? " is-custom" : isDefaultModel ? " is-default" : ""}`}
-                      aria-hidden="true"
-                    />
-                    <code className="provider-card-model-id">{entry.id}</code>
-                    {entry.displayName && entry.displayName !== entry.id && (
-                      <span className="provider-card-model-name">
-                        {entry.displayName}
-                      </span>
-                    )}
+                      className="configured-model-card-summary"
+                      title={`上游基准：上下文 ${formatTokens(upstreamContext)} · 输出 ${formatTokens(upstreamMaxOutput)}`}
+                    >
+                      {summary || "使用上游参数"}
+                      {overridden && <span className="configured-model-card-custom">已定制</span>}
+                    </span>
+                  </button>
+
+                  <div className="configured-model-card-head-right">
                     {isDefaultModel ? (
                       <span className="provider-model-badge is-default">
-                        默认模型
+                        默认
                       </span>
                     ) : (
                       <button
@@ -1777,18 +1795,6 @@ export function SourceCardModelPanel({
                         设为默认
                       </button>
                     )}
-                    {overridden && (
-                      <span className="provider-model-badge is-custom">
-                        已定制参数
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="configured-model-card-head-right">
-                    <span className="model-param-upstream-hint">
-                      上游基准：上下文 {formatTokens(upstreamContext)} · 输出{" "}
-                      {formatTokens(upstreamMaxOutput)}
-                    </span>
                     {overridden && (
                       <button
                         type="button"
@@ -1818,25 +1824,27 @@ export function SourceCardModelPanel({
                   </div>
                 </div>
 
-                <ModelParameterEditor
-                  entry={entry}
-                  override={override}
-                  disabled={disabled}
-                  hideHeader
-                  onChange={(patch) =>
-                    onSelection(updateModelOverride(selection, entry.id, patch))
-                  }
-                  onReset={() =>
-                    onSelection(clearModelOverride(selection, entry.id))
-                  }
-                />
+                {open && (
+                  <ModelParameterEditor
+                    entry={entry}
+                    override={override}
+                    disabled={disabled}
+                    hideHeader
+                    onChange={(patch) =>
+                      onSelection(updateModelOverride(selection, entry.id, patch))
+                    }
+                    onReset={() =>
+                      onSelection(clearModelOverride(selection, entry.id))
+                    }
+                  />
+                )}
               </article>
             );
           })}
         </div>
       ) : (
         <div className="configured-models-empty">
-          <p>当前来源暂未配置任何模型卡片。</p>
+          <p>还没有为这个来源添加模型。</p>
           <Button
             size="sm"
             variant="secondary"
@@ -1844,7 +1852,7 @@ export function SourceCardModelPanel({
             disabled={disabled}
             onClick={() => setPickerOpen(true)}
           >
-            从模型目录选择模型进行配置
+            从目录添加模型
           </Button>
         </div>
       )}
