@@ -79,7 +79,8 @@ async function mount(emptyServices = false) {
   await page.addStyleTag({ content: css });
   await page.addScriptTag({ content: js });
   await page.getByRole("button", { name: "正在加载配置", exact: true }).waitFor();
-  expect(await page.locator('.sidebar-model-status').getAttribute('data-state')).toBe('loading');
+  expect(await page.locator('.sidebar-icon-btn[data-service]').getAttribute('data-service')).toBe('loading');
+  expect(await page.locator('.sidebar-model-status').count()).toBe(0);
   expect(await page.locator('.wb-status-warning').count()).toBe(0);
   await page.evaluate(() => Reflect.get(window, "releaseSettings")());
   return { page, errors };
@@ -90,29 +91,29 @@ async function assertFooterFits(page: Page) {
     const bounds = footer.getBoundingClientRect();
     return {
       overflow: footer.scrollWidth > footer.clientWidth + 1,
-      labels: [...footer.querySelectorAll('button span')].map(label => {
-        const rect = label.getBoundingClientRect();
-        const range = document.createRange();
-        range.selectNodeContents(label);
-        return { wrap: getComputedStyle(label).whiteSpace, lines: range.getClientRects().length,
-          inside: rect.left >= bounds.left && rect.right <= bounds.right + 1,
-          fits: label.scrollWidth <= label.clientWidth + 1 };
+      buttons: [...footer.querySelectorAll('button')].map(button => {
+        const rect = button.getBoundingClientRect();
+        return { named: Boolean(button.getAttribute('aria-label')),
+          text: (button.textContent ?? '').trim(),
+          inside: rect.left >= bounds.left && rect.right <= bounds.right + 1 };
       }),
     };
   });
   expect(metrics.overflow).toBe(false);
-  expect(metrics.labels).toHaveLength(3);
-  for (const label of metrics.labels) {
-    expect(label).toEqual({ wrap: "nowrap", lines: 1, inside: true, fits: true });
+  // Icon-only actions: settings, usage, refresh, each with an accessible name.
+  expect(metrics.buttons).toHaveLength(3);
+  for (const button of metrics.buttons) {
+    expect(button).toEqual({ named: true, text: "", inside: true });
   }
 }
 
 it("keeps session-specific configuration honest, compact and navigable in both themes", async () => {
   const { page, errors } = await mount();
   try {
-    const status = page.getByRole('button', { name: '模型服务已添加', exact: true });
+    // A saved service needs no footer signal: the icon is plain settings.
+    const status = page.getByRole('button', { name: '设置', exact: true });
     await status.waitFor();
-    expect(await status.getAttribute('title')).toContain('不是网络连接状态');
+    expect(await page.locator('.sidebar-icon-badge').count()).toBe(0);
     expect(await page.getByRole('region', { name: '设置工作区' }).count()).toBe(0);
     await page.getByRole('button', { name: '你好', exact: true }).click();
     await page.getByText('你好！有什么我可以帮你的吗？', { exact: true }).waitFor();
@@ -162,6 +163,7 @@ it("still guides a genuinely empty setup into settings without pretending to be 
     await page.locator('.settings-status').getByText('添加模型服务', { exact: true }).waitFor();
     await page.getByRole('button', { name: '返回工作台' }).click();
     await page.getByRole('button', { name: '添加模型服务', exact: true }).waitFor();
+    expect(await page.locator('.sidebar-icon-badge').count()).toBe(1);
     await assertFooterFits(page);
     expect(errors).toEqual([]);
   } finally { await page.close(); }
@@ -170,7 +172,7 @@ it("still guides a genuinely empty setup into settings without pretending to be 
 it("still reveals a newly pending background approval when details start collapsed", async () => {
   const { page } = await mount();
   try {
-    await page.getByRole('button', { name: '模型服务已添加', exact: true }).waitFor();
+    await page.getByRole('button', { name: '设置', exact: true }).waitFor();
     await page.evaluate(() => Reflect.get(window, 'emit')({
       runId: '33333333-3333-4333-8333-333333333333',
       event: { type: 'approval_requested', sessionId: '22222222-2222-4222-8222-222222222222',
