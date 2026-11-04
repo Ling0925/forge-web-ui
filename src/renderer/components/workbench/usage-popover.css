@@ -3,9 +3,9 @@
   --context-memory: #d787ff;
   --context-conversation: #87d7af;
   --context-tools: #ffaf5f;
-  --context-reserve-border: var(--error, #f87171);
-  --context-reserve-stripe-1: rgba(248, 113, 113, 0.5);
-  --context-reserve-stripe-2: rgba(248, 113, 113, 0.15);
+  --context-reserve-border: var(--error);
+  --context-reserve-stripe-1: color-mix(in srgb, var(--error) 50%, transparent);
+  --context-reserve-stripe-2: color-mix(in srgb, var(--error) 15%, transparent);
   position: relative;
   width: 100%;
   min-width: 0;
@@ -17,9 +17,9 @@
   --context-memory: #870087;
   --context-conversation: #005f5f;
   --context-tools: #875f00;
-  --context-reserve-border: var(--error, #b82420);
-  --context-reserve-stripe-1: rgba(184, 36, 32, 0.5);
-  --context-reserve-stripe-2: rgba(184, 36, 32, 0.15);
+  --context-reserve-border: var(--error);
+  --context-reserve-stripe-1: color-mix(in srgb, var(--error) 50%, transparent);
+  --context-reserve-stripe-2: color-mix(in srgb, var(--error) 15%, transparent);
 }
 .usage-trigger {
   display: flex;
@@ -49,7 +49,7 @@
   }
 }
 .usage-track {
-  --usage-run-color: var(--accent-sage, #2f6f5e);
+  --usage-run-color: var(--accent-sage);
   display: flex;
   position: relative;
   flex: 1;
@@ -62,10 +62,10 @@
 }
 .usage-track.is-awaiting,
 .usage-track.is-retrying {
-  --usage-run-color: var(--warning, #d97706);
+  --usage-run-color: var(--warning);
 }
 .usage-track.is-cancelling {
-  --usage-run-color: var(--error, #c2410c);
+  --usage-run-color: var(--error);
 }
 .usage-track-empty {
   position: relative;

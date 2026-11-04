@@ -9,7 +9,7 @@
   --chart-uncached: #3b6998;
   --chart-cost: #975a06;
   --chart-speed: #55684d;
-  --chart-failed: var(--error, #b82420);
+  --chart-failed: var(--error);
 
   position: fixed;
   inset: 0;
@@ -33,7 +33,7 @@
   --chart-uncached: #6ca6d9;
   --chart-cost: #f0be65;
   --chart-speed: #8fad82;
-  --chart-failed: var(--error, #f87171);
+  --chart-failed: var(--error);
 }
 
 .usage-dashboard-modal {

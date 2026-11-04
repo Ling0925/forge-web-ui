@@ -108,13 +108,13 @@
 }
 
 .browser-state.is-available {
-  color: var(--success, #226d40);
-  background: color-mix(in srgb, var(--success, #226d40) 9%, var(--surface-soft));
-  border-color: color-mix(in srgb, var(--success, #226d40) 26%, var(--border-subtle));
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 9%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--success) 26%, var(--border-subtle));
 }
 
 .browser-state.is-available .browser-state-dot {
-  background: var(--success, #226d40);
+  background: var(--success);
 }
 
 .browser-state.is-takeover {
@@ -228,8 +228,8 @@
   margin: 0;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--success, #226d40) 26%, var(--border-subtle));
-  background: color-mix(in srgb, var(--success, #226d40) 8%, var(--surface-elevated));
+  border: 1px solid color-mix(in srgb, var(--success) 26%, var(--border-subtle));
+  background: color-mix(in srgb, var(--success) 8%, var(--surface-elevated));
   color: var(--text-primary);
   font-size: var(--text-2xs);
   line-height: 1.45;
@@ -238,7 +238,7 @@
 .browser-status-line svg {
   flex-shrink: 0;
   margin-top: 1px;
-  color: var(--success, #226d40);
+  color: var(--success);
 }
 
 /* Cards: Preview, Manual Operations, Snapshot */
@@ -298,9 +298,9 @@
 }
 
 .browser-card-badge.is-ready {
-  color: var(--success, #226d40);
-  background: color-mix(in srgb, var(--success, #226d40) 9%, var(--surface-soft));
-  border-color: color-mix(in srgb, var(--success, #226d40) 26%, var(--border-subtle));
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 9%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--success) 26%, var(--border-subtle));
 }
 
 /* Screenshot Stage */
@@ -515,7 +515,7 @@
 }
 
 .browser-result-text.is-error {
-  color: var(--error, #b82420);
+  color: var(--error);
   border-color: var(--error-border, var(--border-control));
   background: var(--error-bg, var(--surface-soft));
 }

@@ -102,11 +102,11 @@
   margin: 0;
   padding: 9px 12px;
   border: 1px solid
-    color-mix(in srgb, var(--success, #226d40) 28%, var(--border-subtle));
+    color-mix(in srgb, var(--success) 28%, var(--border-subtle));
   border-radius: var(--radius-md);
   background: color-mix(
     in srgb,
-    var(--success, #226d40) 8%,
+    var(--success) 8%,
     var(--surface-elevated)
   );
   color: var(--text-primary);
@@ -117,7 +117,7 @@
 .plugin-notice svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--success, #226d40);
+  color: var(--success);
 }
 
 .plugin-card {
@@ -272,15 +272,15 @@
 }
 
 .plugin-status.is-running {
-  color: var(--success, #226d40);
+  color: var(--success);
   background: color-mix(
     in srgb,
-    var(--success, #226d40) 10%,
+    var(--success) 10%,
     var(--surface-soft)
   );
   border-color: color-mix(
     in srgb,
-    var(--success, #226d40) 26%,
+    var(--success) 26%,
     var(--border-subtle)
   );
 }
@@ -297,7 +297,7 @@
 }
 
 .plugin-status.is-running .plugin-status-dot {
-  background: var(--success, #226d40);
+  background: var(--success);
 }
 
 .plugin-description {
@@ -358,15 +358,15 @@
 }
 
 .plugin-subpanel-badge.is-configured {
-  color: var(--success, #226d40);
+  color: var(--success);
   background: color-mix(
     in srgb,
-    var(--success, #226d40) 9%,
+    var(--success) 9%,
     var(--surface-soft)
   );
   border-color: color-mix(
     in srgb,
-    var(--success, #226d40) 24%,
+    var(--success) 24%,
     var(--border-subtle)
   );
 }
@@ -672,28 +672,28 @@
   color: var(--text-primary);
   border-color: color-mix(
     in srgb,
-    var(--success, #226d40) 32%,
+    var(--success) 32%,
     var(--border-subtle)
   );
   background: color-mix(
     in srgb,
-    var(--success, #226d40) 9%,
+    var(--success) 9%,
     var(--surface-soft)
   );
 }
 
 .plugin-health.is-ready svg {
-  color: var(--success, #226d40);
+  color: var(--success);
 }
 
 .plugin-health.is-error {
-  color: var(--error, #b82420);
+  color: var(--error);
   border-color: var(--error-border, var(--border-control));
   background: var(--error-bg, var(--surface-soft));
 }
 
 .plugin-health.is-error svg {
-  color: var(--error, #b82420);
+  color: var(--error);
 }
 
 .plugin-health svg {

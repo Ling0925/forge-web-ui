@@ -113,15 +113,15 @@
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn {
-  background: color-mix(in srgb, var(--accent, #a54f35) 12%, var(--surface-elevated));
-  border: 1px solid color-mix(in srgb, var(--accent, #a54f35) 36%, var(--border-control));
-  color: var(--accent, #a54f35);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-elevated));
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border-control));
+  color: var(--accent);
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent, #a54f35) 20%, var(--surface-elevated));
-  border-color: var(--accent, #a54f35);
-  color: var(--accent, #a54f35);
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-elevated));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .wb-app .composer-split .composer-submit-col .composer-steer-btn:disabled {

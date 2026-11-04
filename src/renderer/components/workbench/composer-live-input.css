@@ -28,8 +28,8 @@
 
 .wb-app .composer-status.composer-queue.is-paused,
 .composer-queue.is-paused {
-  border-color: color-mix(in srgb, var(--warning, #d97706) 35%, var(--border-subtle));
-  background: color-mix(in srgb, var(--warning, #d97706) 5%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--warning) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--warning) 5%, var(--surface-soft));
 }
 
 .composer-queue-header {
@@ -69,8 +69,8 @@
 }
 
 .composer-queue.is-paused .composer-queue-title {
-  color: var(--warning, #d97706);
-  border-color: color-mix(in srgb, var(--warning, #d97706) 35%, var(--border-subtle));
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 35%, var(--border-subtle));
 }
 
 .composer-queue-tip {
@@ -115,14 +115,14 @@
 }
 
 .composer-queue-link-btn.is-primary {
-  background: color-mix(in srgb, var(--accent-sage, #2f6f5e) 14%, var(--surface-elevated));
-  border-color: color-mix(in srgb, var(--accent-sage, #2f6f5e) 35%, var(--border-subtle));
-  color: var(--accent-sage, #2f6f5e);
+  background: color-mix(in srgb, var(--accent-sage) 14%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--accent-sage) 35%, var(--border-subtle));
+  color: var(--accent-sage);
 }
 
 .composer-queue-link-btn.is-primary:hover {
-  background: color-mix(in srgb, var(--accent-sage, #2f6f5e) 22%, var(--surface-elevated));
-  border-color: var(--accent-sage, #2f6f5e);
+  background: color-mix(in srgb, var(--accent-sage) 22%, var(--surface-elevated));
+  border-color: var(--accent-sage);
 }
 
 .composer-queue-link-btn.is-danger:hover {
@@ -258,9 +258,9 @@
 
 .composer-queue-steer-btn {
   appearance: none;
-  border: 1px solid color-mix(in srgb, var(--accent, #a54f35) 32%, var(--border-subtle));
-  background: color-mix(in srgb, var(--accent, #a54f35) 10%, var(--surface-soft));
-  color: var(--accent, #a54f35);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border-subtle));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
+  color: var(--accent);
   height: 22px;
   padding: 0 7px;
   border-radius: var(--radius-full);
@@ -277,8 +277,8 @@
 }
 
 .composer-queue-steer-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent, #a54f35) 18%, var(--surface-soft));
-  border-color: var(--accent, #a54f35);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-soft));
+  border-color: var(--accent);
 }
 
 .composer-queue-steer-btn:disabled {

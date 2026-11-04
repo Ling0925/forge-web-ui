@@ -53,8 +53,8 @@
 }
 
 .phone-pairing-badge.is-live {
-  border-color: color-mix(in srgb, var(--accent, #3b825b) 45%, transparent);
-  color: var(--accent, #3b825b);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--accent);
 }
 
 .phone-pairing-notes {
@@ -110,9 +110,9 @@
 }
 
 .phone-pairing-error {
-  border: 1px solid color-mix(in srgb, var(--danger, #b4423a) 40%, transparent);
-  background-color: color-mix(in srgb, var(--danger, #b4423a) 8%, transparent);
-  color: var(--danger, #b4423a);
+  border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
+  background-color: color-mix(in srgb, var(--error) 8%, transparent);
+  color: var(--error);
 }
 
 .phone-pairing-notice {
@@ -183,7 +183,7 @@
 }
 
 .phone-pairing-url-field:focus {
-  outline: 2px solid var(--focus-ring, var(--accent, #3b825b));
+  outline: 2px solid var(--focus-ring, var(--accent));
   outline-offset: var(--focus-ring-offset);
 }
 

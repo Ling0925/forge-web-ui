@@ -1411,8 +1411,8 @@
 
 .command-task-badge.status-failed {
   background: var(--surface-elevated);
-  border: 1px solid var(--danger);
-  color: var(--danger);
+  border: 1px solid var(--error);
+  color: var(--error);
 }
 
 .command-task-badge.status-cancelled {
@@ -1487,7 +1487,7 @@
 .agent-report-card.status-failed,
 .agent-report-card.is-interrupted,
 .agent-report-card.status-interrupted {
-  border-left-color: var(--danger);
+  border-left-color: var(--error);
 }
 
 .agent-report-card.is-awaiting_approval,
@@ -1635,8 +1635,8 @@
 .child-status-badge.is-failed,
 .child-status-badge.is-interrupted {
   background: var(--error-bg);
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 24%, transparent);
+  color: var(--error);
+  border: 1px solid color-mix(in srgb, var(--error) 24%, transparent);
 }
 
 .child-status-badge.is-cancelled {
@@ -1724,9 +1724,9 @@
   gap: var(--space-2);
   padding: var(--space-2);
   background: var(--surface-soft);
-  border-left: 2px solid var(--danger);
+  border-left: 2px solid var(--error);
   border-radius: var(--radius-xs);
-  color: var(--danger);
+  color: var(--error);
   font-size: var(--text-xs);
 }
 

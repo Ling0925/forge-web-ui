@@ -2298,15 +2298,15 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  background-color: color-mix(in srgb, var(--danger, #c84b31) 8%, var(--surface-soft));
+  background-color: color-mix(in srgb, var(--error) 8%, var(--surface-soft));
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  border: 1px solid color-mix(in srgb, var(--danger, #c84b31) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--error) 24%, transparent);
 }
 
 .agent-delete-confirm-text {
   font-size: var(--text-2xs);
-  color: var(--danger, #c84b31);
+  color: var(--error);
   font-weight: 500;
 }
 
