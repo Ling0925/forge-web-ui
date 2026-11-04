@@ -132,13 +132,15 @@ export function ModelCatalog({
         {filtered.map((group) => (
           <div key={group.sourceId ?? "legacy"} role={groups ? "group" : undefined} aria-label={group.label || undefined}>
             {groups && <div className="model-catalog-group-label">{group.label}</div>}
-            {group.models.map((model) => {
+            {group.models.map((model, index) => {
               const selected = model === value && (!groups || group.sourceId === sourceId);
               return (
                 <button key={model} type="button" className="model-catalog-option"
                   disabled={disabled} aria-pressed={selected} title={model}
+                  style={{ "--i": index } as React.CSSProperties}
                   onClick={() => onSelect(model, group.sourceId)}>
-                  <span><strong>{model.split("/").at(-1)}</strong><small>{model}</small></span>
+                  {/* The full ID only adds information when it carries a vendor prefix. */}
+                  <span><strong>{model.split("/").at(-1)}</strong>{model.includes("/") && <small>{model}</small>}</span>
                   {selected && <Check size={14} aria-hidden="true" />}
                 </button>
               );

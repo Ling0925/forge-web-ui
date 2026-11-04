@@ -194,7 +194,8 @@ it("styles the model picker before Settings loads and preserves configured effor
     await configured.press("End");
     await expect.poll(() => page.locator("#saved-effort").textContent()).toBe("max");
     await expect.poll(() => configured.getAttribute("max")).toBe("0");
-    expect(await page.locator(".effort-slider-fill").evaluate(node => (node as HTMLElement).style.width)).toBe("0%");
+    // The fill scales from the left (transform, not width) so steps animate smoothly.
+    expect(await page.locator(".effort-slider-fill").evaluate(node => (node as HTMLElement).style.transform)).toBe("scaleX(0)");
     await page.evaluate(() => Reflect.get(window, "setEffortOptions")(["vendor-only"]));
     await expect.poll(() => page.locator(".effort-slider-labels > span").allTextContents()).toEqual(["MAX"]);
     expect(await configured.getAttribute("aria-valuetext")).toBe("MAX");

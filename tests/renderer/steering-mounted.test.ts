@@ -196,7 +196,7 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     expect(await input.inputValue()).toBe("retain on cancellation");
     await modelSummary.click();
     await page.locator(".model-picker-current").click();
-    await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { name: 'shared-model shared-model', exact: true }).click();
+    await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { name: 'shared-model', exact: true }).click();
     await page.locator(".model-picker-current").click();
     expect(await page.getByRole('group', { name: 'Source B', exact: true }).getByRole('button', { pressed: true }).innerText()).toContain('shared-model');
     expect(await page.getByRole('group', { name: 'Source A', exact: true }).getByRole('button', { pressed: true }).count()).toBe(0);

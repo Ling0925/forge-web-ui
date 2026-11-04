@@ -4,6 +4,7 @@ import { reasoningEffortSchema } from "@forge/core/shared/model-access";
 import { ModelCatalog, type ModelCatalogGroup } from "./ModelCatalog";
 // The composer needs these styles before the lazy-loaded Settings page opens.
 import "../../styles/settings-models.css";
+import "./model-picker-v2.css";
 
 const defaultEfforts = ["low", "medium", "high", "xhigh", "max"] as const;
 const formatEffort = (value: string | undefined) =>
@@ -36,6 +37,11 @@ export function ModelPicker(props: {
   const ref = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(false);
   const [modelsOpen, setModelsOpen] = useState(false);
+  const [returned, setReturned] = useState(false);
+  useEffect(() => {
+    if (modelsOpen) setReturned(true);
+    else if (!open) setReturned(false);
+  }, [modelsOpen, open]);
   const catalogId = useId();
   const selectedRoute = props.routes?.find(
     (route) => route.id === props.routeGroupId,
@@ -55,7 +61,10 @@ export function ModelPicker(props: {
     (value) => value === props.reasoning?.value,
   );
   const effortLabel = formatEffort(efforts[effortIndex]);
-  const [draftEffort, setDraftEffort] = useState(Math.max(0, effortIndex));
+  const [rawDraftEffort, setDraftEffort] = useState(Math.max(0, effortIndex));
+  // The option list can shrink under a held draft (a source re-declares its
+  // levels). Clamp so the fill, ticks and readout never point past the range.
+  const draftEffort = Math.min(rawDraftEffort, Math.max(0, efforts.length - 1));
   const submittedEffort = useRef<number | null>(null);
   useEffect(() => {
     if (props.reasoning?.disabled) return;
@@ -175,6 +184,7 @@ export function ModelPicker(props: {
               <span
                 key={value}
                 className={index <= effortIndex ? "is-filled" : ""}
+                style={{ "--i": index } as React.CSSProperties}
               />
             ))}
           </span>
@@ -182,7 +192,11 @@ export function ModelPicker(props: {
         <CaretDown size={16} aria-hidden="true" />
       </summary>
       {open && (
-        <div className="composer-model-panel">
+        <div
+          className="composer-model-panel"
+          data-view={modelsOpen ? "catalog" : "settings"}
+          data-returned={returned && !modelsOpen ? "" : undefined}
+        >
           {!modelsOpen && (
             <div className="model-picker-heading">
               <span>模型</span>
@@ -232,7 +246,7 @@ export function ModelPicker(props: {
             >
               <legend className="visually-hidden">思考等级</legend>
               <div className="effort-slider-heading">
-                <output>{formatEffort(efforts[draftEffort])}</output>
+                <output key={draftEffort}>{formatEffort(efforts[draftEffort])}</output>
               </div>
               <div
                 className="effort-slider"
@@ -242,9 +256,14 @@ export function ModelPicker(props: {
                   <span
                     className="effort-slider-fill"
                     style={{
-                      width: `${(draftEffort / Math.max(1, efforts.length - 1)) * 100}%`,
+                      transform: `scaleX(${draftEffort / Math.max(1, efforts.length - 1)})`,
                     }}
                   />
+                </div>
+                <div className="effort-slider-ticks" aria-hidden="true">
+                  {efforts.map((value, index) => (
+                    <span key={value} data-reached={index <= draftEffort} />
+                  ))}
                 </div>
                 <input
                   type="range"

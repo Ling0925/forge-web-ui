@@ -179,6 +179,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 - **焦点**：键盘焦点用 `outline: 2px solid var(--focus-ring)`；输入框聚焦用主色描边 + `var(--focus-halo)` 光晕。程序设置焦点的非交互元素（`tabindex="-1"` 的标题、区域）不显示焦点环。
 - **减少动态效果**：`prefers-reduced-motion: reduce` 时所有时长 token 归零，循环动画停止；新增的循环动画必须在该媒体查询中关闭。
 - **固定定位浮层**：390px 手机视口的 `position: fixed` 浮层，其祖先不得带 `transform`，否则会改变定位参照。
+- **模型选择器（`model-picker-v2.css`）**：面板从触发按钮一侧缩放淡入（`--dur-short`）；进入模型目录时新视图从右侧滑入，返回时设置视图从左侧滑入（`--dur-medium`），首次打开不滑动。思考等级填充条用 `transform: scaleX()` 而不是宽度，切换档位时平滑过渡；轨道上每个档位有刻度点，已达到的点放大点亮；档位读数每次变化重新入场；拖动滑块时手柄外圈出现主色光晕。目录项以 24ms 间隔依次入场（最多 8 项），当前项的勾弹出；触发按钮上的档位条依次填充。``prefers-reduced-motion`` 下全部关闭。只有带厂商前缀的模型才在名称下重复完整 ID。
 
 ### 4.7 对话区（`Transcript`）
 
