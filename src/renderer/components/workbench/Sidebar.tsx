@@ -1,20 +1,29 @@
+import { isPrimarySession, sessionOriginWorkspace } from "@forge/core/shared";
 import {
   Archive,
   ArrowClockwise,
   CaretRight,
   ChartBar,
+  Files,
   Gear,
   MagnifyingGlass,
   Plus,
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { isPrimarySession } from "@forge/core/shared/sessions";
 import type { SessionSummary } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
 import { modelServiceStatus } from "../../state/model-service-status";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
+import { openWorkspaceResources } from "../../state/workspace-resources";
+import { EmptyState } from "../primitives/EmptyState";
 import { ForgeMark } from "../primitives/ForgeMark";
+import { IconButton } from "../primitives/IconButton";
 import { SessionListItem } from "./SessionListItem";
+import { SuperAgentSessions } from "./SuperAgentSessions";
 import "./sidebar-v2.css";
 
 const newSessionShortcut =
@@ -35,22 +44,37 @@ interface SessionGroup {
 }
 
 const DEFAULT_VISIBLE_COUNT = 10;
+/** Collapse-state key; workspace keys are absolute paths, so this never clashes. */
+const SUPER_AGENT_FOLDER = "superagent:";
 const PAGE_SIZE = 10;
 
 export function Sidebar() {
   const {
-    state,
     openNewSession,
     setMobileSidebar,
     openSettings,
     openUsageDashboard,
     createSession,
-  } = useWorkbench();
+    selectSession,
+  } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      activeSnapshotModel: state.activeSnapshot?.model,
+      isMobileSidebarOpen: state.isMobileSidebarOpen,
+      isSessionsLoading: state.isSessionsLoading,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
 
   const serviceStatus = modelServiceStatus(state.settings);
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [creatingWorkspace, setCreatingWorkspace] = useState<string | null>(null);
+  const [creatingWorkspace, setCreatingWorkspace] = useState<string | null>(
+    null,
+  );
   const [collapsedFolders, setCollapsedFolders] = useState<
     Readonly<Record<string, boolean>>
   >({});
@@ -60,19 +84,25 @@ export function Sidebar() {
   const needle = query.trim().toLowerCase();
   const searching = needle.length > 0;
   const sessions = state.sessions.filter(isPrimarySession);
-  const filtered = sessions.filter(
+  const matched = sessions.filter(
     (session) =>
       (showArchived || !session.archived) &&
-      `${session.title} ${session.workspace}`.toLowerCase().includes(needle),
+      `${session.title} ${sessionOriginWorkspace(session)}`
+        .toLowerCase()
+        .includes(needle),
   );
+  // Super-agent Router/Worker sessions get their own group (by core agentRole).
+  const filtered = matched.filter((session) => !session.agentRole);
+  const agentSessions = matched.filter((session) => session.agentRole);
   // Keep navigation independent of activity-ordered API results: folders follow
   // their names and sessions follow creation time, with fixed tie-breakers.
   const groups: readonly SessionGroup[] = (() => {
     const byWorkspace = new Map<string, SessionSummary[]>();
     for (const session of filtered) {
-      const existing = byWorkspace.get(session.workspace);
+      const workspace = sessionOriginWorkspace(session);
+      const existing = byWorkspace.get(workspace);
       if (existing) existing.push(session);
-      else byWorkspace.set(session.workspace, [session]);
+      else byWorkspace.set(workspace, [session]);
     }
     return [...byWorkspace]
       .map(([workspace, sessions]) => ({
@@ -113,11 +143,11 @@ export function Sidebar() {
     setCreatingWorkspace(workspace);
     try {
       const allSessionsInWorkspace = state.sessions.filter(
-        (s) => s.workspace === workspace,
+        (s) => sessionOriginWorkspace(s) === workspace,
       );
       const latest = allSessionsInWorkspace[0];
       const candidateModel =
-        latest?.model || state.activeSnapshot?.model || state.settings?.model;
+        latest?.model || state.activeSnapshotModel || state.settings?.model;
       const snapshot = await createSession({
         workspace,
         ...(candidateModel ? { model: candidateModel } : {}),
@@ -169,15 +199,12 @@ export function Sidebar() {
                 {newSessionShortcut}
               </kbd>
             </button>
-            <button
-              type="button"
-              className="wb-icon-btn sidebar-mobile-close"
+            <IconButton
+              className="sidebar-mobile-close"
+              label="关闭侧边栏"
+              icon={<X size={15} weight="bold" />}
               onClick={() => setMobileSidebar(false)}
-              aria-label="关闭侧边栏"
-              title="关闭侧边栏"
-            >
-              <X size={15} weight="bold" />
-            </button>
+            />
           </div>
         </div>
       </div>
@@ -205,12 +232,27 @@ export function Sidebar() {
       </div>
 
       <div className="sidebar-sessions-list">
+        <SuperAgentSessions
+          sessions={agentSessions}
+          collapsed={
+            !searching && Boolean(collapsedFolders[SUPER_AGENT_FOLDER])
+          }
+          onToggle={() => toggleFolder(SUPER_AGENT_FOLDER)}
+        />
         {state.isSessionsLoading && sessions.length === 0 ? (
           <p className="wb-muted sidebar-empty">正在加载会话...</p>
         ) : sessions.length === 0 ? (
-          <p className="wb-muted sidebar-empty">暂无历史任务</p>
-        ) : groups.length === 0 ? (
-          <p className="wb-muted sidebar-empty">没有匹配的任务</p>
+          <EmptyState
+            variant="compact"
+            className="sidebar-empty"
+            title="暂无历史任务"
+          />
+        ) : groups.length === 0 && agentSessions.length === 0 ? (
+          <EmptyState
+            variant="compact"
+            className="sidebar-empty"
+            title="没有匹配的任务"
+          />
         ) : (
           groups.map((group) => {
             // A live search must reveal its matches, so collapse state is held
@@ -252,6 +294,25 @@ export function Sidebar() {
                       className="session-folder-caret"
                       aria-hidden="true"
                     />
+                  </button>
+                  <button
+                    type="button"
+                    className="session-folder-resources-btn"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const inWorkspace = group.sessions.some(
+                        (s) => s.id === state.activeSessionId,
+                      );
+                      const target = group.sessions[0];
+                      if (!inWorkspace && target)
+                        await selectSession(target.id);
+                      setMobileSidebar(false);
+                      openWorkspaceResources("files");
+                    }}
+                    title={`${workspaceName(group.workspace)} 的工作区文件与项目资源`}
+                    aria-label={`${workspaceName(group.workspace)} 的工作区文件与项目资源`}
+                  >
+                    <Files size={12} weight="bold" />
                   </button>
                   <button
                     type="button"
@@ -307,8 +368,16 @@ export function Sidebar() {
               setMobileSidebar(false);
               openSettings(true);
             }}
-            title={serviceStatus.state === "configured" ? "设置" : `设置 · ${serviceStatus.label}`}
-            aria-label={serviceStatus.state === "configured" ? "设置" : serviceStatus.label}
+            title={
+              serviceStatus.state === "configured"
+                ? "设置"
+                : `设置 · ${serviceStatus.label}`
+            }
+            aria-label={
+              serviceStatus.state === "configured"
+                ? "设置"
+                : serviceStatus.label
+            }
             data-service={serviceStatus.state}
           >
             <Gear size={17} />

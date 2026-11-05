@@ -3,7 +3,7 @@ import {
   PUBLISHED_PREVIEW_MAX_BYTES,
   type PublishedFile,
   publishedFileResponseSchema,
-} from "@forge/core/shared/published-files";
+} from "@forge/core/shared";
 import { DownloadSimple, Eye, FileText } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SessionId } from "../../shared-types";

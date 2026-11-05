@@ -8,8 +8,8 @@ const sessionShot = makePng(20, 12);
 
 /**
  * Integration-level rendered check: the Inspector mounts the browser panel only
- * inside the 会话信息 → 浏览器 subtab, binds it to the selected Forge session,
- * and performs no browser RPC before that subtab is opened.
+ * inside the 会话信息 section's 浏览器 row, binds it to the selected Forge
+ * session, and performs no browser RPC before that row is opened.
  */
 it("binds the browser panel to the selected session and probes only when opened", async () => {
   const bundle = await build({
@@ -161,6 +161,7 @@ it("binds the browser panel to the selected session and probes only when opened"
         window as unknown as { selectTestSession: (id: string) => void }
       ).selectTestSession("22222222-2222-4222-8222-222222222222"),
     );
+    // The browser drill-in stays selected and rebinds to the new session.
     await expect
       .poll(async () => (await rpc()).at(-1)?.sessionId)
       .toBe("22222222-2222-4222-8222-222222222222");

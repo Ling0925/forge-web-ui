@@ -512,7 +512,7 @@ export function PrimitiveShowcase() {
                       <Select
                         aria-label="选择模型"
                         value={demoModel}
-                        onChange={(e) => setDemoModel(e.target.value)}
+                        onValueChange={(value) => setDemoModel(value)}
                         placeholder="请选择模型"
                         options={SAMPLE_MODELS}
                       />
@@ -525,7 +525,7 @@ export function PrimitiveShowcase() {
                       <Select
                         aria-label="选择授权策略"
                         value={demoPermission}
-                        onChange={(e) => setDemoPermission(e.target.value)}
+                        onValueChange={(value) => setDemoPermission(value)}
                         options={SAMPLE_PERMISSIONS}
                       />
                     </SettingRow>
@@ -754,6 +754,33 @@ export function PrimitiveShowcase() {
                       }}
                       output={null}
                     />
+
+                    <p className="showcase-section-desc">
+                      同一组件的全部生命周期状态（结构不变，仅 data-status
+                      变化）：
+                    </p>
+                    {(
+                      [
+                        "generating",
+                        "awaiting_approval",
+                        "running",
+                        "completed",
+                        "failed",
+                        "cancelled",
+                      ] as const
+                    ).map((status) => (
+                      <ToolDisclosure
+                        key={status}
+                        toolName="run_command"
+                        target="npm test"
+                        status={status}
+                        {...(status === "completed" || status === "failed"
+                          ? { durationMs: 1420 }
+                          : {})}
+                        parameters={{ argv: ["npm", "test"] }}
+                        output=""
+                      />
+                    ))}
 
                     <ToolDisclosure
                       toolName="list_files"

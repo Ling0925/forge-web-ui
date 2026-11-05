@@ -1,12 +1,18 @@
 import { DotsThreeVertical } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { OperationScope } from "../../state/operation-scope";
-import { hostCapabilities } from "../../web-host";
 import type { SessionSummary } from "../../shared-types";
-import { useWorkbench } from "../../state/workbench-context";
+import { OperationScope } from "../../state/operation-scope";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
+import { hostCapabilities } from "../../web-host";
 import { Button } from "../primitives/Button";
+import { IconButton } from "../primitives/IconButton";
 import { Input } from "../primitives/Input";
+import { useDismiss } from "../primitives/useDismiss";
 import { Dialog } from "./Dialog";
 
 export interface SessionActionsProps {
@@ -20,9 +26,21 @@ export function SessionActions({
   onOpenChange,
   onMouseEnter,
 }: SessionActionsProps = {}) {
-  const { state, selectSession, loadSessions, refreshActiveSession } =
-    useWorkbench();
-  const target = session ?? state.activeSnapshot;
+  const { selectSession, loadSessions, refreshActiveSession } =
+    useWorkbenchActions();
+  const { activeSnapshot, activeSessionId, runStatus } = useWorkbenchSelector(
+    ({ state }) => {
+      const snapshot = session ? null : state.activeSnapshot;
+      const id = session?.id ?? snapshot?.id;
+      return {
+        activeSnapshot: snapshot,
+        activeSessionId: state.activeSessionId,
+        runStatus: id ? state.activeRuns[id]?.status : undefined,
+      };
+    },
+    shallowEqual,
+  );
+  const target = session ?? activeSnapshot;
   const scope = useRef(new OperationScope());
   useEffect(() => {
     scope.current = new OperationScope();
@@ -45,36 +63,13 @@ export function SessionActions({
     onOpenChange?.(false);
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handlePointerDown = (event: PointerEvent) => {
-      const targetNode = event.target as Node | null;
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(targetNode) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(targetNode)
-      ) {
-        closeMenu();
-      }
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeMenu();
-      }
-    };
-    const handleScroll = () => {
-      closeMenu();
-    };
-    window.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("scroll", handleScroll, true);
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [isOpen]);
+  useDismiss({
+    open: isOpen,
+    refs: [menuRef, triggerRef],
+    onDismiss: closeMenu,
+    closeOnEscape: true,
+    closeOnScroll: true,
+  });
 
   if (!target) return null;
 
@@ -82,9 +77,8 @@ export function SessionActions({
   const targetTitle = target.title;
   const isArchived = Boolean(target.archived);
 
-  const run = state.activeRuns[targetId];
   const locked =
-    busy || run?.status === "running" || run?.status === "awaiting_approval";
+    busy || runStatus === "running" || runStatus === "awaiting_approval";
 
   const toggleMenu = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -119,7 +113,7 @@ export function SessionActions({
       await operation(valid);
       if (!valid()) return;
       await loadSessions();
-      if (targetId === state.activeSessionId) {
+      if (targetId === activeSessionId) {
         await refreshActiveSession();
       }
     } catch (err) {
@@ -155,18 +149,19 @@ export function SessionActions({
       onClick={(e) => e.stopPropagation()}
       onMouseEnter={onMouseEnter}
     >
-      <button
+      <IconButton
         ref={triggerRef}
-        type="button"
-        className={`wb-icon-btn session-action-btn${isOpen ? " is-active" : ""}`}
-        aria-label="会话操作"
+        size="sm"
+        className="session-action-btn"
+        active={isOpen}
+        label="会话操作"
         aria-expanded={isOpen}
         title={locked ? "会话操作（运行中暂不可用）" : "会话操作"}
+        icon={<DotsThreeVertical size={15} weight="bold" />}
         onClick={toggleMenu}
       >
-        <DotsThreeVertical size={15} weight="bold" />
         {renaming && <span className="wb-dirty-dot" aria-hidden="true" />}
-      </button>
+      </IconButton>
 
       {isOpen &&
         createPortal(

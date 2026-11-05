@@ -1,11 +1,11 @@
+import { runIdSchema } from "@forge/core/shared/ipc";
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 import { expect, it } from "vitest";
 import {
   STREAMING_TEXT_LIMIT,
   initialWorkbenchState,
   workbenchReducer,
 } from "../../src/renderer/state/workbench-reducer";
-import { runIdSchema } from "@forge/core/shared/ipc";
-import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 const snapshot = sessionSnapshotSchema.parse({
   version: 1,
   id: "11111111-1111-4111-8111-111111111111",

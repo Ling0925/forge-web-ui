@@ -1,10 +1,5 @@
 import { X } from "@phosphor-icons/react";
-import {
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-} from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "../primitives/Button";
 
@@ -16,6 +11,7 @@ export function Dialog({
   children,
   initialFocus,
   dismissible = true,
+  className,
 }: {
   readonly title: string;
   readonly kicker?: string;
@@ -24,6 +20,7 @@ export function Dialog({
   readonly children: ReactNode;
   readonly initialFocus?: string;
   readonly dismissible?: boolean;
+  readonly className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const close = useRef(onClose);
@@ -44,7 +41,7 @@ export function Dialog({
   return createPortal(
     <dialog
       ref={ref}
-      className="modal-card native-dialog"
+      className={`modal-card native-dialog${className ? ` ${className}` : ""}`}
       aria-label={title}
       onCancel={(e) => {
         e.preventDefault();

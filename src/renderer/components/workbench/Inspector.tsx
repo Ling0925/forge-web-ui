@@ -1,3 +1,4 @@
+import { sessionIdSchema } from "@forge/core/shared/schemas";
 import {
   ArrowLeft,
   ArrowSquareOut,
@@ -11,14 +12,36 @@ import {
   PuzzlePiece,
   SidebarSimple,
 } from "@phosphor-icons/react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useReducer, useRef, useState } from "react";
 import { permissionLabels } from "../../state/permission-labels";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowArrayEqual,
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
+import {
+  type InspectorSectionId,
+  readSectionOverrides,
+  rememberSectionOpen,
+  resolveSectionOpen,
+  subscribeInspectorSection,
+} from "../../state/inspector-sections";
+import {
+  pendingOutbox,
+  pendingSuggestions,
+  useSuperAgent,
+  workItemsForRouter,
+} from "../../state/superagent";
+import { openWorkspaceResources } from "../../state/workspace-resources";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
+import { EmptyState } from "../primitives/EmptyState";
+import { SuperAgentAttention } from "./SuperAgentAttention";
+import { SuperAgentWorkList } from "./SuperAgentWorkList";
 import { Button } from "../primitives/Button";
 import { DiffViewer, diffStats } from "../primitives/DiffViewer";
 import { StatusBadge } from "../primitives/StatusBadge";
-import { CheckpointPanel, ProjectResources } from "./CatalogPanels";
+import { CheckpointPanel } from "./CatalogPanels";
 import { BrowserPanel } from "./BrowserPanel";
 import { ChangeSessionNavigation } from "./ChangeSessionNavigation";
 import {
@@ -28,8 +51,9 @@ import {
   SubAgentsPanel,
   resolveDisplayPlans,
 } from "./RuntimePanels";
-import { WorkspaceFileManager, changeKindMeta } from "./WorkspaceFileManager";
+import { changeKindMeta } from "./WorkspaceFileManager";
 import "./inspector.css";
+import "./inspector-sections.css";
 import "./inspector-v2.css";
 
 // The Transcript renders the selected session's live request inline; the
@@ -42,51 +66,66 @@ function scrollToInlineApproval(approvalId: string) {
 
 type InspectorView =
   | "summary"
-  | "files"
   | "changes"
   | "plan-history"
   | "subagents"
   | "context"
-  | "browser"
-  | "resources";
+  | "browser";
 
-const viewTitles: Readonly<Record<Exclude<InspectorView, "summary">, string>> = {
-  files: "工作区文件",
-  changes: "变更与检查点",
-  "plan-history": "计划说明与历史",
-  subagents: "子任务",
-  context: "上下文与用量",
-  browser: "浏览器",
-  resources: "项目资源",
-};
+const viewTitles: Readonly<Record<Exclude<InspectorView, "summary">, string>> =
+  {
+    changes: "变更与检查点",
+    "plan-history": "计划说明与历史",
+    subagents: "子任务",
+    context: "上下文与用量",
+    browser: "浏览器",
+  };
 
 /** One collapsible summary section: "标题 计数 ⌄". Empty sections never render. */
 function SummarySection({
+  sectionId,
+  open: controlledOpen,
+  onToggle,
   title,
   count,
   action,
   children,
 }: {
+  readonly sectionId?: InspectorSectionId;
+  readonly open?: boolean;
+  readonly onToggle?: (open: boolean) => void;
   readonly title: string;
   readonly count?: number | string | undefined;
   readonly action?: ReactNode;
   readonly children: ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
+  const [localOpen, setLocalOpen] = useState(true);
+  const open = controlledOpen ?? localOpen;
   const id = `inspector-section-${title}`;
   return (
-    <section className="inspector-summary-section" data-open={open}>
+    <section
+      className="inspector-summary-section"
+      data-open={open}
+      data-section={sectionId}
+    >
       <div className="inspector-summary-head">
         <button
           type="button"
           className="inspector-summary-toggle"
           aria-expanded={open}
           aria-controls={id}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => (onToggle ? onToggle(!open) : setLocalOpen(!open))}
         >
           <h3>{title}</h3>
-          {count !== undefined && <span className="inspector-summary-count">{count}</span>}
-          <CaretRight size={12} weight="bold" className="inspector-summary-caret" aria-hidden="true" />
+          {count !== undefined && (
+            <span className="inspector-summary-count">{count}</span>
+          )}
+          <CaretRight
+            size={12}
+            weight="bold"
+            className="inspector-summary-caret"
+            aria-hidden="true"
+          />
         </button>
         {action}
       </div>
@@ -112,15 +151,28 @@ function SummaryRow({
 }) {
   const content = (
     <>
-      <span className="inspector-row-icon" aria-hidden="true">{icon}</span>
-      <span className="inspector-row-label" title={title}>{label}</span>
+      <span className="inspector-row-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="inspector-row-label" title={title}>
+        {label}
+      </span>
       {meta !== undefined && <span className="inspector-row-meta">{meta}</span>}
     </>
   );
   return onClick ? (
-    <button type="button" className="inspector-row is-interactive" onClick={onClick}>
+    <button
+      type="button"
+      className="inspector-row is-interactive"
+      onClick={onClick}
+    >
       {content}
-      <CaretRight size={11} weight="bold" className="inspector-row-caret" aria-hidden="true" />
+      <CaretRight
+        size={11}
+        weight="bold"
+        className="inspector-row-caret"
+        aria-hidden="true"
+      />
     </button>
   ) : (
     <div className="inspector-row">{content}</div>
@@ -132,7 +184,9 @@ const childStatusTone = (status: string) =>
     ? "done"
     : status === "running" || status === "awaiting_approval"
       ? "active"
-      : status === "failed" || status === "interrupted" || status === "cancelled"
+      : status === "failed" ||
+          status === "interrupted" ||
+          status === "cancelled"
         ? "failed"
         : "idle";
 
@@ -144,8 +198,45 @@ export function Inspector({
   readonly focusToken?: number | undefined;
 }) {
   const [view, setView] = useState<InspectorView>("summary");
-  const { state, answerApproval, selectSession, refreshActiveSession, setMobileTab } =
-    useWorkbench();
+  const { answerApproval, selectSession, refreshActiveSession, setMobileTab } =
+    useWorkbenchActions();
+  // Run state is reduced to the fields the drawer renders, so streamed tokens
+  // (which replace the run object) do not re-render the whole inspector.
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      activeSessionId: state.activeSessionId,
+      activeSnapshot: state.activeSnapshot,
+      isSnapshotLoading: state.isSnapshotLoading,
+      sessions: state.sessions,
+      settings: state.settings,
+    }),
+    shallowEqual,
+  );
+  const run = useWorkbenchSelector(({ state }) => {
+    const active = state.activeSessionId
+      ? state.activeRuns[state.activeSessionId]
+      : undefined;
+    return active
+      ? {
+          status: active.status,
+          permission: active.permission,
+          pendingApproval: active.pendingApproval,
+        }
+      : undefined;
+  }, shallowEqual);
+  const pendingApprovals = useWorkbenchSelector(
+    ({ state }) =>
+      Object.values(state.activeRuns)
+        .filter((r) => r.pendingApproval)
+        .map((r) => ({
+          sessionId: r.sessionId,
+          pendingApproval: r.pendingApproval,
+          isCancelling: r.isCancelling,
+          isSubmittingApproval: r.isSubmittingApproval,
+        })),
+    shallowArrayEqual,
+  );
+  const [, rerender] = useReducer((tick: number) => tick + 1, 0);
   const paneRef = useRef<HTMLElement | null>(null);
   const backRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -159,9 +250,43 @@ export function Inspector({
     state.activeSnapshot?.id === state.activeSessionId
       ? state.activeSnapshot
       : null;
-  const run = state.activeSessionId
-    ? state.activeRuns[state.activeSessionId]
-    : undefined;
+  const sessionKey = snapshot?.id ?? "";
+  useEffect(
+    () =>
+      subscribeInspectorSection((id) => {
+        if (!sessionKey) return;
+        rememberSectionOpen(sessionKey, id, true);
+        setView(
+          id === "changes"
+            ? "changes"
+            : id === "context"
+              ? "context"
+              : "summary",
+        );
+        rerender();
+        requestAnimationFrame(() =>
+          paneRef.current
+            ?.querySelector(`[data-section="${id}"]`)
+            ?.scrollIntoView({ block: "start" }),
+        );
+      }),
+    [sessionKey],
+  );
+  const status = run?.status ?? snapshot?.status;
+  const phase =
+    status === "running" || status === "awaiting_approval"
+      ? "running"
+      : "settled";
+  const overrides = sessionKey ? readSectionOverrides(sessionKey) : undefined;
+  const section = (sectionId: InspectorSectionId) => ({
+    sectionId,
+    open: resolveSectionOpen(overrides, phase, sectionId),
+    onToggle: (open: boolean) => {
+      if (!sessionKey) return;
+      rememberSectionOpen(sessionKey, sectionId, open);
+      rerender();
+    },
+  });
   const started = snapshot?.events
     .filter((e) => e.type === "run_started")
     .at(-1);
@@ -169,9 +294,6 @@ export function Inspector({
     !run &&
     (snapshot?.status === "running" ||
       snapshot?.status === "awaiting_approval");
-  const pendingApprovals = Object.values(state.activeRuns).filter(
-    (r) => r.pendingApproval,
-  );
   // Exactly one request can be the selected session's live head; the
   // Transcript already renders it in the reading flow, so the drawer only
   // annotates and links it instead of duplicating the buttons. `run` is
@@ -188,17 +310,39 @@ export function Inspector({
     (started?.type === "run_started"
       ? started.permission
       : (state.settings?.defaultPermission ?? "workspace"));
-  const model = started?.type === "run_started" ? started.model : snapshot?.model;
+  const model =
+    started?.type === "run_started" ? started.model : snapshot?.model;
   const plans = snapshot ? resolveDisplayPlans(snapshot) : null;
   const children = snapshot
     ? state.sessions
         .filter((session) => session.parentSessionId === snapshot.id)
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+        .sort(
+          (a, b) =>
+            a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id),
+        )
     : [];
+  const superAgent = useSuperAgent();
+  const outbox = pendingOutbox(superAgent);
+  const suggestions = pendingSuggestions(superAgent);
+  const routerWork =
+    snapshot?.agentRole?.kind === "router"
+      ? workItemsForRouter(superAgent, snapshot.id)
+      : [];
+  const failedChildren = children.filter(
+    (child) => child.status === "failed" || child.status === "interrupted",
+  );
+  const hasSubtasks =
+    children.length > 0 ||
+    routerWork.length > 0 ||
+    Boolean(snapshot?.agentTask || snapshot?.agentProfile);
+  const attentionCount =
+    failedChildren.length + outbox.length + suggestions.length;
   const hasRelatedChanges = Boolean(
     snapshot &&
       (snapshot.parentSessionId ||
-        state.sessions.some((session) => session.parentSessionId === snapshot.id)),
+        state.sessions.some(
+          (session) => session.parentSessionId === snapshot.id,
+        )),
   );
   const isSummary = view === "summary";
 
@@ -214,7 +358,9 @@ export function Inspector({
           {isSummary ? (
             <>
               <span>概要</span>
-              {snapshot && <StatusBadge status={run?.status ?? snapshot.status} />}
+              {snapshot && (
+                <StatusBadge status={run?.status ?? snapshot.status} />
+              )}
             </>
           ) : (
             <>
@@ -278,7 +424,9 @@ export function Inspector({
                       size="sm"
                       onClick={() => {
                         setMobileTab("task");
-                        requestAnimationFrame(() => scrollToInlineApproval(request.id));
+                        requestAnimationFrame(() =>
+                          scrollToInlineApproval(request.id),
+                        );
                       }}
                     >
                       定位到消息流
@@ -326,40 +474,73 @@ export function Inspector({
             })}
           </section>
         )}
+        {attentionCount > 0 && (
+          <section
+            className="wb-approvals-summary wb-stack"
+            data-section="attention"
+            aria-label="需要处理"
+          >
+            <h3>需要处理 · {attentionCount}</h3>
+            {failedChildren.map((child) => (
+              <SummaryRow
+                key={child.id}
+                icon={<span className="inspector-row-dot is-failed" />}
+                label={child.title}
+                meta={<StatusBadge status={child.status} />}
+                onClick={() => void selectSession(child.id)}
+              />
+            ))}
+            <SuperAgentAttention
+              view={superAgent}
+              outbox={outbox}
+              suggestions={suggestions}
+            />
+          </section>
+        )}
         {!snapshot ? (
-          <p className="wb-muted inspector-empty">
-            {state.isSnapshotLoading
-              ? "正在读取执行记录…"
-              : "选择一个会话，查看执行详情"}
-          </p>
+          <EmptyState
+            variant="compact"
+            title={
+              state.isSnapshotLoading
+                ? "正在读取执行记录…"
+                : "选择一个会话，查看执行详情"
+            }
+          />
         ) : isSummary ? (
           <div className="inspector-summary">
             {plans?.currentPlan && plans.currentProgress && (
               <SummarySection
+                {...section("progress")}
                 title="进度"
                 count={`${plans.currentProgress.completed}/${plans.currentProgress.total}`}
                 action={
-                  plans.currentPlan.explanation || plans.historical.length > 0 ? (
+                  plans.currentPlan.explanation ||
+                  plans.historical.length > 0 ? (
                     <button
                       type="button"
                       className="inspector-summary-link"
                       onClick={() => setView("plan-history")}
                     >
-                      {plans.historical.length > 0 ? `说明与历史 ${plans.historical.length}` : "说明"}
+                      {plans.historical.length > 0
+                        ? `说明与历史 ${plans.historical.length}`
+                        : "说明"}
                     </button>
                   ) : undefined
                 }
               >
                 {plans.currentPlan.title && (
-                  <p className="inspector-summary-caption">{plans.currentPlan.title}</p>
+                  <p className="inspector-summary-caption">
+                    {plans.currentPlan.title}
+                  </p>
                 )}
                 <PlanSteps plan={plans.currentPlan} />
               </SummarySection>
             )}
-            {children.length > 0 && (
+            {hasSubtasks && (
               <SummarySection
+                {...section("subtasks")}
                 title="子任务"
-                count={children.length}
+                count={children.length + routerWork.length}
                 action={
                   <button
                     type="button"
@@ -370,10 +551,23 @@ export function Inspector({
                   </button>
                 }
               >
+                {routerWork.length > 0 && (
+                  <SuperAgentWorkList
+                    items={routerWork}
+                    onOpen={(id) => {
+                      const parsed = sessionIdSchema.safeParse(id);
+                      if (parsed.success) void selectSession(parsed.data);
+                    }}
+                  />
+                )}
                 {children.map((child) => (
                   <SummaryRow
                     key={child.id}
-                    icon={<span className={`inspector-row-dot is-${childStatusTone(child.status)}`} />}
+                    icon={
+                      <span
+                        className={`inspector-row-dot is-${childStatusTone(child.status)}`}
+                      />
+                    }
                     label={child.title}
                     title={child.title}
                     meta={child.agentProfileName}
@@ -393,6 +587,7 @@ export function Inspector({
             )}
             {snapshot.changes.length > 0 && (
               <SummarySection
+                {...section("changes")}
                 title="文件"
                 count={snapshot.changes.length}
                 action={
@@ -407,7 +602,9 @@ export function Inspector({
               >
                 {snapshot.changes.map((change, i) => {
                   const stats = diffStats(change);
-                  const name = change.path.slice(change.path.lastIndexOf("/") + 1);
+                  const name = change.path.slice(
+                    change.path.lastIndexOf("/") + 1,
+                  );
                   return (
                     <SummaryRow
                       key={`${change.path}-${i}`}
@@ -417,8 +614,16 @@ export function Inspector({
                       meta={
                         stats ? (
                           <span className="diff-stats-pill">
-                            {stats.added > 0 && <span className="diff-stats-add">+{stats.added}</span>}
-                            {stats.removed > 0 && <span className="diff-stats-del">-{stats.removed}</span>}
+                            {stats.added > 0 && (
+                              <span className="diff-stats-add">
+                                +{stats.added}
+                              </span>
+                            )}
+                            {stats.removed > 0 && (
+                              <span className="diff-stats-del">
+                                -{stats.removed}
+                              </span>
+                            )}
                           </span>
                         ) : (
                           changeKindMeta(change.kind).label
@@ -430,7 +635,7 @@ export function Inspector({
                 })}
               </SummarySection>
             )}
-            <SummarySection title="会话">
+            <SummarySection title="会话" {...section("session")}>
               <dl className="inspector-facts">
                 <dt>模型</dt>
                 <dd title={model}>{model}</dd>
@@ -438,7 +643,10 @@ export function Inspector({
                 <dd>{permissionLabels[permission].split(" · ")[0]}</dd>
                 <dt>工作区</dt>
                 <dd title={snapshot.workspace}>
-                  {snapshot.workspace.replace(/[\\/]+$/, "").split(/[\\/]/).pop() || snapshot.workspace}
+                  {snapshot.workspace
+                    .replace(/[\\/]+$/, "")
+                    .split(/[\\/]/)
+                    .pop() || snapshot.workspace}
                 </dd>
               </dl>
               {storedActive && (
@@ -447,17 +655,40 @@ export function Inspector({
                 </p>
               )}
             </SummarySection>
-            {!plans?.currentPlan && children.length === 0 && snapshot.changes.length === 0 && (
-              <p className="inspector-summary-empty">
-                执行计划、子任务和文件变更出现后会显示在这里。
-              </p>
-            )}
+            {!plans?.currentPlan &&
+              !hasSubtasks &&
+              snapshot.changes.length === 0 && (
+                <EmptyState
+                  variant="inline"
+                  title="执行计划、子任务和文件变更出现后会显示在这里。"
+                />
+              )}
             <nav className="inspector-more" aria-label="更多工具">
-              <SummaryRow icon={<FolderOpen size={14} />} label="工作区文件" onClick={() => setView("files")} />
-              <SummaryRow icon={<ClockCounterClockwise size={14} />} label="变更与检查点" onClick={() => setView("changes")} />
-              <SummaryRow icon={<Gauge size={14} />} label="上下文与用量" onClick={() => setView("context")} />
-              <SummaryRow icon={<Browser size={14} />} label="浏览器" onClick={() => setView("browser")} />
-              <SummaryRow icon={<PuzzlePiece size={14} />} label="项目资源" onClick={() => setView("resources")} />
+              <SummaryRow
+                icon={<FolderOpen size={14} />}
+                label="工作区文件"
+                onClick={() => openWorkspaceResources("files")}
+              />
+              <SummaryRow
+                icon={<ClockCounterClockwise size={14} />}
+                label="变更与检查点"
+                onClick={() => setView("changes")}
+              />
+              <SummaryRow
+                icon={<Gauge size={14} />}
+                label="上下文与用量"
+                onClick={() => setView("context")}
+              />
+              <SummaryRow
+                icon={<Browser size={14} />}
+                label="浏览器"
+                onClick={() => setView("browser")}
+              />
+              <SummaryRow
+                icon={<PuzzlePiece size={14} />}
+                label="项目资源"
+                onClick={() => openWorkspaceResources("resources")}
+              />
               <button
                 type="button"
                 className="inspector-row is-interactive inspector-refresh-row"
@@ -472,14 +703,6 @@ export function Inspector({
           </div>
         ) : (
           <div className="inspector-subview" data-view={view}>
-            {view === "files" && (
-              <WorkspaceFileManager
-                session={snapshot}
-                liveEvents={[]}
-                active
-                onSelectChangesTab={() => setView("changes")}
-              />
-            )}
             {view === "changes" && (
               <div className="wb-stack">
                 {hasRelatedChanges && (
@@ -502,7 +725,9 @@ export function Inspector({
                   <div className="inspector-section-header">
                     <h3>
                       文件变更{" "}
-                      <span className="wb-muted">{snapshot.changes.length}</span>
+                      <span className="wb-muted">
+                        {snapshot.changes.length}
+                      </span>
                     </h3>
                   </div>
                   {snapshot.changes.length ? (
@@ -510,61 +735,101 @@ export function Inspector({
                       {snapshot.changes.map((change, i) => {
                         const stats = diffStats(change);
                         const lastSlash = change.path.lastIndexOf("/");
-                        const dir = lastSlash >= 0 ? change.path.slice(0, lastSlash + 1) : "";
-                        const name = lastSlash >= 0 ? change.path.slice(lastSlash + 1) : change.path;
+                        const dir =
+                          lastSlash >= 0
+                            ? change.path.slice(0, lastSlash + 1)
+                            : "";
+                        const name =
+                          lastSlash >= 0
+                            ? change.path.slice(lastSlash + 1)
+                            : change.path;
                         return (
                           <details
-                            open
                             key={`${change.path}-${i}`}
                             className="wb-disclosure inspector-file-card"
                           >
                             <summary className="inspector-file-summary">
                               <div className="inspector-file-info">
-                                <FileCode size={14} className="inspector-file-icon" />
-                                <span className="inspector-file-path" title={change.path}>
-                                  {dir && <span className="inspector-file-dir">{dir}</span>}
-                                  <span className="inspector-file-name">{name}</span>
+                                <FileCode
+                                  size={14}
+                                  className="inspector-file-icon"
+                                />
+                                <span
+                                  className="inspector-file-path"
+                                  title={change.path}
+                                >
+                                  {dir && (
+                                    <span className="inspector-file-dir">
+                                      {dir}
+                                    </span>
+                                  )}
+                                  <span className="inspector-file-name">
+                                    {name}
+                                  </span>
                                 </span>
                               </div>
                               <div className="inspector-file-badges">
                                 {stats && (
                                   <span className="diff-stats-pill">
-                                    {stats.added > 0 && <span className="diff-stats-add">+{stats.added}</span>}
-                                    {stats.removed > 0 && <span className="diff-stats-del">-{stats.removed}</span>}
+                                    {stats.added > 0 && (
+                                      <span className="diff-stats-add">
+                                        +{stats.added}
+                                      </span>
+                                    )}
+                                    {stats.removed > 0 && (
+                                      <span className="diff-stats-del">
+                                        -{stats.removed}
+                                      </span>
+                                    )}
                                   </span>
                                 )}
-                                <span className={`inspector-file-kind ${changeKindMeta(change.kind).className}`}>
+                                <span
+                                  className={`inspector-file-kind ${changeKindMeta(change.kind).className}`}
+                                >
                                   {changeKindMeta(change.kind).label}
                                 </span>
                               </div>
                             </summary>
                             <div className="inspector-diff-container">
-                              <DiffViewer change={change} isSuggested={false} embedded />
+                              <DiffViewer
+                                change={change}
+                                isSuggested={false}
+                                embedded
+                              />
                             </div>
                           </details>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="inspector-empty-card">
-                      <p className="wb-muted">本会话尚无直接文件变更</p>
-                    </div>
+                    <EmptyState
+                      variant="inline"
+                      title="本会话尚无直接文件变更"
+                    />
                   )}
                 </section>
                 <details open className="wb-disclosure">
                   <summary>文件检查点与恢复</summary>
                   <div className="wb-disclosure-body">
-                    <CheckpointPanel key={`changes-checkpoints:${state.activeSessionId ?? "none"}`} />
+                    <CheckpointPanel
+                      key={`changes-checkpoints:${state.activeSessionId ?? "none"}`}
+                    />
                   </div>
                 </details>
               </div>
             )}
-            {view === "plan-history" && <PlanDocumentPanel snapshot={snapshot} />}
+            {view === "plan-history" && (
+              <PlanDocumentPanel snapshot={snapshot} />
+            )}
             {view === "subagents" && (
-              <SubAgentsPanel key={`subagents:${state.activeSessionId ?? "none"}`} />
+              <SubAgentsPanel
+                key={`subagents:${state.activeSessionId ?? "none"}`}
+              />
             )}
             {view === "context" && (
-              <ContextManagementPanel key={`context:${state.activeSessionId ?? "none"}`} />
+              <ContextManagementPanel
+                key={`context:${state.activeSessionId ?? "none"}`}
+              />
             )}
             {view === "browser" && (
               // Same-session binding: the panel is keyed and scoped to the
@@ -575,9 +840,6 @@ export function Inspector({
                 permission={permission}
                 active
               />
-            )}
-            {view === "resources" && (
-              <ProjectResources key={state.activeSessionId ?? "none"} />
             )}
           </div>
         )}

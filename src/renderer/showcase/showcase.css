@@ -58,7 +58,7 @@
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  border-radius: calc(var(--radius-sm) - 2px);
+  border-radius: var(--radius-xs);
   cursor: pointer;
   white-space: nowrap;
   font-family: var(--font-sans);

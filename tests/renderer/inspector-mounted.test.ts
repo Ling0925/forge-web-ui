@@ -80,7 +80,9 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
     await page.setContent('<div id="root"></div>');
     await page.addScriptTag({ content: bundle.outputFiles[0]?.text ?? "" });
 
-    await page.getByRole("button", { name: "变更与检查点", exact: true }).click();
+    await page
+      .getByRole("button", { name: "变更与检查点", exact: true })
+      .click();
 
     // Forward/back across all four sessions, revisiting parents so an
     // accumulating sibling navigation would surface as a duplicate section.

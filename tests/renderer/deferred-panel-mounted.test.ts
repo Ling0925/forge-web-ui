@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import { build } from "esbuild";
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page, chromium } from "playwright";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
 let browser: Browser;
@@ -9,7 +9,10 @@ let css: string;
 
 beforeAll(async () => {
   const bundle = await build({
-    stdin: { resolveDir: resolve("."), loader: "tsx", contents: `
+    stdin: {
+      resolveDir: resolve("."),
+      loader: "tsx",
+      contents: `
       import {createContext,StrictMode,useContext,useState} from 'react';
       import {createRoot} from 'react-dom/client';
       import {DeferredPanel} from './src/renderer/components/primitives/DeferredPanel';
@@ -44,16 +47,24 @@ beforeAll(async () => {
         </C.Provider>;
       }
       createRoot(document.getElementById('root')).render(<StrictMode><Harness/></StrictMode>);
-    ` },
-    bundle: true, write: false, format: "iife", jsx: "automatic", outfile: "deferred-panel.js",
-    loader: { ".woff2": "dataurl" }, define: { "process.env.NODE_ENV": '"development"' },
+    `,
+    },
+    bundle: true,
+    write: false,
+    format: "iife",
+    jsx: "automatic",
+    outfile: "deferred-panel.js",
+    loader: { ".woff2": "dataurl" },
+    define: { "process.env.NODE_ENV": '"development"' },
   });
-  js = bundle.outputFiles.find(file => file.path.endsWith(".js"))!.text;
-  css = bundle.outputFiles.find(file => file.path.endsWith(".css"))!.text;
+  js = bundle.outputFiles.find((file) => file.path.endsWith(".js"))!.text;
+  css = bundle.outputFiles.find((file) => file.path.endsWith(".css"))!.text;
   browser = await chromium.launch({ headless: true });
 }, 30000);
 
-afterAll(async () => { await browser?.close(); });
+afterAll(async () => {
+  await browser?.close();
+});
 
 async function mount(): Promise<Page> {
   const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
@@ -65,10 +76,12 @@ async function mount(): Promise<Page> {
   return page;
 }
 
-const attempts = (page: Page) => page.evaluate(() => Reflect.get(window, "fixture").attempts);
-const setMode = (page: Page, mode: string) => page.evaluate(value => {
-  Reflect.get(window, "fixture").mode = value;
-}, mode);
+const attempts = (page: Page) =>
+  page.evaluate(() => Reflect.get(window, "fixture").attempts);
+const setMode = (page: Page, mode: string) =>
+  page.evaluate((value) => {
+    Reflect.get(window, "fixture").mode = value;
+  }, mode);
 
 it("retries rejected lazy loads on demand, preserving drafts and successful panel state", async () => {
   const page = await mount();
@@ -78,7 +91,11 @@ it("retries rejected lazy loads on demand, preserving drafts and successful pane
     await page.getByRole("button", { name: "打开面板" }).click();
     await page.getByRole("alert").waitFor();
     expect(await attempts(page)).toBe(1);
-    expect(await page.getByRole("button", { name: "刷新页面", exact: true }).isVisible()).toBe(true);
+    expect(
+      await page
+        .getByRole("button", { name: "刷新页面", exact: true })
+        .isVisible(),
+    ).toBe(true);
     await page.getByRole("button", { name: "重试", exact: true }).click();
     await page.getByRole("alert").waitFor();
     expect(await attempts(page)).toBe(2);
@@ -96,7 +113,9 @@ it("retries rejected lazy loads on demand, preserving drafts and successful pane
     expect(await page.getByLabel("面板筛选").inputValue()).toBe("最近七天");
     expect(await attempts(page)).toBe(3);
     expect(await page.getByLabel("会话草稿").inputValue()).toBe("草稿不能丢");
-  } finally { await page.close(); }
+  } finally {
+    await page.close();
+  }
 });
 
 it("recovers if the load fails after the user has already returned to the workbench", async () => {
@@ -104,33 +123,47 @@ it("recovers if the load fails after the user has already returned to the workbe
   try {
     await setMode(page, "pending");
     await page.getByRole("button", { name: "打开面板" }).click();
-    await page.getByRole("status").filter({ hasText: "正在加载测试面板" }).waitFor();
+    await page
+      .getByRole("status")
+      .filter({ hasText: "正在加载测试面板" })
+      .waitFor();
     await page.getByRole("button", { name: "返回工作台" }).click();
-    await page.evaluate(() => Reflect.get(window, "fixture").reject(new Error("late import failure")));
+    await page.evaluate(() =>
+      Reflect.get(window, "fixture").reject(new Error("late import failure")),
+    );
     await setMode(page, "success");
     expect(await page.getByRole("alert").count()).toBe(0);
     expect(await attempts(page)).toBe(1);
     await page.getByRole("button", { name: "打开面板" }).click();
     await page.getByRole("dialog").waitFor();
     expect(await attempts(page)).toBe(2);
-  } finally { await page.close(); }
+  } finally {
+    await page.close();
+  }
 });
 
-it.each(["retry", "reopen"])("recovers from a mounted panel render error via %s", async action => {
-  const page = await mount();
-  try {
-    await setMode(page, "success");
-    await page.getByRole("button", { name: "打开面板" }).click();
-    await page.getByRole("button", { name: "触发渲染失败" }).click();
-    await page.getByRole("alert").waitFor();
-    await page.evaluate(() => { Reflect.get(window, "fixture").renderFailure = false; });
-    if (action === "retry") {
-      await page.getByRole("button", { name: "重试", exact: true }).click();
-    } else {
-      await page.getByRole("button", { name: "返回工作台" }).click();
+it.each(["retry", "reopen"])(
+  "recovers from a mounted panel render error via %s",
+  async (action) => {
+    const page = await mount();
+    try {
+      await setMode(page, "success");
       await page.getByRole("button", { name: "打开面板" }).click();
+      await page.getByRole("button", { name: "触发渲染失败" }).click();
+      await page.getByRole("alert").waitFor();
+      await page.evaluate(() => {
+        Reflect.get(window, "fixture").renderFailure = false;
+      });
+      if (action === "retry") {
+        await page.getByRole("button", { name: "重试", exact: true }).click();
+      } else {
+        await page.getByRole("button", { name: "返回工作台" }).click();
+        await page.getByRole("button", { name: "打开面板" }).click();
+      }
+      await page.getByRole("dialog").waitFor();
+      expect(await attempts(page)).toBe(2);
+    } finally {
+      await page.close();
     }
-    await page.getByRole("dialog").waitFor();
-    expect(await attempts(page)).toBe(2);
-  } finally { await page.close(); }
-});
+  },
+);

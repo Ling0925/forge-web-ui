@@ -6,12 +6,16 @@ import {
   WarningCircle,
   XCircle,
 } from "@phosphor-icons/react";
-import { useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SessionSummary } from "../../shared-types";
 import { readSessionInfo } from "../../state/session-info-cache";
 import { seedSessionUsage } from "../../state/session-usage";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { SessionActions } from "./SessionActions";
 
 const labels: Readonly<Record<string, string>> = {
@@ -28,24 +32,38 @@ const labels: Readonly<Record<string, string>> = {
 function SessionStatusIcon({ status }: { readonly status: string }) {
   const props = { size: 15, "aria-hidden": true } as const;
   if (status === "running") return <CircleNotch {...props} weight="bold" />;
-  if (status === "awaiting_approval") return <WarningCircle {...props} weight="fill" />;
+  if (status === "awaiting_approval")
+    return <WarningCircle {...props} weight="fill" />;
   if (status === "completed") return <CheckCircle {...props} />;
   if (status === "failed") return <XCircle {...props} />;
-  if (status === "interrupted" || status === "cancelled") return <PauseCircle {...props} />;
+  if (status === "interrupted" || status === "cancelled")
+    return <PauseCircle {...props} />;
   return <ChatCircle {...props} />;
 }
 
 export function SessionListItem({
   session,
-}: { readonly session: SessionSummary }) {
-  const { state, selectSession, setMobileSidebar } = useWorkbench();
-  const run = state.activeRuns[session.id];
-  const pending = Boolean(run?.pendingApproval);
-  const status = pending
-    ? "awaiting_approval"
-    : (run?.status ?? session.status);
-  const active =
-    !state.isNewSessionOpen && session.id === state.activeSessionId;
+  badge,
+  displayTitle,
+}: {
+  readonly session: SessionSummary;
+  /** Role tag shown after the title (super-agent Router/Worker rows). */
+  readonly badge?: ReactNode;
+  /** Readable title when the stored one is an internal id (Worker `wrk_…`). */
+  readonly displayTitle?: string | undefined;
+}) {
+  const { selectSession, setMobileSidebar } = useWorkbenchActions();
+  // Select only what the row shows so streamed tokens for this session (which
+  // replace its run object) do not re-render every row.
+  const { pending, runStatus, active } = useWorkbenchSelector(({ state }) => {
+    const run = state.activeRuns[session.id];
+    return {
+      pending: Boolean(run?.pendingApproval),
+      runStatus: run?.status,
+      active: !state.isNewSessionOpen && session.id === state.activeSessionId,
+    };
+  }, shallowEqual);
+  const status = pending ? "awaiting_approval" : (runStatus ?? session.status);
   const [open, setOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [info, setInfo] = useState({ tokens: "读取中…", model: session.model });
@@ -147,8 +165,9 @@ export function SessionListItem({
         )}
         <span className="session-item-title">
           {session.archived ? "归档 · " : ""}
-          {session.title}
+          {displayTitle ?? session.title}
         </span>
+        {badge}
       </button>
       <SessionActions
         session={session}
@@ -170,7 +189,7 @@ export function SessionListItem({
               maxHeight: `calc(100dvh - ${position.top + 8}px)`,
             }}
           >
-            <strong>{session.title}</strong>
+            <strong>{displayTitle ?? session.title}</strong>
             <dl>
               <dt>状态</dt>
               <dd>{labels[status] ?? status}</dd>

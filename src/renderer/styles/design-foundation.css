@@ -1,141 +1,5 @@
-/*
- * Forge design foundation (v2, "Warm Paper & Ink, refined").
- * Loaded last by main.tsx; it is the single source of truth for surface
- * layers, warm shadows, accent tints and motion. Pages consume these tokens;
- * they do not invent their own. See docs/WEB_UI_LAYOUT_SPEC.md §1–§2, §6.
- */
-
-/* ---------- 1. Palette & surfaces ---------- */
-:root,
-[data-theme="light"] {
-  --canvas-bg: #f9f8f5;
-  --sidebar-bg: #f1efea;
-  --surface-shell: #ebe9e3;
-  --surface-elevated: #ffffff;
-  --surface-raised: #fffefc;
-  --surface-soft: #f3f1ec;
-  --surface-sunken: #eceae4;
-  --surface-hover: rgb(64 52 36 / 6%);
-  --surface-active: rgb(64 52 36 / 10%);
-  --surface-selected: rgb(64 52 36 / 8%);
-
-  --text-primary: #23211d;
-  --text-secondary: #5f5c55;
-  --text-muted: #8a867c;
-  --text-tertiary: #8a867c;
-  --text-disabled: #aaa69c;
-
-  --border-subtle: rgb(64 52 36 / 9%);
-  --border-control: rgb(64 52 36 / 16%);
-  --border-hover: rgb(64 52 36 / 28%);
-  --border-strong: rgb(64 52 36 / 40%);
-  /* Light top edge on raised cards: reads as paper catching light. */
-  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 80%);
-
-  --accent: #a54f35;
-  --accent-hover: #8f4029;
-  --accent-ink: #ffffff;
-  --accent-subtle: color-mix(in srgb, var(--accent) 9%, transparent);
-  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 32%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent) 22%, transparent);
-  --focus-ring: #a54f35;
-
-  /* Warm, layered shadows: an ambient wash plus a tight contact shadow. */
-  --shadow-color: 32deg 22% 28%;
-  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 5%);
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 6%), 0 1px 1px
-    hsl(var(--shadow-color) / 4%);
-  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 4px 12px -4px
-    hsl(var(--shadow-color) / 8%);
-  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 8px 24px -8px
-    hsl(var(--shadow-color) / 14%);
-  --shadow-dropdown: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 4px 8px -2px
-    hsl(var(--shadow-color) / 8%), 0 16px 32px -8px
-    hsl(var(--shadow-color) / 16%);
-  --shadow-overlay: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 12px 24px -6px
-    hsl(var(--shadow-color) / 12%), 0 32px 64px -16px
-    hsl(var(--shadow-color) / 22%);
-}
-
-[data-theme="dark"] {
-  --canvas-bg: #181715;
-  --sidebar-bg: #131211;
-  --surface-shell: #0f0e0d;
-  --surface-elevated: #211f1d;
-  --surface-raised: #272522;
-  --surface-soft: #1d1c1a;
-  --surface-sunken: #141312;
-  --surface-hover: rgb(255 244 228 / 5%);
-  --surface-active: rgb(255 244 228 / 9%);
-  --surface-selected: rgb(255 244 228 / 7%);
-
-  --text-primary: #eeebe4;
-  --text-secondary: #b0aca2;
-  --text-muted: #85817a;
-  --text-tertiary: #85817a;
-  --text-disabled: #625f59;
-
-  --border-subtle: rgb(255 244 228 / 7%);
-  --border-control: rgb(255 244 228 / 12%);
-  --border-hover: rgb(255 244 228 / 22%);
-  --border-strong: rgb(255 244 228 / 32%);
-  --edge-highlight: inset 0 1px 0 rgb(255 244 228 / 5%);
-
-  --accent: #dc9477;
-  --accent-hover: #e8a88e;
-  --accent-ink: #1d1410;
-  --accent-subtle: color-mix(in srgb, var(--accent) 10%, transparent);
-  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 36%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent) 26%, transparent);
-  --focus-ring: #dc9477;
-
-  --shadow-color: 30deg 30% 2%;
-  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 30%);
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 40%);
-  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 35%), 0 4px 12px -4px
-    hsl(var(--shadow-color) / 45%);
-  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 40%), 0 10px 28px -8px
-    hsl(var(--shadow-color) / 60%);
-  --shadow-dropdown: 0 0 0 1px rgb(255 244 228 / 7%), 0 4px 8px -2px
-    hsl(var(--shadow-color) / 45%), 0 18px 36px -8px
-    hsl(var(--shadow-color) / 65%);
-  --shadow-overlay: 0 0 0 1px rgb(255 244 228 / 8%), 0 12px 24px -6px
-    hsl(var(--shadow-color) / 50%), 0 32px 64px -16px
-    hsl(var(--shadow-color) / 70%);
-}
-
-/* ---------- 2. Motion ---------- */
-:root {
-  /* Durations: micro (hover/press), short (popover, toggle), medium (panel,
-     disclosure), long (page / large layout moves). */
-  --dur-micro: 120ms;
-  --dur-short: 180ms;
-  --dur-medium: 260ms;
-  --dur-long: 380ms;
-
-  /* Easings: out for entrances, in-out for state swaps, spring for
-     small physical feedback (≤ 4% overshoot). */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
-  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
-
-  /* Legacy aliases so existing rules adopt the new curve. */
-  --motion-duration-fast: var(--dur-micro);
-  --motion-duration-sm: var(--dur-short);
-  --motion-duration-base: var(--dur-short);
-  --motion-duration-md: var(--dur-medium);
-  --motion-duration-dialog: var(--dur-medium);
-  --motion-ease-out: var(--ease-out);
-  --motion-ease-in-out: var(--ease-in-out);
-  --motion-ease-dialog: var(--ease-out);
-  --transition-fast: var(--dur-micro) var(--ease-out);
-  --transition-normal: var(--dur-short) var(--ease-out);
-
-  --focus-halo: 0 0 0 3px var(--accent-glow);
-}
+/* Shared motion and component polish. Color tokens live in workspace-theme.css;
+ * scale and motion tokens live in tokens.css. This file only consumes them. */
 
 @keyframes fx-pop-in {
   from {
@@ -303,7 +167,7 @@
 .btn.is-accent {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent-ink);
+  color: var(--on-accent);
 }
 .btn-accent:hover:not(:disabled),
 .btn.is-accent:hover:not(:disabled) {
@@ -328,8 +192,8 @@
 .form-textarea:focus,
 .form-textarea:focus-visible {
   outline: none;
-  border-color: var(--accent-border);
-  box-shadow: var(--focus-halo);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
 /* Popovers & menus share one entrance. */

@@ -46,8 +46,8 @@
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out);
 }
 .wb-app .wb-inspector .wb-inspector-close:hover {
   background: var(--surface-hover);
@@ -138,8 +138,8 @@
   font: inherit;
   font-size: var(--text-xs);
   cursor: pointer;
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out);
 }
 .wb-app .wb-inspector .inspector-summary-link:hover,
 .wb-app .wb-inspector .inspector-summary-toggle:hover .inspector-summary-caret {
@@ -226,7 +226,10 @@
   transition: opacity var(--dur-micro) var(--ease-out);
 }
 .wb-app .wb-inspector .inspector-row.is-interactive:hover .inspector-row-caret,
-.wb-app .wb-inspector .inspector-row.is-interactive:focus-visible .inspector-row-caret {
+.wb-app
+  .wb-inspector
+  .inspector-row.is-interactive:focus-visible
+  .inspector-row-caret {
   opacity: 1;
 }
 .wb-app .wb-inspector .inspector-row-dot {
@@ -300,7 +303,11 @@
   text-decoration: line-through;
   text-decoration-color: var(--border-control);
 }
-.wb-app .wb-inspector .inspector-summary .plan-step-in_progress .plan-step-text {
+.wb-app
+  .wb-inspector
+  .inspector-summary
+  .plan-step-in_progress
+  .plan-step-text {
   font-weight: 500;
 }
 
@@ -505,9 +512,17 @@
 
 /* The drill-in header already names the view; panel headings that repeat it
    are hidden so the title reads once. Actions in the same row stay. */
-.wb-app .wb-inspector .inspector-subview .inspector-file-manager-header-card .inspector-card-title {
+.wb-app
+  .wb-inspector
+  .inspector-subview
+  .inspector-file-manager-header-card
+  .inspector-card-title {
   display: none;
 }
-.wb-app .wb-inspector .inspector-subview .inspector-file-manager-header-card .inspector-card-header {
+.wb-app
+  .wb-inspector
+  .inspector-subview
+  .inspector-file-manager-header-card
+  .inspector-card-header {
   justify-content: flex-end;
 }

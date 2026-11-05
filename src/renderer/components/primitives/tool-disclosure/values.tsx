@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
-import { type ToolDisclosureProps } from "./types";
+import { PlanStepsList, isPlanSteps } from "./plans";
 import { paramLabels } from "./presentation";
-import { isPlanSteps, PlanStepsList } from "./plans";
+import { type ToolDisclosureProps } from "./types";
 
 /** Best-effort pretty print for non-scalar argument values. */
 function prettyValue(value: unknown): string {

@@ -106,7 +106,8 @@
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms
+    ease;
 }
 
 .composer-queue-link-btn:hover {
@@ -115,14 +116,14 @@
 }
 
 .composer-queue-link-btn.is-primary {
-  background: color-mix(in srgb, var(--accent-sage) 14%, var(--surface-elevated));
-  border-color: color-mix(in srgb, var(--accent-sage) 35%, var(--border-subtle));
-  color: var(--accent-sage);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border-subtle));
+  color: var(--accent);
 }
 
 .composer-queue-link-btn.is-primary:hover {
-  background: color-mix(in srgb, var(--accent-sage) 22%, var(--surface-elevated));
-  border-color: var(--accent-sage);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-elevated));
+  border-color: var(--accent);
 }
 
 .composer-queue-link-btn.is-danger:hover {
@@ -179,9 +180,9 @@
 }
 
 .composer-queue-item.is-drag-over {
-  border-color: var(--accent, var(--border-hover));
+  border-color: var(--accent);
   background: var(--surface-hover);
-  box-shadow: 0 0 0 1px var(--accent, var(--border-hover));
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .composer-queue-item.is-editing {
@@ -273,7 +274,8 @@
   line-height: 1;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+  transition: background-color 120ms ease, border-color 120ms ease, transform
+    120ms ease;
 }
 
 .composer-queue-steer-btn:hover:not(:disabled) {
@@ -302,31 +304,21 @@
   flex-shrink: 0;
 }
 
-.composer-queue-icon-btn:hover:not(:disabled) {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.composer-queue-icon-btn.is-danger:hover:not(:disabled) {
+/* Tone modifiers on top of IconButton (ghost, sm). */
+.btn-icon.composer-queue-icon-btn.is-danger:hover:not(:disabled) {
   background: var(--error-bg);
   color: var(--error);
 }
 
-.composer-queue-icon-btn.is-confirm {
+.btn-icon.composer-queue-icon-btn.is-confirm {
   color: var(--success);
 }
 
-.composer-queue-icon-btn.is-confirm:hover:not(:disabled) {
+.btn-icon.composer-queue-icon-btn.is-confirm:hover:not(:disabled) {
   background: var(--success-bg);
   color: var(--success);
 }
 
-.composer-queue-icon-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.composer-queue-icon-btn:focus-visible,
 .composer-queue-steer-btn:focus-visible,
 .composer-queue-link-btn:focus-visible {
   outline: 2px solid var(--focus-ring);

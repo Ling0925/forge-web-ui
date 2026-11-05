@@ -79,9 +79,8 @@
 @media (hover: hover) and (pointer: fine) {
   .wb-app .conversation-inner .message-copy {
     opacity: 0;
-    transition: opacity var(--dur-short) var(--ease-out),
-      background-color var(--dur-micro) var(--ease-out),
-      color var(--dur-micro) var(--ease-out);
+    transition: opacity var(--dur-short) var(--ease-out), background-color
+      var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
   }
   .wb-app .conversation-inner .message-assistant:hover .message-copy,
   .wb-app .conversation-inner .message-copy:focus-visible,
@@ -105,8 +104,8 @@
   box-shadow: none;
   color: var(--text-muted);
   font-size: var(--text-sm);
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out);
 }
 .wb-app .conversation-inner .transcript-execution-summary:hover {
   background: var(--surface-hover);
@@ -128,7 +127,11 @@
 }
 
 /* Intermediate commentary inside the process reads as quiet narration. */
-.wb-app .conversation-inner .transcript-execution-items .message-assistant .message-body {
+.wb-app
+  .conversation-inner
+  .transcript-execution-items
+  .message-assistant
+  .message-body {
   color: var(--text-secondary);
   font-size: var(--text-md);
 }
@@ -177,9 +180,18 @@
   transition: opacity var(--dur-micro) var(--ease-out);
 }
 .wb-app .conversation-inner .tool-disclosure-header:hover .tool-disclosure-time,
-.wb-app .conversation-inner .tool-disclosure-header:focus-visible .tool-disclosure-time,
-.wb-app .conversation-inner .tool-disclosure-header:hover .tool-disclosure-status,
-.wb-app .conversation-inner .tool-disclosure[data-expanded="true"] .tool-disclosure-time {
+.wb-app
+  .conversation-inner
+  .tool-disclosure-header:focus-visible
+  .tool-disclosure-time,
+.wb-app
+  .conversation-inner
+  .tool-disclosure-header:hover
+  .tool-disclosure-status,
+.wb-app
+  .conversation-inner
+  .tool-disclosure[data-expanded="true"]
+  .tool-disclosure-time {
   opacity: 1;
 }
 .wb-app .conversation-inner .tool-disclosure-chevron {
@@ -195,7 +207,10 @@
   .tool-disclosure-header {
   background-color: var(--surface-hover);
 }
-.wb-app .conversation-inner .tool-disclosure-header:hover .tool-disclosure-label {
+.wb-app
+  .conversation-inner
+  .tool-disclosure-header:hover
+  .tool-disclosure-label {
   color: var(--text-primary);
 }
 .wb-app .conversation-inner .tool-diff-stat {
@@ -204,7 +219,10 @@
 }
 /* A failed action keeps its tint and word; it is the one row that must be
    findable while scrolling. */
-.wb-app .conversation-inner .tool-disclosure[data-status="failed"] .tool-disclosure-header {
+.wb-app
+  .conversation-inner
+  .tool-disclosure[data-status="failed"]
+  .tool-disclosure-header {
   border: 0;
 }
 
@@ -228,7 +246,11 @@
 .wb-app .conversation-inner .reasoning-done .reasoning-head:hover {
   background-color: var(--surface-hover);
 }
-.wb-app .conversation-inner .reasoning-done .reasoning-head:hover .reasoning-summary {
+.wb-app
+  .conversation-inner
+  .reasoning-done
+  .reasoning-head:hover
+  .reasoning-summary {
   color: var(--text-secondary);
 }
 

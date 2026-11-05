@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { agentEventSchema } from "@forge/core/shared/schemas";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
@@ -6,7 +7,6 @@ import {
   appendSessionEvent,
   sessionUsage,
 } from "../../src/renderer/state/session-usage";
-import { agentEventSchema } from "@forge/core/shared/schemas";
 
 const base = {
   sessionId: "00000000-0000-4000-8000-000000000001",
@@ -138,12 +138,21 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     render();
   `,
     },
-    plugins: [{ name: "workbench-settings-fixture", setup(plugin) {
-      plugin.onLoad({ filter: /[/\\]state[/\\]workbench-context\.tsx$/ }, () => ({
-        contents: "export const useWorkbench = () => ({ state: { settings: window.contextSettings } });",
-        loader: "ts",
-      }));
-    } }],
+    plugins: [
+      {
+        name: "workbench-settings-fixture",
+        setup(plugin) {
+          plugin.onLoad(
+            { filter: /[/\\]state[/\\]workbench-context\.tsx$/ },
+            () => ({
+              contents:
+                "export const useWorkbench = () => ({ state: { settings: window.contextSettings } });",
+              loader: "ts",
+            }),
+          );
+        },
+      },
+    ],
     bundle: true,
     write: false,
     format: "iife",
@@ -182,20 +191,37 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
         const track = await page.locator(".usage-track").boundingBox();
         if (!track) throw new Error("Missing context track");
         expect(track.height).toBe(3);
-        const segments = await page.locator(".usage-segment").evaluateAll(nodes => nodes.map(node => ({ width: node.getBoundingClientRect().width, color: getComputedStyle(node).backgroundColor })));
-        expect(new Set(segments.map(segment => segment.color)).size).toBe(4);
-        expect(segments.reduce((sum, segment) => sum + segment.width, 0) / track.width).toBeCloseTo(486400 / 1048576, 2);
+        const segments = await page
+          .locator(".usage-segment")
+          .evaluateAll((nodes) =>
+            nodes.map((node) => ({
+              width: node.getBoundingClientRect().width,
+              color: getComputedStyle(node).backgroundColor,
+            })),
+          );
+        expect(new Set(segments.map((segment) => segment.color)).size).toBe(4);
+        expect(
+          segments.reduce((sum, segment) => sum + segment.width, 0) /
+            track.width,
+        ).toBeCloseTo(486400 / 1048576, 2);
         const reserve = await page.locator(".usage-reserve").boundingBox();
         if (!reserve) throw new Error("Missing context reserve segment");
         expect(reserve.width / track.width).toBeCloseTo(0.2, 1);
-        expect(await page.locator(".usage-reserve").getAttribute("title")).toContain("压缩预留区");
+        expect(
+          await page.locator(".usage-reserve").getAttribute("title"),
+        ).toContain("压缩预留区");
         await trigger.click();
         const panel = page.getByRole("region", { name: "用量详情" });
         expect(await panel.innerText()).toContain("46.4% / 486.3K");
         expect(await panel.innerText()).toContain("97.6%");
         expect(await panel.innerText()).toContain("压缩预留");
-        for (const label of ["指令", "记忆", "对话", "工具"]) expect(await panel.innerText()).toContain(label);
-        const panelSegments = await page.locator(".usage-panel-segment").evaluateAll(nodes => nodes.map(node => getComputedStyle(node).backgroundColor));
+        for (const label of ["指令", "记忆", "对话", "工具"])
+          expect(await panel.innerText()).toContain(label);
+        const panelSegments = await page
+          .locator(".usage-panel-segment")
+          .evaluateAll((nodes) =>
+            nodes.map((node) => getComputedStyle(node).backgroundColor),
+          );
         expect(new Set(panelSegments).size).toBe(4);
         expect(await page.locator(".usage-panel-reserve").count()).toBe(1);
         const rect = await panel.boundingBox();
@@ -224,42 +250,102 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     expect(
       await page.evaluate(() => localStorage.getItem("forge-session-usage-v2")),
     ).toBe(saved);
-    const projected = { ...base, type: "context_usage", usage: { windowTokens: 1048576, usedTokens: 120000, estimated: true, basis: "projected", parts: { instructions: 0, memory: 0, conversation: 120000, tools: 0 } } };
-    await page.evaluate(event => Reflect.get(window, 'appendUsage')(event), projected);
-    const detail = page.getByRole('region', { name: '用量详情' });
-    await expect.poll(() => detail.innerText()).toContain('≈120K tokens');
-    expect(await page.getByLabel('上下文与用量', { exact: true }).innerText()).toContain('1M');
-    expect(await detail.innerText()).toContain('最近请求输入（实报）');
-    await page.evaluate(event => Reflect.get(window, 'appendUsage')(event), { ...base, type: 'context_compacted', removedMessages: 10, beforeChars: 1000000, afterChars: 400000 });
-    await page.evaluate(event => Reflect.get(window, 'appendUsage')(event), projected);
-    await expect.poll(() => page.getByLabel('上下文与用量', { exact: true }).innerText()).toContain('1M');
-    expect(await detail.innerText()).toContain('压缩后预估（待实报）');
-    expect(await detail.innerText()).toContain('累计用量不清零');
-    // Active runs use the captured budget, while idle history uses current settings.
-    const settings = { contextBudgetChars: 100000, contextBudgetTokens: null, modelContextWindows: { model: 64000 } };
-    const oldEvents = await page.evaluate(() => Reflect.get(window, 'usageEvents')());
-    await page.evaluate(value => Reflect.get(window, 'setContextSettings')(value), settings);
-    await expect.poll(() => page.getByLabel('上下文与用量', { exact: true }).innerText()).toContain('1M');
-    expect(await page.evaluate(() => localStorage.getItem('forge-session-usage-v2'))).toBe(saved);
-    await page.evaluate(() => Reflect.get(window, 'finishUsage')());
-    await expect.poll(() => page.getByLabel('上下文与用量', { exact: true }).innerText()).toContain('64K');
-    const completedCache = await page.evaluate(() => localStorage.getItem('forge-session-usage-v2'));
-    expect(await detail.innerText()).toContain('187.5% / 120K');
-    expect(await page.locator('.usage-reserve').getAttribute('title')).toContain('下一次请求前自动压缩');
-    await page.evaluate(value => Reflect.get(window, 'setContextSettings')(value), {
-      ...settings, modelContextWindows: { model: 1000000 }, contextBudgetTokens: 500000,
+    const projected = {
+      ...base,
+      type: "context_usage",
+      usage: {
+        windowTokens: 1048576,
+        usedTokens: 120000,
+        estimated: true,
+        basis: "projected",
+        parts: { instructions: 0, memory: 0, conversation: 120000, tools: 0 },
+      },
+    };
+    await page.evaluate(
+      (event) => Reflect.get(window, "appendUsage")(event),
+      projected,
+    );
+    const detail = page.getByRole("region", { name: "用量详情" });
+    await expect.poll(() => detail.innerText()).toContain("≈120K tokens");
+    expect(
+      await page.getByLabel("上下文与用量", { exact: true }).innerText(),
+    ).toContain("1M");
+    expect(await detail.innerText()).toContain("最近请求输入（实报）");
+    await page.evaluate((event) => Reflect.get(window, "appendUsage")(event), {
+      ...base,
+      type: "context_compacted",
+      removedMessages: 10,
+      beforeChars: 1000000,
+      afterChars: 400000,
     });
-    await expect.poll(() => detail.innerText()).toContain('窗口 1M tokens');
-    expect(await detail.innerText()).toContain('12.0% / 120K');
-    expect(await page.locator('.usage-reserve').getAttribute('title')).toContain('500K tokens (50.0%)');
-    expect(await page.evaluate(() => localStorage.getItem('forge-session-usage-v2'))).toBe(completedCache);
-    expect(await page.evaluate(() => Reflect.get(window, 'usageEvents')())).toBe(oldEvents);
+    await page.evaluate(
+      (event) => Reflect.get(window, "appendUsage")(event),
+      projected,
+    );
+    await expect
+      .poll(() => page.getByLabel("上下文与用量", { exact: true }).innerText())
+      .toContain("1M");
+    expect(await detail.innerText()).toContain("压缩后预估（待实报）");
+    expect(await detail.innerText()).toContain("累计用量不清零");
+    // Active runs use the captured budget, while idle history uses current settings.
+    const settings = {
+      contextBudgetChars: 100000,
+      contextBudgetTokens: null,
+      modelContextWindows: { model: 64000 },
+    };
+    const oldEvents = await page.evaluate(() =>
+      Reflect.get(window, "usageEvents")(),
+    );
+    await page.evaluate(
+      (value) => Reflect.get(window, "setContextSettings")(value),
+      settings,
+    );
+    await expect
+      .poll(() => page.getByLabel("上下文与用量", { exact: true }).innerText())
+      .toContain("1M");
+    expect(
+      await page.evaluate(() => localStorage.getItem("forge-session-usage-v2")),
+    ).toBe(saved);
+    await page.evaluate(() => Reflect.get(window, "finishUsage")());
+    await expect
+      .poll(() => page.getByLabel("上下文与用量", { exact: true }).innerText())
+      .toContain("64K");
+    const completedCache = await page.evaluate(() =>
+      localStorage.getItem("forge-session-usage-v2"),
+    );
+    expect(await detail.innerText()).toContain("187.5% / 120K");
+    expect(
+      await page.locator(".usage-reserve").getAttribute("title"),
+    ).toContain("下一次请求前自动压缩");
+    await page.evaluate(
+      (value) => Reflect.get(window, "setContextSettings")(value),
+      {
+        ...settings,
+        modelContextWindows: { model: 1000000 },
+        contextBudgetTokens: 500000,
+      },
+    );
+    await expect.poll(() => detail.innerText()).toContain("窗口 1M tokens");
+    expect(await detail.innerText()).toContain("12.0% / 120K");
+    expect(
+      await page.locator(".usage-reserve").getAttribute("title"),
+    ).toContain("500K tokens (50.0%)");
+    expect(
+      await page.evaluate(() => localStorage.getItem("forge-session-usage-v2")),
+    ).toBe(completedCache);
+    expect(
+      await page.evaluate(() => Reflect.get(window, "usageEvents")()),
+    ).toBe(oldEvents);
     await page.goto("http://usage.test/?unknown-window");
     await page.getByText("61.6K tokens", { exact: true }).click();
     const unknownPanel = page.getByRole("region", { name: "用量详情" });
     expect(await unknownPanel.innerText()).toContain("61.6K tokens 已用");
-    expect(await unknownPanel.innerText()).toContain("上下文窗口未知，暂不计算百分比");
-    expect(await page.getByRole("progressbar", { name: "上下文占用" }).count()).toBe(0);
+    expect(await unknownPanel.innerText()).toContain(
+      "上下文窗口未知，暂不计算百分比",
+    );
+    expect(
+      await page.getByRole("progressbar", { name: "上下文占用" }).count(),
+    ).toBe(0);
 
     // Verify linking model pricing from Usage (getUsageStats) and displaying TPS + breakdowns.
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -390,7 +476,9 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     await expect.poll(() => richTrigger.innerText()).toContain("50.0 tok/s");
     await richTrigger.click();
     const richPanel = page.getByRole("region", { name: "用量详情" });
-    await expect.poll(() => richPanel.innerText()).toContain("入 $6 · 出 $22.5 · 缓存 $0.6 /M");
+    await expect
+      .poll(() => richPanel.innerText())
+      .toContain("入 $6 · 出 $22.5 · 缓存 $0.6 /M");
     expect(await richPanel.innerText()).toContain("模型单价 (>200K)");
     expect(await richPanel.innerText()).toContain("$0.36");
     expect(await richPanel.innerText()).toContain("省 $2.57");
@@ -398,18 +486,16 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
     expect(await richPanel.innerText()).toContain("50.0 tok/s");
     expect(await richPanel.innerText()).toContain("峰值 60.0 · 耗时 4.0s");
     expect(await richPanel.innerText()).toContain("未缓存 23.5K");
-    const dtBoxes = await richPanel
-      .locator("dt")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => {
-          const rect = node.getBoundingClientRect();
-          return {
-            text: (node.textContent ?? "").trim(),
-            width: rect.width,
-            height: rect.height,
-          };
-        }),
-      );
+    const dtBoxes = await richPanel.locator("dt").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          text: (node.textContent ?? "").trim(),
+          width: rect.width,
+          height: rect.height,
+        };
+      }),
+    );
     for (const box of dtBoxes) {
       expect(box.height).toBeLessThanOrEqual(24);
       expect(box.width).toBeGreaterThanOrEqual(24);
@@ -468,18 +554,16 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
       ],
     );
     await expect.poll(() => richPanel.innerText()).toContain("耗时 3h 3m");
-    const lightDtBoxes = await richPanel
-      .locator("dt")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => {
-          const rect = node.getBoundingClientRect();
-          return {
-            text: (node.textContent ?? "").trim(),
-            width: rect.width,
-            height: rect.height,
-          };
-        }),
-      );
+    const lightDtBoxes = await richPanel.locator("dt").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          text: (node.textContent ?? "").trim(),
+          width: rect.width,
+          height: rect.height,
+        };
+      }),
+    );
     for (const box of lightDtBoxes) {
       expect(box.height).toBeLessThanOrEqual(24);
       expect(box.width).toBeGreaterThanOrEqual(24);

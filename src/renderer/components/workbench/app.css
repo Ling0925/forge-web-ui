@@ -79,7 +79,7 @@
   height: 56px;
   border-radius: var(--radius-md);
   background-color: var(--surface-soft);
-  color: var(--accent-sage);
+  color: var(--accent);
   margin-bottom: var(--space-2);
 }
 .wb-app .conversation-inner .empty-state .empty-state-icon svg {
@@ -87,7 +87,7 @@
   height: 28px;
 }
 .wb-app .conversation-inner .empty-state .empty-state-title {
-  font-size: 22px;
+  font-size: var(--text-display);
   line-height: 30px;
   font-weight: 600;
   letter-spacing: -0.015em;
@@ -208,8 +208,11 @@
   background: var(--border-hover);
   flex-shrink: 0;
 }
+.wb-app .message-user .message-header {
+  font-weight: 500;
+}
 .wb-app .message-user .message-header::before {
-  background: var(--accent);
+  background: var(--border-hover);
 }
 .wb-app .message-assistant.message-streaming .message-header::before {
   background: var(--accent);
@@ -403,7 +406,7 @@
   color: var(--text-primary);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   width: min(640px, calc(100vw - var(--space-6)));
   max-height: 88dvh;
   box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.25);
@@ -532,9 +535,8 @@
     transform: translateX(-100%);
     visibility: hidden;
     pointer-events: none;
-    transition:
-      transform var(--transition-normal),
-      visibility 0s linear var(--transition-normal);
+    transition: transform var(--transition-normal), visibility 0s linear
+      var(--transition-normal);
     will-change: transform;
     overscroll-behavior: contain;
   }
@@ -553,16 +555,6 @@
   }
   .sidebar-mobile-close {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-  }
-  .sidebar-mobile-close:hover {
-    background-color: var(--surface-hover);
-    color: var(--text-primary);
   }
   .session-item-main {
     min-height: 38px;
@@ -606,6 +598,9 @@
 .markdown-content ol {
   margin: 0.75em 0;
 }
+.markdown-content > :is(p, ul, ol, blockquote, h1, h2, h3, h4, h5, h6) {
+  max-width: var(--prose-measure);
+}
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3,
@@ -618,20 +613,20 @@
   line-height: 1.35;
 }
 .markdown-content h1 {
-  font-size: 26px;
+  font-size: var(--text-2xl);
   margin: 1.15em 0 0.4em;
   letter-spacing: -0.02em;
 }
 .markdown-content h2 {
-  font-size: 21px;
+  font-size: var(--text-xl);
   margin: 1.1em 0 0.4em;
 }
 .markdown-content h3 {
-  font-size: 18px;
+  font-size: var(--text-lg);
   margin: 1em 0 0.35em;
 }
 .markdown-content h4 {
-  font-size: 16px;
+  font-size: var(--text-prose);
   margin: 1em 0 0.3em;
 }
 .markdown-content h5,
@@ -677,6 +672,30 @@
 .markdown-content th {
   font-weight: 600;
   border-bottom: 1px solid var(--border-subtle);
+  /* Short CJK headers must never break per character ("风/险"). */
+  white-space: nowrap;
+}
+/* Tables are reference material: one step below body prose so a 4-column
+   table fits the reading column without per-character wrapping. */
+.markdown-content table {
+  font-size: var(--text-md);
+  line-height: var(--leading-md);
+}
+.markdown-content td {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.markdown-content tr:last-child td {
+  border-bottom: none;
+}
+/* Inline code as a quiet chip. Bare monospace inside CJK prose read as a font
+   fallback glitch; the chip makes identifiers intentional and scannable. */
+.markdown-content code:not(.markdown-code code) {
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-xs);
+  background: var(--surface-soft);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 .agent-card {
   padding: var(--space-2-5);
@@ -789,7 +808,7 @@
 .transcript-latest {
   position: absolute;
   left: 50%;
-  bottom: var(--space-2, 8px);
+  bottom: var(--space-2);
   transform: translateX(-50%);
   z-index: 25;
   display: flex;
@@ -806,8 +825,8 @@
   background: var(--surface-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-control);
-  box-shadow: var(--shadow-overlay, 0 8px 24px rgba(0, 0, 0, 0.22));
-  padding: 0 var(--space-3-5, 14px);
+  box-shadow: var(--shadow-overlay);
+  padding: 0 var(--space-3-5);
   height: 30px;
   min-height: 30px;
   font-size: var(--text-xs);
@@ -839,9 +858,9 @@
 
 @media (pointer: coarse) {
   .transcript-latest .btn {
-    min-height: var(--touch-min-target, 44px);
-    height: var(--touch-min-target, 44px);
-    padding: 0 var(--space-4, 16px);
+    min-height: var(--touch-min-target);
+    height: var(--touch-min-target);
+    padding: 0 var(--space-4);
   }
 }
 
@@ -1349,11 +1368,10 @@
   .wb-app .workbench-inspector {
     overflow: hidden;
     will-change: width, transform;
-    transition:
-      width var(--motion-duration-md) var(--motion-ease-out),
+    transition: width var(--motion-duration-md) var(--motion-ease-out),
       border-left-width var(--motion-duration-md) var(--motion-ease-out),
-      opacity var(--motion-duration-sm) ease,
-      transform var(--motion-duration-md) var(--motion-ease-out);
+      opacity var(--motion-duration-sm) ease, transform
+      var(--motion-duration-md) var(--motion-ease-out);
   }
   .wb-app .workbench-inspector > * {
     width: var(--inspector-width);
@@ -1379,7 +1397,7 @@
    pane narrows to --inspector-width-compact and the sidebar rail follows
    --rail-width-compact so the central reading flow keeps a comfortable
    (>= 640px) width instead of being squeezed below its legible measure. */
-@media (min-width: 1001px) and (max-width: 1366px) {
+@media (min-width: 1281px) and (max-width: 1366px) {
   .wb-app:not(.inspector-collapsed) .workbench-inspector,
   .wb-app:not(.inspector-collapsed) .workbench-inspector > * {
     width: var(--inspector-width-compact);
@@ -1390,6 +1408,53 @@
     min-width: var(--rail-width-compact);
     max-width: var(--rail-width-compact);
   }
+}
+
+.wb-inspector-scrim {
+  display: none;
+}
+/* 1001px ~ 1280px: the inspector stays collapsed by default and opens as an
+   overlay drawer above the reading column instead of narrowing it. */
+@media (min-width: 1001px) and (max-width: 1280px) {
+  .wb-app .workbench-content {
+    position: relative;
+  }
+  .wb-app .workbench-inspector {
+    position: absolute;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    box-shadow: var(--shadow-overlay);
+  }
+  .wb-app.inspector-collapsed .workbench-inspector {
+    width: var(--inspector-width);
+    transform: translateX(100%);
+    box-shadow: none;
+  }
+  .wb-app .wb-inspector-scrim {
+    display: block;
+    position: absolute;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    inset: 0;
+    z-index: 29;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.16);
+    cursor: default;
+    animation: wb-inspector-scrim-in var(--motion-duration-sm) ease both;
+  }
+}
+@keyframes wb-inspector-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (min-width: 1001px) and (max-width: 1366px) {
   /* One scroll owner: the reading flow fills the remaining space instead of
      growing an outer page scrollbar next to the conversation scrollbar. */
   .wb-app .workbench-main {
@@ -1430,43 +1495,6 @@
   }
 }
 
-.wb-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: var(--icon-size);
-  min-width: var(--icon-size);
-  height: var(--icon-size);
-  min-height: var(--icon-size);
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  line-height: 1;
-  border-radius: var(--radius-quiet);
-  cursor: pointer;
-}
-.wb-icon-btn:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
-}
-.wb-icon-btn:active {
-  background: var(--active-bg);
-}
-.wb-icon-btn:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
-}
-.wb-icon-btn:disabled {
-  color: var(--text-disabled);
-  cursor: not-allowed;
-}
-
-.wb-icon-btn.is-active {
-  background: var(--surface-selected);
-}
 .wb-approval-pill,
 .wb-approval-count {
   color: var(--warning);
@@ -1501,7 +1529,7 @@
   padding: var(--space-4);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-overlay);
   z-index: 50;
   display: flex;
@@ -1626,7 +1654,6 @@
   }
 }
 @media (max-width: 768px) {
-  .wb-icon-btn,
   .wb-overflow > summary {
     min-width: var(--icon-size-touch);
     min-height: var(--icon-size-touch);
@@ -1761,7 +1788,7 @@
   color: var(--text-secondary);
 }
 .sidebar-search input[type="checkbox"] {
-  accent-color: var(--accent-sage);
+  accent-color: var(--accent);
   margin: 0;
   flex-shrink: 0;
 }

@@ -1,3 +1,4 @@
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -7,9 +8,9 @@ import {
   PlanStageDivider,
   StoredTranscript,
   ToolPreviews,
+  groupExecution,
 } from "../../src/renderer/components/workbench/Transcript";
 import type { TimelineItem } from "../../src/renderer/state/timeline";
-import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
 
 const toolCall = {
   id: "call-1",
@@ -149,7 +150,6 @@ describe("Transcript Turn partitioning and grouping", () => {
     ).toEqual(["", "t2"]);
   });
 
-
   it("renders StoredTranscript with turn container, turn badge and compact tool call group", () => {
     const snapshot = sessionSnapshotSchema.parse({
       version: 1,
@@ -173,7 +173,9 @@ describe("Transcript Turn partitioning and grouping", () => {
       changes: [],
     });
 
-    const html = renderToStaticMarkup(createElement(StoredTranscript, { snapshot }));
+    const html = renderToStaticMarkup(
+      createElement(StoredTranscript, { snapshot }),
+    );
 
     expect(html).toContain('class="transcript-turn"');
     // A turn is the user's request plus the work; no turn badge or toggle.
@@ -202,7 +204,7 @@ describe("Transcript Turn partitioning and grouping", () => {
     expect(html).toContain('class="transcript-stage-fill-active"');
     expect(html).toContain('style="width:33%"');
     expect(html).toContain('class="transcript-stage-count"');
-    expect(html).toContain("1/3");
+    expect(html).toContain("第 2/3 步");
   });
 
   it("renders animated active progress segment for in-progress stage at 0/3 and omits it when all steps are completed", () => {
@@ -213,17 +215,30 @@ describe("Transcript Turn partitioning and grouping", () => {
         total: 3,
         plan: {
           steps: [
-            { step: "检查模型发现调用链、存储约定及相关测试，确定最小实现范围", status: "in_progress" },
-            { step: "实现按来源隔离的模型元数据持久缓存并接通刷新入口", status: "pending" },
-            { step: "运行聚焦功能测试并编译 CLI，检查 diff 后提交本轮修改", status: "pending" },
+            {
+              step: "检查模型发现调用链、存储约定及相关测试，确定最小实现范围",
+              status: "in_progress",
+            },
+            {
+              step: "实现按来源隔离的模型元数据持久缓存并接通刷新入口",
+              status: "pending",
+            },
+            {
+              step: "运行聚焦功能测试并编译 CLI，检查 diff 后提交本轮修改",
+              status: "pending",
+            },
           ],
         },
       }),
     );
 
-    expect(initialHtml).toContain('class="transcript-stage-fill" style="width:0%"');
-    expect(initialHtml).toContain('class="transcript-stage-fill-active" style="width:33%"');
-    expect(initialHtml).toContain("0/3");
+    expect(initialHtml).toContain(
+      'class="transcript-stage-fill" style="width:0%"',
+    );
+    expect(initialHtml).toContain(
+      'class="transcript-stage-fill-active" style="width:33%"',
+    );
+    expect(initialHtml).toContain("第 1/3 步");
 
     const completedHtml = renderToStaticMarkup(
       createElement(PlanStageDivider, {
@@ -240,48 +255,73 @@ describe("Transcript Turn partitioning and grouping", () => {
       }),
     );
 
-    expect(completedHtml).toContain('class="transcript-stage-fill" style="width:100%"');
+    expect(completedHtml).toContain(
+      'class="transcript-stage-fill" style="width:100%"',
+    );
     expect(completedHtml).not.toContain("transcript-stage-fill-active");
-    expect(completedHtml).toContain("3/3");
+    expect(completedHtml).toContain("3/3 完成");
   });
 
-  it.each(["create_plan", "update_plan"])("separates %s tool entries as single blocks between surrounding tools", (name) => {
-    const planTool: TimelineItem = {
-      kind: "tool",
-      id: "plan-tool-1",
-      call: {
-        id: "call-plan",
-        type: "function",
-        function: {
-          name,
-          arguments: JSON.stringify({
-            explanation: "e",
-            steps: [{ step: "s1", status: "completed" }, { step: "s2", status: "in_progress" }],
-          }),
+  it.each(["create_plan", "update_plan"])(
+    "separates %s tool entries as single blocks between surrounding tools",
+    (name) => {
+      const planTool: TimelineItem = {
+        kind: "tool",
+        id: "plan-tool-1",
+        call: {
+          id: "call-plan",
+          type: "function",
+          function: {
+            name,
+            arguments: JSON.stringify({
+              explanation: "e",
+              steps: [
+                { step: "s1", status: "completed" },
+                { step: "s2", status: "in_progress" },
+              ],
+            }),
+          },
         },
-      },
-      status: "completed",
-      output: JSON.stringify({
-        explanation: "e",
-        steps: [{ step: "s1", status: "completed" }, { step: "s2", status: "in_progress" }],
-      }),
-      changes: [],
-    };
+        status: "completed",
+        output: JSON.stringify({
+          explanation: "e",
+          steps: [
+            { step: "s1", status: "completed" },
+            { step: "s2", status: "in_progress" },
+          ],
+        }),
+        changes: [],
+      };
 
-    const entries = [
-      { item: toolItem("t1"), index: 0 },
-      { item: planTool, index: 1 },
-      { item: toolItem("t2"), index: 2 },
-    ];
-    const headers = [null, null, null];
-    const blocks = groupTurnEntries(entries, headers);
+      const entries = [
+        { item: toolItem("t1"), index: 0 },
+        { item: planTool, index: 1 },
+        { item: toolItem("t2"), index: 2 },
+      ];
+      const headers = [null, null, null];
+      const blocks = groupTurnEntries(entries, headers);
 
-    expect(blocks).toHaveLength(3);
-    expect(blocks[0].kind).toBe("tool_group");
-    expect(blocks[1].kind).toBe("single");
-    expect(blocks[1].entry.item.id).toBe("plan-tool-1");
-    expect(blocks[2].kind).toBe("tool_group");
-  });
+      expect(blocks).toHaveLength(3);
+      expect(blocks[0].kind).toBe("tool_group");
+      expect(blocks[1].kind).toBe("single");
+      expect(blocks[1].entry.item.id).toBe("plan-tool-1");
+      expect(blocks[2].kind).toBe("tool_group");
+
+      // The plan bar heads an execution group holding the work after it;
+      // work before the first plan bar stays outside any group.
+      const sections = groupExecution(blocks);
+      expect(sections.map((section) => section.kind)).toEqual([
+        "loose",
+        "group",
+      ]);
+      const group = sections[1];
+      if (group?.kind !== "group") throw new Error("expected a group");
+      expect(group.header.entry.item.id).toBe("plan-tool-1");
+      expect(group.members.map(({ index }) => index)).toEqual([2]);
+      expect(group.complete).toBe(false);
+      expect(group.last).toBe(true);
+    },
+  );
 
   it("renders live tool previews with real-time diff badges (+added / -removed)", () => {
     const html = renderToStaticMarkup(
@@ -298,9 +338,13 @@ describe("Transcript Turn partitioning and grouping", () => {
       }),
     );
 
-    expect(html).toContain('class="tool-diff-stat tool-diff-added tool-live-diff"');
+    expect(html).toContain(
+      'class="tool-diff-stat tool-diff-added tool-live-diff"',
+    );
     expect(html).toContain("+123");
-    expect(html).toContain('class="tool-diff-stat tool-diff-removed tool-live-diff"');
+    expect(html).toContain(
+      'class="tool-diff-stat tool-diff-removed tool-live-diff"',
+    );
     expect(html).toContain("-12");
     expect(html).toContain("3878 字符");
     expect(html).toContain("生成参数中");

@@ -24,7 +24,7 @@
 .composer-image-attachments::-webkit-scrollbar-thumb,
 .message-image-attachments::-webkit-scrollbar-thumb {
   background: var(--border-subtle);
-  border-radius: 2px;
+  border-radius: var(--radius-2xs);
 }
 
 .image-attachment-item {
@@ -54,7 +54,7 @@
   cursor: pointer;
   background: var(--surface-hover);
   border: 1px solid var(--border-subtle);
-  transition: opacity var(--transition-fast, 120ms ease);
+  transition: opacity var(--transition-fast);
 }
 
 .image-attachment-button:hover {
@@ -76,10 +76,10 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: var(--touch-min-target, 44px);
-  height: var(--touch-min-target, 44px);
-  min-width: var(--touch-min-target, 44px);
-  min-height: var(--touch-min-target, 44px);
+  width: var(--touch-min-target);
+  height: var(--touch-min-target);
+  min-width: var(--touch-min-target);
+  min-height: var(--touch-min-target);
   padding: 0;
   border-radius: var(--radius-full);
   background-color: var(--surface-elevated);
@@ -121,7 +121,7 @@
   height: 16px;
   border: 2px solid var(--border-subtle);
   border-top-color: var(--text-secondary);
-  border-radius: var(--radius-full, 50%);
+  border-radius: var(--radius-full);
   animation: image-attachment-spin 0.8s linear infinite;
 }
 

@@ -2,8 +2,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
-  Markdown,
   MARKDOWN_PARSE_LIMIT,
+  Markdown,
 } from "../../src/renderer/components/workbench/Markdown";
 const render = (source: string, highlight = false) =>
   renderToStaticMarkup(createElement(Markdown, { source, highlight }));

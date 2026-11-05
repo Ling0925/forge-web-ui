@@ -1,8 +1,9 @@
-import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
+import { chooseOption, selectValue } from "./select-helpers";
 
 it("imports sources, manages routes and credentials, logs in and reads quota", async () => {
   const bundle = await build({
@@ -12,7 +13,7 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
       contents: `
         import {createRoot} from 'react-dom/client';
         import {ProviderSources} from './src/renderer/components/workbench/ProviderSources';
-        import {providerPresets} from '@forge/core/provider/presets';
+        import {providerPresets} from './node_modules/@forge/core/src/provider/presets';
         import {TestProvider} from './src/renderer/state/workbench-context';
         import './src/renderer/styles/global.css';
         import './src/renderer/components/workbench/model-access.css';
@@ -154,7 +155,7 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     });
 
     await expect
-      .poll(() => page.locator(".provider-source-card").count())
+      .poll(() => page.locator(".provider-source-row").count())
       .toBe(1);
     await expect
       .poll(() => page.locator(".model-access-route-card").count())
@@ -194,9 +195,9 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     // Route members keep the exact source/model/credential triple.
     await page.getByRole("button", { name: "编辑路由组" }).click();
     await page.getByRole("dialog", { name: "编辑路由组" }).waitFor();
-    expect(await page.locator("#route-source-0").inputValue()).toBe("a");
+    expect(await selectValue(page.locator("#route-source-0"))).toBe("a");
     expect(await page.locator("#route-model-0").inputValue()).toBe("a/one");
-    expect(await page.locator("#route-credential-0").inputValue()).toBe(
+    expect(await selectValue(page.locator("#route-credential-0"))).toBe(
       "default",
     );
     await page.locator("#route-model-0").fill("a/two");
@@ -216,9 +217,9 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     await page.getByRole("button", { name: "添加路由组" }).click();
     await page.getByRole("dialog", { name: "添加路由组" }).waitFor();
     await page.getByLabel("名称", { exact: true }).fill("路由 B");
-    await page.locator("#route-source-0").selectOption("a");
+    await chooseOption(page.locator("#route-source-0"), "a");
     await page.locator("#route-model-0").fill("a/one");
-    await page.locator("#route-credential-0").selectOption("codex-1");
+    await chooseOption(page.locator("#route-credential-0"), "codex-1");
     await page.getByRole("button", { name: "保存路由组" }).click();
     await expect
       .poll(async () =>
@@ -261,10 +262,10 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
       .toContain("工具 否");
     await expect
       .poll(() => page.locator(".model-access-catalog").innerText())
-      .toContain("视觉 ?");
+      .toContain("视觉 未知");
     await expect
       .poll(() => page.locator(".model-access-catalog").innerText())
-      .toContain("推理 low/high");
+      .toContain("思考档位 低/高");
     await expect
       .poll(() => page.locator(".model-access-catalog").innerText())
       .toContain("价格 1 USD / 2 USD · catalog");
@@ -273,9 +274,10 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
         .getByRole("textbox", { name: "凭据密钥 默认", exact: true })
         .inputValue(),
     ).toBe("");
-    await page
-      .getByRole("combobox", { name: "账号平台" })
-      .selectOption("copilot");
+    await chooseOption(
+      page.getByRole("combobox", { name: "账号平台" }),
+      "copilot",
+    );
     await page.getByRole("button", { name: "开始登录" }).click();
     await expect
       .poll(async () =>
@@ -381,23 +383,44 @@ it("imports sources, manages routes and credentials, logs in and reads quota", a
     ).toContain("codex-2");
 
     await page.getByRole("button", { name: "添加来源" }).click();
-    await page.getByLabel("预设", { exact: true }).selectOption("google");
-    expect(await page.getByLabel("协议", { exact: true }).inputValue()).toBe("gemini");
-    expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("https://generativelanguage.googleapis.com/v1beta");
-    await page.getByLabel("预设", { exact: true }).selectOption("azure");
-    expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("");
-    await page.getByLabel("预设", { exact: true }).selectOption("bedrock");
-    await page.getByLabel("Region", { exact: true }).selectOption("eu-central-1");
-    expect(await page.getByLabel("API 地址", { exact: true }).inputValue()).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1");
+    await chooseOption(page.getByLabel("预设", { exact: true }), "google");
+    expect(await selectValue(page.getByLabel("协议", { exact: true }))).toBe(
+      "gemini",
+    );
+    expect(
+      await page.getByLabel("API 地址", { exact: true }).inputValue(),
+    ).toBe("https://generativelanguage.googleapis.com/v1beta");
+    await chooseOption(page.getByLabel("预设", { exact: true }), "azure");
+    expect(
+      await page.getByLabel("API 地址", { exact: true }).inputValue(),
+    ).toBe("");
+    await chooseOption(page.getByLabel("预设", { exact: true }), "bedrock");
+    await chooseOption(
+      page.getByLabel("Region", { exact: true }),
+      "eu-central-1",
+    );
+    expect(
+      await page.getByLabel("API 地址", { exact: true }).inputValue(),
+    ).toBe("https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1");
     const captureDir = process.env.FORGE_MODEL_ACCESS_CAPTURE_DIR;
     if (captureDir) {
       await mkdir(captureDir, { recursive: true });
-      for (const theme of ["light", "dark"]) for (const width of [1440, 390]) {
-        await page.setViewportSize({ width, height: 1000 });
-        await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-        await page.screenshot({ path: resolve(captureDir, `providers-${theme}-${width}.png`), fullPage: true });
-        expect(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth)).toBe(true);
-      }
+      for (const theme of ["light", "dark"])
+        for (const width of [1440, 390]) {
+          await page.setViewportSize({ width, height: 1000 });
+          await page.evaluate((value) => {
+            document.documentElement.dataset.theme = value;
+          }, theme);
+          await page.screenshot({
+            path: resolve(captureDir, `providers-${theme}-${width}.png`),
+            fullPage: true,
+          });
+          expect(
+            await page.evaluate(
+              () => document.body.scrollWidth <= window.innerWidth,
+            ),
+          ).toBe(true);
+        }
     }
   } finally {
     await browser.close();
@@ -490,7 +513,9 @@ it("shows actual route, source and credential usage in the stats panel", async (
     });
 
     const overviewTab = page.getByRole("tab", { name: "概览", exact: true });
-    await expect.poll(() => overviewTab.getAttribute("aria-selected")).toBe("true");
+    await expect
+      .poll(() => overviewTab.getAttribute("aria-selected"))
+      .toBe("true");
     await page.getByRole("tab", { name: "用量统计", exact: true }).click();
 
     const section = page

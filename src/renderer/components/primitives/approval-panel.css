@@ -4,10 +4,10 @@
   background-color: var(--surface-elevated);
   border: 1px solid var(--warning-border);
   border-radius: var(--radius-card);
-  padding: 16px 18px;
-  gap: 12px;
+  padding: var(--space-4);
+  gap: var(--space-3);
   max-width: 100%;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .approval-panel.is-invalid {

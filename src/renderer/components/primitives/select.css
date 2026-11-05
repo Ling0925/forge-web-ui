@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Select（Radix）：触发器复用 .form-select，弹层沿用设置页下拉视觉
+   ========================================================================== */
+
+.forge-select-trigger {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  text-align: left;
+}
+
+.forge-select-trigger[data-placeholder] .forge-select-label {
+  color: var(--text-muted);
+}
+
+.forge-select-value {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.forge-select-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.forge-select-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forge-select-content {
+  z-index: 1000;
+  width: var(--radix-select-trigger-width);
+  max-height: min(240px, var(--radix-select-content-available-height));
+  overflow: hidden;
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dropdown);
+}
+
+.forge-select-viewport {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1);
+  overscroll-behavior: contain;
+}
+
+.forge-select-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.forge-select-item[data-highlighted] {
+  background-color: var(--surface-hover);
+}
+
+.forge-select-item[data-state="checked"] {
+  background-color: var(--surface-selected);
+  font-weight: 500;
+}
+
+.forge-select-item[data-highlighted][data-state="checked"] {
+  background-color: var(--surface-selected);
+  box-shadow: inset 0 0 0 1px var(--border-control);
+}
+
+.forge-select-item[data-disabled] {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.forge-select-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.forge-select-item-label {
+  overflow-wrap: anywhere;
+}
+
+.forge-select-item-sub {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--text-2xs);
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forge-select-check {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--accent);
+}

@@ -91,7 +91,7 @@
 }
 .settings-page .settings-header-meta h2 {
   margin: 0 0 var(--space-1);
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: -0.015em;
 }
@@ -143,6 +143,11 @@
   box-shadow: inset 0 1px 1px hsl(var(--shadow-color) / 5%);
 }
 .settings-page .provider-source-tab {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
   gap: var(--space-2);
   min-height: 30px;
   padding: 0 var(--space-3);
@@ -150,8 +155,8 @@
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: var(--text-sm);
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out), box-shadow var(--dur-short)
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out), box-shadow var(--dur-short)
     var(--ease-out);
 }
 .settings-page .provider-source-tab:hover:not(.is-active) {
@@ -284,6 +289,7 @@
   color: var(--text-muted);
 }
 .settings-page .configured-models-grid {
+  grid-template-columns: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
@@ -292,6 +298,7 @@
   box-shadow: var(--shadow-xs);
 }
 .settings-page .configured-model-card {
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -363,6 +370,8 @@
   font-size: var(--text-xs);
 }
 .settings-page .configured-model-card-summary {
+  flex: 1;
+  justify-content: flex-end;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -384,6 +393,8 @@
 /* Fixed-width action slot so every row's summary ends on the same line,
    whether it shows "默认" or the hover-only "设为默认 ×". */
 .settings-page .configured-model-card-head-right {
+  display: flex;
+  align-items: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
   justify-content: flex-end;
@@ -407,9 +418,8 @@
   background: transparent;
   color: var(--text-muted);
   opacity: 0;
-  transition: opacity var(--dur-micro) var(--ease-out),
-    background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: opacity var(--dur-micro) var(--ease-out), background-color
+    var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
 }
 .settings-page .configured-model-card:hover .provider-model-action-pill,
 .settings-page .provider-model-action-pill:focus-visible {
@@ -563,8 +573,8 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out);
 }
 .settings-page .provider-inference-option:hover:not(.is-active) {
   color: var(--text-primary);
@@ -600,6 +610,8 @@
     padding: var(--space-2) var(--space-4) var(--space-8);
   }
   .settings-page .configured-model-card-summary {
+    flex: 1;
+    justify-content: flex-end;
     display: none;
   }
   .settings-page .model-param-editor.is-card-body {
@@ -622,5 +634,31 @@
   .settings-page .model-param-editor.is-card-body,
   .settings-page .provider-model-picker-drawer {
     animation: none;
+  }
+}
+
+.settings-page .configured-model-card-summary > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-page .configured-model-card-custom {
+  flex-shrink: 0;
+}
+.settings-page .provider-source-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+@media (max-width: 600px) {
+  .settings-page .configured-model-card-toggle {
+    flex-wrap: wrap;
+    padding-block: var(--space-2);
+  }
+  .settings-page .configured-model-card-summary {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+  .settings-page .configured-model-card-head-right {
+    min-width: 0;
   }
 }

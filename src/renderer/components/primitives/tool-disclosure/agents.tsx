@@ -11,14 +11,18 @@ import {
   ShieldCheck,
   WarningCircle,
 } from "@phosphor-icons/react";
-import { useWorkbench } from "../../../state/workbench-context";
+import type { SessionId } from "../../../shared-types";
+import { useWorkbenchActions } from "../../../state/workbench-store";
 import { Markdown } from "../../workbench/Markdown";
 import { ToolCopyButton } from "./common";
 
-function useSessionSelect(): ((sessionId: string) => Promise<void>) | undefined {
+function useSessionSelect():
+  | ((sessionId: string) => Promise<void>)
+  | undefined {
   try {
-    const wb = useWorkbench();
-    return wb?.selectSession;
+    const { selectSession } = useWorkbenchActions();
+    // Child-session ids arrive from tool payloads as plain strings.
+    return (sessionId) => selectSession(sessionId as SessionId);
   } catch {
     return undefined;
   }
@@ -129,7 +133,11 @@ export function SpawnAgentView({
             onClick={() => selectSession && void selectSession(childSessionId)}
           >
             <span>子会话 #{childSessionId.slice(0, 8)}</span>
-            <ArrowSquareOut size={12} weight="bold" className="agent-link-icon" />
+            <ArrowSquareOut
+              size={12}
+              weight="bold"
+              className="agent-link-icon"
+            />
           </button>
         )}
         {isolation && isolation !== "shared" && (
@@ -236,7 +244,9 @@ export function parseWaitAgentsResult(
         id: rec.id as string,
         status: typeof rec.status === "string" ? rec.status : "completed",
         ...(typeof rec.model === "string" ? { model: rec.model } : {}),
-        ...(typeof rec.profileId === "string" ? { profileId: rec.profileId } : {}),
+        ...(typeof rec.profileId === "string"
+          ? { profileId: rec.profileId }
+          : {}),
         ...(typeof rec.title === "string" ? { title: rec.title } : {}),
         ...(typeof rec.summary === "string" ? { summary: rec.summary } : {}),
         ...(typeof rec.content === "string" ? { content: rec.content } : {}),
@@ -306,7 +316,11 @@ export function WaitAgentsView({
                   ) : isRunning ? (
                     <>
                       <span className="agent-live-dot" aria-hidden="true" />
-                      <CircleDashed size={13} weight="bold" className="agent-live-icon" />
+                      <CircleDashed
+                        size={13}
+                        weight="bold"
+                        className="agent-live-icon"
+                      />
                     </>
                   ) : isAwaiting ? (
                     <HourglassMedium size={13} weight="bold" />
@@ -342,14 +356,20 @@ export function WaitAgentsView({
                   />
                 </button>
                 {report.model && (
-                  <span className="agent-model-name" title={`模型：${report.model}`}>
+                  <span
+                    className="agent-model-name"
+                    title={`模型：${report.model}`}
+                  >
                     {report.model}
                   </span>
                 )}
               </div>
               <div className="agent-report-meta">
                 {report.usage && (
-                  <span className="agent-usage-tag" title="Token 消耗（提示词入 / 输出）">
+                  <span
+                    className="agent-usage-tag"
+                    title="Token 消耗（提示词入 / 输出）"
+                  >
                     <Coins size={12} weight="regular" />
                     <span className="agent-usage-num">
                       {formatTokens(report.usage.promptTokens)} 入 /{" "}
@@ -512,7 +532,8 @@ export function ListAgentProfilesView({
   let profiles: readonly Record<string, unknown>[] = [];
   if (result && typeof result === "object") {
     if (Array.isArray((result as { profiles?: unknown }).profiles)) {
-      profiles = (result as { profiles: readonly Record<string, unknown>[] }).profiles;
+      profiles = (result as { profiles: readonly Record<string, unknown>[] })
+        .profiles;
     } else if (Array.isArray(result)) {
       profiles = result as readonly Record<string, unknown>[];
     }
@@ -527,10 +548,13 @@ export function ListAgentProfilesView({
       {profiles.map((p, i) => {
         const id = typeof p.id === "string" ? p.id : `profile-${i}`;
         const name = typeof p.name === "string" ? p.name : id;
-        const desc = typeof p.description === "string" ? p.description : undefined;
+        const desc =
+          typeof p.description === "string" ? p.description : undefined;
         const model = typeof p.model === "string" ? p.model : undefined;
-        const permission = typeof p.permission === "string" ? p.permission : undefined;
-        const isolation = typeof p.isolation === "string" ? p.isolation : undefined;
+        const permission =
+          typeof p.permission === "string" ? p.permission : undefined;
+        const isolation =
+          typeof p.isolation === "string" ? p.isolation : undefined;
 
         return (
           <div key={id} className="agent-profile-item-card">
@@ -583,7 +607,11 @@ export function SendAgentMessageView({
           >
             <PaperPlaneTilt size={13} weight="bold" />
             <span>目标子会话 #{id.slice(0, 8)}</span>
-            <ArrowSquareOut size={12} weight="bold" className="agent-link-icon" />
+            <ArrowSquareOut
+              size={12}
+              weight="bold"
+              className="agent-link-icon"
+            />
           </button>
         </div>
       )}
@@ -623,7 +651,11 @@ export function ResolveAgentView({
           >
             <ShieldCheck size={13} weight="bold" />
             <span>解决子会话 #{id.slice(0, 8)}</span>
-            <ArrowSquareOut size={12} weight="bold" className="agent-link-icon" />
+            <ArrowSquareOut
+              size={12}
+              weight="bold"
+              className="agent-link-icon"
+            />
           </button>
         </div>
       )}

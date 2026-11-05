@@ -3,8 +3,8 @@ import {
   foldedTool,
   phaseMarkers,
 } from "../../src/renderer/components/workbench/Transcript";
-import type { TimelineItem } from "../../src/renderer/state/timeline";
 import type { ToolCall } from "../../src/renderer/shared-types";
+import type { TimelineItem } from "../../src/renderer/state/timeline";
 
 const call: ToolCall = {
   id: "t",

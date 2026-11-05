@@ -1,9 +1,13 @@
-import { type LanStatus, lanRequestSchema } from "@forge/core/shared/lan";
 import { CopySimple, WarningCircle } from "@phosphor-icons/react";
 import * as QRCode from "qrcode";
 import { useEffect, useId, useRef, useState } from "react";
+import { type LanStatus, lanRequestSchema } from "../../lan";
 import { OperationScope } from "../../state/operation-scope";
-import { useWorkbench } from "../../state/workbench-context";
+import {
+  shallowEqual,
+  useWorkbenchActions,
+  useWorkbenchSelector,
+} from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
 import { Field } from "../primitives/Field";
 import { Input } from "../primitives/Input";
@@ -25,10 +29,16 @@ function message(error: unknown, fallback: string): string {
  * the status again before deciding what to do.
  */
 export function PhonePairing() {
-  const { state, chooseWorkspace } = useWorkbench();
+  const { chooseWorkspace } = useWorkbenchActions();
+  const state = useWorkbenchSelector(
+    ({ state }) => ({
+      defaultWorkspace:
+        state.activeSnapshot?.workspace ?? state.sessions?.[0]?.workspace ?? "",
+    }),
+    shallowEqual,
+  );
   const headingId = useId();
-  const defaultWorkspace =
-    state.activeSnapshot?.workspace ?? state.sessions?.[0]?.workspace ?? "";
+  const defaultWorkspace = state.defaultWorkspace;
   const [status, setStatus] = useState<LanStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -268,7 +278,7 @@ export function PhonePairing() {
             <Select
               id="pairing-host"
               value={host}
-              onChange={(event) => setHost(event.target.value)}
+              onValueChange={(value) => setHost(value)}
               placeholder="选择可用的 IPv4 地址"
               options={addresses.map((value) => ({ value, label: value }))}
               disabled={busy || !addresses.length}

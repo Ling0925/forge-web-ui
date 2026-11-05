@@ -45,7 +45,7 @@
   padding: 2px 10px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
-  background-color: var(--surface-sunken, var(--sidebar-bg));
+  background-color: var(--sidebar-bg);
   color: var(--text-secondary);
   font-size: var(--text-2xs);
   line-height: var(--leading-2xs);
@@ -70,7 +70,7 @@
 }
 
 .phone-pairing-notes li::marker {
-  color: var(--text-tertiary, var(--text-secondary));
+  color: var(--text-tertiary);
 }
 
 .phone-pairing-form {
@@ -171,7 +171,7 @@
   padding: 6px 10px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background-color: var(--surface-sunken, var(--sidebar-bg));
+  background-color: var(--sidebar-bg);
   color: var(--text-primary);
   font-family: var(--font-mono);
   font-size: var(--text-xs);

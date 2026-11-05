@@ -51,9 +51,8 @@
   color: var(--text-primary);
   font-size: var(--text-sm);
   font-weight: 500;
-  transition: border-color var(--dur-micro) var(--ease-out),
-    box-shadow var(--dur-short) var(--ease-out),
-    transform var(--dur-micro) var(--ease-out);
+  transition: border-color var(--dur-micro) var(--ease-out), box-shadow
+    var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out);
 }
 .wb-app .workbench-sidebar .sidebar-new-btn:hover {
   border-color: var(--border-control);
@@ -150,7 +149,10 @@
   font-weight: 500;
   letter-spacing: 0;
 }
-.wb-app .workbench-sidebar .session-folder-header-row:hover .session-folder-header {
+.wb-app
+  .workbench-sidebar
+  .session-folder-header-row:hover
+  .session-folder-header {
   color: var(--text-secondary);
 }
 /* Auto-width name: an ellipsis only when it truly overflows, instead of the
@@ -170,12 +172,21 @@
   margin-right: auto;
   color: var(--text-disabled);
   opacity: 0;
-  transition: opacity var(--dur-micro) var(--ease-out),
-    transform var(--dur-short) var(--ease-out);
+  transition: opacity var(--dur-micro) var(--ease-out), transform
+    var(--dur-short) var(--ease-out);
 }
-.wb-app .workbench-sidebar .session-folder-header-row:hover .session-folder-caret,
-.wb-app .workbench-sidebar .session-folder-header:focus-visible .session-folder-caret,
-.wb-app .workbench-sidebar .session-folder-header.is-collapsed .session-folder-caret {
+.wb-app
+  .workbench-sidebar
+  .session-folder-header-row:hover
+  .session-folder-caret,
+.wb-app
+  .workbench-sidebar
+  .session-folder-header:focus-visible
+  .session-folder-caret,
+.wb-app
+  .workbench-sidebar
+  .session-folder-header.is-collapsed
+  .session-folder-caret {
   opacity: 1;
 }
 .wb-app .workbench-sidebar .session-folder-create-btn {
@@ -284,7 +295,9 @@
 .wb-app .workbench-sidebar .session-status-icon[data-status="running"] svg {
   animation: sidebar-status-spin 1s linear infinite;
 }
-.wb-app .workbench-sidebar .session-status-icon[data-status="awaiting_approval"] {
+.wb-app
+  .workbench-sidebar
+  .session-status-icon[data-status="awaiting_approval"] {
   color: var(--warning);
 }
 .wb-app .workbench-sidebar .session-status-icon[data-status="failed"] {
@@ -320,8 +333,8 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out);
 }
 .wb-app .workbench-sidebar .sidebar-icon-btn:hover {
   background: var(--surface-hover);

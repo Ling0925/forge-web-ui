@@ -213,7 +213,9 @@ it("scopes pending steering to its session and settles drafts per owner", async 
     // running; it can accept another write even while B's write is pending.
     await openA.click();
     await expect.poll(() => input.inputValue()).toBe("");
-    await page.getByText("steer A one", { exact: true }).waitFor({ state: "visible" });
+    await page
+      .getByText("steer A one", { exact: true })
+      .waitFor({ state: "visible" });
     expect(await page.locator(".composer-cancel").count()).toBe(1);
     await input.fill("steer A two");
     await input.press("Alt+Enter");
@@ -229,7 +231,9 @@ it("scopes pending steering to its session and settles drafts per owner", async 
       B,
     );
     await expect.poll(() => input.inputValue()).toBe("");
-    await page.getByText("steer B one", { exact: true }).waitFor({ state: "visible" });
+    await page
+      .getByText("steer B one", { exact: true })
+      .waitFor({ state: "visible" });
     await expect.poll(() => pendingSteers(page)).toBe(1);
     await openA.click();
     await expect.poll(() => input.inputValue()).toBe("steer A two");

@@ -113,16 +113,16 @@
 .model-effort-meter > span {
   width: 3px;
   height: 11px;
-  border-radius: 1px;
+  border-radius: var(--radius-2xs);
   background: var(--border-control);
   opacity: 0.45;
 }
 .model-effort-meter > .is-filled {
-  background: var(--accent-sage);
+  background: var(--accent);
   opacity: 1;
 }
 .model-effort-meter small {
-  font-size: 9px;
+  font-size: var(--text-2xs);
   line-height: 13px;
   margin-left: 2px;
 }
@@ -228,7 +228,7 @@
   display: block;
   position: relative;
   height: 100%;
-  background: var(--accent-sage);
+  background: var(--accent);
   border-radius: inherit;
   overflow: hidden;
 }
@@ -268,7 +268,7 @@
   margin-top: -3px;
   border: 2px solid var(--surface-elevated);
   border-radius: 50%;
-  background: var(--accent-sage);
+  background: var(--accent);
   box-shadow: 0 0 0 1px var(--border-control);
 }
 .effort-slider input::-moz-range-track {
@@ -280,7 +280,7 @@
   width: 10px;
   border: 2px solid var(--surface-elevated);
   border-radius: 50%;
-  background: var(--accent-sage);
+  background: var(--accent);
   box-shadow: 0 0 0 1px var(--border-control);
 }
 .effort-slider input:focus-visible {
@@ -518,7 +518,7 @@
   font-weight: 500;
 }
 .model-picker-subheading {
-  padding: var(--space-0-5, 2px) var(--space-1) var(--space-1-5);
+  padding: 2px var(--space-1) var(--space-1-5);
   border-bottom: 1px solid var(--border-subtle);
   margin-bottom: var(--space-1-5);
   font-weight: 500;

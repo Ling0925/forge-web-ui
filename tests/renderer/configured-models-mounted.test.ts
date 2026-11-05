@@ -1,8 +1,9 @@
 import { resolve } from "node:path";
-import { build } from "esbuild";
-import { chromium, type Page } from "playwright";
-import { expect, it } from "vitest";
 import { defaultPublicSettings } from "@forge/core/shared/schemas";
+import { build } from "esbuild";
+import { type Page, chromium } from "playwright";
+import { expect, it } from "vitest";
+import { chooseOption, optionValues, selectValue } from "./select-helpers";
 
 /**
  * Browser regressions for the configured-model picker and the per-model
@@ -306,7 +307,9 @@ const openApp = async (
   const page = await browser.newPage({ viewport });
   page.setDefaultTimeout(5000);
   const pageErrors: string[] = [];
-  page.on("pageerror", (error) => pageErrors.push(error.stack ?? error.message));
+  page.on("pageerror", (error) =>
+    pageErrors.push(error.stack ?? error.message),
+  );
   await page.route("https://forge.test/**", (route) =>
     route.fulfill({
       contentType: "text/html",
@@ -321,11 +324,12 @@ const openApp = async (
         ""),
   });
   await page.addScriptTag({
-    content: bundle.outputFiles.find((file) => file.path.endsWith(".js"))!
-      .text,
+    content: bundle.outputFiles.find((file) => file.path.endsWith(".js"))!.text,
   });
   try {
-    await page.locator("textarea.composer-textarea").waitFor({ state: "attached" });
+    await page
+      .locator("textarea.composer-textarea")
+      .waitFor({ state: "attached" });
     await page.waitForFunction(() =>
       Boolean(
         (window as unknown as { __wb?: { state?: { settings?: unknown } } })
@@ -348,8 +352,8 @@ const remount = async (page: Page) => {
     .waitFor({ state: "attached" });
   await page.waitForFunction(() =>
     Boolean(
-      (window as unknown as { __wb?: { state?: { settings?: unknown } } })
-        .__wb?.state?.settings,
+      (window as unknown as { __wb?: { state?: { settings?: unknown } } }).__wb
+        ?.state?.settings,
     ),
   );
 };
@@ -368,18 +372,16 @@ const closeModelPanel = async (page: Page) => {
 };
 
 const catalogGroups = (page: Page) =>
-  page
-    .locator('.model-catalog-list [role="group"]')
-    .evaluateAll((nodes) =>
-      nodes.map((node) => ({
-        label: node.getAttribute("aria-label") ?? "",
-        models: Array.from(
-          node.querySelectorAll<HTMLButtonElement>(
-            "button.model-catalog-option[title]",
-          ),
-        ).map((button) => button.title),
-      })),
-    );
+  page.locator('.model-catalog-list [role="group"]').evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      label: node.getAttribute("aria-label") ?? "",
+      models: Array.from(
+        node.querySelectorAll<HTMLButtonElement>(
+          "button.model-catalog-option[title]",
+        ),
+      ).map((button) => button.title),
+    })),
+  );
 
 const catalogModelTitles = (page: Page) =>
   page
@@ -400,59 +402,71 @@ const summaryTitle = (page: Page) =>
   page.locator(".composer-model-summary").getAttribute("title");
 
 const modelCard = (page: Page, id: string) =>
-  page.getByLabel(`已配置模型卡片 ${id}`, { exact: true });
+  page.getByRole("article", { name: `模型 ${id}`, exact: true });
 
-// Cards rest collapsed; open one before reading its parameter controls.
-const openModelCard = async (page: Page, id: string) => {
-  const toggle = page.getByRole("button", { name: `展开模型 ${id} 参数`, exact: true });
-  if (await toggle.count()) await toggle.click();
+const updateCount = (page: Page) =>
+  page.evaluate(() => window.__updates.length);
+
+/** Waits for exactly one more settings update and returns it. */
+const nextUpdate = async (page: Page, index: number) => {
+  await expect.poll(() => updateCount(page)).toBe(index + 1);
+  return page.evaluate((at) => window.__updates[at], index);
 };
 
-const protocolSelect = (page: Page, id: string) =>
-  page.getByLabel(`模型 ${id} 请求协议`, { exact: true });
-
+/** Model cards save immediately: adding a card persists it. */
 const addConfiguredModel = async (
   page: Page,
   sourceLabel: string,
   id: string,
 ) => {
+  const index = await updateCount(page);
   const toggle = page.getByRole("button", {
-    name: `添加${sourceLabel}的配置模型`,
+    name: `为${sourceLabel}添加模型`,
     exact: true,
   });
   if ((await toggle.getAttribute("aria-expanded")) !== "true")
     await toggle.click();
   const add = page.getByRole("button", {
-    name: `添加模型 ${id} 到配置卡片`,
+    name: `添加模型 ${id}`,
     exact: true,
   });
   await add.waitFor();
   await add.click();
+  const update = await nextUpdate(page, index);
   await modelCard(page, id).waitFor();
+  return update;
 };
 
-const saveSourceModels = async (page: Page, sourceLabel: string) => {
-  const index = await page.evaluate(() => window.__updates.length);
-  await page
-    .getByRole("button", {
-      name: `保存${sourceLabel}的模型配置`,
-      exact: true,
-    })
+/** Opens a model's parameter dialog with its advanced panel expanded. */
+const openModelDialog = async (page: Page, id: string) => {
+  await modelCard(page, id)
+    .getByRole("button", { name: `编辑模型 ${id} 的参数`, exact: true })
     .click();
-  await expect
-    .poll(() => page.evaluate(() => window.__updates.length))
-    .toBe(index + 1);
-  await expect
-    .poll(() =>
-      page
-        .getByRole("button", {
-          name: `保存${sourceLabel}的模型配置`,
-          exact: true,
-        })
-        .count(),
-    )
-    .toBe(0);
-  return page.evaluate((at) => window.__updates[at], index);
+  const dialog = page.getByRole("dialog", { name: `模型参数 · ${id}` });
+  await dialog.waitFor();
+  await dialog.getByText("高级", { exact: true }).click();
+  return dialog;
+};
+
+const protocolOf = async (page: Page, id: string) => {
+  const dialog = await openModelDialog(page, id);
+  const value = await selectValue(
+    dialog.getByLabel("请求协议", { exact: true }),
+  );
+  await dialog.getByRole("button", { name: "取消", exact: true }).click();
+  await dialog.waitFor({ state: "hidden" });
+  return value;
+};
+
+/** Sets a model's protocol in its dialog and returns the resulting save. */
+const saveModelProtocol = async (page: Page, id: string, protocol: string) => {
+  const index = await updateCount(page);
+  const dialog = await openModelDialog(page, id);
+  await chooseOption(dialog.getByLabel("请求协议", { exact: true }), protocol);
+  await dialog.getByRole("button", { name: "保存", exact: true }).click();
+  const update = await nextUpdate(page, index);
+  await dialog.waitFor({ state: "hidden" });
+  return update;
 };
 
 const sourceFields = (update: Record<string, any> | undefined) =>
@@ -570,14 +584,13 @@ it("shows a historical pinned model as current but never offers it again", async
         (await page.locator(".composer-status").innerText()).trim(),
       )
       .toContain("当前模型 a/legacy 未在来源 源 A 的设置中启用");
-    expect(await page.evaluate(() => window.__served["legacy-session"].model))
-      .toBe("a/legacy");
+    expect(
+      await page.evaluate(() => window.__served["legacy-session"].model),
+    ).toBe("a/legacy");
 
     await openModelCatalog(page);
     const groups = await catalogGroups(page);
-    expect(groups).toEqual([
-      { label: "源 A", models: ["a/current"] },
-    ]);
+    expect(groups).toEqual([{ label: "源 A", models: ["a/current"] }]);
     expect(await catalogModelTitles(page)).not.toContain("a/legacy");
 
     await pickModel(page, "源 A", "a/current");
@@ -589,7 +602,7 @@ it("shows a historical pinned model as current but never offers it again", async
   }
 }, 30000);
 
-it("saves added, protocol-overridden and removed models across a remount", async () => {
+it("saves added, protocol-overridden and removed models immediately and across a remount", async () => {
   const { browser, page, pageErrors } = await openApp({
     withSettings: true,
     settings: settings([
@@ -640,20 +653,19 @@ it("saves added, protocol-overridden and removed models across a remount", async
       ),
     ).toBe(true);
     await modelCard(page, "a/existing").waitFor();
-    await openModelCard(page, "a/existing");
 
-    const existingProtocol = protocolSelect(page, "a/existing");
-    await existingProtocol.waitFor();
+    // Protocol choices live in the model's dialog, under 高级.
+    const dialog = await openModelDialog(page, "a/existing");
     expect(
-      await existingProtocol
-        .locator("option")
-        .evaluateAll((options) => options.map((option) => option.getAttribute("value"))),
+      await optionValues(dialog.getByLabel("请求协议", { exact: true })),
     ).toEqual(["", "chat-completions", "responses", "anthropic", "gemini"]);
+    await dialog.getByRole("button", { name: "取消", exact: true }).click();
+    await dialog.waitFor({ state: "hidden" });
+    expect(await updateCount(page)).toBe(0);
 
     // A protocol override coexists with existing request fields and leaves the
     // source protocol plus every other model override untouched.
-    await existingProtocol.selectOption("anthropic");
-    const update1 = await saveSourceModels(page, "源 A");
+    const update1 = await saveModelProtocol(page, "a/existing", "anthropic");
     expect(sourceFields(update1)).toMatchObject({
       id: "a",
       apiMode: "chat-completions",
@@ -669,51 +681,24 @@ it("saves added, protocol-overridden and removed models across a remount", async
     });
 
     // Upstream discovery remains the source of candidates for the settings
-    // picker. Adding an upstream model is a draft until Save.
-    await addConfiguredModel(page, "源 A", "a/upstream");
-    await openModelCatalog(page);
-    expect(await catalogModelTitles(page)).not.toContain("a/upstream");
-    await closeModelPanel(page);
-    expect(await page.evaluate(() => window.__updates.length)).toBe(1);
-
-    // Discarding must not leave a phantom pin behind.
-    await page.getByRole("button", { name: "放弃修改", exact: true }).click();
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(0);
-    expect(
-      await page.evaluate(
-        () =>
-          window.__wb.state.settings.providerSources[0].modelSelection.manual,
-      ),
-    ).toEqual([{ id: "a/existing", contextWindowTokens: null }]);
-    await openModelCatalog(page);
-    expect(await catalogModelTitles(page)).not.toContain("a/upstream");
-    await closeModelPanel(page);
-
-    // Adding a model with no parameters saves a minimal manual entry.
-    await addConfiguredModel(page, "源 A", "a/upstream");
-    await protocolSelect(page, "a/upstream").selectOption("responses");
-    const update2 = await saveSourceModels(page, "源 A");
+    // picker. Adding a model saves a minimal manual entry right away.
+    const update2 = await addConfiguredModel(page, "源 A", "a/upstream");
     const saved2 = sourceFields(update2);
     expect(saved2?.modelSelection.mode).toBe("selected");
-    expect(saved2?.modelSelection.models).toEqual([
-      "a/existing",
-      "a/upstream",
-    ]);
+    expect(saved2?.modelSelection.models).toEqual(["a/existing", "a/upstream"]);
     expect(saved2?.modelSelection.manual).toEqual([
       { id: "a/existing", contextWindowTokens: null },
       { id: "a/upstream", contextWindowTokens: null },
     ]);
-    expect(saved2?.modelSelection.overrides).toEqual({
+    expect(saved2?.apiMode).toBe("chat-completions");
+
+    const update3 = await saveModelProtocol(page, "a/upstream", "responses");
+    expect(sourceFields(update3)?.modelSelection.overrides).toEqual({
       "a/existing": { maxOutputTokens: 4096, apiMode: "anthropic" },
       "a/other": { reasoningEffort: "high" },
       "a/upstream": { apiMode: "responses" },
     });
-    expect(saved2?.apiMode).toBe("chat-completions");
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(1);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(1);
 
     // The mounted composer follows the save without a reload.
     await openModelCatalog(page);
@@ -723,77 +708,53 @@ it("saves added, protocol-overridden and removed models across a remount", async
     // A remount re-reads the saved settings, not component-local drafts.
     await remount(page);
     await modelCard(page, "a/existing").waitFor();
-    // A remount starts with every card collapsed again.
-    await openModelCard(page, "a/upstream");
-    await openModelCard(page, "a/existing");
-    await expect
-      .poll(() => protocolSelect(page, "a/upstream").inputValue())
-      .toBe("responses");
-    await expect
-      .poll(() => protocolSelect(page, "a/existing").inputValue())
-      .toBe("anthropic");
+    expect(await protocolOf(page, "a/upstream")).toBe("responses");
+    expect(await protocolOf(page, "a/existing")).toBe("anthropic");
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).toContain("a/upstream");
     await closeModelPanel(page);
 
     // Inheritance removes only apiMode; the minimal manual entry remains.
-    await protocolSelect(page, "a/upstream").selectOption("");
-    const update3 = await saveSourceModels(page, "源 A");
-    const saved3 = sourceFields(update3);
-    expect(saved3?.modelSelection.overrides?.["a/upstream"]).toBeUndefined();
-    expect(saved3?.modelSelection.models).toEqual([
-      "a/existing",
-      "a/upstream",
-    ]);
-    expect(saved3?.modelSelection.manual).toEqual([
+    const update4 = await saveModelProtocol(page, "a/upstream", "");
+    const saved4 = sourceFields(update4);
+    expect(saved4?.modelSelection.overrides?.["a/upstream"]).toBeUndefined();
+    expect(saved4?.modelSelection.models).toEqual(["a/existing", "a/upstream"]);
+    expect(saved4?.modelSelection.manual).toEqual([
       { id: "a/existing", contextWindowTokens: null },
       { id: "a/upstream", contextWindowTokens: null },
     ]);
-    expect(saved3?.modelSelection.overrides?.["a/existing"]).toEqual({
+    expect(saved4?.modelSelection.overrides?.["a/existing"]).toEqual({
       maxOutputTokens: 4096,
       apiMode: "anthropic",
     });
 
     await remount(page);
     await modelCard(page, "a/upstream").waitFor();
-    await openModelCard(page, "a/upstream");
-    await expect
-      .poll(() => protocolSelect(page, "a/upstream").inputValue())
-      .toBe("");
-    await openModelCatalog(page);
-    expect(await catalogModelTitles(page)).toContain("a/upstream");
-    await closeModelPanel(page);
+    expect(await protocolOf(page, "a/upstream")).toBe("");
 
-    // Removal clears manual, selected models and a fresh override together.
-    await protocolSelect(page, "a/upstream").selectOption("gemini");
-    await page
-      .getByRole("button", {
-        name: "移除模型 a/upstream 配置卡片",
-        exact: true,
-      })
+    // Removal clears manual, selected models and the model's override together.
+    await saveModelProtocol(page, "a/upstream", "gemini");
+    const before = await updateCount(page);
+    await modelCard(page, "a/upstream")
+      .getByRole("button", { name: "移除模型 a/upstream", exact: true })
       .click();
-    const update4 = await saveSourceModels(page, "源 A");
-    const saved4 = sourceFields(update4);
-    expect(saved4?.modelSelection.manual).toEqual([
+    const saved5 = sourceFields(await nextUpdate(page, before));
+    expect(saved5?.modelSelection.manual).toEqual([
       { id: "a/existing", contextWindowTokens: null },
     ]);
-    expect(saved4?.modelSelection.models).toEqual(["a/existing"]);
-    expect(saved4?.modelSelection.overrides).toEqual({
+    expect(saved5?.modelSelection.models).toEqual(["a/existing"]);
+    expect(saved5?.modelSelection.overrides).toEqual({
       "a/existing": { maxOutputTokens: 4096, apiMode: "anthropic" },
       "a/other": { reasoningEffort: "high" },
     });
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(0);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(0);
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).not.toContain("a/upstream");
     await closeModelPanel(page);
 
     await remount(page);
     await modelCard(page, "a/existing").waitFor();
-    await expect
-      .poll(() => modelCard(page, "a/upstream").count())
-      .toBe(0);
+    await expect.poll(() => modelCard(page, "a/upstream").count()).toBe(0);
     await openModelCatalog(page);
     expect(await catalogModelTitles(page)).not.toContain("a/upstream");
     await closeModelPanel(page);
@@ -824,15 +785,23 @@ it("edits a model protocol at a phone viewport without settings content overflow
     { width: 390, height: 844 },
   );
   try {
-    await openModelCard(page, "a/mobile");
-    const select = protocolSelect(page, "a/mobile");
-    await select.waitFor();
-    await select.selectOption("gemini");
-    const update = await saveSourceModels(page, "源 A");
-    expect(sourceFields(update)?.modelSelection.overrides?.["a/mobile"]).toEqual(
-      { maxOutputTokens: 2048, apiMode: "gemini" },
-    );
-    await expect.poll(() => select.inputValue()).toBe("gemini");
+    await modelCard(page, "a/mobile").waitFor();
+    const update = await saveModelProtocol(page, "a/mobile", "gemini");
+    expect(
+      sourceFields(update)?.modelSelection.overrides?.["a/mobile"],
+    ).toEqual({ maxOutputTokens: 2048, apiMode: "gemini" });
+    expect(await protocolOf(page, "a/mobile")).toBe("gemini");
+    // The parameter dialog itself fits the phone viewport.
+    const dialog = await openModelDialog(page, "a/mobile");
+    const box = await dialog.boundingBox();
+    if (!box) throw new Error("model dialog is not laid out");
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390 + 1);
+    expect(
+      await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+    ).toBe(true);
+    await dialog.getByRole("button", { name: "取消", exact: true }).click();
+    await dialog.waitFor({ state: "hidden" });
     const overflow = await page.evaluate(() => {
       const root = document.querySelector<HTMLElement>(".provider-sources");
       const rect = root?.getBoundingClientRect();

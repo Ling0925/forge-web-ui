@@ -10,7 +10,8 @@ export function useAutosizePrompt(
     const resize = () => {
       if (!input.value) {
         if (input.style.height !== "36px") input.style.height = "36px";
-        if (input.style.overflowY !== "hidden") input.style.overflowY = "hidden";
+        if (input.style.overflowY !== "hidden")
+          input.style.overflowY = "hidden";
         return;
       }
       const style = getComputedStyle(input);
@@ -37,7 +38,8 @@ export function useAutosizePrompt(
       if (input.style.height !== nextHeightStr) {
         input.style.height = nextHeightStr;
       }
-      const nextOverflow = input.scrollHeight > targetHeight ? "auto" : "hidden";
+      const nextOverflow =
+        input.scrollHeight > targetHeight ? "auto" : "hidden";
       if (input.style.overflowY !== nextOverflow) {
         input.style.overflowY = nextOverflow;
       }

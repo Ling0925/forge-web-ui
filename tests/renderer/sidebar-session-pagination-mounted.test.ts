@@ -65,7 +65,9 @@ it("limits sessions per workspace to 10 by default, expands by 10 on see more, a
   });
 
   const js = bundle.outputFiles.find((file) => file.path.endsWith(".js"))?.text;
-  const css = bundle.outputFiles.find((file) => file.path.endsWith(".css"))?.text;
+  const css = bundle.outputFiles.find((file) =>
+    file.path.endsWith(".css"),
+  )?.text;
   if (!js || !css) throw new Error("Missing test bundle");
 
   const browser = await chromium.launch({ headless: true });
@@ -155,7 +157,9 @@ it("limits sessions per workspace to 10 by default, expands by 10 on see more, a
 
     // 6. Test collapse and expand transition classes
     const headerA = folderA.locator(".session-folder-header");
-    expect(await collapseEl.getAttribute("class")).not.toContain("is-collapsed");
+    expect(await collapseEl.getAttribute("class")).not.toContain(
+      "is-collapsed",
+    );
 
     // Click header to collapse
     await headerA.click();
@@ -164,20 +168,31 @@ it("limits sessions per workspace to 10 by default, expands by 10 on see more, a
 
     // Click header to expand
     await headerA.click();
-    expect(await collapseEl.getAttribute("class")).not.toContain("is-collapsed");
+    expect(await collapseEl.getAttribute("class")).not.toContain(
+      "is-collapsed",
+    );
     expect(await headerA.getAttribute("aria-expanded")).toBe("true");
 
     // 7. Test create session button in folder header
     const createBtnB = folderB.locator(".session-folder-create-btn");
     expect(await createBtnB.count()).toBe(1);
-    expect(await createBtnB.getAttribute("title")).toBe("在 project-b 中新建会话");
+    expect(await createBtnB.getAttribute("title")).toBe(
+      "在 project-b 中新建会话",
+    );
     let createdWorkspace: string | null = null;
-    await page.exposeFunction("trackCreateSession", (input: { workspace: string }) => {
-      createdWorkspace = input.workspace;
-    });
+    await page.exposeFunction(
+      "trackCreateSession",
+      (input: { workspace: string }) => {
+        createdWorkspace = input.workspace;
+      },
+    );
     await page.evaluate(() => {
       window.createSession = async (input: { workspace: string }) => {
-        await (window as unknown as { trackCreateSession: (val: unknown) => Promise<void> }).trackCreateSession(input);
+        await (
+          window as unknown as {
+            trackCreateSession: (val: unknown) => Promise<void>;
+          }
+        ).trackCreateSession(input);
         return { id: "new-session-b", workspace: input.workspace };
       };
     });

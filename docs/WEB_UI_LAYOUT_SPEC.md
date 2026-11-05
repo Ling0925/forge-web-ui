@@ -10,17 +10,15 @@
 
 Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石墨暗色（Graphite Dark）」** 工作台美学，克制、温润、高信息密度，强调长时阅读与多任务协作的秩序感。
 
-### 1.1 样式文件优先级（严禁只看 `tokens.css`）
+### 1.1 样式文件分工
 
-生产入口由 [main.tsx](../src/renderer/main.tsx) 按顺序装配样式，**最终视觉效果以工作台主题覆盖后的计算值为准**：
+生产入口由 [main.tsx](../src/renderer/main.tsx) 按顺序装配样式。Token 只有一个来源：刻度在 `tokens.css`，颜色在 `workspace-theme.css`，两者不再互相覆盖：
 
-1. [tokens.css](../src/renderer/styles/tokens.css)：定义字体栈、字号阶梯、4px 间距刻度、圆角刻度，以及基础语义状态色（`--success`、`--warning`、`--error`）。
-2. [workspace-theme.css](../src/renderer/styles/workspace-theme.css)：**工作台最终生效的主题覆盖**，将背景、文字、边框、主强调色（`--accent`）及控件高度覆盖为暖纸/石墨体系。
+1. [tokens.css](../src/renderer/styles/tokens.css)：字体栈、字号阶梯（`--text-2xs` 11px 起）、行高、4px 间距刻度、圆角刻度（`--radius-2xs` … `--radius-full`）、布局尺寸与动效时长。不放任何颜色。
+2. [workspace-theme.css](../src/renderer/styles/workspace-theme.css)：唯一的颜色来源（浅色 / 深色两套：表面、五级墨色、边框、主强调、焦点、状态色、阴影、图表色），其后是工作台级的组件覆盖规则。
 3. [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 与 [app.css](../src/renderer/components/workbench/app.css)：负责主框架、侧栏紧凑密度与响应式断点。
-4. [design-foundation.css](../src/renderer/styles/design-foundation.css)：**v2 设计基础，最后加载，覆盖前三层**。表面层级、暖色阴影、主色衍生色（`--accent-subtle/soft/border/glow`）、焦点光晕与动画 token 只在这里定义。
-5. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现，只消费上述 token，不另定义颜色、阴影或动画曲线。
-
-> UI 正在按页面重做（v2）。新页面一律使用 `design-foundation.css` 的 token；旧页面的写死值在重做该页时清除。
+4. [design-foundation.css](../src/renderer/styles/design-foundation.css)：共享动画和基础控件外观，只引用上述 token，不再覆盖 token。
+5. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现。
 
 ---
 
@@ -28,16 +26,17 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 修改样式时**必须使用 CSS 变量或基于变量的 `color-mix()`**，严禁硬编码脱离主题的十六进制/RGB 颜色。
 
-### 2.1 主强调色 vs 完成/成功色（严禁误用 `--accent-sage`）
+### 2.1 主强调色 vs 完成/成功色
 
 | 语义场景 | 必须使用的 Token | 浅色实际值 | 深色实际值 | 严禁使用的错误写法 |
 | :--- | :--- | :--- | :--- | :--- |
-| **主强调 / 进行中 / 激活 / 焦点** | `var(--accent)`、`var(--accent-subtle)` | `#a54f35`（赤陶色） | `#dc9477`（暖赤陶） | 严禁使用蓝色 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
-| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#226d40`（森林鼠尾草绿） | `#34d399`（柔翠绿） | **严禁使用 `var(--accent-sage)`**（在工作台主题中它等于赤陶色！）；严禁硬编码刺眼亮绿 `#16a34a` |
+| **主强调 / 进行中 / 激活** | `var(--accent)`、`var(--accent-soft)`、`var(--on-accent)` | `#a54f35`（赤陶色） | `#dc9477`（暖赤陶） | 严禁使用蓝色 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
+| **键盘焦点 / 输入聚焦** | `var(--focus-ring)`、`var(--focus-halo)` | `#4a4740`（中性墨） | `#cfcbc1` | 不要用 `--accent` 做焦点色，赤陶与错误红同色系，聚焦会像报错 |
+| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#226d40`（森林鼠尾草绿） | `#34d399`（柔翠绿） | 严禁硬编码刺眼亮绿 `#16a34a` |
 | **警告 / 待确认 / 队列提示** | `var(--warning)`、`var(--warning-bg)`、`var(--warning-border)` | `#975a06` | `#fbbf24` | 严禁使用无对比度的纯黄 `#ffff00` |
-| **错误 / 失败 / 危险操作** | `var(--error)` 或 `var(--danger)`、`var(--error-bg)` | `#b82420` / `#c84b31` | `#f87171` / `#e06c53` | 严禁使用纯红 `#ff0000` |
+| **错误 / 失败 / 危险操作** | `var(--error)`、`var(--error-bg)`、`var(--error-border)` | `#b82420` | `#f87171` | 严禁使用纯红 `#ff0000`；`--danger` 已移除 |
 
-> **关键陷阱说明**：`workspace-theme.css` 将 `--accent-sage` 重映射为了赤陶主色（`#a54f35` / `#dc9477`）。如果你需要「绿色」来表示步骤完成、任务成功或连接正常，**只能使用 `var(--success)` 或 `color-mix(in srgb, var(--success, #226d40) XX%, transparent)`**。
+> 旧的 `--accent-sage`（名为绿、值为赤陶）已移除。需要「绿色」表示步骤完成、任务成功或连接正常时，使用 `var(--success)` 或 `color-mix(in srgb, var(--success) XX%, transparent)`；token 均全局定义，`var()` 不需要写十六进制 fallback。
 
 ### 2.2 严禁出现原生蓝（Off-Brand Blue）与脏渐变
 
@@ -59,7 +58,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 - **边框**：`--border-subtle`（分隔线、卡片描边）→ `--border-control`（输入框、次按钮）→ `--border-hover`（悬停）→ `--border-strong`（强调），都是暖墨色半透明，不写死灰色。
 - **阴影**：只用 `--shadow-xs / sm / card / composer / dropdown / overlay` 六档，暖色调分层阴影（环境阴影 + 贴合阴影）。浮层（下拉、Popover）用 `--shadow-dropdown`，不再加边框；对话框用 `--shadow-overlay`。卡片顶部可叠加 `var(--edge-highlight)` 表现纸面受光。
-- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`（14%）、描边 `--accent-border`、光晕 `--accent-glow`。主色按钮用 `.btn-accent`（`--accent` 底 + `--accent-ink` 字）。
+- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`（14%）、描边 `--accent-border`、光晕 `--accent-glow`。主色按钮用 `.btn-accent`（`--accent` 底 + `--on-accent` 字）。
 
 - **表面交替铁律**：当卡片内部需要再分组时，外层用 `--surface-elevated`，内层子块必须用 `--surface-soft`（反之亦然），通过明度差建立秩序。
 - **反套娃铁律**：严禁出现「外层带边框大卡片 → 中层带边框分组卡 → 内层带边框表单卡」的 3 层以上无意义边框套娃（尤其是在 `SettingsModal` 中，右侧页面级容器不得再包裹多余的外层 `.settings-card`）。
@@ -95,7 +94,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ### 4.1 表单与选择器（严禁使用浏览器原生 `<select>` 与裸复选框）
 
-- **禁止原生 `<select>`**：原生下拉菜单会弹出操作系统级菜单，完全脱离工作台主题与字体。所有下拉选择必须使用工作台自定义无障碍下拉组件（如 `SettingsSelect`：`.settings-select-trigger` + `.settings-select-popover` + `.settings-select-option`，或底部栏 `ComposerDropdown`），并支持：
+- **禁止原生 `<select>`**：原生下拉菜单会弹出操作系统级菜单，完全脱离工作台主题与字体。所有下拉选择必须使用 `components/primitives/Select.tsx`（基于 Radix Select：触发器 `role="combobox"`、选项 `role="option"`，样式在 `select.css`），或底部栏 `ComposerDropdown`；复选框同理使用 `Checkbox`（Radix，`checkbox.css`）。二者均支持：
   - `role="listbox"` / `role="option"` 与 `aria-expanded`
   - 当前选中项勾选标记与可选副标题/描述
   - 点击外部关闭、`Escape` 关闭（且不误关外层 Modal）、方向键导航
@@ -130,28 +129,30 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
   - 子任务：左侧 7px 状态点（完成 `--success`、运行中 `--accent` 呼吸、失败 `--error`），右侧元信息为智能体角色名；点击打开子会话。
   - 变更文件：只显示文件名，路径放在 `title`；元信息为 `+N -N`，无 diff 统计时显示「新增 / 已改 / 已删」。
 - **会话事实**：「会话」分区用 `<dl class="inspector-facts">`（`auto minmax(0, 1fr)`，`dt` 不换行）只列模型、权限、工作区三项；工作区显示末级目录名，完整路径放在 `title`。
-- **更多工具（下钻视图）**：概要底部的「更多」列表进入：工作区文件、变更与检查点、上下文与用量、浏览器、项目资源，以及「刷新记录」。下钻时头部显示返回按钮（`aria-label="返回概要"`，打开后获得焦点）和视图标题；**视图标题只出现一次**，下钻内容自身不再重复同名标题。计划说明与历史计划、子任务详情（智能体快照、答疑与协调）也是下钻视图，从对应分区头的链接进入。
+- **更多工具**：概要底部的「更多」列表提供工作区文件、变更与检查点、上下文与用量、浏览器、项目资源，以及「刷新记录」。下钻时头部显示返回按钮（`aria-label="返回概要"`，打开后获得焦点）和视图标题；**视图标题只出现一次**，下钻内容自身不再重复同名标题。计划说明与历史计划、子任务详情（智能体快照、答疑与协调）也是下钻视图，从对应分区头的链接进入。
+- **工作区资源**：工作区文件、项目资源打开独立 `WorkspaceResourcesDialog`；其中「查看变更」仍能定位到当前会话的变更下钻。
+- **状态与协作**：分区展开状态按会话保留，未操作时使用运行中/已结束的默认值；需要处理区置顶展示失败子任务、超级智能体发送队列与建议，Router 的工作项在子任务区展示。
 - **按需加载**：上下文统计（`getDiagnostics`）与浏览器状态探测只在对应下钻视图打开时请求；概要页不触发这些请求。切换会话时保持当前视图，下钻内容跟随新会话重新读取。
 - **待批准**：待批准汇总（`.wb-approvals-summary`）始终置顶于概要之上，不收进任何分区。当前会话的请求只提供「定位到消息流」，其他会话与子代理的请求在此给出完整审批面板。
 - **空状态**：没有任何分区内容时显示一行说明「执行计划、子任务和文件变更出现后会显示在这里」；下钻视图内的空列表沿用虚线引导卡片（`.inspector-plan-empty` / `.inspector-empty-card` / `.inspector-subagents-empty`），不只渲染一行裸 `<p>`。
 - **子任务下钻（`SubAgentsPanel` / `SubAgentActivity`）**：子任务卡左侧语义状态边条、`#1` 序号、角色徽章、等待答疑胶囊（仅当父运行活跃且 `run_started.budget.rootRunId` 与请求 `parentRunId` 匹配时为动态脉冲；这是 Core 协调身份，不能与 Web 传输 `runId` 比较）、状态徽章与运行中取消按钮保持不变；集中答疑区域如实区分“已在主会话保存，等待子代理同步确认”与“已投递到子代理”。
 
-### 4.5 工作区选择弹窗（`WorkspacePicker`）与设置中心（`SettingsModal`）
+### 4.5 工作区选择弹窗（`WorkspacePicker`）与设置中心（`Settings`）
 
 - **工作区选择弹窗**：提供「最近使用工作区」一键切换、可点击路径面包屑、实时目录过滤、内联新建文件夹输入行，以及底部清晰的当前选中路径确认栏。
 - **模型连接页（v2，`settings-v2.css`）**：
   - 页头只有标题与一行说明；模型服务已保存时不显示状态胶囊，只在未添加或读取中时显示。左侧导航底部的本机说明是一行灰字，不是卡片。
-  - 来源切换是分段控件（`.provider-source-tabs`），标签只带「默认」；已定制数量显示在模型列表头。
-  - 来源摘要是标题加一行事实：端点（去掉协议头）· 协议 · 目录数量；只在多于一个凭据时显示凭据数。徽标只保留需要用户处理的状态：默认、无密钥、目录已过期。刷新与删除是图标按钮（保留 `aria-label`），编辑是唯一带文字的按钮。
-  - 模型列表是一张卡里的若干行（`.configured-model-card`）：每行「模型 ID　参数摘要　默认/设为默认 ×」，默认收起，点击行展开参数编辑器；本次新加的模型自动展开。参数摘要只列已知值（上下文、输出、固定思考档位），全部未知时写「使用上游参数」，不显示 `?`。
-  - 参数编辑器在浅底内缩区里，行与行之间不画虚线；标签为「请求协议 / 思考等级 / 可选档位 / 上下文窗口 / 最大输出」，未知上游值时预设按钮只写「默认」。
-  - 全局默认思考等级是一条分段控件，下方一行说明当前档位；不使用两行卡片网格。
+  - 模型列表的来源切换是分段控件（`.provider-source-tabs`），仅显示来源名称。默认来源标记在来源列表中。
+  - 来源摘要是标题加一行事实：端点（去掉协议头）· 协议 · 可选模型数量；只在多于一个凭据时显示凭据数。徽标只保留需要用户处理的状态：默认、无密钥、目录已过期。刷新是图标按钮（保留 `aria-label`），编辑是带文字的按钮；删除在来源编辑器内确认。
+  - 模型列表是一张卡里的若干紧凑行（`.configured-model-card`）：每行「模型 ID　参数摘要　默认/设为默认 ×」。点击摘要行打开 `ModelEditDialog`，独立编辑参数并保存；保留来源修订冲突保护、旧窗口配置迁移与失败反馈。
+  - 来源列表保留默认模型选择和编辑入口，模型列表上方用分段控件切换来源；来源刷新为图标按钮，删除在来源编辑器内确认。
+  - 全局默认思考等级是一条分段控件，选择后自动保存并显示保存状态；不使用两行卡片网格。
 - **设置中心（模型连接、外观、执行与权限、智能体、上下文与记忆、语言服务）**：
   - 左侧分类导航与右侧内容区分离；右侧直接展示章节标题与功能面板卡（`.settings-panel-card`），**不套最外层冗余大框**。
   - 批量导入/导出、路由组列表、策略矩阵与压缩阈值均采用结构化卡片网格、状态徽章与自定义下拉/分段控件。
   - **智能体管理（`AgentProfilesPanel`）**：
     - 提供角色列表、一键新建、从预置模板添加（探索/前端/后端/代码审查）、编辑、复制、启停与带安全二次确认的删除。
-    - 字段包含 ID、名称、简要描述、适用场景（whenToUse）、系统指令（instructions）、模型绑定（继承主模型或绑定已配置 Provider 来源与精确模型 ID，禁止虚构 fallback）、权限上限（readonly/workspace/unrestricted，明确提示权限绝不突破宿主）、工作树隔离（shared/worktree，明确提示非 OS 沙箱）、工具组限定策略（inherit/restricted）及 MCP 白名单。
+    - 字段包含 ID、名称、简要描述、适用场景（whenToUse）、系统指令（instructions）、模型绑定（继承主模型或绑定已配置 Provider 来源与精确模型 ID，禁止虚构 fallback）、权限策略（默认继承主会话权限，readonly 额外只读，workspace 工作区逐次审批，旧配置不自动放宽）、工作树隔离（shared/worktree，明确提示非 OS 沙箱）、工具组限定策略（inherit/restricted）及 MCP 白名单。
     - 固定模型优先通过「已配置模型」下拉选择，复用 `selectableModelIds` 与所选来源的 `modelSelection` 可见性规则；模型与来源必须成对保存。仅在显式选择手动、无可选模型或保留旧未列出绑定时显示 ID 输入，不得要求用户重复录入已有模型。切换来源重新选择新来源可选值，读取已有配置则保留原绑定，不按远端目录或主模型静默回退。
     - 具备版本冲突保护（保留草稿，提供拉取最新配置与放弃修改选项）、未保存草稿全局离开拦截（分类切换、搜索、关闭防护）、保存繁忙态锁定保护，以及旧配置缺省兼容。禁止使用原生 select 与裸 checkbox，采用全键盘与读屏支持的 `SettingsSelect` 与 `SettingsToggleCard`。
 
@@ -159,7 +160,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ## 4.6 动画与动效（v2）
 
-动画要流畅、可感知，但不抢内容。只使用 `design-foundation.css` 中的 token 和关键帧，不在组件里另写曲线或时长。
+动画要流畅、可感知，但不抢内容。只使用 `tokens.css` 中的动效 token 和 `design-foundation.css` 中的关键帧，不在组件里另写曲线或时长。
 
 | Token | 值 | 用途 |
 | :--- | :--- | :--- |
@@ -176,10 +177,10 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 - **工具类**：`.fx-pop-in`、`.fx-rise`、`.fx-fade`、`.fx-skeleton`；列表入场用 `.fx-stagger`，子元素设置 `--i` 序号，每项延迟 32ms，最多 8 项。
 - **只动画 `transform` 与 `opacity`**（以及颜色、阴影）；不动画 `width`、`height`、`top`、`left`。折叠区用 `grid-template-rows: 0fr → 1fr`。
 - **按下反馈**：按钮与可点击卡片 `:active` 缩放到 0.97–0.98；悬停只改颜色与阴影，不位移超过 1px。
-- **焦点**：键盘焦点用 `outline: 2px solid var(--focus-ring)`；输入框聚焦用主色描边 + `var(--focus-halo)` 光晕。程序设置焦点的非交互元素（`tabindex="-1"` 的标题、区域）不显示焦点环。
+- **焦点**：键盘焦点用 `outline: 2px solid var(--focus-ring)`；输入框聚焦用中性 `--focus-ring` 描边和 `--focus-halo` 光晕。程序设置焦点的非交互元素（`tabindex="-1"` 的标题、区域）不显示焦点环。
 - **减少动态效果**：`prefers-reduced-motion: reduce` 时所有时长 token 归零，循环动画停止；新增的循环动画必须在该媒体查询中关闭。
 - **固定定位浮层**：390px 手机视口的 `position: fixed` 浮层，其祖先不得带 `transform`，否则会改变定位参照。
-- **模型选择器（`model-picker-v2.css`）**：面板从触发按钮一侧缩放淡入（`--dur-short`）；进入模型目录时新视图从右侧滑入，返回时设置视图从左侧滑入（`--dur-medium`），首次打开不滑动。思考等级填充条用 `transform: scaleX()` 而不是宽度，切换档位时平滑过渡；轨道上每个档位有刻度点，已达到的点放大点亮；档位读数每次变化重新入场；拖动滑块时手柄外圈出现主色光晕。目录项以 24ms 间隔依次入场（最多 8 项），当前项的勾弹出；触发按钮上的档位条依次填充。``prefers-reduced-motion`` 下全部关闭。只有带厂商前缀的模型才在名称下重复完整 ID。
+- **模型选择器（`model-picker-v2.css`）**：面板从触发按钮一侧缩放淡入（`--dur-short`）；进入模型目录时新视图从右侧滑入，返回时设置视图从左侧滑入（`--dur-medium`），首次打开不滑动。思考等级填充条用 `transform: scaleX()` 而不是宽度，切换档位时平滑过渡；轨道上每个档位有刻度点，已达到的点放大点亮；档位读数每次变化重新入场；拖动滑块时手柄外圈出现主色光晕。目录项以 24ms 间隔依次入场（最多 8 项），当前项的勾弹出；触发按钮上的档位条依次填充。`prefers-reduced-motion` 下全部关闭。只有带厂商前缀的模型才在名称下重复完整 ID。
 
 ### 4.7 对话区（`Transcript`）
 
@@ -210,7 +211,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 每次完成界面或样式修改后，必须在真实浏览器（Playwright Chromium）与聚焦测试中完成以下核对：
 
 1. **Token 合规**：新增样式的颜色、阴影、圆角、动画时长与曲线全部来自 token；有新循环动画时已在 reduced-motion 中关闭。
-1. **色彩合规**：检查是否误用 `--accent-sage` 表示绿色、是否混入 `#16a34a` 亮绿或 `rgba(59, 130, 246, ...)` 蓝色、是否有红绿直接渐变。
+1. **色彩与刻度合规**：运行 `pnpm lint:css` 与 `pnpm check:css-vars`，检查未定义变量和字面字号、圆角；确认没有红绿直接渐变。
 2. **控件合规**：检查是否引入了原生 `<select>`、裸 `<input type="checkbox">`、无表面对比的同色卡片堆叠或冗余的 3 层边框套娃。
 3. **极端文本防崩**：检查长工作区路径、长模型名、多段费用/TPS 公式下，`<dl>` 标签列是否保持 `nowrap` 不竖排、卡片是否无水平溢出。
 4. **聚焦测试与构建**：

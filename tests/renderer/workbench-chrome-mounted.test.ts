@@ -1,10 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
-import { chromium, type Browser, type Page } from "playwright";
+import { type Browser, type Page, chromium } from "playwright";
 import { afterAll, beforeAll, expect, it } from "vitest";
 
-const output = resolve(process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/workbench-chrome");
+const output = resolve(
+  process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/workbench-chrome",
+);
 let browser: Browser;
 let js: string;
 let css: string;
@@ -13,7 +15,9 @@ beforeAll(async () => {
   await mkdir(output, { recursive: true });
   const bundle = await build({
     stdin: {
-      resolveDir: resolve("."), loader: "tsx", contents: `
+      resolveDir: resolve("."),
+      loader: "tsx",
+      contents: `
         import { createRoot } from 'react-dom/client';
         import { App } from './src/renderer/components/workbench/App';
         import { defaultPublicSettings } from '@forge/core/shared/schemas';
@@ -53,49 +57,84 @@ beforeAll(async () => {
         createRoot(document.getElementById('root')).render(<App />);
       `,
     },
-    bundle: true, write: false, format: "iife", jsx: "automatic",
-    outfile: "workbench-chrome.js", loader: { ".woff2": "dataurl" },
+    bundle: true,
+    write: false,
+    format: "iife",
+    jsx: "automatic",
+    outfile: "workbench-chrome.js",
+    loader: { ".woff2": "dataurl" },
     define: { "process.env.NODE_ENV": '"development"' },
   });
-  js = bundle.outputFiles.find(file => file.path.endsWith(".js"))!.text;
-  css = bundle.outputFiles.find(file => file.path.endsWith(".css"))!.text;
-  browser = await chromium.launch({ headless: true,
-    ...(process.env.FORGE_BROWSER_EXECUTABLE ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE } : {}),
+  js = bundle.outputFiles.find((file) => file.path.endsWith(".js"))!.text;
+  css = bundle.outputFiles.find((file) => file.path.endsWith(".css"))!.text;
+  browser = await chromium.launch({
+    headless: true,
+    ...(process.env.FORGE_BROWSER_EXECUTABLE
+      ? { executablePath: process.env.FORGE_BROWSER_EXECUTABLE }
+      : {}),
   });
 }, 30000);
 
-afterAll(async () => { await browser?.close(); });
+afterAll(async () => {
+  await browser?.close();
+});
 
-async function mount(emptyServices = false) {
-  const page = await browser.newPage({ viewport: { width: 1172, height: 800 }, reducedMotion: "reduce" });
+async function mount(
+  emptyServices = false,
+  options: { hasTouch?: boolean; pointerCoarse?: boolean } = {},
+) {
+  const page = await browser.newPage({
+    viewport: { width: 1172, height: 800 },
+    reducedMotion: "reduce",
+    hasTouch: options.hasTouch,
+  });
+  if (options.pointerCoarse) {
+    const client = await page.context().newCDPSession(page);
+    await client.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "pointer", value: "coarse" }],
+    });
+  }
   page.setDefaultTimeout(5000);
   const errors: string[] = [];
-  page.on("pageerror", error => errors.push(error.message));
-  await page.route("https://forge.test/**", route => route.fulfill({
-    contentType: "text/html", body: '<!doctype html><html><body><div id="root"></div></body></html>',
-  }));
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("https://forge.test/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: '<!doctype html><html><body><div id="root"></div></body></html>',
+    }),
+  );
   await page.goto("https://forge.test/");
-  await page.evaluate(value => { Reflect.set(window, "emptyServices", value); }, emptyServices);
+  await page.evaluate((value) => {
+    Reflect.set(window, "emptyServices", value);
+  }, emptyServices);
   await page.addStyleTag({ content: css });
   await page.addScriptTag({ content: js });
-  await page.getByRole("button", { name: "正在加载配置", exact: true }).waitFor();
-  expect(await page.locator('.sidebar-icon-btn[data-service]').getAttribute('data-service')).toBe('loading');
-  expect(await page.locator('.sidebar-model-status').count()).toBe(0);
-  expect(await page.locator('.wb-status-warning').count()).toBe(0);
+  await page
+    .getByRole("button", { name: "正在加载配置", exact: true })
+    .waitFor();
+  expect(
+    await page
+      .locator(".sidebar-icon-btn[data-service]")
+      .getAttribute("data-service"),
+  ).toBe("loading");
+  expect(await page.locator(".sidebar-model-status").count()).toBe(0);
+  expect(await page.locator(".wb-status-warning").count()).toBe(0);
   await page.evaluate(() => Reflect.get(window, "releaseSettings")());
   return { page, errors };
 }
 
 async function assertFooterFits(page: Page) {
-  const metrics = await page.locator('.sidebar-footer').evaluate(footer => {
+  const metrics = await page.locator(".sidebar-footer").evaluate((footer) => {
     const bounds = footer.getBoundingClientRect();
     return {
       overflow: footer.scrollWidth > footer.clientWidth + 1,
-      buttons: [...footer.querySelectorAll('button')].map(button => {
+      buttons: [...footer.querySelectorAll("button")].map((button) => {
         const rect = button.getBoundingClientRect();
-        return { named: Boolean(button.getAttribute('aria-label')),
-          text: (button.textContent ?? '').trim(),
-          inside: rect.left >= bounds.left && rect.right <= bounds.right + 1 };
+        return {
+          named: Boolean(button.getAttribute("aria-label")),
+          text: (button.textContent ?? "").trim(),
+          inside: rect.left >= bounds.left && rect.right <= bounds.right + 1,
+        };
       }),
     };
   });
@@ -111,80 +150,148 @@ it("keeps session-specific configuration honest, compact and navigable in both t
   const { page, errors } = await mount();
   try {
     // A saved service needs no footer signal: the icon is plain settings.
-    const status = page.getByRole('button', { name: '设置', exact: true });
+    const status = page.getByRole("button", { name: "设置", exact: true });
     await status.waitFor();
-    expect(await page.locator('.sidebar-icon-badge').count()).toBe(0);
-    expect(await page.getByRole('region', { name: '设置工作区' }).count()).toBe(0);
-    await page.getByRole('button', { name: '你好', exact: true }).click();
-    await page.getByText('你好！有什么我可以帮你的吗？', { exact: true }).waitFor();
-    const prompt = page.getByRole('textbox', { name: '继续任务' });
-    await prompt.fill('验证会话模型可以使用');
-    expect(await page.getByRole('button', { name: '运行', exact: true }).isEnabled()).toBe(true);
-    await prompt.fill('');
-    expect(await page.getByRole('button', { name: '展开详情', exact: true }).getAttribute('aria-expanded')).toBe('false');
-    expect(await page.locator('.workbench-inspector').isVisible()).toBe(false);
+    expect(await page.locator(".sidebar-icon-badge").count()).toBe(0);
+    expect(await page.getByRole("region", { name: "设置工作区" }).count()).toBe(
+      0,
+    );
+    await page.getByRole("button", { name: "你好", exact: true }).click();
+    await page
+      .getByText("你好！有什么我可以帮你的吗？", { exact: true })
+      .waitFor();
+    const prompt = page.getByRole("textbox", { name: "继续任务" });
+    await prompt.fill("验证会话模型可以使用");
+    expect(
+      await page.getByRole("button", { name: "运行", exact: true }).isEnabled(),
+    ).toBe(true);
+    await prompt.fill("");
+    expect(
+      await page
+        .getByRole("button", { name: "展开详情", exact: true })
+        .getAttribute("aria-expanded"),
+    ).toBe("false");
+    expect(await page.locator(".workbench-inspector").isVisible()).toBe(false);
 
     for (const width of [1172, 1440, 390]) {
       await page.setViewportSize({ width, height: 900 });
-      for (const theme of ['light', 'dark']) {
-        await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-        if (width === 390) await page.getByRole('button', { name: '打开会话列表' }).click();
+      for (const theme of ["light", "dark"]) {
+        await page.evaluate((value) => {
+          document.documentElement.dataset.theme = value;
+        }, theme);
+        if (width === 390)
+          await page.getByRole("button", { name: "打开会话列表" }).click();
         await assertFooterFits(page);
-        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        await page.screenshot({ path: resolve(output, `workbench-${width}-${theme}.png`), animations: 'disabled' });
-        if (width === 390) await page.getByRole('button', { name: '关闭侧边栏' }).click();
-        await page.getByRole('button', { name: '展开详情', exact: true }).click();
-        await page.locator('.inspector-summary, .inspector-empty').first().waitFor();
-        expect(await page.locator('.inspector-scroll').evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+        ).toBe(true);
+        await page.screenshot({
+          path: resolve(output, `workbench-${width}-${theme}.png`),
+          animations: "disabled",
+        });
+        if (width === 390)
+          await page.getByRole("button", { name: "关闭侧边栏" }).click();
+        await page
+          .getByRole("button", { name: "展开详情", exact: true })
+          .click();
+        await page
+          .locator(".inspector-summary, .inspector-empty")
+          .first()
+          .waitFor();
+        expect(
+          await page
+            .locator(".inspector-scroll")
+            .evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+        ).toBe(true);
         if (width === 390) {
-          await page.getByRole('button', { name: '收起详情，返回任务', exact: true }).click();
+          await page
+            .getByRole("button", { name: "收起详情，返回任务", exact: true })
+            .click();
         } else {
-          // Open details forces the 232px compact sidebar at the screenshot's width.
+          // ≤1280px opens details as an overlay drawer; wider screens dock it
+          // and force the compact sidebar. The footer must fit either way.
           await assertFooterFits(page);
-          await page.locator('.wb-inspector-close').click();
-          expect(await page.getByRole('button', { name: '展开详情', exact: true }).evaluate(el => el === document.activeElement)).toBe(true);
+          await page.locator(".wb-inspector-close").click();
+          expect(
+            await page
+              .getByRole("button", { name: "展开详情", exact: true })
+              .evaluate((el) => el === document.activeElement),
+          ).toBe(true);
         }
       }
     }
     await page.setViewportSize({ width: 1172, height: 800 });
-    expect(await page.getByRole('button', { name: '展开详情', exact: true }).getAttribute('aria-expanded')).toBe('false');
+    expect(
+      await page
+        .getByRole("button", { name: "展开详情", exact: true })
+        .getAttribute("aria-expanded"),
+    ).toBe("false");
     await status.click();
     // A saved service needs no header signal in settings either.
-    await page.getByRole('region', { name: '设置工作区' }).waitFor();
-    expect(await page.locator('.settings-status').count()).toBe(0);
-    await page.getByRole('button', { name: '返回工作台' }).click();
+    await page.getByRole("region", { name: "设置工作区" }).waitFor();
+    expect(await page.locator(".settings-status").count()).toBe(0);
+    await page.getByRole("button", { name: "返回工作台" }).click();
     await status.waitFor();
     expect(errors).toEqual([]);
-  } finally { await page.close(); }
+  } finally {
+    await page.close();
+  }
 }, 30000);
 
 it("still guides a genuinely empty setup into settings without pretending to be disconnected", async () => {
   const { page, errors } = await mount(true);
   try {
-    await page.getByRole('region', { name: '设置工作区' }).waitFor();
-    await page.locator('.settings-status').getByText('添加模型服务', { exact: true }).waitFor();
-    await page.getByRole('button', { name: '返回工作台' }).click();
-    await page.getByRole('button', { name: '添加模型服务', exact: true }).waitFor();
-    expect(await page.locator('.sidebar-icon-badge').count()).toBe(1);
+    await page.getByRole("region", { name: "设置工作区" }).waitFor();
+    await page
+      .locator(".settings-status")
+      .getByText("添加模型服务", { exact: true })
+      .waitFor();
+    await page.getByRole("button", { name: "返回工作台" }).click();
+    await page
+      .getByRole("button", { name: "添加模型服务", exact: true })
+      .waitFor();
+    expect(await page.locator(".sidebar-icon-badge").count()).toBe(1);
     await assertFooterFits(page);
     expect(errors).toEqual([]);
-  } finally { await page.close(); }
+  } finally {
+    await page.close();
+  }
 });
 
 it("still reveals a newly pending background approval when details start collapsed", async () => {
   const { page } = await mount();
   try {
-    await page.getByRole('button', { name: '设置', exact: true }).waitFor();
-    await page.evaluate(() => Reflect.get(window, 'emit')({
-      runId: '33333333-3333-4333-8333-333333333333',
-      event: { type: 'approval_requested', sessionId: '22222222-2222-4222-8222-222222222222',
-        timestamp: '2026-10-29T00:01:00Z', request: {
-          id: '44444444-4444-4444-8444-444444444444',
-          sessionId: '22222222-2222-4222-8222-222222222222', toolCallId: 'call-1',
-          toolName: 'run_command', command: ['pwd'], description: 'fixture approval',
-        } },
-    }));
-    await expect.poll(() => page.locator('.wb-app').getAttribute('class')).not.toContain('inspector-collapsed');
-    await page.getByRole('button', { name: '待批准 1 项，打开执行详情' }).waitFor();
-  } finally { await page.close(); }
+    await page.getByRole("button", { name: "设置", exact: true }).waitFor();
+    await page.evaluate(() =>
+      Reflect.get(
+        window,
+        "emit",
+      )({
+        runId: "33333333-3333-4333-8333-333333333333",
+        event: {
+          type: "approval_requested",
+          sessionId: "22222222-2222-4222-8222-222222222222",
+          timestamp: "2026-10-29T00:01:00Z",
+          request: {
+            id: "44444444-4444-4444-8444-444444444444",
+            sessionId: "22222222-2222-4222-8222-222222222222",
+            toolCallId: "call-1",
+            toolName: "run_command",
+            command: ["pwd"],
+            description: "fixture approval",
+          },
+        },
+      }),
+    );
+    await expect
+      .poll(() => page.locator(".wb-app").getAttribute("class"))
+      .not.toContain("inspector-collapsed");
+    await page
+      .getByRole("button", { name: "待批准 1 项，打开执行详情" })
+      .waitFor();
+  } finally {
+    await page.close();
+  }
 });

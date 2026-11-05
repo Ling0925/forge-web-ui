@@ -3,9 +3,9 @@ import {
   CircleDashed,
   WarningCircle,
 } from "@phosphor-icons/react";
-import { type ToolDisclosureProps } from "./types";
+import { SectionHead, ToolCopyButton } from "./common";
 import { formatDuration, paramLabels } from "./presentation";
-import { ToolCopyButton, SectionHead } from "./common";
+import { type ToolDisclosureProps } from "./types";
 
 export interface CommandTaskItem {
   readonly id: string;
@@ -320,9 +320,11 @@ export function CommandConsole({
   const failure = error ?? model.error;
   const emptyText = model.pending
     ? "命令仍在运行，输出尚未生成。"
-    : status === "running"
-      ? "等待命令输出…"
-      : "工具未返回文本";
+    : status === "awaiting_approval"
+      ? "批准后开始执行。"
+      : status === "running"
+        ? "等待命令输出…"
+        : "工具未返回文本";
   return (
     <div className="tool-terminal-card">
       {command && (

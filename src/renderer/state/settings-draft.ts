@@ -1,4 +1,8 @@
-import { configureInputSchema, type ConfigureInput, type PublicSettings } from "@forge/core/shared/schemas";
+import {
+  type ConfigureInput,
+  type PublicSettings,
+  configureInputSchema,
+} from "@forge/core/shared/schemas";
 
 /**
  * Fields the settings form actually edits. Endpoint, model and protocol now
@@ -12,7 +16,12 @@ export type SettingsDraft = {
   contextBudgetTokens: string;
   contextBudgetChars: string;
   modelContextWindows: { model: string; tokens: string }[];
-  lspServers: { id: string; command: string; args: string; extensions: string }[];
+  lspServers: {
+    id: string;
+    command: string;
+    args: string;
+    extensions: string;
+  }[];
 };
 
 export function createSettingsDraft(s: PublicSettings): SettingsDraft {
@@ -21,12 +30,15 @@ export function createSettingsDraft(s: PublicSettings): SettingsDraft {
     theme: s.theme,
     defaultPermission: s.defaultPermission,
     requestTimeoutMs: String(s.requestTimeoutMs),
-    contextBudgetTokens: s.contextBudgetTokens == null ? "" : String(s.contextBudgetTokens),
+    contextBudgetTokens:
+      s.contextBudgetTokens == null ? "" : String(s.contextBudgetTokens),
     contextBudgetChars: String(s.contextBudgetChars),
-    modelContextWindows: Object.entries(s.modelContextWindows ?? {}).map(([model, tokens]) => ({
-      model,
-      tokens: tokens == null ? "" : String(tokens),
-    })),
+    modelContextWindows: Object.entries(s.modelContextWindows ?? {}).map(
+      ([model, tokens]) => ({
+        model,
+        tokens: tokens == null ? "" : String(tokens),
+      }),
+    ),
     lspServers: (s.lspServers ?? []).map((server) => ({
       ...server,
       args: JSON.stringify(server.args),
@@ -36,7 +48,8 @@ export function createSettingsDraft(s: PublicSettings): SettingsDraft {
 }
 
 const integer = (value: string, field: string) => {
-  if (!/^\d+$/.test(value.trim())) throw Error(`${field}：请输入整数，不能留空。`);
+  if (!/^\d+$/.test(value.trim()))
+    throw Error(`${field}：请输入整数，不能留空。`);
   return Number(value);
 };
 
@@ -51,7 +64,8 @@ export function buildSettingsUpdate(
   const baseline = createSettingsDraft(original);
   const settings: Record<string, unknown> = {};
   for (const name of Object.keys(draft) as (keyof SettingsDraft)[]) {
-    if (JSON.stringify(draft[name]) === JSON.stringify(baseline[name])) continue;
+    if (JSON.stringify(draft[name]) === JSON.stringify(baseline[name]))
+      continue;
     switch (name) {
       case "requestTimeoutMs":
       case "contextBudgetChars":
@@ -62,9 +76,16 @@ export function buildSettingsUpdate(
         break;
       case "modelContextWindows": {
         const entries = draft[name].map(
-          (row) => [row.model.trim(), row.tokens.trim() ? integer(row.tokens, "模型窗口") : null] as const,
+          (row) =>
+            [
+              row.model.trim(),
+              row.tokens.trim() ? integer(row.tokens, "模型窗口") : null,
+            ] as const,
         );
-        if (entries.some(([model]) => !model) || new Set(entries.map(([model]) => model)).size !== entries.length)
+        if (
+          entries.some(([model]) => !model) ||
+          new Set(entries.map(([model]) => model)).size !== entries.length
+        )
           throw Error("模型窗口：模型 ID 不能为空或重复。");
         settings[name] = Object.fromEntries(entries);
         break;
@@ -97,6 +118,10 @@ export function buildSettingsUpdate(
     ...(removeKey ? { apiKey: "" } : key ? { apiKey: key } : {}),
   });
   if (!parsed.success)
-    throw Error(parsed.error.issues.map((issue) => `${issue.path.join(".")}：${issue.message}`).join("\n"));
+    throw Error(
+      parsed.error.issues
+        .map((issue) => `${issue.path.join(".")}：${issue.message}`)
+        .join("\n"),
+    );
   return parsed.data;
 }

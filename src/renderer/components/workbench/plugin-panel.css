@@ -101,14 +101,9 @@
   gap: 8px;
   margin: 0;
   padding: 8px 12px;
-  border: 1px solid
-    color-mix(in srgb, var(--success) 28%, var(--border-subtle));
+  border: 1px solid color-mix(in srgb, var(--success) 28%, var(--border-subtle));
   border-radius: var(--radius-md);
-  background: color-mix(
-    in srgb,
-    var(--success) 8%,
-    var(--surface-elevated)
-  );
+  background: color-mix(in srgb, var(--success) 8%, var(--surface-elevated));
   color: var(--text-primary);
   font-size: var(--text-xs);
   line-height: 1.5;
@@ -130,8 +125,8 @@
   border-radius: var(--radius-card);
   background: var(--surface-elevated);
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast, 120ms ease), box-shadow
-    var(--transition-fast, 120ms ease);
+  transition: border-color var(--transition-fast), box-shadow
+    var(--transition-fast);
 }
 
 .plugin-card.is-enabled {
@@ -273,16 +268,8 @@
 
 .plugin-status.is-running {
   color: var(--success);
-  background: color-mix(
-    in srgb,
-    var(--success) 10%,
-    var(--surface-soft)
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--success) 26%,
-    var(--border-subtle)
-  );
+  background: color-mix(in srgb, var(--success) 10%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--success) 26%, var(--border-subtle));
 }
 
 .plugin-status-dot {
@@ -359,16 +346,8 @@
 
 .plugin-subpanel-badge.is-configured {
   color: var(--success);
-  background: color-mix(
-    in srgb,
-    var(--success) 9%,
-    var(--surface-soft)
-  );
-  border-color: color-mix(
-    in srgb,
-    var(--success) 24%,
-    var(--border-subtle)
-  );
+  background: color-mix(in srgb, var(--success) 9%, var(--surface-soft));
+  border-color: color-mix(in srgb, var(--success) 24%, var(--border-subtle));
 }
 
 .plugin-capabilities ul {
@@ -670,16 +649,8 @@
 
 .plugin-health.is-ready {
   color: var(--text-primary);
-  border-color: color-mix(
-    in srgb,
-    var(--success) 32%,
-    var(--border-subtle)
-  );
-  background: color-mix(
-    in srgb,
-    var(--success) 9%,
-    var(--surface-soft)
-  );
+  border-color: color-mix(in srgb, var(--success) 32%, var(--border-subtle));
+  background: color-mix(in srgb, var(--success) 9%, var(--surface-soft));
 }
 
 .plugin-health.is-ready svg {

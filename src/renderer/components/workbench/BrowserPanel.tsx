@@ -1,7 +1,4 @@
-import type {
-  BrowserCommand,
-  BrowserResponse,
-} from "@forge/core/shared/plugins";
+import type { BrowserCommand, BrowserResponse } from "@forge/core/shared";
 import {
   ArrowClockwise,
   ArrowsLeftRight,
@@ -393,7 +390,8 @@ export function BrowserPanel({
           <div>
             <strong>本会话当前没有活动浏览器</strong>
             <span>
-              只有 Agent 在当前运行中首次调用浏览器工具后才会开启，运行结束或取消时自动关闭；此面板不会替你启动或安装浏览器。
+              只有 Agent
+              在当前运行中首次调用浏览器工具后才会开启，运行结束或取消时自动关闭；此面板不会替你启动或安装浏览器。
             </span>
           </div>
         </output>

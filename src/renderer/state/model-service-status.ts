@@ -2,7 +2,9 @@ import type { PublicSettings } from "@forge/core/shared/schemas";
 
 /** Service setup is not default-model readiness or a network health check.
  * A source can intentionally have no default model: sessions bind their own. */
-export function modelServiceStatus(settings: PublicSettings | null | undefined) {
+export function modelServiceStatus(
+  settings: PublicSettings | null | undefined,
+) {
   if (!settings) {
     return {
       state: "loading" as const,
@@ -10,7 +12,9 @@ export function modelServiceStatus(settings: PublicSettings | null | undefined) 
       hint: "正在读取模型服务配置，尚未判断连接状态。",
     };
   }
-  const added = settings.isConfigured || Boolean(settings.baseUrl?.trim()) ||
+  const added =
+    settings.isConfigured ||
+    Boolean(settings.baseUrl?.trim()) ||
     settings.providerSources?.some((source) => Boolean(source.baseUrl.trim()));
   return added
     ? {

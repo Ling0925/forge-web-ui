@@ -1,19 +1,23 @@
-import { useEffect, useState } from "react";
-import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
-import type { ModelCatalogEntry } from "@forge/core/shared/model-catalog";
+import type { ModelCatalogEntry, sessionUsage } from "@forge/core/shared";
 import {
+  type ModelPrice,
+  type TokenRates,
   estimateAggregateCostUsd,
   estimateRequestCostUsd,
   findModelPrice,
   modelCatalogPricingToPrice,
   normalizePricingModelId,
   resolveRequestRates,
-  type ModelPrice,
-  type TokenRates,
-} from "@forge/core/shared/model-pricing";
-import type { AgentEvent, PublicProviderSource } from "@forge/core/shared/schemas";
-import type { SessionUsage } from "@forge/core/shared/session-usage";
+} from "@forge/core/shared";
+import type { UsagePricingStatus, UsageStatsDto } from "@forge/core/shared/ipc";
+import type {
+  AgentEvent,
+  PublicProviderSource,
+} from "@forge/core/shared/schemas";
+import { useEffect, useState } from "react";
 import { composerModelMetadata } from "./composer-model";
+
+type SessionUsageSummary = ReturnType<typeof sessionUsage>;
 
 interface PricingStoreState {
   readonly prices: ReadonlyMap<string, ModelPrice>;
@@ -154,13 +158,15 @@ export async function ensureUsageModelPrices(
   ];
   const unrequested = cleaned.filter((m) => {
     const key = normalizePricingModelId(m);
-    return key.length > 0 && !requestedModels.has(key) && !mutablePrices.has(key);
+    return (
+      key.length > 0 && !requestedModels.has(key) && !mutablePrices.has(key)
+    );
   });
   if (unrequested.length === 0 && pricingStatus !== undefined) return;
   if (inflightFetch) return inflightFetch;
   inflightFetch = (async () => {
     try {
-      const res = await window.forge.getUsageStats(
+      const res = await window.forge.getUsageStats?.(
         cleaned.length > 0 ? { models: cleaned } : undefined,
       );
       if (res && res.pricing?.state !== "unavailable") {
@@ -265,7 +271,7 @@ export function collectSessionModels(
 
 export function computeSessionSpeedMetrics(
   events: readonly AgentEvent[],
-  usage: SessionUsage,
+  usage: SessionUsageSummary,
   liveRun?: {
     readonly status?: string | undefined;
     readonly unreportedOutputTokens?: number | undefined;
@@ -342,7 +348,8 @@ export function computeSessionSpeedMetrics(
   }
 
   return {
-    avgTps: avgTps !== undefined && Number.isFinite(avgTps) ? avgTps : undefined,
+    avgTps:
+      avgTps !== undefined && Number.isFinite(avgTps) ? avgTps : undefined,
     latestTps,
     peakTps,
     durationMs,
@@ -355,7 +362,7 @@ export function computeSessionSpeedMetrics(
 
 export function computeSessionCostMetrics(options: {
   readonly events: readonly AgentEvent[];
-  readonly usage: SessionUsage;
+  readonly usage: SessionUsageSummary;
   readonly sessionId?: string | undefined;
   readonly model?: string | undefined;
   readonly snapshotModel?: string | undefined;
@@ -382,7 +389,9 @@ export function computeSessionCostMetrics(options: {
   } = options;
 
   const primaryModel = model || snapshotModel;
-  const resolvePrice = (targetModel: string | undefined): ModelPrice | undefined => {
+  const resolvePrice = (
+    targetModel: string | undefined,
+  ): ModelPrice | undefined => {
     if (!targetModel) return undefined;
     const usagePrice = findModelPrice(prices, targetModel);
     const catalogMeta =

@@ -1,5 +1,6 @@
 import { CaretDown, Check } from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useDismiss } from "../primitives/useDismiss";
 
 export function ComposerDropdown<T extends string>({
   value,
@@ -39,17 +40,12 @@ export function ComposerDropdown<T extends string>({
     menuRef.current
       ?.querySelector<HTMLButtonElement>('[aria-checked="true"]')
       ?.focus();
-    const dismiss = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        !containerRef.current?.contains(event.target)
-      ) {
-        setOpen(false);
-      }
-    };
-    window.addEventListener("pointerdown", dismiss);
-    return () => window.removeEventListener("pointerdown", dismiss);
   }, [open, disabled]);
+  useDismiss({
+    open,
+    refs: [containerRef],
+    onDismiss: () => setOpen(false),
+  });
 
   return (
     <div
@@ -97,19 +93,23 @@ export function ComposerDropdown<T extends string>({
         disabled={disabled}
         aria-label={ariaLabel}
         aria-describedby={descId}
-        title={iconOnly && current ? `${ariaLabel}：${current.label}` : undefined}
+        title={
+          iconOnly && current ? `${ariaLabel}：${current.label}` : undefined
+        }
         aria-haspopup="menu"
         aria-controls={menuId}
         aria-expanded={open}
       >
         {icon && <span className="composer-dropdown-icon">{icon}</span>}
-        {!iconOnly && <span className="composer-dropdown-label">{current?.label}</span>}
         {!iconOnly && (
-        <CaretDown
-          size={10}
-          aria-hidden="true"
-          className="composer-dropdown-caret"
-        />
+          <span className="composer-dropdown-label">{current?.label}</span>
+        )}
+        {!iconOnly && (
+          <CaretDown
+            size={10}
+            aria-hidden="true"
+            className="composer-dropdown-caret"
+          />
         )}
       </button>
       <span id={descId} className="visually-hidden">

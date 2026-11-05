@@ -1,4 +1,12 @@
-import { Component, type ComponentType, lazy, type LazyExoticComponent, Suspense, useEffect, useState } from "react";
+import {
+  Component,
+  type ComponentType,
+  type LazyExoticComponent,
+  Suspense,
+  lazy,
+  useEffect,
+  useState,
+} from "react";
 import { Button } from "./Button";
 
 interface PanelProps {
@@ -9,19 +17,37 @@ interface PanelProps {
 }
 
 function Placeholder({
-  label, onClose, onRetry,
+  label,
+  onClose,
+  onRetry,
 }: Pick<PanelProps, "label" | "onClose"> & { onRetry?: () => void }) {
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 100, display: "grid",
-      placeContent: "center", gap: 16, padding: 24, background: "var(--surface-shell)",
-    }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        display: "grid",
+        placeContent: "center",
+        gap: 16,
+        padding: 24,
+        background: "var(--surface-shell)",
+      }}
+    >
       <p role={onRetry ? "alert" : "status"}>
-        {onRetry ? `${label}加载失败，请重试；若仍失败或服务已更新，可刷新页面。` : `正在加载${label}…`}
+        {onRetry
+          ? `${label}加载失败，请重试；若仍失败或服务已更新，可刷新页面。`
+          : `正在加载${label}…`}
       </p>
-      {onRetry && <Button variant="primary" onClick={onRetry}>重试</Button>}
+      {onRetry && (
+        <Button variant="primary" onClick={onRetry}>
+          重试
+        </Button>
+      )}
       <Button onClick={onClose}>返回工作台</Button>
-      {onRetry && <Button onClick={() => window.location.reload()}>刷新页面</Button>}
+      {onRetry && (
+        <Button onClick={() => window.location.reload()}>刷新页面</Button>
+      )}
     </div>
   );
 }
@@ -32,15 +58,21 @@ function Placeholder({
 async function retryPanelLoad(load: PanelProps["load"], error: unknown) {
   const cssErrorPrefix = "Unable to preload CSS for ";
   if (error instanceof Error && error.message.startsWith(cssErrorPrefix)) {
-    const href = new URL(error.message.slice(cssErrorPrefix.length), document.baseURI).href;
-    const link = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'))
-      .find(candidate => candidate.href === href);
+    const href = new URL(
+      error.message.slice(cssErrorPrefix.length),
+      document.baseURI,
+    ).href;
+    const link = Array.from(
+      document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+    ).find((candidate) => candidate.href === href);
     if (!link) throw error;
     // A failed download can still leave a non-null, empty link.sheet.
     await new Promise<void>((resolve, reject) => {
       const replacement = link.cloneNode() as HTMLLinkElement;
       replacement.addEventListener("load", () => resolve(), { once: true });
-      replacement.addEventListener("error", () => reject(error), { once: true });
+      replacement.addEventListener("error", () => reject(error), {
+        once: true,
+      });
       link.replaceWith(replacement);
     });
   }
@@ -69,15 +101,24 @@ class PanelBoundary extends Component<PanelProps, PanelState> {
   private retry = () => {
     const { load } = this.props;
     const { error } = this.state;
-    this.setState({ failed: false, error: undefined, Panel: lazy(() => retryPanelLoad(load, error)) });
+    this.setState({
+      failed: false,
+      error: undefined,
+      Panel: lazy(() => retryPanelLoad(load, error)),
+    });
   };
 
   override render() {
     const { open, label, onClose } = this.props;
     const { Panel } = this.state;
-    if (this.state.failed) return open ? <Placeholder label={label} onClose={onClose} onRetry={this.retry} /> : null;
+    if (this.state.failed)
+      return open ? (
+        <Placeholder label={label} onClose={onClose} onRetry={this.retry} />
+      ) : null;
     return (
-      <Suspense fallback={open ? <Placeholder label={label} onClose={onClose} /> : null}>
+      <Suspense
+        fallback={open ? <Placeholder label={label} onClose={onClose} /> : null}
+      >
         <Panel />
       </Suspense>
     );

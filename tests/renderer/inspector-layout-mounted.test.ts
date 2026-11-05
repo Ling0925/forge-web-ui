@@ -5,7 +5,9 @@ import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
 it("keeps execution details compact, navigable and diagnostics on demand", async () => {
-  const output = resolve(process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/inspector-layout");
+  const output = resolve(
+    process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/inspector-layout",
+  );
   await mkdir(output, { recursive: true });
   const bundle = await build({
     stdin: {
@@ -15,10 +17,12 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
       import {useState} from 'react';
       import {createRoot} from 'react-dom/client';
       import {Inspector} from './src/renderer/components/workbench/Inspector';
+      import {WorkspaceResourcesDialog} from './src/renderer/components/workbench/WorkspaceResourcesDialog';
       import {initialWorkbenchState} from './src/renderer/state/workbench-reducer';
       import './src/renderer/styles/global.css';
       import './src/renderer/components/workbench/app.css';
       import './src/renderer/styles/workspace-theme.css';
+      import './src/renderer/styles/design-foundation.css';
       window.diagnosticCalls=0;
       window.forge={
         getDiagnostics:async()=>{window.diagnosticCalls++;return {transcriptChars:42000,messageCount:12,projectedChars:16000}},
@@ -75,7 +79,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         const [tick,setTick]=useState(0);
         window.refreshFixture=()=>setTick(tick+1);
         window.testController={state:{...initialWorkbenchState,activeSessionId:'session',activeSnapshot:{...snapshot,updatedAt:String(tick)},activeRuns:{session:{status:'running',permission:'unrestricted'}},sessions:childSessions},refreshActiveSession:async()=>{},selectSession:async()=>{}};
-        return <div className="wb-app mobile-inspector" style={{height:'100vh',justifyContent:'flex-end'}}><Inspector onRequestCollapse={()=>{window.collapsed=true}}/></div>;
+        return <div className="wb-app mobile-inspector" style={{height:'100vh',justifyContent:'flex-end'}}><Inspector onRequestCollapse={()=>{window.collapsed=true}}/><WorkspaceResourcesDialog/></div>;
       }
       createRoot(document.getElementById('root')).render(<Harness/>);
     `,
@@ -120,12 +124,20 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         await page.addScriptTag({ content: js });
         // One summary page: progress, subtasks and session facts in order.
         // Section headers read "标题 计数", e.g. "进度 1/3" and "子任务 1".
-        await page.getByRole("button", { name: "进度 1/3", exact: true }).waitFor();
+        await page
+          .getByRole("button", { name: "进度 1/3", exact: true })
+          .waitFor();
         expect(
-          await page.getByRole("button", { name: "子任务 1", exact: true }).isVisible(),
+          await page
+            .getByRole("button", { name: "子任务 1", exact: true })
+            .isVisible(),
         ).toBe(true);
         expect(
-          await page.getByText("独立子代理：收集仓库结构与测试配置并输出简要结论", { exact: true }).isVisible(),
+          await page
+            .getByText("独立子代理：收集仓库结构与测试配置并输出简要结论", {
+              exact: true,
+            })
+            .isVisible(),
         ).toBe(true);
         expect(
           await page
@@ -138,9 +150,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           const pending = document.querySelector(
             ".wb-plan-progress .plan-pending",
           );
-          const titleRow = document.querySelector(
-            ".inspector-summary-head",
-          );
+          const titleRow = document.querySelector(".inspector-summary-head");
           const listStyle = list ? getComputedStyle(list) : null;
           const pendingStyle = pending ? getComputedStyle(pending) : null;
           const pendingRect = pending?.getBoundingClientRect();
@@ -157,35 +167,45 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         expect(stepMetrics.gap).toBe("0px");
         expect(stepMetrics.pendingWidth).toBe(14);
         expect(stepMetrics.pendingHeight).toBe(14);
-        expect(Number.parseFloat(stepMetrics.pendingBorderWidth)).toBeGreaterThan(
-          0,
-        );
+        expect(
+          Number.parseFloat(stepMetrics.pendingBorderWidth),
+        ).toBeGreaterThan(0);
         expect(stepMetrics.pendingBorderColor).not.toBe("rgba(0, 0, 0, 0)");
         expect(stepMetrics.titleRowDisplay).toBe("flex");
         await page.screenshot({
           path: resolve(output, `forge-inspector-plan-${width}-${theme}.png`),
           animations: "disabled",
         });
-        const back = page.getByRole("button", { name: "返回概要", exact: true });
+        const back = page.getByRole("button", {
+          name: "返回概要",
+          exact: true,
+        });
         await page.getByRole("button", { name: "说明", exact: true }).click();
         expect(
           await page.getByText("真实计划说明", { exact: true }).isVisible(),
         ).toBe(true);
         // The drill-in moves focus to its back button and returns on click.
-        expect(await back.evaluate((el) => el === document.activeElement)).toBe(true);
+        expect(await back.evaluate((el) => el === document.activeElement)).toBe(
+          true,
+        );
         await back.click();
-        await page.getByRole("button", { name: "工作区文件", exact: true }).click();
-        // The drill-in header names the view; the panel does not repeat it.
+        await page
+          .getByRole("button", { name: "工作区文件", exact: true })
+          .click();
+        const dialog = page.getByRole("dialog");
+        await dialog.waitFor();
         expect(
-          await page.locator(".wb-inspector-head").getByText("工作区文件", { exact: true }).isVisible(),
-        ).toBe(true);
+          await dialog
+            .getByRole("tab", { name: "工作区文件", exact: true })
+            .getAttribute("aria-selected"),
+        ).toBe("true");
         await page.getByText("README.md", { exact: true }).click();
         expect(
           await page
             .getByText("# Workspace Preview Content", { exact: true })
             .isVisible(),
         ).toBe(true);
-        await back.click();
+        await dialog.getByRole("button", { name: "关闭面板" }).click();
         await page
           .getByRole("button", { name: "变更与检查点", exact: true })
           .click();
@@ -196,6 +216,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(0);
         await back.click();
+        await page.getByRole("button", { name: "会话", exact: true }).click();
         expect(
           await page.getByText("无限制", { exact: true }).isVisible(),
         ).toBe(true);
@@ -203,7 +224,9 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         expect(
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(0);
-        await page.getByRole("button", { name: "上下文与用量", exact: true }).click();
+        await page
+          .getByRole("button", { name: "上下文与用量", exact: true })
+          .click();
         await expect
           .poll(() =>
             page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
@@ -221,7 +244,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         expect(
           await page.getByText("42,000 字符", { exact: false }).isVisible(),
         ).toBe(true);
-        // Memory card is open by default and truncated excerpt expands on click
+        // The dedicated context view keeps the saved memory expanded.
         expect(
           await page.getByText("初始简短摘要", { exact: true }).isVisible(),
         ).toBe(true);
@@ -238,10 +261,13 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           animations: "disabled",
         });
         await back.click();
-        await page.getByRole("button", { name: "项目资源", exact: true }).click();
+        await page
+          .getByRole("button", { name: "项目资源", exact: true })
+          .click();
         expect(
           await page.getByText("项目指令与技能", { exact: true }).isVisible(),
         ).toBe(true);
+        await dialog.getByRole("button", { name: "关闭面板" }).click();
         const overflow = await page
           .locator(".inspector-scroll")
           .evaluate((el) => el.scrollWidth > el.clientWidth + 1);

@@ -1,0 +1,5 @@
+# Formatting-only commits, ignored by `git blame` (GitHub applies this file automatically).
+# Local use: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# style: apply biome format and organize imports repo-wide
+9b3f92db9e9f7bc9c07856619a8132fe8d135de3

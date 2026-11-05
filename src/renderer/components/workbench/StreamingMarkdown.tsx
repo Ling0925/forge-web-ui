@@ -25,5 +25,11 @@ export function StreamingMarkdown({
     }
   }, [source, displayed]);
   useEffect(() => () => clearTimeout(timer.current), []);
-  return <Markdown source={displayed} highlight={false} enableCharts={enableCharts} />;
+  return (
+    <Markdown
+      source={displayed}
+      highlight={false}
+      enableCharts={enableCharts}
+    />
+  );
 }

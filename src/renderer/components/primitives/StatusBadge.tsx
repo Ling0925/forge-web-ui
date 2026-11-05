@@ -6,14 +6,31 @@ import {
   WarningCircle,
   XCircle,
 } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 import type { SessionStatus } from "../../shared-types";
 import "./status-badge.css";
 
 export type BadgeStatus = SessionStatus | "queued" | "unknown";
 
+export type BadgeTone =
+  | "neutral"
+  | "accent"
+  | "success"
+  | "warning"
+  | "error"
+  | "muted";
+
 export interface StatusBadgeProps {
   readonly status: BadgeStatus | string;
   readonly label?: string;
+  readonly className?: string;
+}
+
+export interface ToneBadgeProps {
+  readonly tone: BadgeTone;
+  readonly children: ReactNode;
+  /** `mono` 用于计数类内容（如 3/5），使用等宽数字。 */
+  readonly mono?: boolean;
   readonly className?: string;
 }
 
@@ -36,6 +53,7 @@ const STATUS_CONFIG: Record<
   unknown: { text: "状态未知", icon: Question },
 };
 
+/** 会话/运行状态徽标：图标 + 文案，带 `状态：…` 可访问名称。 */
 export function StatusBadge({
   status,
   label,
@@ -65,4 +83,26 @@ export function StatusBadge({
       <span>{displayText}</span>
     </output>
   );
+}
+
+/**
+ * 语义色调徽标：用于计划进度、请求结果、顾问请求等"状态胶囊"，
+ * 统一替代各面板自绘的 `*-badge is-xxx` / `*-status is-xxx` 样式。
+ */
+export function ToneBadge({
+  tone,
+  children,
+  mono = false,
+  className = "",
+}: ToneBadgeProps) {
+  const classes = [
+    "status-badge",
+    "status-badge-compact",
+    `status-badge-tone-${tone}`,
+    mono ? "status-badge-mono" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return <span className={classes}>{children}</span>;
 }

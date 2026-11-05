@@ -31,12 +31,16 @@
 }
 
 /* ---------- View switch ---------- */
-.composer-model-picker .composer-model-panel[data-view="catalog"] > .model-picker-subpanel {
+.composer-model-picker
+  .composer-model-panel[data-view="catalog"]
+  > .model-picker-subpanel {
   animation: picker-view-forward var(--dur-medium) var(--ease-out) both;
 }
 /* Only coming back from the catalog slides in from the left; on first open
    the panel entrance is enough. */
-.composer-model-picker .composer-model-panel[data-view="settings"][data-returned] > * {
+.composer-model-picker
+  .composer-model-panel[data-view="settings"][data-returned]
+  > * {
   animation: picker-view-back var(--dur-medium) var(--ease-out) both;
 }
 @keyframes picker-view-forward {
@@ -62,12 +66,12 @@
 
 /* ---------- Current model row ---------- */
 .composer-model-picker .model-picker-current {
-  transition: background-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: background-color var(--dur-micro) var(--ease-out), color
+    var(--dur-micro) var(--ease-out);
 }
 .composer-model-picker .model-picker-current > svg {
-  transition: transform var(--dur-short) var(--ease-out),
-    color var(--dur-micro) var(--ease-out);
+  transition: transform var(--dur-short) var(--ease-out), color var(--dur-micro)
+    var(--ease-out);
 }
 .composer-model-picker .model-picker-current:hover > svg {
   color: var(--text-primary);
@@ -103,8 +107,8 @@
   background: var(--surface-elevated);
   opacity: 0.9;
   transform: scale(0.6);
-  transition: transform var(--dur-short) var(--ease-spring),
-    opacity var(--dur-short) var(--ease-out);
+  transition: transform var(--dur-short) var(--ease-spring), opacity
+    var(--dur-short) var(--ease-out);
 }
 .composer-model-picker .effort-slider-ticks > span[data-reached="false"] {
   background: var(--text-muted);
@@ -116,8 +120,8 @@
 /* The native thumb follows the value instantly; its feedback is a hover
    halo and a short spring on press. */
 .composer-model-picker .effort-slider input::-webkit-slider-thumb {
-  transition: transform var(--dur-short) var(--ease-spring),
-    box-shadow var(--dur-short) var(--ease-out);
+  transition: transform var(--dur-short) var(--ease-spring), box-shadow
+    var(--dur-short) var(--ease-out);
 }
 .composer-model-picker .effort-slider input:hover::-webkit-slider-thumb {
   box-shadow: var(--shadow-sm), 0 0 0 4px var(--accent-subtle);
@@ -127,8 +131,8 @@
   box-shadow: var(--shadow-sm), 0 0 0 6px var(--accent-soft);
 }
 .composer-model-picker .effort-slider input::-moz-range-thumb {
-  transition: transform var(--dur-short) var(--ease-spring),
-    box-shadow var(--dur-short) var(--ease-out);
+  transition: transform var(--dur-short) var(--ease-spring), box-shadow
+    var(--dur-short) var(--ease-out);
 }
 .composer-model-picker .effort-slider input:active::-moz-range-thumb {
   transform: scale(1.2);
@@ -148,8 +152,8 @@
   }
 }
 .composer-model-picker .effort-slider-labels > span {
-  transition: color var(--dur-short) var(--ease-out),
-    transform var(--dur-short) var(--ease-spring);
+  transition: color var(--dur-short) var(--ease-out), transform var(--dur-short)
+    var(--ease-spring);
 }
 .composer-model-picker .effort-slider-labels > span[data-active="true"] {
   transform: translateY(-1px);
@@ -187,16 +191,19 @@
 
 /* ---------- Trigger ---------- */
 .composer-model-picker .model-effort-meter > span {
-  transition: background-color var(--dur-short) var(--ease-out),
-    opacity var(--dur-short) var(--ease-out),
-    transform var(--dur-short) var(--ease-spring);
+  transition: background-color var(--dur-short) var(--ease-out), opacity
+    var(--dur-short) var(--ease-out), transform var(--dur-short)
+    var(--ease-spring);
   transition-delay: calc(var(--i, 0) * 30ms);
   transform-origin: bottom;
 }
 .composer-model-picker .model-effort-meter > .is-filled {
   opacity: 1;
 }
-.composer-model-picker .composer-model-summary:hover .model-effort-meter > .is-filled {
+.composer-model-picker
+  .composer-model-summary:hover
+  .model-effort-meter
+  > .is-filled {
   transform: scaleY(1.15);
 }
 

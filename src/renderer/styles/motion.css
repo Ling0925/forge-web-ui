@@ -87,8 +87,8 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.16s ease;
+  transition: grid-template-rows 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity
+    0.16s ease;
 }
 
 .smooth-collapse.is-expanded {
@@ -96,7 +96,8 @@
   opacity: 1;
 }
 
-.smooth-collapse.is-collapsing {
+.smooth-collapse.is-collapsing,
+.smooth-collapse.is-entering {
   grid-template-rows: 0fr;
   opacity: 0;
 }
@@ -178,8 +179,7 @@
 }
 
 /* 5. Interactive controls hover/pressed feedback & composer focus-within */
-.btn:not(:disabled),
-.wb-icon-btn:not(:disabled) {
+.btn:not(:disabled) {
   transition:
     background-color var(--motion-duration-fast) ease,
     border-color var(--motion-duration-fast) ease,
@@ -188,8 +188,7 @@
     transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
-.btn:active:not(:disabled),
-.wb-icon-btn:active:not(:disabled) {
+.btn:active:not(:disabled) {
   transform: scale(0.97);
 }
 
@@ -266,8 +265,42 @@
   height: 1.15em;
   margin-left: 3px;
   vertical-align: -0.15em;
-  border-radius: 2px;
-  background: var(--accent-sage);
+  border-radius: var(--radius-2xs);
+  background: var(--accent);
+  animation: wb-caret-blink 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Lists and quotes carry the caret on their last line of text; on the block
+   itself it dropped onto a line of its own below the final item. */
+.message-streaming
+  .markdown-content
+  > :is(ul, ol, blockquote):last-child:not(.markdown-code):not(
+    .markdown-table-scroll
+  )::after {
+  content: none;
+}
+.message-streaming
+  .markdown-content
+  > :is(ul, ol):last-child
+  > li:last-child:not(:has(> :is(p, ul, ol)))::after,
+.message-streaming
+  .markdown-content
+  > :is(ul, ol, blockquote):last-child
+  > :last-child:is(p, li)
+  > p:last-child::after,
+.message-streaming
+  .markdown-content
+  > blockquote:last-child
+  > p:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.15em;
+  margin-left: 3px;
+  vertical-align: -0.15em;
+  border-radius: var(--radius-2xs);
+  background: var(--accent);
   animation: wb-caret-blink 1s ease-in-out infinite;
   pointer-events: none;
 }
@@ -356,6 +389,7 @@
   .modal-backdrop,
   .tool-disclosure,
   .tool-disclosure-body,
+  .smooth-collapse,
   .tool-call-group,
   .transcript-execution-items,
   .transcript-turn:last-child .message-user,
@@ -380,7 +414,15 @@
      keeps a readable solid colour instead of a frozen clipped gradient. */
   .message-streaming
     .markdown-content
-    > :last-child:not(.markdown-code):not(.markdown-table-scroll)::after {
+    > :last-child:not(.markdown-code):not(.markdown-table-scroll)::after,
+  .message-streaming
+    .markdown-content
+    > :is(ul, ol):last-child
+    > li:last-child::after,
+  .message-streaming
+    .markdown-content
+    > :is(ul, ol, blockquote):last-child
+    p:last-child::after {
     animation: none !important;
     opacity: 1;
   }
@@ -393,7 +435,6 @@
   }
 
   .btn:active:not(:disabled),
-  .wb-icon-btn:active:not(:disabled),
   .composer-run:active:not(:disabled),
   .session-item:active,
   .tab-btn:active:not(:disabled) {

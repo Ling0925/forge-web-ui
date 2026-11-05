@@ -1,77 +1,179 @@
+/*
+ * Single source of color tokens for the workbench (light + dark).
+ * Scale tokens (type, spacing, radius, layout, motion) live in tokens.css.
+ * Components reference semantic names only; never hard-code a hex value
+ * that one of these tokens already covers.
+ */
 :root,
 [data-theme="light"] {
-  --canvas-bg: #faf9f6;
-  --sidebar-bg: #f2f1ed;
-  --surface-shell: #eae9e4;
+  color-scheme: light;
+
+  /* Surfaces: warm paper */
+  --canvas-bg: #f9f8f5;
+  --sidebar-bg: #f1efea;
+  --surface-shell: #ebe9e3;
   --surface-elevated: #ffffff;
-  --surface-soft: #f0efeb;
-  --surface-hover: #e8e6e0;
-  --surface-active: #dedbd3;
-  --surface-selected: #e6e3dc;
+  --surface-soft: #f3f1ec;
+  --surface-hover: rgb(64 52 36 / 6%);
+  --surface-active: rgb(64 52 36 / 10%);
+  --surface-selected: rgb(64 52 36 / 8%);
+
+  /* Ink levels (primary > secondary > muted >= tertiary > disabled).
+     muted / tertiary stay >= 4.5:1 on the canvas; disabled is decorative. */
   --text-primary: #292824;
-  --text-secondary: #68665f;
+  --text-secondary: #57554f;
   --text-muted: #716e66;
+  /* Composer usage bar keeps its previous ink (intentionally untouched). */
+  --composer-usage-ink: #68665f;
   --text-tertiary: #716e66;
-  --text-disabled: #716e66;
-  --border-subtle: #e5e3dc;
-  --border-control: #d1cec5;
-  --border-hover: #aba69a;
+  --text-disabled: #9c998f;
+
+  /* Borders */
+  --border-subtle: rgb(64 52 36 / 9%);
+  --border-control: rgb(64 52 36 / 16%);
+  --border-hover: rgb(64 52 36 / 28%);
+  --border-strong: rgb(64 52 36 / 40%);
+
+  /* Brand: terracotta */
   --accent: #a54f35;
-  --accent-sage: #a54f35;
-  --accent-sage-soft: #f3e6df;
-  --focus-ring: #a54f35;
+  --accent-hover: #8f4029;
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+  --on-accent: #ffffff;
   --link: #a54f35;
+  /* Focus uses neutral ink so a focused field never reads as an error. */
+  --focus-ring: #4a4740;
+  --focus-halo: rgb(74 71 64 / 14%);
+
+  /* States: inks meet >= 4.5:1 against their own tinted surfaces. */
+  --success: #226d40;
+  --success-bg: #edf7ef;
+  --success-border: #aee4be;
+
+  --warning: #975a06;
+  --warning-bg: #fef7e9;
+  --warning-border: #fedf89;
+
+  --error: #b82420;
+  --error-bg: #fef3f2;
+  --error-border: #fecdca;
+
+  /* High contrast call-to-action */
   --run-bg: #35332e;
   --run-ink: #ffffff;
   --run-hover: #49463f;
   --run-active: #24221e;
-  --shadow-composer: 0 2px 8px rgb(35 30 20 / 4%);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 5%);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 6%), 0 1px 1px
+    hsl(var(--shadow-color) / 4%);
+  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 4px 12px -4px
+    hsl(var(--shadow-color) / 8%);
+  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 8px 24px -8px
+    hsl(var(--shadow-color) / 14%);
+  --shadow-overlay: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 12px 24px -6px
+    hsl(var(--shadow-color) / 12%), 0 32px 64px -16px
+    hsl(var(--shadow-color) / 22%);
+  --shadow-dropdown: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 4px 8px -2px
+    hsl(var(--shadow-color) / 8%), 0 16px 32px -8px
+    hsl(var(--shadow-color) / 16%);
+
   /* Chart series use the workbench's earthy hues, sampled by charts/theme.ts. */
   --chart-series: #a54f35, #55684d, #975a06, #7d5a7c, #68665f, #226d40, #6b5439;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
   --chart-heat: #f6f3ee, #dc9477, #7a3520;
-  --rail-width: 264px;
-  --header-height: 44px;
-  --control-height: 28px;
-  --control-height-sm: 24px;
-  --control-height-lg: 32px;
-  --reading-measure: 760px;
-  --welcome-title-size: 22px;
-  --radius-composer: 18px;
-  --composer-inset: 6px 32px 16px;
+  --surface-raised: #fffefc;
+  --surface-sunken: #eceae4;
+  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 80%);
+  --accent-subtle: color-mix(in srgb, var(--accent) 9%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 32%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 22%, transparent);
+  --shadow-color: 32deg 22% 28%;
 }
 
 [data-theme="dark"] {
-  --canvas-bg: #171716;
-  --sidebar-bg: #121211;
-  --surface-shell: #191918;
-  --surface-elevated: #222221;
-  --surface-soft: #252524;
-  --surface-hover: #30302e;
-  --surface-active: #3a3936;
-  --surface-selected: #343330;
+  color-scheme: dark;
+
+  /* Surfaces: graphite */
+  --canvas-bg: #181715;
+  --sidebar-bg: #131211;
+  --surface-shell: #0f0e0d;
+  --surface-elevated: #211f1d;
+  --surface-soft: #1d1c1a;
+  --surface-hover: rgb(255 244 228 / 5%);
+  --surface-active: rgb(255 244 228 / 9%);
+  --surface-selected: rgb(255 244 228 / 7%);
+
+  /* Four distinct ink levels; tertiary stays >= 4.5:1 on canvas / elevated. */
   --text-primary: #eeede8;
-  --text-secondary: #aaa79f;
-  --text-muted: #aaa79f;
-  --text-tertiary: #aaa79f;
-  --text-disabled: #aaa79f;
-  --border-subtle: #2b2b28;
-  --border-control: #3d3c37;
-  --border-hover: #706d64;
+  --text-secondary: #b3b0a8;
+  --composer-usage-ink: #b3b0a8;
+  --text-muted: #a19e96;
+  --text-tertiary: #8f8c84;
+  --text-disabled: #6b6862;
+
+  /* Borders */
+  --border-subtle: rgb(255 244 228 / 7%);
+  --border-control: rgb(255 244 228 / 12%);
+  --border-hover: rgb(255 244 228 / 22%);
+  --border-strong: rgb(255 244 228 / 32%);
+
+  /* Brand: terracotta */
   --accent: #dc9477;
-  --accent-sage: #dc9477;
-  --accent-sage-soft: #3b2b24;
-  --focus-ring: #dc9477;
+  --accent-hover: #e8a88e;
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --on-accent: #1c1b1a;
   --link: #dc9477;
+  --focus-ring: #cfcbc1;
+  --focus-halo: rgb(207 203 193 / 18%);
+
+  /* States */
+  --success: #34d399;
+  --success-bg: #064e3b;
+  --success-border: #065f46;
+
+  --warning: #fbbf24;
+  --warning-bg: #451a03;
+  --warning-border: #78350f;
+
+  --error: #f87171;
+  --error-bg: #450a0a;
+  --error-border: #7f1d1d;
+
+  /* High contrast call-to-action */
   --run-bg: #e9e6de;
   --run-ink: #242320;
   --run-hover: #ffffff;
   --run-active: #d4d0c5;
-  --shadow-composer: 0 2px 8px rgb(0 0 0 / 8%);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 30%);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 40%);
+  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 35%), 0 4px 12px -4px
+    hsl(var(--shadow-color) / 45%);
+  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 40%), 0 10px 28px -8px
+    hsl(var(--shadow-color) / 60%);
+  --shadow-overlay: 0 0 0 1px rgb(255 244 228 / 8%), 0 12px 24px -6px
+    hsl(var(--shadow-color) / 50%), 0 32px 64px -16px
+    hsl(var(--shadow-color) / 70%);
+  --shadow-dropdown: 0 0 0 1px rgb(255 244 228 / 7%), 0 4px 8px -2px
+    hsl(var(--shadow-color) / 45%), 0 18px 36px -8px
+    hsl(var(--shadow-color) / 65%);
+
   --chart-series: #dc9477, #8fad82, #f0be65, #c39bc1, #aaa79f, #56b881, #b89b7c;
   --chart-heat: #1c1b1a, #dc9477, #f2c4ae;
+  --surface-raised: #272522;
+  --surface-sunken: #141312;
+  --edge-highlight: inset 0 1px 0 rgb(255 244 228 / 5%);
+  --accent-subtle: color-mix(in srgb, var(--accent) 10%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 36%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 26%, transparent);
+  --shadow-color: 30deg 30% 2%;
 }
 
+.composer-usage {
+  --text-secondary: var(--composer-usage-ink);
+}
 .wb-app .workbench-task-header {
   border-bottom-color: transparent;
   padding-inline: var(--space-6);

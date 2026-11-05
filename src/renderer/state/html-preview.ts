@@ -1,4 +1,4 @@
-import type { HtmlPreviewResponse } from "@forge/core/shared/html-preview";
+import type { HtmlPreviewResponse } from "@forge/core/shared";
 
 export type HtmlPreviewSource =
   | { readonly kind: "inline"; readonly html: string }

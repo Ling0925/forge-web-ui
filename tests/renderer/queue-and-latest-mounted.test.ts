@@ -255,21 +255,17 @@ it("renders floating jump-to-latest button and interactive queue list with cance
     await page.evaluate(() => {
       document.documentElement.dataset.theme = "dark";
     });
-    await page
-      .locator(".workbench-composer")
-      .screenshot({
-        path: resolve(".build/queue-ui/queue-1-item-dark.png"),
-        animations: "disabled",
-      });
+    await page.locator(".workbench-composer").screenshot({
+      path: resolve(".build/queue-ui/queue-1-item-dark.png"),
+      animations: "disabled",
+    });
     await page.evaluate(() => {
       document.documentElement.dataset.theme = "light";
     });
-    await page
-      .locator(".workbench-composer")
-      .screenshot({
-        path: resolve(".build/queue-ui/queue-1-item-light.png"),
-        animations: "disabled",
-      });
+    await page.locator(".workbench-composer").screenshot({
+      path: resolve(".build/queue-ui/queue-1-item-light.png"),
+      animations: "disabled",
+    });
 
     // Queue 2 more items (total 3 items)
     await input.fill("second to cancel");
@@ -283,21 +279,17 @@ it("renders floating jump-to-latest button and interactive queue list with cance
     await page.evaluate(() => {
       document.documentElement.dataset.theme = "dark";
     });
-    await page
-      .locator(".workbench-composer")
-      .screenshot({
-        path: resolve(".build/queue-ui/queue-3-items-dark.png"),
-        animations: "disabled",
-      });
+    await page.locator(".workbench-composer").screenshot({
+      path: resolve(".build/queue-ui/queue-3-items-dark.png"),
+      animations: "disabled",
+    });
     await page.evaluate(() => {
       document.documentElement.dataset.theme = "light";
     });
-    await page
-      .locator(".workbench-composer")
-      .screenshot({
-        path: resolve(".build/queue-ui/queue-3-items-light.png"),
-        animations: "disabled",
-      });
+    await page.locator(".workbench-composer").screenshot({
+      path: resolve(".build/queue-ui/queue-3-items-light.png"),
+      animations: "disabled",
+    });
     expect(await page.locator(".composer-queue-title").innerText()).toBe(
       "待发 3 条",
     );
