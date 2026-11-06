@@ -16,6 +16,7 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -224,6 +225,7 @@ export function UsageDashboard() {
   const wsTriggerRef = useRef<HTMLButtonElement>(null);
   const wsMenuRef = useRef<HTMLDivElement>(null);
   const wsMenuId = useId();
+  const backButtonRef = useRef<HTMLButtonElement>(null);
 
   // Extract unique workspaces from existing session summaries
   const availableWorkspaces = useMemo(() => {
@@ -286,6 +288,17 @@ export function UsageDashboard() {
       requestVersion.current += 1;
     };
   }, [state.isUsageDashboardOpen, fetchStats]);
+
+  // The workbench behind turns inert while open; move focus in and hand it
+  // back to the opener on close. Layout phase: capture before inert blurs it.
+  useLayoutEffect(() => {
+    if (!state.isUsageDashboardOpen) return;
+    const opener = document.activeElement;
+    backButtonRef.current?.focus();
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [state.isUsageDashboardOpen]);
 
   // Handle escape key
   useEffect(() => {
@@ -569,6 +582,7 @@ export function UsageDashboard() {
         <header className="usage-dashboard-header">
           <div className="usage-dashboard-title-area">
             <button
+              ref={backButtonRef}
               type="button"
               className="usage-back-btn"
               onClick={() => openUsageDashboard(false)}

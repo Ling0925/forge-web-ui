@@ -19,12 +19,12 @@ import {
 import { SessionActions } from "./SessionActions";
 
 const labels: Readonly<Record<string, string>> = {
-  running: "执行中",
+  running: "运行中",
   awaiting_approval: "待批准",
   completed: "完成",
   failed: "失败",
   cancelled: "已取消",
-  interrupted: "中断",
+  interrupted: "已中断",
   idle: "空闲",
 };
 

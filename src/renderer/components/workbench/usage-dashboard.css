@@ -1,16 +1,9 @@
 /* ==========================================================================
    Usage Dashboard Full-Page Workspace Styles
-   Follows DESIGN.md Warm Light-First & Charcoal Dark token system.
+   Metric colors (--chart-*) live in styles/workspace-theme.css.
    ========================================================================== */
 
 .usage-dashboard-overlay {
-  --chart-completion: #a54f35;
-  --chart-cached: #226d40;
-  --chart-uncached: #3b6998;
-  --chart-cost: #975a06;
-  --chart-speed: #55684d;
-  --chart-failed: var(--error);
-
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -25,15 +18,6 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
-}
-
-[data-theme="dark"] .usage-dashboard-overlay {
-  --chart-completion: #dc9477;
-  --chart-cached: #56b881;
-  --chart-uncached: #6ca6d9;
-  --chart-cost: #f0be65;
-  --chart-speed: #8fad82;
-  --chart-failed: var(--error);
 }
 
 .usage-dashboard-modal {

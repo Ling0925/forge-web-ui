@@ -139,7 +139,7 @@ function Workbench() {
     <>
       <div
         hidden={state.isSettingsOpen}
-        inert={state.isSettingsOpen}
+        inert={state.isSettingsOpen || state.isUsageDashboardOpen}
         style={state.isSettingsOpen ? { display: "none" } : undefined}
         className={`workbench wb-app mobile-${state.mobileTab}${inspectorCollapsed ? " inspector-collapsed" : ""}${state.isMobileSidebarOpen ? " sidebar-open" : ""}`}
       >

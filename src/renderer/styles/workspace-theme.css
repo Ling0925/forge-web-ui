@@ -82,6 +82,13 @@
   --chart-series: #a54f35, #55684d, #975a06, #7d5a7c, #68665f, #226d40, #6b5439;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
   --chart-heat: #f6f3ee, #dc9477, #7a3520;
+  /* Usage dashboard metrics, drawn from the same earthy series. */
+  --chart-completion: #a54f35;
+  --chart-cached: #226d40;
+  --chart-uncached: #7d5a7c;
+  --chart-cost: #975a06;
+  --chart-speed: #55684d;
+  --chart-failed: var(--error);
   --surface-raised: #fffefc;
   --surface-sunken: #eceae4;
   --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 80%);
@@ -162,6 +169,12 @@
 
   --chart-series: #dc9477, #8fad82, #f0be65, #c39bc1, #aaa79f, #56b881, #b89b7c;
   --chart-heat: #1c1b1a, #dc9477, #f2c4ae;
+  --chart-completion: #dc9477;
+  --chart-cached: #56b881;
+  --chart-uncached: #c39bc1;
+  --chart-cost: #f0be65;
+  --chart-speed: #8fad82;
+  --chart-failed: var(--error);
   --surface-raised: #272522;
   --surface-sunken: #141312;
   --edge-highlight: inset 0 1px 0 rgb(255 244 228 / 5%);
@@ -202,7 +215,7 @@
   min-height: var(--control-height-lg);
 }
 /* Brand row stacks on wide screens, so the primary action owns the full rail
-   width (DESIGN.md §7.2: 通栏静默新建任务按钮) instead of hugging its label. */
+   width (通栏静默新建任务按钮) instead of hugging its label. */
 .wb-app .sidebar-brand-actions {
   width: 100%;
 }
@@ -293,7 +306,7 @@
 .wb-app .composer-split .composer-textarea {
   min-height: 36px;
   height: 36px;
-  /* DESIGN.md §5.2 fixes the composer field at 15px; body prose is 16px. */
+  /* WEB_UI_LAYOUT_SPEC.md fixes the composer field at 15px; body prose is 16px. */
   font-size: var(--text-md);
   line-height: 1.6;
 }
