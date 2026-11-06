@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { subscribeInspectorSection } from "../../state/inspector-sections";
 import { useGlobalModalShortcuts } from "../../state/modal-shortcuts";
@@ -63,6 +63,15 @@ function Workbench() {
       ).length,
     };
   }, shallowEqual);
+  // Same commit that makes the workbench inert: capture the opener before the
+  // browser blurs it, and hand focus back when the dashboard closes.
+  useLayoutEffect(() => {
+    if (!state.isUsageDashboardOpen) return;
+    const opener = document.activeElement;
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, [state.isUsageDashboardOpen]);
   useGlobalModalShortcuts({
     onNewSession: (open) => {
       if (!state.isSettingsOpen) openNewSession(open);

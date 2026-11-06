@@ -16,7 +16,6 @@ import {
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -289,15 +288,10 @@ export function UsageDashboard() {
     };
   }, [state.isUsageDashboardOpen, fetchStats]);
 
-  // The workbench behind turns inert while open; move focus in and hand it
-  // back to the opener on close. Layout phase: capture before inert blurs it.
-  useLayoutEffect(() => {
-    if (!state.isUsageDashboardOpen) return;
-    const opener = document.activeElement;
-    backButtonRef.current?.focus();
-    return () => {
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
+  // The workbench behind is inert while open. Passive on purpose: App's layout
+  // effect must record the opener first so it can restore focus on close.
+  useEffect(() => {
+    if (state.isUsageDashboardOpen) backButtonRef.current?.focus();
   }, [state.isUsageDashboardOpen]);
 
   // Handle escape key
