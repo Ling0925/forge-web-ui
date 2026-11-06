@@ -124,14 +124,9 @@ it("binds the browser panel to the selected session and probes only when opened"
         }[]
       >;
 
-    await page
-      .locator(
-        'section.inspector-sec[aria-label="会话信息"] .inspector-sec-toggle',
-      )
-      .click();
-    // Session info shows the browser as one folded row: nothing probed yet.
+    // The summary is the default view: the browser view has not been opened.
     expect(await rpc()).toEqual([]);
-    await page.getByText("浏览器", { exact: true }).click();
+    await page.getByRole("button", { name: "浏览器", exact: true }).click();
     const panel = page.getByRole("region", { name: "浏览器预览与接管" });
     await expect.poll(() => panel.isVisible()).toBe(true);
     // Only a read-only status probe, scoped to the selected session.
@@ -166,12 +161,7 @@ it("binds the browser panel to the selected session and probes only when opened"
         window as unknown as { selectTestSession: (id: string) => void }
       ).selectTestSession("22222222-2222-4222-8222-222222222222"),
     );
-    // Expand state is remembered per session: open 会话信息 for session B.
-    await page
-      .locator(
-        'section.inspector-sec[aria-label="会话信息"] .inspector-sec-toggle[aria-expanded="false"]',
-      )
-      .click();
+    // The browser drill-in stays selected and rebinds to the new session.
     await expect
       .poll(async () => (await rpc()).at(-1)?.sessionId)
       .toBe("22222222-2222-4222-8222-222222222222");

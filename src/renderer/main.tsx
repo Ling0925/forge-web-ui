@@ -5,6 +5,7 @@ import { App } from "./components/workbench/App";
 import "./styles/global.css";
 import "./styles/workspace-theme.css";
 import "./styles/sidebar-compact.css";
+import "./styles/design-foundation.css";
 import { installWebHost } from "./web-host";
 
 const loadPrimitiveShowcase = () =>

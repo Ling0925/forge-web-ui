@@ -58,6 +58,7 @@ import { useAutosizePrompt } from "./useAutosizePrompt";
 import { useSlashCommands } from "./useSlashCommands";
 import "./composer-layout.css";
 import "./composer-live-input.css";
+import "./new-session-v2.css";
 
 type PendingSubmission = {
   readonly id: SessionId;

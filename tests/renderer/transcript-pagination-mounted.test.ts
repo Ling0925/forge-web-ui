@@ -386,7 +386,8 @@ it("windows transcript history on real upward intent, anchors the reader, and is
       expect(await turnSix.count()).toBe(1);
       const turnSixSummary = turnSix.locator(".transcript-execution-summary");
       expect(await turnSixSummary.count()).toBe(1);
-      expect(await turnSixSummary.innerText()).toContain("总耗时");
+      expect(await turnSixSummary.innerText()).toContain("工作了");
+      expect(await turnSixSummary.getAttribute("title")).toContain("总耗时");
       expect(await page.locator('[data-turn="1"]').count()).toBe(0);
 
       await page.evaluate(() => {

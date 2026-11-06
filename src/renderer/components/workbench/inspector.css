@@ -173,7 +173,7 @@
   height: calc(100% - 4px);
   border-radius: var(--radius-sm);
   background: var(--surface-elevated);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-subtle);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s
     cubic-bezier(0.16, 1, 0.3, 1);
@@ -380,7 +380,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 8px 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -395,7 +395,7 @@
   justify-content: space-between;
   gap: 6px;
   margin-bottom: 0;
-  padding-bottom: 5px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -491,7 +491,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   background: var(--surface-soft);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   display: inline-block;
@@ -516,7 +516,7 @@
 
 .wb-inspector .inspector-stored-notice {
   margin-top: 4px;
-  padding: 5px 8px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   border-left: 3px solid var(--warning);
@@ -535,7 +535,7 @@
   min-width: 0;
   overflow: hidden;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: var(--shadow-sm);
 }
 
 .wb-app .wb-inspector .wb-disclosure[open] {
@@ -544,7 +544,7 @@
 }
 
 .wb-app .wb-inspector details > summary {
-  padding: 5px 8px;
+  padding: 6px 8px;
   min-height: 24px;
   cursor: pointer;
   font-size: var(--text-2xs);
@@ -565,8 +565,8 @@
 .wb-inspector .inspector-disclosure-head {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-weight: 550;
+  gap: 6px;
+  font-weight: 500;
   color: var(--text-primary);
 }
 
@@ -616,25 +616,34 @@
 .wb-inspector .inspector-usage-content {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .wb-inspector .inspector-usage-dl {
   grid-template-columns: 72px minmax(0, 1fr) !important;
 }
 
+/* The total is the row to read first, but it is data, not a link: primary ink
+   and weight, no accent. */
 .wb-inspector .usage-total-highlight {
-  font-weight: 700;
-  color: var(--accent) !important;
+  font-weight: 600;
+  color: var(--text-primary);
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The header pill summarizes the card while it is folded; once open, the
+   累计 Tokens row says the same thing. */
+.wb-inspector .inspector-usage-card[open] .inspector-token-pill {
+  display: none;
 }
 
 .wb-inspector .inspector-usage-footer {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 5px;
-  padding-top: 5px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -1008,7 +1017,7 @@
 .wb-inspector .inspector-plan-history-header {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .wb-inspector .inspector-plan-history-icon {
@@ -1041,7 +1050,7 @@
 .wb-inspector .inspector-plan-history-summary-main {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
   flex: 1 1 auto;
 }
@@ -1125,7 +1134,7 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
   margin-left: auto;
 }
 
@@ -1206,7 +1215,7 @@
 .wb-inspector .inspector-subagents-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
 .wb-inspector .inspector-subagents-empty {
@@ -1229,9 +1238,9 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--surface-soft);
-  padding: 8px 9px;
+  padding: 8px 8px;
   min-width: 0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1282,7 +1291,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 7px 10px 6px;
+  padding: 8px 10px 6px;
   background: var(--surface-elevated);
   border-bottom: 1px solid var(--border-subtle);
   min-width: 0;
@@ -1336,7 +1345,7 @@
 .wb-inspector .child-card-badges .status-badge {
   font-size: var(--text-2xs);
   font-weight: 600;
-  padding: 0 7px;
+  padding: 0 8px;
   height: 20px;
   min-height: 20px;
   border-radius: var(--radius-full);
@@ -1346,11 +1355,11 @@
 .wb-inspector .child-card-badges .status-badge-running {
   background: var(--accent-soft);
   color: var(--accent);
-  border-color: rgba(165, 79, 53, 0.26);
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
 }
 
 .wb-inspector .child-card-badges .status-badge-completed {
-  border-color: rgba(47, 111, 94, 0.24);
+  border-color: color-mix(in srgb, var(--success) 24%, transparent);
 }
 
 .wb-app .wb-inspector .child-session-card .child-cancel-btn,
@@ -1372,8 +1381,8 @@
   .child-session-card
   .child-cancel-btn:hover:not(:disabled),
 .wb-inspector .child-session-card .child-cancel-btn:hover:not(:disabled) {
-  background: rgba(200, 75, 49, 0.2);
-  border-color: rgba(200, 75, 49, 0.42);
+  background: color-mix(in srgb, var(--error) 20%, transparent);
+  border-color: color-mix(in srgb, var(--error) 42%, transparent);
 }
 
 .wb-app .wb-inspector .child-session-card .child-title-button,
@@ -1441,7 +1450,7 @@
   align-items: center;
   gap: 3.5px;
   max-width: 170px;
-  padding: 0 5px;
+  padding: 0 6px;
   height: 17px;
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);
@@ -1494,7 +1503,7 @@
 .wb-inspector .child-activity-mode-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -1544,7 +1553,7 @@
   overflow-wrap: anywhere;
   white-space: pre-wrap;
   height: 33px;
-  margin: 7px 10px;
+  margin: 8px 10px;
   padding-left: 8px;
   border-left: 2px solid var(--border-control);
   font-size: var(--text-2xs);
@@ -1554,11 +1563,11 @@
 }
 
 .wb-inspector .child-session-card.is-running .child-activity-preview {
-  border-left-color: rgba(165, 79, 53, 0.45);
+  border-left-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .wb-inspector .child-session-card.is-completed .child-activity-preview {
-  border-left-color: rgba(47, 111, 94, 0.45);
+  border-left-color: color-mix(in srgb, var(--success) 45%, transparent);
 }
 
 .wb-inspector .child-activity-preview.is-empty {
@@ -1641,12 +1650,12 @@
 }
 
 .wb-inspector .child-conversation-message[data-live="true"] {
-  border-color: rgba(165, 79, 53, 0.35);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .wb-inspector .child-conversation-message + *,
 .wb-inspector .child-conversation-scroll > * + .child-conversation-message {
-  margin-top: 7px;
+  margin-top: 8px;
 }
 
 .wb-inspector .child-conversation-speaker {
@@ -1669,7 +1678,7 @@
 }
 
 .wb-inspector .child-conversation-current {
-  padding: 4px 7px;
+  padding: 4px 8px;
   margin-top: 6px !important;
   border-radius: var(--radius-sm);
   background: var(--accent-soft);
@@ -1682,11 +1691,11 @@
 }
 
 .wb-inspector .child-conversation-scroll .tool-disclosure {
-  margin-block: 5px;
+  margin-block: 6px;
 }
 
 .wb-inspector .child-conversation-scroll .tool-disclosure-header {
-  padding: 5px 6px;
+  padding: 6px 6px;
   gap: 4px;
 }
 
@@ -1815,7 +1824,7 @@
   font-size: var(--text-2xs);
   color: var(--text-secondary);
   background: var(--surface-elevated);
-  padding: 4px 7px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
@@ -1828,7 +1837,7 @@
 .wb-inspector .inspector-control-output {
   font-size: var(--text-2xs);
   color: var(--text-secondary);
-  padding: 4px 7px;
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -1880,7 +1889,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 8px;
+  padding: 6px 8px;
   gap: 6px;
   cursor: pointer;
 }
@@ -1888,7 +1897,7 @@
 .wb-inspector .inspector-file-info {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
   flex: 1;
 }
@@ -1920,7 +1929,7 @@
 .wb-inspector .inspector-file-badges {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -1945,7 +1954,7 @@
   font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--surface-soft);
   color: var(--text-secondary);
@@ -2076,7 +2085,7 @@
 .wb-inspector .inspector-file-manager-actions {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -2134,12 +2143,17 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 7px;
+  gap: 6px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   background: var(--surface-soft);
   min-width: 0;
+}
+
+.wb-inspector .inspector-file-filter-row:focus-within {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .wb-inspector .inspector-file-filter-icon {
@@ -2244,7 +2258,7 @@
 .wb-inspector .inspector-file-tree-meta {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -2353,7 +2367,7 @@
 .wb-inspector .inspector-memory-ref-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -2397,7 +2411,7 @@
 .wb-inspector .inspector-memory-ref-btn {
   display: inline-flex;
   align-items: center;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-family: var(--font-mono);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -2446,7 +2460,7 @@
   flex-direction: column;
   gap: 4px;
   margin-top: 3px;
-  padding: 5px 7px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -2475,7 +2489,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .wb-inspector .inspector-memory-block-title {
@@ -2532,7 +2546,7 @@
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -2656,7 +2670,7 @@
   font-size: var(--text-2xs);
   color: var(--text-secondary);
   background: var(--surface-elevated);
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }

@@ -58,17 +58,26 @@ export function ReasoningSection({ form }: { readonly form: SettingsForm }) {
           label="默认思考等级"
           description="适用于支持思考参数的模型。优先级：单个模型的设置 ＞ 这里的默认 ＞ 模型自身默认。"
           control={
-            <Select
+            <div
+              className="provider-inference-grid"
+              role="group"
               aria-label="默认思考等级"
-              value={draft.reasoningEffort}
-              disabled={disabled}
-              options={GLOBAL_REASONING_EFFORT_OPTIONS.map((item) => ({
-                value: item.value,
-                label: item.label,
-                sub: item.desc,
-              }))}
-              onValueChange={(value) => void commit("reasoningEffort", value)}
-            />
+            >
+              {GLOBAL_REASONING_EFFORT_OPTIONS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`provider-inference-option${draft.reasoningEffort === item.value ? " is-active" : ""}`}
+                  aria-pressed={draft.reasoningEffort === item.value}
+                  aria-label={item.label}
+                  title={item.desc}
+                  disabled={disabled}
+                  onClick={() => void commit("reasoningEffort", item.value)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
           }
           status={<SaveIndicator status={statusOf("reasoningEffort")} />}
         />

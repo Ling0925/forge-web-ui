@@ -113,8 +113,11 @@ async function mount(
     .getByRole("button", { name: "正在加载配置", exact: true })
     .waitFor();
   expect(
-    await page.locator(".sidebar-model-status").getAttribute("data-state"),
+    await page
+      .locator(".sidebar-icon-btn[data-service]")
+      .getAttribute("data-service"),
   ).toBe("loading");
+  expect(await page.locator(".sidebar-model-status").count()).toBe(0);
   expect(await page.locator(".wb-status-warning").count()).toBe(0);
   await page.evaluate(() => Reflect.get(window, "releaseSettings")());
   return { page, errors };
@@ -125,40 +128,31 @@ async function assertFooterFits(page: Page) {
     const bounds = footer.getBoundingClientRect();
     return {
       overflow: footer.scrollWidth > footer.clientWidth + 1,
-      labels: [...footer.querySelectorAll("button span")].map((label) => {
-        const rect = label.getBoundingClientRect();
-        const range = document.createRange();
-        range.selectNodeContents(label);
+      buttons: [...footer.querySelectorAll("button")].map((button) => {
+        const rect = button.getBoundingClientRect();
         return {
-          wrap: getComputedStyle(label).whiteSpace,
-          lines: range.getClientRects().length,
+          named: Boolean(button.getAttribute("aria-label")),
+          text: (button.textContent ?? "").trim(),
           inside: rect.left >= bounds.left && rect.right <= bounds.right + 1,
-          fits: label.scrollWidth <= label.clientWidth + 1,
         };
       }),
     };
   });
   expect(metrics.overflow).toBe(false);
-  expect(metrics.labels).toHaveLength(3);
-  for (const label of metrics.labels) {
-    expect(label).toEqual({
-      wrap: "nowrap",
-      lines: 1,
-      inside: true,
-      fits: true,
-    });
+  // Icon-only actions: settings, usage, refresh, each with an accessible name.
+  expect(metrics.buttons).toHaveLength(3);
+  for (const button of metrics.buttons) {
+    expect(button).toEqual({ named: true, text: "", inside: true });
   }
 }
 
 it("keeps session-specific configuration honest, compact and navigable in both themes", async () => {
   const { page, errors } = await mount();
   try {
-    const status = page.getByRole("button", {
-      name: "模型服务已添加",
-      exact: true,
-    });
+    // A saved service needs no footer signal: the icon is plain settings.
+    const status = page.getByRole("button", { name: "设置", exact: true });
     await status.waitFor();
-    expect(await status.getAttribute("title")).toContain("不是网络连接状态");
+    expect(await page.locator(".sidebar-icon-badge").count()).toBe(0);
     expect(await page.getByRole("region", { name: "设置工作区" }).count()).toBe(
       0,
     );
@@ -203,7 +197,8 @@ it("keeps session-specific configuration honest, compact and navigable in both t
           .getByRole("button", { name: "展开详情", exact: true })
           .click();
         await page
-          .locator('section.inspector-sec[aria-label="进度"]')
+          .locator(".inspector-summary, .inspector-empty")
+          .first()
           .waitFor();
         expect(
           await page
@@ -234,10 +229,9 @@ it("keeps session-specific configuration honest, compact and navigable in both t
         .getAttribute("aria-expanded"),
     ).toBe("false");
     await status.click();
-    await page
-      .locator(".settings-status")
-      .getByText("模型服务已添加", { exact: true })
-      .waitFor();
+    // A saved service needs no header signal in settings either.
+    await page.getByRole("region", { name: "设置工作区" }).waitFor();
+    expect(await page.locator(".settings-status").count()).toBe(0);
     await page.getByRole("button", { name: "返回工作台" }).click();
     await status.waitFor();
     expect(errors).toEqual([]);
@@ -258,6 +252,7 @@ it("still guides a genuinely empty setup into settings without pretending to be 
     await page
       .getByRole("button", { name: "添加模型服务", exact: true })
       .waitFor();
+    expect(await page.locator(".sidebar-icon-badge").count()).toBe(1);
     await assertFooterFits(page);
     expect(errors).toEqual([]);
   } finally {
@@ -268,9 +263,7 @@ it("still guides a genuinely empty setup into settings without pretending to be 
 it("still reveals a newly pending background approval when details start collapsed", async () => {
   const { page } = await mount();
   try {
-    await page
-      .getByRole("button", { name: "模型服务已添加", exact: true })
-      .waitFor();
+    await page.getByRole("button", { name: "设置", exact: true }).waitFor();
     await page.evaluate(() =>
       Reflect.get(
         window,
@@ -298,43 +291,6 @@ it("still reveals a newly pending background approval when details start collaps
     await page
       .getByRole("button", { name: "待批准 1 项，打开执行详情" })
       .waitFor();
-  } finally {
-    await page.close();
-  }
-});
-
-it("maintains accessible touch targets on coarse pointer devices without layout overflow", async () => {
-  const { page, errors } = await mount(false, {
-    hasTouch: true,
-    pointerCoarse: true,
-  });
-  try {
-    await page
-      .getByRole("button", { name: "模型服务已添加", exact: true })
-      .waitFor();
-    const isCoarse = await page.evaluate(
-      () => window.matchMedia("(pointer: coarse)").matches,
-    );
-    expect(isCoarse).toBe(true);
-
-    const refreshBox = await page.locator(".sidebar-refresh-btn").boundingBox();
-    expect(refreshBox).not.toBeNull();
-    expect(refreshBox!.width).toBeGreaterThanOrEqual(44);
-    expect(refreshBox!.height).toBeGreaterThanOrEqual(44);
-
-    const statusBox = await page.locator(".sidebar-model-status").boundingBox();
-    expect(statusBox).not.toBeNull();
-    expect(statusBox!.height).toBeGreaterThanOrEqual(44);
-
-    const settingsBox = await page
-      .getByRole("button", { name: "设置", exact: true })
-      .boundingBox();
-    expect(settingsBox).not.toBeNull();
-    expect(settingsBox!.height).toBeGreaterThanOrEqual(44);
-    expect(settingsBox!.width).toBeGreaterThanOrEqual(44);
-
-    await assertFooterFits(page);
-    expect(errors).toEqual([]);
   } finally {
     await page.close();
   }

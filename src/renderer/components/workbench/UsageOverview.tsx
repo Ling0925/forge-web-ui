@@ -223,7 +223,7 @@ export function UsageOverview({
       document.documentElement.getAttribute("data-theme") === "dark" ||
       document.documentElement.dataset.theme === "dark";
 
-    // Palette aligned with DESIGN.md Warm Light-First & Charcoal Dark tokens
+    // Palette mirrors styles/workspace-theme.css (warm paper / graphite)
     const bgCenter = isDark ? "#20221f" : "#f7f6f1";
     const bgEdge = isDark ? "#151614" : "#efeee8";
     const orbitRingStroke = isDark

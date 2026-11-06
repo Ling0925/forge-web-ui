@@ -54,7 +54,20 @@ it("styles the model picker before Settings loads and preserves configured effor
     page.setDefaultTimeout(4000);
     await page.setContent(`<style>${css}</style><div id="root"></div>`);
     await page.addScriptTag({ content: js });
-    const labels = ["low", "medium", "high", "xhigh", "MAX"];
+    // Picker labels use the settings page names; #saved-effort keeps the wire value.
+    const effortLabel = (value: string) =>
+      ({
+        default: "默认",
+        none: "关闭",
+        minimal: "极低",
+        low: "低",
+        medium: "中",
+        high: "高",
+        xhigh: "超高",
+        max: "最大",
+      })[value] ?? value;
+    const levels = ["low", "medium", "high", "xhigh", "max"];
+    const labels = levels.map(effortLabel);
     const trigger = page.locator(".composer-model-summary");
     // Unknown capability retains the usual five choices plus the actual setting.
     for (const width of [1440, 390])
@@ -69,6 +82,22 @@ it("styles the model picker before Settings loads and preserves configured effor
           exact: true,
         });
         await slider.waitFor();
+        // Measure after the panel entrance animation has reached its final size.
+        await page.evaluate(() =>
+          Promise.all(
+            document
+              .getAnimations()
+              .map((animation) => animation.finished.catch(() => undefined)),
+          ),
+        );
+        // Layout assertions measure the resting panel, after its scale-in.
+        await page.evaluate(() =>
+          Promise.all(
+            document
+              .getAnimations()
+              .map((animation) => animation.finished.catch(() => undefined)),
+          ),
+        );
         expect(
           await page
             .locator(".model-picker-heading")
@@ -94,13 +123,15 @@ it("styles the model picker before Settings loads and preserves configured effor
         ).toBe("flex");
         expect(
           await page.locator(".effort-slider-labels > span").allTextContents(),
-        ).toEqual([configured, ...labels]);
+        ).toEqual([effortLabel(configured), ...labels]);
         expect(await page.locator("#saved-effort").textContent()).toBe(
           configured,
         );
-        expect(await slider.getAttribute("aria-valuetext")).toBe(configured);
+        expect(await slider.getAttribute("aria-valuetext")).toBe(
+          effortLabel(configured),
+        );
         expect(await trigger.getAttribute("title")).toContain(
-          `思考：${configured}`,
+          `思考：${effortLabel(configured)}`,
         );
         expect(await page.locator(".model-effort-meter > span").count()).toBe(
           6,
@@ -135,6 +166,13 @@ it("styles the model picker before Settings loads and preserves configured effor
         await trigger.click();
         const currentModel = page.getByRole("button", { name: /^选择模型：/ });
         await currentModel.waitFor();
+        await page.evaluate(() =>
+          Promise.all(
+            document
+              .getAnimations()
+              .map((animation) => animation.finished.catch(() => undefined)),
+          ),
+        );
         expect(await currentModel.locator("small").textContent()).toBe(
           "LingAPI",
         );
@@ -177,13 +215,13 @@ it("styles the model picker before Settings loads and preserves configured effor
         expect(await slider.getAttribute("max")).toBe("4");
         await slider.press("Home");
         expect(await page.locator(".effort-slider-heading").textContent()).toBe(
-          "low",
+          "低",
         );
         for (const [index, label] of labels.entries()) {
           if (index) await slider.press("ArrowRight");
           expect(await slider.getAttribute("aria-valuetext")).toBe(label);
           expect(await page.locator("#saved-effort").textContent()).toBe(
-            label.toLowerCase(),
+            levels[index],
           );
           expect(
             await page.locator(".effort-slider-heading output").textContent(),
@@ -204,10 +242,10 @@ it("styles the model picker before Settings loads and preserves configured effor
           ).toBe(`思考等级：${label}，${index + 1}/5`);
           expect(
             await page.locator(".effort-slider").getAttribute("data-max"),
-          ).toBe(String(label === "MAX"));
+          ).toBe(String(index === labels.length - 1));
         }
         await slider.press("ArrowRight");
-        expect(await slider.getAttribute("aria-valuetext")).toBe("MAX");
+        expect(await slider.getAttribute("aria-valuetext")).toBe("最大");
         expect(
           await page
             .locator(".effort-slider-fill")
@@ -292,7 +330,7 @@ it("styles the model picker before Settings loads and preserves configured effor
           bounds.y + bounds.height / 2,
           { steps: 8 },
         );
-        expect(await slider.getAttribute("aria-valuetext")).toBe("medium");
+        expect(await slider.getAttribute("aria-valuetext")).toBe("中");
         expect(
           await page.locator(".model-effort-meter .is-filled").count(),
         ).toBe(5);
@@ -364,8 +402,8 @@ it("styles the model picker before Settings loads and preserves configured effor
       .poll(() =>
         page.locator(".effort-slider-labels > span").allTextContents(),
       )
-      .toEqual(["none", "minimal", "high"]);
-    expect(await trigger.getAttribute("title")).toContain("思考：none");
+      .toEqual(["关闭", "极低", "高"]);
+    expect(await trigger.getAttribute("title")).toContain("思考：关闭");
     await configured.press("ArrowRight");
     expect(await page.locator("#saved-effort").textContent()).toBe("minimal");
 
@@ -376,18 +414,19 @@ it("styles the model picker before Settings loads and preserves configured effor
       .poll(() =>
         page.locator(".effort-slider-labels > span").allTextContents(),
       )
-      .toEqual(["minimal", "MAX"]);
-    expect(await configured.getAttribute("aria-valuetext")).toBe("minimal");
+      .toEqual(["极低", "最大"]);
+    expect(await configured.getAttribute("aria-valuetext")).toBe("极低");
     await configured.press("End");
     await expect
       .poll(() => page.locator("#saved-effort").textContent())
       .toBe("max");
     await expect.poll(() => configured.getAttribute("max")).toBe("0");
+    // The fill scales from the left (transform, not width) so steps animate smoothly.
     expect(
       await page
         .locator(".effort-slider-fill")
-        .evaluate((node) => (node as HTMLElement).style.width),
-    ).toBe("0%");
+        .evaluate((node) => (node as HTMLElement).style.transform),
+    ).toBe("scaleX(0)");
     await page.evaluate(() =>
       Reflect.get(window, "setEffortOptions")(["vendor-only"]),
     );
@@ -395,8 +434,8 @@ it("styles the model picker before Settings loads and preserves configured effor
       .poll(() =>
         page.locator(".effort-slider-labels > span").allTextContents(),
       )
-      .toEqual(["MAX"]);
-    expect(await configured.getAttribute("aria-valuetext")).toBe("MAX");
+      .toEqual(["最大"]);
+    expect(await configured.getAttribute("aria-valuetext")).toBe("最大");
     expect(
       await page.getByRole("button", { name: /^选择模型：/ }).count(),
     ).toBe(1);

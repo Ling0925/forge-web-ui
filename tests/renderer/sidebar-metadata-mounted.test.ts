@@ -3,7 +3,7 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
-it("sidebar hides completed dots and inline metadata, loads honest usage on hover", async () => {
+it("sidebar shows a status glyph on every row, no inline metadata, and loads honest usage on hover", async () => {
   const bundle = await build({
     stdin: {
       resolveDir: resolve("."),
@@ -68,8 +68,18 @@ it("sidebar hides completed dots and inline metadata, loads honest usage on hove
     await page.addScriptTag({ content: js });
     const done = page.getByRole("button", { name: "完成的会话", exact: true });
     await done.waitFor();
-    expect(await done.locator(".wb-status-dot").count()).toBe(0);
-    expect(await page.locator(".wb-status-dot").count()).toBe(2);
+    // Every row carries a status glyph; the accessible name stays the title.
+    expect(await page.locator(".session-status-icon").count()).toBe(3);
+    expect(
+      await done
+        .locator('.session-status-icon[data-status="completed"]')
+        .count(),
+    ).toBe(1);
+    expect(
+      await page
+        .locator('.session-status-icon[data-status="awaiting_approval"]')
+        .count(),
+    ).toBe(1);
     expect(await page.locator(".session-item-time").count()).toBe(0);
     expect(await page.locator("body").getAttribute("data-reads")).toBeNull();
     await done.hover();

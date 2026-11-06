@@ -101,11 +101,26 @@
 
   /* Focus ring offset */
   --focus-ring-offset: 2px;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-fast: 120ms;
   --duration-normal: 180ms;
-  --transition-fast: var(--duration-fast) var(--ease-out);
-  --transition-normal: var(--duration-normal) var(--ease-out);
+  --transition-fast: var(--dur-micro) var(--ease-out);
+  --transition-normal: var(--dur-short) var(--ease-out);
+  --dur-micro: 120ms;
+  --dur-short: 180ms;
+  --dur-medium: 260ms;
+  --dur-long: 380ms;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --motion-duration-fast: var(--dur-micro);
+  --motion-duration-sm: var(--dur-short);
+  --motion-duration-base: var(--dur-short);
+  --motion-duration-md: var(--dur-medium);
+  --motion-duration-dialog: var(--dur-medium);
+  --motion-ease-out: var(--ease-out);
+  --motion-ease-in-out: var(--ease-in-out);
+  --motion-ease-dialog: var(--ease-out);
 }
 
 :root,

@@ -1,108 +1,194 @@
-import { type FileChange, sessionIdSchema } from "@forge/core/shared/schemas";
+import { sessionIdSchema } from "@forge/core/shared/schemas";
 import {
+  ArrowLeft,
   ArrowSquareOut,
   ArrowsCounterClockwise,
+  Browser,
   CaretRight,
+  ClockCounterClockwise,
   FileCode,
   FolderOpen,
-  Plugs,
+  Gauge,
+  PuzzlePiece,
   SidebarSimple,
 } from "@phosphor-icons/react";
-import { useEffect, useReducer, useRef } from "react";
-import {
-  type InspectorPhase,
-  type InspectorSectionId,
-  readSectionOverrides,
-  rememberSectionOpen,
-  resolveSectionOpen,
-  subscribeInspectorSection,
-} from "../../state/inspector-sections";
+import { type ReactNode, useEffect, useReducer, useRef, useState } from "react";
 import { permissionLabels } from "../../state/permission-labels";
-import {
-  pendingOutbox,
-  pendingSuggestions,
-  useSuperAgent,
-  workItemsForRouter,
-} from "../../state/superagent";
 import {
   shallowArrayEqual,
   shallowEqual,
   useWorkbenchActions,
   useWorkbenchSelector,
 } from "../../state/workbench-store";
+import {
+  type InspectorSectionId,
+  readSectionOverrides,
+  rememberSectionOpen,
+  resolveSectionOpen,
+  subscribeInspectorSection,
+} from "../../state/inspector-sections";
+import {
+  pendingOutbox,
+  pendingSuggestions,
+  useSuperAgent,
+  workItemsForRouter,
+} from "../../state/superagent";
 import { openWorkspaceResources } from "../../state/workspace-resources";
 import { ApprovalPanel } from "../primitives/ApprovalPanel";
-import { Button } from "../primitives/Button";
-import { DiffViewer, diffStats } from "../primitives/DiffViewer";
 import { EmptyState } from "../primitives/EmptyState";
-import { IconButton } from "../primitives/IconButton";
-import { StatusBadge } from "../primitives/StatusBadge";
-import { Tag, type TagTone } from "../primitives/Tag";
-import { BrowserPanel } from "./BrowserPanel";
-import { CheckpointPanel } from "./CatalogPanels";
-import { ChangeSessionNavigation } from "./ChangeSessionNavigation";
-import { InspectorSection } from "./InspectorSection";
-import {
-  ContextManagementPanel,
-  PlanOverview,
-  SubAgentsPanel,
-  planOverviewSummary,
-} from "./RuntimePanels";
 import { SuperAgentAttention } from "./SuperAgentAttention";
 import { SuperAgentWorkList } from "./SuperAgentWorkList";
+import { Button } from "../primitives/Button";
+import { DiffViewer, diffStats } from "../primitives/DiffViewer";
+import { StatusBadge } from "../primitives/StatusBadge";
+import { CheckpointPanel } from "./CatalogPanels";
+import { BrowserPanel } from "./BrowserPanel";
+import { ChangeSessionNavigation } from "./ChangeSessionNavigation";
+import {
+  ContextManagementPanel,
+  PlanDocumentPanel,
+  PlanSteps,
+  SubAgentsPanel,
+  resolveDisplayPlans,
+} from "./RuntimePanels";
+import { changeKindMeta } from "./WorkspaceFileManager";
 import "./inspector.css";
 import "./inspector-sections.css";
+import "./inspector-v2.css";
 
-const CHANGE_KIND: Record<
-  FileChange["kind"],
-  { readonly label: string; readonly tone: TagTone }
-> = {
-  modified: { label: "修改", tone: "accent" },
-  created: { label: "新增", tone: "success" },
-  deleted: { label: "删除", tone: "warning" },
-};
+// The Transcript renders the selected session's live request inline; the
+// Inspector owns every other request (background, child, other session).
+function scrollToInlineApproval(approvalId: string) {
+  const target = document.querySelector(`[data-approval-id="${approvalId}"]`);
+  if (target instanceof HTMLElement)
+    target.scrollIntoView({ block: "center", behavior: "auto" });
+}
 
-const FAILED_CHILD = new Set(["failed", "interrupted"]);
+type InspectorView =
+  | "summary"
+  | "changes"
+  | "plan-history"
+  | "subagents"
+  | "context"
+  | "browser";
 
-function ChangeRow({ change }: { readonly change: FileChange }) {
-  const stats = diffStats(change);
-  const lastSlash = change.path.lastIndexOf("/");
-  const dir = lastSlash >= 0 ? change.path.slice(0, lastSlash + 1) : "";
-  const name = lastSlash >= 0 ? change.path.slice(lastSlash + 1) : change.path;
-  const kind = CHANGE_KIND[change.kind] ?? CHANGE_KIND.modified;
+const viewTitles: Readonly<Record<Exclude<InspectorView, "summary">, string>> =
+  {
+    changes: "变更与检查点",
+    "plan-history": "计划说明与历史",
+    subagents: "子任务",
+    context: "上下文与用量",
+    browser: "浏览器",
+  };
+
+/** One collapsible summary section: "标题 计数 ⌄". Empty sections never render. */
+function SummarySection({
+  sectionId,
+  open: controlledOpen,
+  onToggle,
+  title,
+  count,
+  action,
+  children,
+}: {
+  readonly sectionId?: InspectorSectionId;
+  readonly open?: boolean;
+  readonly onToggle?: (open: boolean) => void;
+  readonly title: string;
+  readonly count?: number | string | undefined;
+  readonly action?: ReactNode;
+  readonly children: ReactNode;
+}) {
+  const [localOpen, setLocalOpen] = useState(true);
+  const open = controlledOpen ?? localOpen;
+  const id = `inspector-section-${title}`;
   return (
-    // Diffs stay collapsed: the list reads as a file summary first.
-    <details className="inspector-change">
-      <summary className="inspector-change-row" title={change.path}>
-        <CaretRight
-          size={10}
-          weight="bold"
-          className="inspector-change-caret"
-          aria-hidden="true"
-        />
-        <FileCode size={13} className="inspector-change-icon" aria-hidden />
-        <span className="inspector-change-path">
-          {dir && <span className="inspector-change-dir">{dir}</span>}
-          <span className="inspector-change-name">{name}</span>
-        </span>
-        {stats && (
-          <span className="diff-stats-pill">
-            {stats.added > 0 && (
-              <span className="diff-stats-add">+{stats.added}</span>
-            )}
-            {stats.removed > 0 && (
-              <span className="diff-stats-del">-{stats.removed}</span>
-            )}
-          </span>
-        )}
-        <Tag tone={kind.tone}>{kind.label}</Tag>
-      </summary>
-      <div className="inspector-diff-container">
-        <DiffViewer change={change} isSuggested={false} embedded />
+    <section
+      className="inspector-summary-section"
+      data-open={open}
+      data-section={sectionId}
+    >
+      <div className="inspector-summary-head">
+        <button
+          type="button"
+          className="inspector-summary-toggle"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={() => (onToggle ? onToggle(!open) : setLocalOpen(!open))}
+        >
+          <h3>{title}</h3>
+          {count !== undefined && (
+            <span className="inspector-summary-count">{count}</span>
+          )}
+          <CaretRight
+            size={12}
+            weight="bold"
+            className="inspector-summary-caret"
+            aria-hidden="true"
+          />
+        </button>
+        {action}
       </div>
-    </details>
+      <div className="inspector-summary-collapse" id={id} hidden={!open}>
+        {children}
+      </div>
+    </section>
   );
 }
+
+function SummaryRow({
+  icon,
+  label,
+  meta,
+  onClick,
+  title,
+}: {
+  readonly icon: ReactNode;
+  readonly label: ReactNode;
+  readonly meta?: ReactNode;
+  readonly onClick?: () => void;
+  readonly title?: string;
+}) {
+  const content = (
+    <>
+      <span className="inspector-row-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="inspector-row-label" title={title}>
+        {label}
+      </span>
+      {meta !== undefined && <span className="inspector-row-meta">{meta}</span>}
+    </>
+  );
+  return onClick ? (
+    <button
+      type="button"
+      className="inspector-row is-interactive"
+      onClick={onClick}
+    >
+      {content}
+      <CaretRight
+        size={11}
+        weight="bold"
+        className="inspector-row-caret"
+        aria-hidden="true"
+      />
+    </button>
+  ) : (
+    <div className="inspector-row">{content}</div>
+  );
+}
+
+const childStatusTone = (status: string) =>
+  status === "completed"
+    ? "done"
+    : status === "running" || status === "awaiting_approval"
+      ? "active"
+      : status === "failed" ||
+          status === "interrupted" ||
+          status === "cancelled"
+        ? "failed"
+        : "idle";
 
 export function Inspector({
   onRequestCollapse,
@@ -111,7 +197,8 @@ export function Inspector({
   readonly onRequestCollapse?: (() => void) | undefined;
   readonly focusToken?: number | undefined;
 }) {
-  const { answerApproval, selectSession, refreshActiveSession } =
+  const [view, setView] = useState<InspectorView>("summary");
+  const { answerApproval, selectSession, refreshActiveSession, setMobileTab } =
     useWorkbenchActions();
   // Run state is reduced to the fields the drawer renders, so streamed tokens
   // (which replace the run object) do not re-render the whole inspector.
@@ -151,9 +238,13 @@ export function Inspector({
   );
   const [, rerender] = useReducer((tick: number) => tick + 1, 0);
   const paneRef = useRef<HTMLElement | null>(null);
+  const backRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     if (focusToken && focusToken > 0) paneRef.current?.focus();
   }, [focusToken]);
+  useEffect(() => {
+    if (view !== "summary") backRef.current?.focus();
+  }, [view]);
   // Never show another session's provenance while selection/read is in flight.
   const snapshot =
     state.activeSnapshot?.id === state.activeSessionId
@@ -165,30 +256,37 @@ export function Inspector({
       subscribeInspectorSection((id) => {
         if (!sessionKey) return;
         rememberSectionOpen(sessionKey, id, true);
+        setView(
+          id === "changes"
+            ? "changes"
+            : id === "context"
+              ? "context"
+              : "summary",
+        );
         rerender();
         requestAnimationFrame(() =>
           paneRef.current
             ?.querySelector(`[data-section="${id}"]`)
-            ?.scrollIntoView({ block: "start", behavior: "auto" }),
+            ?.scrollIntoView({ block: "start" }),
         );
       }),
     [sessionKey],
   );
   const status = run?.status ?? snapshot?.status;
-  const phase: InspectorPhase =
+  const phase =
     status === "running" || status === "awaiting_approval"
       ? "running"
       : "settled";
   const overrides = sessionKey ? readSectionOverrides(sessionKey) : undefined;
-  const section = (id: InspectorSectionId) => ({
-    open: resolveSectionOpen(overrides, phase, id),
+  const section = (sectionId: InspectorSectionId) => ({
+    sectionId,
+    open: resolveSectionOpen(overrides, phase, sectionId),
     onToggle: (open: boolean) => {
       if (!sessionKey) return;
-      rememberSectionOpen(sessionKey, id, open);
+      rememberSectionOpen(sessionKey, sectionId, open);
       rerender();
     },
   });
-
   const started = snapshot?.events
     .filter((e) => e.type === "run_started")
     .at(-1);
@@ -196,50 +294,16 @@ export function Inspector({
     !run &&
     (snapshot?.status === "running" ||
       snapshot?.status === "awaiting_approval");
-  // The selected session's live request is decided in the Transcript; the
-  // Inspector only carries requests that would otherwise go unseen
-  // (background sessions and subagents).
+  // Exactly one request can be the selected session's live head; the
+  // Transcript already renders it in the reading flow, so the drawer only
+  // annotates and links it instead of duplicating the buttons. `run` is
+  // keyed by the active session, so its pending request is that exact head.
   const inlineApprovalId = run?.pendingApproval?.id;
+  const inlineCovered = pendingApprovals.filter(
+    (r) => r.pendingApproval?.id === inlineApprovalId,
+  );
   const drawerApprovals = pendingApprovals.filter(
     (r) => r.pendingApproval?.id !== inlineApprovalId,
-  );
-  const children = snapshot
-    ? state.sessions
-        .filter((session) => session.parentSessionId === snapshot.id)
-        .sort(
-          (a, b) =>
-            a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id),
-        )
-    : [];
-  const failedChildren = children.filter((child) =>
-    FAILED_CHILD.has(child.status),
-  );
-  const superAgent = useSuperAgent();
-  const outbox = pendingOutbox(superAgent);
-  const suggestions = pendingSuggestions(superAgent);
-  const routerWork =
-    snapshot?.agentRole?.kind === "router"
-      ? workItemsForRouter(superAgent, snapshot.id)
-      : [];
-  const attentionCount =
-    drawerApprovals.length +
-    failedChildren.length +
-    outbox.length +
-    suggestions.length;
-  const runningChildren = children.filter(
-    (child) =>
-      child.status === "running" || child.status === "awaiting_approval",
-  ).length;
-  const doneChildren = children.filter(
-    (child) => child.status === "completed",
-  ).length;
-  const hasSubtasks = Boolean(
-    snapshot &&
-      (children.length > 0 ||
-        routerWork.length > 0 ||
-        snapshot.parentSessionId ||
-        snapshot.agentTask ||
-        snapshot.agentProfile),
   );
   const permission =
     run?.permission ??
@@ -248,173 +312,244 @@ export function Inspector({
       : (state.settings?.defaultPermission ?? "workspace"));
   const model =
     started?.type === "run_started" ? started.model : snapshot?.model;
-  const changes = snapshot?.changes ?? [];
-  const hasLinkedChanges = Boolean(
-    snapshot && (snapshot.parentSessionId || children.length > 0),
+  const plans = snapshot ? resolveDisplayPlans(snapshot) : null;
+  const children = snapshot
+    ? state.sessions
+        .filter((session) => session.parentSessionId === snapshot.id)
+        .sort(
+          (a, b) =>
+            a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id),
+        )
+    : [];
+  const superAgent = useSuperAgent();
+  const outbox = pendingOutbox(superAgent);
+  const suggestions = pendingSuggestions(superAgent);
+  const routerWork =
+    snapshot?.agentRole?.kind === "router"
+      ? workItemsForRouter(superAgent, snapshot.id)
+      : [];
+  const failedChildren = children.filter(
+    (child) => child.status === "failed" || child.status === "interrupted",
   );
-  const sessionOpen = section("session");
-  const approvalSource = (sessionId: string) => {
-    const session = state.sessions.find((item) => item.id === sessionId);
-    if (session?.agentRole?.kind !== "worker") return "后台会话待批准";
-    const work = superAgent.workItems.find(
-      (item) => item.id === session.agentRole?.ownerId,
-    );
-    return `Worker 待批准 · ${work?.title || session.agentRole.ownerId}`;
-  };
+  const hasSubtasks =
+    children.length > 0 ||
+    routerWork.length > 0 ||
+    Boolean(snapshot?.agentTask || snapshot?.agentProfile);
+  const attentionCount =
+    failedChildren.length + outbox.length + suggestions.length;
+  const hasRelatedChanges = Boolean(
+    snapshot &&
+      (snapshot.parentSessionId ||
+        state.sessions.some(
+          (session) => session.parentSessionId === snapshot.id,
+        )),
+  );
+  const isSummary = view === "summary";
 
   return (
     <aside
       ref={paneRef}
       tabIndex={-1}
       className="workbench-inspector wb-inspector"
-      aria-label="会话详情"
+      aria-label="执行详情"
     >
       <div className="inspector-header wb-inspector-head">
         <div className="inspector-title-row">
-          <span className="inspector-head-title">会话详情</span>
-          {snapshot && status && <StatusBadge status={status} />}
+          {isSummary ? (
+            <>
+              <span>概要</span>
+              {snapshot && (
+                <StatusBadge status={run?.status ?? snapshot.status} />
+              )}
+            </>
+          ) : (
+            <>
+              <button
+                ref={backRef}
+                type="button"
+                className="wb-icon-btn inspector-back"
+                aria-label="返回概要"
+                title="返回概要"
+                onClick={() => setView("summary")}
+              >
+                <ArrowLeft size={14} weight="bold" />
+              </button>
+              <span>{viewTitles[view]}</span>
+            </>
+          )}
         </div>
         <div className="inspector-head-actions">
           {onRequestCollapse && (
-            <IconButton
-              size="sm"
-              className="wb-inspector-close"
-              label="收起详情"
-              icon={<SidebarSimple size={15} />}
+            <button
+              type="button"
+              className="wb-icon-btn wb-inspector-close"
+              aria-label="收起详情"
+              title="收起详情"
               onClick={onRequestCollapse}
-            />
+            >
+              <SidebarSimple size={15} className="wb-inspector-close-icon" />
+            </button>
           )}
         </div>
       </div>
-      <div className="inspector-scroll">
-        {!snapshot ? (
-          <>
-            {drawerApprovals.length > 0 && (
-              <p className="wb-muted inspector-empty">
-                有 {drawerApprovals.length} 个后台请求待批准，打开对应会话处理。
-              </p>
-            )}
-            {state.isSnapshotLoading ? (
-              <p className="wb-muted inspector-empty">正在读取执行记录…</p>
-            ) : (
-              <EmptyState
-                variant="compact"
-                className="inspector-empty"
-                title="选择一个会话，查看详情"
-              />
-            )}
-          </>
-        ) : (
-          <div className="inspector-sections-list">
-            {attentionCount > 0 && (
-              <InspectorSection
-                id="attention"
-                title="需要处理"
-                tone="attention"
-                summary={`${attentionCount} 项`}
-                {...section("attention")}
-              >
-                {drawerApprovals.map((r) => {
-                  const request = r.pendingApproval;
-                  if (!request) return null;
-                  const background = r.sessionId !== state.activeSessionId;
-                  return (
-                    <div key={request.id} className="inspector-attention-item">
-                      <div className="inspector-attention-meta">
-                        <span>
-                          {request.childSessionId
-                            ? `子任务审批 · ${request.childSessionId}`
-                            : approvalSource(r.sessionId)}
-                        </span>
-                        {background && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => void selectSession(r.sessionId)}
-                          >
-                            打开会话
-                          </Button>
-                        )}
-                      </div>
-                      <ApprovalPanel
-                        toolName={request.toolName}
-                        description={request.description}
-                        command={
-                          request.command
-                            ? JSON.stringify(request.command)
-                            : request.description
-                        }
-                        isSubmitting={Boolean(
-                          r.isSubmittingApproval || r.isCancelling,
-                        )}
-                        riskNotice="命令不是 OS 沙箱；批准仅对本次请求有效。"
-                        onApprove={() =>
-                          void answerApproval(r.sessionId, request.id, true)
-                        }
-                        onReject={() =>
-                          void answerApproval(r.sessionId, request.id, false)
-                        }
-                      />
-                    </div>
-                  );
-                })}
-                {failedChildren.map((child) => (
-                  <div key={child.id} className="inspector-attention-item">
-                    <div className="inspector-attention-meta">
-                      <span className="inspector-attention-title">
-                        子任务{child.status === "failed" ? "失败" : "已中断"} ·{" "}
-                        {child.title}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => void selectSession(child.id)}
-                      >
-                        查看
-                      </Button>
-                    </div>
+      <div className="inspector-scroll wb-stack">
+        {pendingApprovals.length > 0 && (
+          // Approvals are never hidden behind a disclosure or a collapsed
+          // pane: this summary (and the header pill in App) always shows the
+          // pending count before any per-request detail. The selected
+          // session's live request is decided in the Transcript, so the drawer
+          // links to it instead of duplicating its buttons; every other
+          // request (background / child) still gets a full panel here.
+          <section className="wb-approvals-summary wb-stack">
+            <h3 className="wb-approvals-title">
+              待批准（{pendingApprovals.length}）
+            </h3>
+            {inlineCovered.map((r) => {
+              const request = r.pendingApproval;
+              if (!request) return null;
+              return (
+                <section
+                  key={request.id}
+                  className="wb-approval-row wb-approval-row-inline wb-stack"
+                >
+                  <p className="wb-muted">在对话中批准或拒绝本次操作。</p>
+                  <div className="wb-row">
+                    <span>
+                      {request.toolName}
+                      {request.childSessionId
+                        ? ` · 子代理 ${request.childSessionId}`
+                        : ""}
+                    </span>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setMobileTab("task");
+                        requestAnimationFrame(() =>
+                          scrollToInlineApproval(request.id),
+                        );
+                      }}
+                    >
+                      定位到消息流
+                    </Button>
                   </div>
-                ))}
-                <SuperAgentAttention
-                  view={superAgent}
-                  outbox={outbox}
-                  suggestions={suggestions}
-                />
-              </InspectorSection>
-            )}
-
-            <InspectorSection
-              id="progress"
-              title="进度"
-              summary={planOverviewSummary(snapshot)}
-              {...section("progress")}
-            >
-              <PlanOverview snapshot={snapshot} />
-            </InspectorSection>
-
-            {hasSubtasks && (
-              <InspectorSection
-                id="subtasks"
-                title="子任务"
-                summary={
-                  routerWork.length > 0 && children.length === 0
-                    ? `${routerWork.length} 个工作项`
-                    : children.length === 0
-                      ? "当前为子任务"
-                      : [
-                          `${children.length} 个`,
-                          runningChildren > 0
-                            ? `${runningChildren} 运行中`
-                            : "",
-                          doneChildren > 0 ? `${doneChildren} 完成` : "",
-                          failedChildren.length > 0
-                            ? `${failedChildren.length} 异常`
-                            : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")
+                </section>
+              );
+            })}
+            {drawerApprovals.map((r) => {
+              const request = r.pendingApproval;
+              if (!request) return null;
+              return (
+                <section key={request.id} className="wb-approval-row wb-stack">
+                  {r.sessionId !== state.activeSessionId && (
+                    <Button onClick={() => void selectSession(r.sessionId)}>
+                      后台任务待批准 · 打开会话
+                    </Button>
+                  )}
+                  {request.childSessionId && (
+                    <p className="wb-muted">
+                      子代理审批 · {request.childSessionId}
+                    </p>
+                  )}
+                  <ApprovalPanel
+                    toolName={request.toolName}
+                    description={request.description}
+                    command={
+                      request.command
+                        ? JSON.stringify(request.command)
+                        : request.description
+                    }
+                    isSubmitting={Boolean(
+                      r.isSubmittingApproval || r.isCancelling,
+                    )}
+                    riskNotice="命令不是 OS 沙箱；批准仅对本次请求有效。"
+                    onApprove={() =>
+                      void answerApproval(r.sessionId, request.id, true)
+                    }
+                    onReject={() =>
+                      void answerApproval(r.sessionId, request.id, false)
+                    }
+                  />
+                </section>
+              );
+            })}
+          </section>
+        )}
+        {attentionCount > 0 && (
+          <section
+            className="wb-approvals-summary wb-stack"
+            data-section="attention"
+            aria-label="需要处理"
+          >
+            <h3>需要处理 · {attentionCount}</h3>
+            {failedChildren.map((child) => (
+              <SummaryRow
+                key={child.id}
+                icon={<span className="inspector-row-dot is-failed" />}
+                label={child.title}
+                meta={<StatusBadge status={child.status} />}
+                onClick={() => void selectSession(child.id)}
+              />
+            ))}
+            <SuperAgentAttention
+              view={superAgent}
+              outbox={outbox}
+              suggestions={suggestions}
+            />
+          </section>
+        )}
+        {!snapshot ? (
+          <EmptyState
+            variant="compact"
+            title={
+              state.isSnapshotLoading
+                ? "正在读取执行记录…"
+                : "选择一个会话，查看执行详情"
+            }
+          />
+        ) : isSummary ? (
+          <div className="inspector-summary">
+            {plans?.currentPlan && plans.currentProgress && (
+              <SummarySection
+                {...section("progress")}
+                title="进度"
+                count={`${plans.currentProgress.completed}/${plans.currentProgress.total}`}
+                action={
+                  plans.currentPlan.explanation ||
+                  plans.historical.length > 0 ? (
+                    <button
+                      type="button"
+                      className="inspector-summary-link"
+                      onClick={() => setView("plan-history")}
+                    >
+                      {plans.historical.length > 0
+                        ? `说明与历史 ${plans.historical.length}`
+                        : "说明"}
+                    </button>
+                  ) : undefined
                 }
+              >
+                {plans.currentPlan.title && (
+                  <p className="inspector-summary-caption">
+                    {plans.currentPlan.title}
+                  </p>
+                )}
+                <PlanSteps plan={plans.currentPlan} />
+              </SummarySection>
+            )}
+            {hasSubtasks && (
+              <SummarySection
                 {...section("subtasks")}
+                title="子任务"
+                count={children.length + routerWork.length}
+                action={
+                  <button
+                    type="button"
+                    className="inspector-summary-link"
+                    onClick={() => setView("subagents")}
+                  >
+                    详情
+                  </button>
+                }
               >
                 {routerWork.length > 0 && (
                   <SuperAgentWorkList
@@ -425,87 +560,93 @@ export function Inspector({
                     }}
                   />
                 )}
-                {(children.length > 0 || routerWork.length === 0) && (
-                  <SubAgentsPanel key={`subagents:${snapshot.id}`} embedded />
-                )}
-              </InspectorSection>
+                {children.map((child) => (
+                  <SummaryRow
+                    key={child.id}
+                    icon={
+                      <span
+                        className={`inspector-row-dot is-${childStatusTone(child.status)}`}
+                      />
+                    }
+                    label={child.title}
+                    title={child.title}
+                    meta={child.agentProfileName}
+                    onClick={() => void selectSession(child.id)}
+                  />
+                ))}
+              </SummarySection>
             )}
-
-            <InspectorSection
-              id="changes"
-              title="变更"
-              summary={
-                changes.length > 0 ? `${changes.length} 个文件` : "暂无变更"
-              }
-              {...section("changes")}
-            >
-              {changes.length > 0 ? (
-                <div className="inspector-change-list">
-                  {changes.map((change, i) => (
-                    <ChangeRow key={`${change.path}-${i}`} change={change} />
-                  ))}
-                </div>
-              ) : (
-                <p className="wb-muted inspector-row-hint">
-                  本会话尚无直接文件变更
-                </p>
-              )}
-              {hasLinkedChanges && (
-                <details className="inspector-row-disclosure">
-                  <summary>
-                    <span>关联任务的变更</span>
-                  </summary>
-                  <div className="inspector-row-disclosure-body">
-                    <ChangeSessionNavigation
-                      key={`changes-navigation:${snapshot.id}`}
-                      sessionId={snapshot.id}
-                      parentSessionId={snapshot.parentSessionId}
-                      sessions={state.sessions}
-                      onOpenChanges={(id) => {
-                        rememberSectionOpen(id, "changes", true);
-                        void selectSession(id);
-                      }}
-                    />
-                  </div>
-                </details>
-              )}
-              <CheckpointPanel key={`checkpoints:${snapshot.id}`} />
-            </InspectorSection>
-
-            <ContextManagementPanel
-              key={`context:${snapshot.id}`}
-              section={section("context")}
-            />
-
-            <InspectorSection
-              id="session"
-              title="会话信息"
-              summary={[
-                model?.split("/").at(-1),
-                permissionLabels[permission].split(" · ")[0],
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-              action={
-                <IconButton
-                  size="sm"
-                  label="刷新记录"
-                  icon={<ArrowsCounterClockwise size={13} weight="bold" />}
-                  onClick={() => void refreshActiveSession()}
+            {snapshot.parentSessionId && (
+              <SummarySection title="父任务">
+                <SummaryRow
+                  icon={<ArrowSquareOut size={14} />}
+                  label="打开父任务"
+                  onClick={() => void selectSession(snapshot.parentSessionId!)}
                 />
-              }
-              {...sessionOpen}
-            >
-              <dl className="wb-details inspector-info-grid">
+              </SummarySection>
+            )}
+            {snapshot.changes.length > 0 && (
+              <SummarySection
+                {...section("changes")}
+                title="文件"
+                count={snapshot.changes.length}
+                action={
+                  <button
+                    type="button"
+                    className="inspector-summary-link"
+                    onClick={() => setView("changes")}
+                  >
+                    查看变更
+                  </button>
+                }
+              >
+                {snapshot.changes.map((change, i) => {
+                  const stats = diffStats(change);
+                  const name = change.path.slice(
+                    change.path.lastIndexOf("/") + 1,
+                  );
+                  return (
+                    <SummaryRow
+                      key={`${change.path}-${i}`}
+                      icon={<FileCode size={14} />}
+                      label={name}
+                      title={change.path}
+                      meta={
+                        stats ? (
+                          <span className="diff-stats-pill">
+                            {stats.added > 0 && (
+                              <span className="diff-stats-add">
+                                +{stats.added}
+                              </span>
+                            )}
+                            {stats.removed > 0 && (
+                              <span className="diff-stats-del">
+                                -{stats.removed}
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          changeKindMeta(change.kind).label
+                        )
+                      }
+                      onClick={() => setView("changes")}
+                    />
+                  );
+                })}
+              </SummarySection>
+            )}
+            <SummarySection title="会话" {...section("session")}>
+              <dl className="inspector-facts">
                 <dt>模型</dt>
-                <dd className="wb-val-mono" title={model}>
-                  <code>{model}</code>
-                </dd>
+                <dd title={model}>{model}</dd>
                 <dt>权限</dt>
                 <dd>{permissionLabels[permission].split(" · ")[0]}</dd>
                 <dt>工作区</dt>
-                <dd className="wb-val-mono" title={snapshot.workspace}>
-                  <code>{snapshot.workspace}</code>
+                <dd title={snapshot.workspace}>
+                  {snapshot.workspace
+                    .replace(/[\\/]+$/, "")
+                    .split(/[\\/]/)
+                    .pop() || snapshot.workspace}
                 </dd>
               </dl>
               {storedActive && (
@@ -513,78 +654,197 @@ export function Inspector({
                   已保存的状态，本窗口没有运行句柄。刷新可查看最新记录；取消操作由主机确认。
                 </p>
               )}
-              <BrowserRow
-                sessionId={snapshot.id}
-                permission={permission}
-                visible={sessionOpen.open}
+            </SummarySection>
+            {!plans?.currentPlan &&
+              !hasSubtasks &&
+              snapshot.changes.length === 0 && (
+                <EmptyState
+                  variant="compact"
+                  className="inspector-summary-empty"
+                  title="执行计划、子任务和文件变更出现后会显示在这里。"
+                />
+              )}
+            <nav className="inspector-more" aria-label="更多工具">
+              <SummaryRow
+                icon={<FolderOpen size={14} />}
+                label="工作区文件"
+                onClick={() => openWorkspaceResources("files")}
               />
-            </InspectorSection>
+              <SummaryRow
+                icon={<ClockCounterClockwise size={14} />}
+                label="变更与检查点"
+                onClick={() => setView("changes")}
+              />
+              <SummaryRow
+                icon={<Gauge size={14} />}
+                label="上下文与用量"
+                onClick={() => setView("context")}
+              />
+              <SummaryRow
+                icon={<Browser size={14} />}
+                label="浏览器"
+                onClick={() => setView("browser")}
+              />
+              <SummaryRow
+                icon={<PuzzlePiece size={14} />}
+                label="项目资源"
+                onClick={() => openWorkspaceResources("resources")}
+              />
+              <button
+                type="button"
+                className="inspector-row is-interactive inspector-refresh-row"
+                onClick={() => void refreshActiveSession()}
+              >
+                <span className="inspector-row-icon" aria-hidden="true">
+                  <ArrowsCounterClockwise size={14} />
+                </span>
+                <span className="inspector-row-label">刷新记录</span>
+              </button>
+            </nav>
+          </div>
+        ) : (
+          <div className="inspector-subview" data-view={view}>
+            {view === "changes" && (
+              <div className="wb-stack">
+                {hasRelatedChanges && (
+                  <details className="wb-disclosure">
+                    <summary>关联任务的变更</summary>
+                    <div className="wb-disclosure-body">
+                      <ChangeSessionNavigation
+                        key={`changes-navigation:${snapshot.id}`}
+                        sessionId={snapshot.id}
+                        parentSessionId={snapshot.parentSessionId}
+                        sessions={state.sessions}
+                        onOpenChanges={(id) => {
+                          void selectSession(id);
+                        }}
+                      />
+                    </div>
+                  </details>
+                )}
+                <section className="wb-stack inspector-changes-section">
+                  <div className="inspector-section-header">
+                    <h3>
+                      文件变更{" "}
+                      <span className="wb-muted">
+                        {snapshot.changes.length}
+                      </span>
+                    </h3>
+                  </div>
+                  {snapshot.changes.length ? (
+                    <div className="inspector-files-list">
+                      {snapshot.changes.map((change, i) => {
+                        const stats = diffStats(change);
+                        const lastSlash = change.path.lastIndexOf("/");
+                        const dir =
+                          lastSlash >= 0
+                            ? change.path.slice(0, lastSlash + 1)
+                            : "";
+                        const name =
+                          lastSlash >= 0
+                            ? change.path.slice(lastSlash + 1)
+                            : change.path;
+                        return (
+                          <details
+                            key={`${change.path}-${i}`}
+                            className="wb-disclosure inspector-file-card"
+                          >
+                            <summary className="inspector-file-summary">
+                              <div className="inspector-file-info">
+                                <FileCode
+                                  size={14}
+                                  className="inspector-file-icon"
+                                />
+                                <span
+                                  className="inspector-file-path"
+                                  title={change.path}
+                                >
+                                  {dir && (
+                                    <span className="inspector-file-dir">
+                                      {dir}
+                                    </span>
+                                  )}
+                                  <span className="inspector-file-name">
+                                    {name}
+                                  </span>
+                                </span>
+                              </div>
+                              <div className="inspector-file-badges">
+                                {stats && (
+                                  <span className="diff-stats-pill">
+                                    {stats.added > 0 && (
+                                      <span className="diff-stats-add">
+                                        +{stats.added}
+                                      </span>
+                                    )}
+                                    {stats.removed > 0 && (
+                                      <span className="diff-stats-del">
+                                        -{stats.removed}
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                                <span
+                                  className={`inspector-file-kind ${changeKindMeta(change.kind).className}`}
+                                >
+                                  {changeKindMeta(change.kind).label}
+                                </span>
+                              </div>
+                            </summary>
+                            <div className="inspector-diff-container">
+                              <DiffViewer
+                                change={change}
+                                isSuggested={false}
+                                embedded
+                              />
+                            </div>
+                          </details>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      variant="inline"
+                      title="本会话尚无直接文件变更"
+                    />
+                  )}
+                </section>
+                <details open className="wb-disclosure">
+                  <summary>文件检查点与恢复</summary>
+                  <div className="wb-disclosure-body">
+                    <CheckpointPanel
+                      key={`changes-checkpoints:${state.activeSessionId ?? "none"}`}
+                    />
+                  </div>
+                </details>
+              </div>
+            )}
+            {view === "plan-history" && (
+              <PlanDocumentPanel snapshot={snapshot} />
+            )}
+            {view === "subagents" && (
+              <SubAgentsPanel
+                key={`subagents:${state.activeSessionId ?? "none"}`}
+              />
+            )}
+            {view === "context" && (
+              <ContextManagementPanel
+                key={`context:${state.activeSessionId ?? "none"}`}
+              />
+            )}
+            {view === "browser" && (
+              // Same-session binding: the panel is keyed and scoped to the
+              // selected session and only probes while this view is open.
+              <BrowserPanel
+                key={`browser:${state.activeSessionId ?? "none"}`}
+                sessionId={state.activeSessionId ?? undefined}
+                permission={permission}
+                active
+              />
+            )}
           </div>
         )}
       </div>
-      {snapshot && (
-        <div className="inspector-footer">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => openWorkspaceResources("files")}
-          >
-            <FolderOpen size={13} aria-hidden="true" />
-            <span>工作区文件</span>
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => openWorkspaceResources("resources")}
-          >
-            <Plugs size={13} aria-hidden="true" />
-            <span>项目资源与 MCP</span>
-            <ArrowSquareOut size={11} aria-hidden="true" />
-          </Button>
-        </div>
-      )}
     </aside>
-  );
-}
-
-/**
- * 浏览器只占会话信息里的一行；展开后才挂载完整面板并开始探测状态，
- * 面板仍按会话绑定（key）且只在可见时探测。
- */
-function BrowserRow({
-  sessionId,
-  permission,
-  visible,
-}: {
-  readonly sessionId: string;
-  readonly permission: Parameters<typeof BrowserPanel>[0]["permission"];
-  readonly visible: boolean;
-}) {
-  const [open, toggle] = useReducer((value: boolean) => !value, false);
-  return (
-    <details
-      className="inspector-row-disclosure"
-      open={open}
-      onToggle={(event) => {
-        if (event.currentTarget.open !== open) toggle();
-      }}
-    >
-      <summary>
-        <span>浏览器</span>
-        <span className="inspector-row-hint">
-          {open ? "预览与接管" : "展开后检测状态"}
-        </span>
-      </summary>
-      {open && (
-        <div className="inspector-row-disclosure-body">
-          <BrowserPanel
-            key={`browser:${sessionId}`}
-            sessionId={sessionId}
-            permission={permission}
-            active={visible && open}
-          />
-        </div>
-      )}
-    </details>
   );
 }

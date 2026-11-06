@@ -22,6 +22,7 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
       import './src/renderer/styles/global.css';
       import './src/renderer/components/workbench/app.css';
       import './src/renderer/styles/workspace-theme.css';
+      import './src/renderer/styles/design-foundation.css';
       window.diagnosticCalls=0;
       window.forge={
         getDiagnostics:async()=>{window.diagnosticCalls++;return {transcriptChars:42000,messageCount:12,projectedChars:16000}},
@@ -121,40 +122,35 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
         );
         await page.addStyleTag({ content: css });
         await page.addScriptTag({ content: js });
-        const section = (name: string) =>
-          page.locator(`section.inspector-sec[aria-label="${name}"]`);
-        const toggle = (name: string) =>
-          section(name).locator(".inspector-sec-toggle");
-        // Running session: 进度 starts open, 变更 / 上下文 / 会话信息 collapsed.
-        await expect
-          .poll(() => toggle("进度").getAttribute("aria-expanded"))
-          .toBe("true");
-        expect(await page.getByRole("tab").count()).toBe(0);
-        expect(await toggle("变更").getAttribute("aria-expanded")).toBe(
-          "false",
-        );
-        expect(await toggle("上下文").getAttribute("aria-expanded")).toBe(
-          "false",
-        );
-        expect(await toggle("会话信息").getAttribute("aria-expanded")).toBe(
-          "false",
-        );
-        expect(await toggle("进度").textContent()).toContain("1/3 · 进行中");
+        // One summary page: progress, subtasks and session facts in order.
+        // Section headers read "标题 计数", e.g. "进度 1/3" and "子任务 1".
+        await page
+          .getByRole("button", { name: "进度 1/3", exact: true })
+          .waitFor();
+        expect(
+          await page
+            .getByRole("button", { name: "子任务 1", exact: true })
+            .isVisible(),
+        ).toBe(true);
+        expect(
+          await page
+            .getByText("独立子代理：收集仓库结构与测试配置并输出简要结论", {
+              exact: true,
+            })
+            .isVisible(),
+        ).toBe(true);
         expect(
           await page
             .getByText("检查会话数据与执行状态", { exact: true })
             .isVisible(),
         ).toBe(true);
-        // Background approvals/errors only: nothing needs attention here.
-        expect(await section("需要处理").count()).toBe(0);
-        expect(await toggle("子任务").textContent()).toContain("1 个 · 1 完成");
-        // Verify PlanSteps pending item circle and the section header row
+        // Verify PlanSteps pending item circle and inline title row
         const stepMetrics = await page.evaluate(() => {
           const list = document.querySelector(".wb-plan-progress");
           const pending = document.querySelector(
             ".wb-plan-progress .plan-pending",
           );
-          const titleRow = document.querySelector(".inspector-sec-head");
+          const titleRow = document.querySelector(".inspector-summary-head");
           const listStyle = list ? getComputedStyle(list) : null;
           const pendingStyle = pending ? getComputedStyle(pending) : null;
           const pendingRect = pending?.getBoundingClientRect();
@@ -180,34 +176,57 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           path: resolve(output, `forge-inspector-plan-${width}-${theme}.png`),
           animations: "disabled",
         });
-        // The plan document is a single folded row inside 进度.
-        await page.getByText("方案说明", { exact: true }).click();
+        const back = page.getByRole("button", {
+          name: "返回概要",
+          exact: true,
+        });
+        await page.getByRole("button", { name: "说明", exact: true }).click();
         expect(
           await page.getByText("真实计划说明", { exact: true }).isVisible(),
         ).toBe(true);
-        await toggle("变更").click();
+        // The drill-in moves focus to its back button and returns on click.
+        expect(await back.evaluate((el) => el === document.activeElement)).toBe(
+          true,
+        );
+        await back.click();
+        await page
+          .getByRole("button", { name: "工作区文件", exact: true })
+          .click();
+        const dialog = page.getByRole("dialog");
+        await dialog.waitFor();
+        expect(
+          await dialog
+            .getByRole("tab", { name: "工作区文件", exact: true })
+            .getAttribute("aria-selected"),
+        ).toBe("true");
+        await page.getByText("README.md", { exact: true }).click();
+        expect(
+          await page
+            .getByText("# Workspace Preview Content", { exact: true })
+            .isVisible(),
+        ).toBe(true);
+        await dialog.getByRole("button", { name: "关闭面板" }).click();
+        await page
+          .getByRole("button", { name: "变更与检查点", exact: true })
+          .click();
         expect(
           await page.getByRole("button", { name: "刷新检查点" }).isVisible(),
         ).toBe(true);
         expect(
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(0);
-        await toggle("会话信息").click();
+        await back.click();
+        await page.getByRole("button", { name: "会话", exact: true }).click();
         expect(
-          await section("会话信息")
-            .locator("dd", { hasText: "无限制" })
-            .isVisible(),
+          await page.getByText("无限制", { exact: true }).isVisible(),
         ).toBe(true);
+        // Context diagnostics load only when their view is opened.
         expect(
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(0);
-        // Compress lives in the 上下文 header and is usable while collapsed.
-        expect(
-          await section("上下文")
-            .getByRole("button", { name: "压缩上下文", exact: true })
-            .isDisabled(),
-        ).toBe(true);
-        await toggle("上下文").click();
+        await page
+          .getByRole("button", { name: "上下文与用量", exact: true })
+          .click();
         await expect
           .poll(() =>
             page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
@@ -218,10 +237,14 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
           await page.evaluate(() => Reflect.get(window, "diagnosticCalls")),
         ).toBe(1);
         expect(
+          await page
+            .getByRole("button", { name: "压缩上下文", exact: true })
+            .isDisabled(),
+        ).toBe(true);
+        expect(
           await page.getByText("42,000 字符", { exact: false }).isVisible(),
         ).toBe(true);
-        // Memory is a secondary expand; its truncated excerpt still expands.
-        await page.getByText("记忆与工作状态", { exact: true }).click();
+        // The dedicated context view keeps the saved memory expanded.
         expect(
           await page.getByText("初始简短摘要", { exact: true }).isVisible(),
         ).toBe(true);
@@ -233,34 +256,18 @@ it("keeps execution details compact, navigable and diagnostics on demand", async
             .getByText("需要把右侧面板的折叠项默认展开", { exact: false })
             .isVisible(),
         ).toBe(true);
-        // Expand state is remembered for the session across re-renders.
-        await toggle("进度").click();
-        await page.evaluate(() => Reflect.get(window, "refreshFixture")());
-        expect(await toggle("进度").getAttribute("aria-expanded")).toBe(
-          "false",
-        );
-        expect(await toggle("变更").getAttribute("aria-expanded")).toBe("true");
         await page.screenshot({
           path: resolve(output, `forge-inspector-${width}-${theme}.png`),
           animations: "disabled",
         });
-        // Workspace files and project resources moved to the 工作区 dialog.
-        await page.getByRole("button", { name: "工作区文件" }).click();
-        const dialog = page.locator("dialog.workspace-resources-dialog");
-        await dialog.getByText("README.md", { exact: true }).click();
-        expect(
-          await dialog
-            .getByText("# Workspace Preview Content", { exact: true })
-            .isVisible(),
-        ).toBe(true);
-        await dialog
-          .getByRole("tab", { name: "项目资源", exact: true })
+        await back.click();
+        await page
+          .getByRole("button", { name: "项目资源", exact: true })
           .click();
         expect(
-          await dialog.getByText("项目指令与技能", { exact: true }).isVisible(),
+          await page.getByText("项目指令与技能", { exact: true }).isVisible(),
         ).toBe(true);
         await dialog.getByRole("button", { name: "关闭面板" }).click();
-        await expect.poll(() => dialog.count()).toBe(0);
         const overflow = await page
           .locator(".inspector-scroll")
           .evaluate((el) => el.scrollWidth > el.clientWidth + 1);

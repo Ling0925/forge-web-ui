@@ -1,5 +1,5 @@
 import type { ModelCatalog, ModelCatalogEntry } from "@forge/core/shared";
-import { PencilSimple, Plus, X } from "@phosphor-icons/react";
+import { CaretRight, Plus, X } from "@phosphor-icons/react";
 import { useState } from "react";
 import {
   configuredModelIds,
@@ -299,97 +299,86 @@ export function SourceCardModelPanel({
                 aria-label={`模型 ${entry.id}`}
               >
                 <div className="configured-model-card-head">
-                  <div className="configured-model-card-identity">
-                    <code className="provider-card-model-id" title={entry.id}>
-                      {entry.id}
-                    </code>
-                    {entry.displayName && entry.displayName !== entry.id && (
-                      <span className="provider-card-model-name">
-                        {entry.displayName}
-                      </span>
-                    )}
-                  </div>
-                  {!isDefaultModel && (
-                    <button
-                      type="button"
-                      className="configured-model-remove-btn"
-                      disabled={disabled}
-                      title="从列表中移除"
-                      aria-label={`移除模型 ${entry.id}`}
-                      onClick={() => removeModelCard(entry.id)}
-                    >
-                      <X size={13} aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-                <div className="configured-model-card-tags">
-                  {isDefaultModel && <Tag tone="accent">默认</Tag>}
-                  <Tag tone={enabled ? "success" : "muted"}>
-                    {enabled ? "已启用" : "未启用"}
-                  </Tag>
-                  {overridden && <Tag tone="muted">已自定义</Tag>}
-                </div>
-                <dl className="configured-model-card-facts">
-                  <div>
-                    <dt>协议</dt>
-                    <dd>
-                      {override?.apiMode
-                        ? protocolName(override.apiMode)
-                        : protocol}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>上下文</dt>
-                    <dd>
-                      {contextWindowText(
-                        override?.contextWindowTokens,
-                        upstream.context,
-                        legacyWindows?.[entry.id] ?? null,
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>思考</dt>
-                    <dd>{effort ? effortName(effort) : "跟随全局"}</dd>
-                  </div>
-                  {override?.maxOutputTokens != null && (
-                    <div>
-                      <dt>输出</dt>
-                      <dd>{formatTokens(override.maxOutputTokens)}</dd>
-                    </div>
-                  )}
-                </dl>
-                <div className="configured-model-card-actions">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    icon={<PencilSimple size={13} />}
+                  <button
+                    type="button"
+                    className="configured-model-card-toggle"
                     disabled={disabled}
                     aria-label={`编辑模型 ${entry.id} 的参数`}
                     onClick={() => setEditing(entry.id)}
                   >
-                    编辑参数
-                  </Button>
-                  {selection.mode === "selected" && !isDefaultModel && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={disabled}
-                      onClick={() => toggleEnabled(entry.id)}
-                    >
-                      {enabled ? "停用" : "启用"}
-                    </Button>
-                  )}
-                  {!isDefaultModel && enabled && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={disabled}
-                      onClick={() => onModel(entry.id)}
-                    >
-                      设为默认
-                    </Button>
-                  )}
+                    <span className="configured-model-card-identity">
+                      <code className="provider-card-model-id" title={entry.id}>
+                        {entry.id}
+                      </code>
+                      {entry.displayName && entry.displayName !== entry.id && (
+                        <span className="provider-card-model-name">
+                          {entry.displayName}
+                        </span>
+                      )}
+                    </span>
+                    <span className="configured-model-card-summary">
+                      <span>
+                        {[
+                          override?.apiMode
+                            ? protocolName(override.apiMode)
+                            : protocol,
+                          contextWindowText(
+                            override?.contextWindowTokens,
+                            upstream.context,
+                            legacyWindows?.[entry.id] ?? null,
+                          ),
+                          effort ? effortName(effort) : "跟随全局思考",
+                          override?.maxOutputTokens != null
+                            ? `输出 ${formatTokens(override.maxOutputTokens)}`
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                      {overridden && (
+                        <span className="configured-model-card-custom">
+                          已自定义
+                        </span>
+                      )}
+                    </span>
+                    <CaretRight size={12} aria-hidden="true" />
+                  </button>
+                  <div className="configured-model-card-head-right">
+                    {isDefaultModel && <Tag tone="accent">默认</Tag>}
+                    {!enabled && <Tag tone="muted">未启用</Tag>}
+                    {selection.mode === "selected" && !isDefaultModel && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={disabled}
+                        onClick={() => toggleEnabled(entry.id)}
+                      >
+                        {enabled ? "停用" : "启用"}
+                      </Button>
+                    )}
+                    {!isDefaultModel && enabled && (
+                      <button
+                        type="button"
+                        className="provider-model-action-pill"
+                        disabled={disabled}
+                        onClick={() => onModel(entry.id)}
+                      >
+                        设为默认
+                      </button>
+                    )}
+                    {!isDefaultModel && (
+                      <button
+                        type="button"
+                        className="configured-model-remove-btn"
+                        disabled={disabled}
+                        title="从列表中移除"
+                        aria-label={`移除模型 ${entry.id}`}
+                        onClick={() => removeModelCard(entry.id)}
+                      >
+                        <X size={13} aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </article>
             );

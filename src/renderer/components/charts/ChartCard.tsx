@@ -187,7 +187,11 @@ export function ChartCard({ spec, source }: ChartCardProps) {
           instance.resize({ width, height, animation: { duration: 0 } });
         }
         if (needsPaint) {
-          instance.setOption(structuredClone(option), {
+          const painted = structuredClone(option);
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            painted.animation = false;
+          }
+          instance.setOption(painted, {
             notMerge: true,
             lazyUpdate: false,
           });

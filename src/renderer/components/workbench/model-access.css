@@ -287,7 +287,7 @@
 }
 
 .model-access-fold > summary {
-  padding: 11px 14px;
+  padding: 12px 14px;
   color: var(--text-secondary);
   font-size: var(--text-xs);
   font-weight: 500;
@@ -1190,7 +1190,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
-  padding: 9px 14px;
+  padding: 8px 14px;
   background: var(--surface-soft);
   border-bottom: 1px solid var(--border-subtle);
   min-width: 0;
@@ -1200,7 +1200,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -1269,7 +1269,7 @@
 }
 
 .model-param-link-btn {
-  padding: 2px 7px;
+  padding: 2px 8px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
   background: var(--surface-elevated);

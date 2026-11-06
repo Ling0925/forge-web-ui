@@ -128,7 +128,7 @@ it("limits sessions per workspace to 10 by default, expands by 10 on see more, a
     // 2. A muted "See more" button is displayed at the bottom of the list
     const seeMoreBtn = folderA.locator(".session-folder-more");
     expect(await seeMoreBtn.isVisible()).toBe(true);
-    expect(await seeMoreBtn.innerText()).toContain("See more");
+    expect(await seeMoreBtn.innerText()).toContain("查看更多");
 
     // Check transition styles on .session-folder-collapse
     const collapseEl = folderA.locator(".session-folder-collapse");

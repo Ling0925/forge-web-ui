@@ -224,6 +224,7 @@ export function UsageDashboard() {
   const wsTriggerRef = useRef<HTMLButtonElement>(null);
   const wsMenuRef = useRef<HTMLDivElement>(null);
   const wsMenuId = useId();
+  const backButtonRef = useRef<HTMLButtonElement>(null);
 
   // Extract unique workspaces from existing session summaries
   const availableWorkspaces = useMemo(() => {
@@ -286,6 +287,12 @@ export function UsageDashboard() {
       requestVersion.current += 1;
     };
   }, [state.isUsageDashboardOpen, fetchStats]);
+
+  // The workbench behind is inert while open. Passive on purpose: App's layout
+  // effect must record the opener first so it can restore focus on close.
+  useEffect(() => {
+    if (state.isUsageDashboardOpen) backButtonRef.current?.focus();
+  }, [state.isUsageDashboardOpen]);
 
   // Handle escape key
   useEffect(() => {
@@ -569,6 +576,7 @@ export function UsageDashboard() {
         <header className="usage-dashboard-header">
           <div className="usage-dashboard-title-area">
             <button
+              ref={backButtonRef}
               type="button"
               className="usage-back-btn"
               onClick={() => openUsageDashboard(false)}

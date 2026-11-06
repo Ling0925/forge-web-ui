@@ -364,7 +364,7 @@ it("uses pinned sources, retains unacknowledged drafts and runs only confirmed s
     await page.locator(".model-picker-current").click();
     await page
       .getByRole("group", { name: "Source B", exact: true })
-      .getByRole("button", { name: "shared-model shared-model", exact: true })
+      .getByRole("button", { name: "shared-model", exact: true })
       .click();
     await page.locator(".model-picker-current").click();
     expect(

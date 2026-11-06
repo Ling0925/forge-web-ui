@@ -583,7 +583,7 @@ it("limits reasoning choices to model metadata and saves only the selected model
   });
   try {
     // Source/model override > alias target override > global settings.
-    await expect.poll(() => title(page)).toContain("思考：high");
+    await expect.poll(() => title(page)).toContain("思考：高");
     await expect
       .poll(async () => (await footer(page).innerText()).trim())
       .toBe("64K");
@@ -595,9 +595,9 @@ it("limits reasoning choices to model metadata and saves only the selected model
     await slider.waitFor();
     expect(
       await page.locator(".effort-slider-labels > span").allTextContents(),
-    ).toEqual(["low", "medium", "high"]);
+    ).toEqual(["低", "中", "高"]);
     expect(await slider.getAttribute("max")).toBe("2");
-    expect(await slider.getAttribute("aria-valuetext")).toBe("high");
+    expect(await slider.getAttribute("aria-valuetext")).toBe("高");
 
     // Saving a level updates only this source/model's override. The existing
     // window/output fields and the alias target's override remain intact.
@@ -605,7 +605,7 @@ it("limits reasoning choices to model metadata and saves only the selected model
     await expect
       .poll(() => page.evaluate(() => window.__updates.length))
       .toBe(1);
-    await expect.poll(() => title(page)).toContain("思考：low");
+    await expect.poll(() => title(page)).toContain("思考：低");
     const update = await page.evaluate(() => window.__updates[0]);
     if (!update) throw new Error("Expected a source/model effort update");
     expect(update.source).toMatchObject({
@@ -637,7 +637,7 @@ it("limits reasoning choices to model metadata and saves only the selected model
         "upstream/model": { reasoningEffort: "medium" },
       }),
     );
-    await expect.poll(() => title(page)).toContain("思考：medium");
+    await expect.poll(() => title(page)).toContain("思考：中");
     if ((await page.locator(".composer-model-panel").count()) === 0)
       await page.locator(".composer-model-summary").click();
     if ((await page.locator(".model-catalog").count()) > 0)
@@ -647,12 +647,12 @@ it("limits reasoning choices to model metadata and saves only the selected model
       exact: true,
     });
     await panelSlider.waitFor();
-    expect(await panelSlider.getAttribute("aria-valuetext")).toBe("medium");
+    expect(await panelSlider.getAttribute("aria-valuetext")).toBe("中");
 
     // Clearing all overrides falls back to the global level while the composer
     // remains mounted and its draft survives.
     await page.evaluate(() => window.__saveSourceOverrides({}));
-    await expect.poll(() => title(page)).toContain("思考：low");
+    await expect.poll(() => title(page)).toContain("思考：低");
     expect(await input.inputValue()).toBe("reasoning draft");
   } finally {
     await browser.close();
@@ -662,7 +662,13 @@ it("limits reasoning choices to model metadata and saves only the selected model
 it.each(["default", "none", "minimal", "xhigh", "max"] as const)(
   "shows configured effort %s even when the catalog omits it, without rewriting it on blur",
   async (effort) => {
-    const label = effort === "max" ? "MAX" : effort;
+    const label = {
+      default: "默认",
+      none: "关闭",
+      minimal: "极低",
+      xhigh: "超高",
+      max: "最大",
+    }[effort];
     const { browser, page } = await openComposer({
       settings: settings(
         [
@@ -737,22 +743,20 @@ it("follows configured efforts across sources and settings revisions even outsid
     },
   });
   try {
-    await expect.poll(() => title(page)).toContain("思考：MAX");
+    await expect.poll(() => title(page)).toContain("思考：最大");
     await pickModel(page, "Source B", "shared/model");
     const slider = page.getByRole("slider", { name: "思考等级", exact: true });
-    await expect
-      .poll(() => slider.getAttribute("aria-valuetext"))
-      .toBe("minimal");
-    expect(await title(page)).toContain("思考：minimal");
+    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("极低");
+    expect(await title(page)).toContain("思考：极低");
 
     await page.evaluate(() =>
       window.__saveSourceOverrides({
         "shared/model": { reasoningEffort: "none" },
       }),
     );
-    expect(await title(page)).toContain("思考：minimal");
+    expect(await title(page)).toContain("思考：极低");
     await pickModel(page, "Source A", "shared/model");
-    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("none");
+    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("关闭");
 
     // Both values have the first index; an unchanged index must not keep an old label.
     await page.evaluate(() =>
@@ -760,12 +764,10 @@ it("follows configured efforts across sources and settings revisions even outsid
         "shared/model": { reasoningEffort: "minimal" },
       }),
     );
-    await expect
-      .poll(() => slider.getAttribute("aria-valuetext"))
-      .toBe("minimal");
+    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("极低");
     await page.evaluate(() => window.__saveSourceOverrides({}));
-    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("high");
-    expect(await title(page)).toContain("思考：high");
+    await expect.poll(() => slider.getAttribute("aria-valuetext")).toBe("高");
+    expect(await title(page)).toContain("思考：高");
     expect(await page.evaluate(() => window.__updates.length)).toBe(3);
   } finally {
     await browser.close();

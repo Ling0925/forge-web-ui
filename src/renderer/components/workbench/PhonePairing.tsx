@@ -223,7 +223,7 @@ export function PhonePairing() {
         <div className="phone-pairing-head-text">
           <p id={headingId}>
             在局域网内公开当前核心的 HTTP 地址，让 Android
-            应用扫码连接同一个核心与任务。配对操作立即生效，独立于底部“保存设置”。
+            应用扫码连接同一个核心与任务。配对操作立即生效。
           </p>
         </div>
         <span className={`phone-pairing-badge ${url ? "is-live" : "is-idle"}`}>

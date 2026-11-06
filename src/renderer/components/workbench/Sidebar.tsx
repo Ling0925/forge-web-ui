@@ -5,8 +5,6 @@ import {
   CaretRight,
   ChartBar,
   Files,
-  Folder,
-  FolderOpen,
   Gear,
   MagnifyingGlass,
   Plus,
@@ -26,6 +24,12 @@ import { ForgeMark } from "../primitives/ForgeMark";
 import { IconButton } from "../primitives/IconButton";
 import { SessionListItem } from "./SessionListItem";
 import { SuperAgentSessions } from "./SuperAgentSessions";
+import "./sidebar-v2.css";
+
+const newSessionShortcut =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+    ? "⌘N"
+    : "Ctrl N";
 
 /** Folder label for a workspace path; the full path stays available as a tooltip. */
 function workspaceName(workspace: string) {
@@ -189,8 +193,11 @@ export function Sidebar() {
               title="新建会话 (Ctrl+N / Cmd+N)"
               aria-label="新建会话"
             >
-              <Plus size={15} weight="bold" />
+              <Plus size={16} weight="bold" />
               <span>新任务</span>
+              <kbd className="sidebar-new-kbd" aria-hidden="true">
+                {newSessionShortcut}
+              </kbd>
             </button>
             <IconButton
               className="sidebar-mobile-close"
@@ -204,7 +211,7 @@ export function Sidebar() {
 
       <div className="sidebar-search">
         <div className="sidebar-search-input-wrap">
-          <MagnifyingGlass size={13} className="sidebar-search-icon" />
+          <MagnifyingGlass size={14} className="sidebar-search-icon" />
           <input
             className="sidebar-search-input"
             aria-label="搜索会话"
@@ -212,16 +219,16 @@ export function Sidebar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
+          <button
+            type="button"
+            className={`sidebar-archive-toggle ${showArchived ? "is-active" : ""}`}
+            onClick={() => setShowArchived(!showArchived)}
+            title={showArchived ? "隐藏归档会话" : "显示归档会话"}
+            aria-pressed={showArchived}
+          >
+            <Archive size={14} weight={showArchived ? "fill" : "regular"} />
+          </button>
         </div>
-        <button
-          type="button"
-          className={`sidebar-archive-toggle ${showArchived ? "is-active" : ""}`}
-          onClick={() => setShowArchived(!showArchived)}
-          title={showArchived ? "隐藏归档会话" : "显示归档会话"}
-          aria-pressed={showArchived}
-        >
-          <Archive size={13} weight={showArchived ? "fill" : "regular"} />
-        </button>
       </div>
 
       <div className="sidebar-sessions-list">
@@ -275,33 +282,18 @@ export function Sidebar() {
                     aria-controls={bodyId}
                     title={group.workspace}
                   >
-                    <CaretRight
-                      size={11}
-                      weight="bold"
-                      className="session-folder-caret"
-                      aria-hidden="true"
-                    />
-                    {isCollapsed ? (
-                      <Folder
-                        size={13}
-                        weight="regular"
-                        className="session-folder-icon"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <FolderOpen
-                        size={13}
-                        weight="regular"
-                        className="session-folder-icon"
-                        aria-hidden="true"
-                      />
-                    )}
                     <span className="session-folder-name">
                       {workspaceName(group.workspace)}
                     </span>
                     <span className="session-folder-count">
                       {group.sessions.length}
                     </span>
+                    <CaretRight
+                      size={10}
+                      weight="bold"
+                      className="session-folder-caret"
+                      aria-hidden="true"
+                    />
                   </button>
                   <button
                     type="button"
@@ -353,7 +345,7 @@ export function Sidebar() {
                         }
                         aria-label={`查看更多会话（当前已显示 ${visibleSessions.length}/${group.sessions.length}）`}
                       >
-                        <span>See more</span>
+                        <span>查看更多</span>
                       </button>
                     )}
                   </div>
@@ -364,40 +356,38 @@ export function Sidebar() {
         )}
       </div>
 
+      {/* Icon-only actions. The model-service state no longer gets its own
+          row: a saved endpoint says nothing useful once it exists, so only a
+          missing or loading setup marks the settings icon. */}
       <div className="sidebar-footer">
-        <button
-          type="button"
-          className="sidebar-model-status"
-          data-state={serviceStatus.state}
-          title={serviceStatus.hint}
-          onClick={() => {
-            setMobileSidebar(false);
-            openSettings(true);
-          }}
-        >
-          <i
-            className="sidebar-status-dot wb-status-dot"
-            data-status={
-              serviceStatus.state === "configured"
-                ? "ready"
-                : serviceStatus.state === "loading"
-                  ? "running"
-                  : "awaiting_approval"
-            }
-            aria-hidden="true"
-          />
-          <span>{serviceStatus.label}</span>
-          <CaretRight
-            size={12}
-            className="sidebar-status-arrow"
-            aria-hidden="true"
-          />
-        </button>
-
         <div className="sidebar-footer-actions">
           <button
             type="button"
-            className="sidebar-settings-btn"
+            className="sidebar-icon-btn"
+            onClick={() => {
+              setMobileSidebar(false);
+              openSettings(true);
+            }}
+            title={
+              serviceStatus.state === "configured"
+                ? "设置"
+                : `设置 · ${serviceStatus.label}`
+            }
+            aria-label={
+              serviceStatus.state === "configured"
+                ? "设置"
+                : serviceStatus.label
+            }
+            data-service={serviceStatus.state}
+          >
+            <Gear size={17} />
+            {serviceStatus.state === "missing" && (
+              <span className="sidebar-icon-badge" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
+            className="sidebar-icon-btn"
             onClick={() => {
               setMobileSidebar(false);
               openUsageDashboard(true);
@@ -405,30 +395,16 @@ export function Sidebar() {
             title="用量看板"
             aria-label="用量看板"
           >
-            <ChartBar size={15} />
-            <span>用量</span>
+            <ChartBar size={17} />
           </button>
           <button
             type="button"
-            className="sidebar-settings-btn"
-            onClick={() => {
-              setMobileSidebar(false);
-              openSettings(true);
-            }}
-            title="设置"
-            aria-label="设置"
-          >
-            <Gear size={15} />
-            <span>设置</span>
-          </button>
-          <button
-            type="button"
-            className="sidebar-refresh-btn"
+            className="sidebar-icon-btn sidebar-refresh-btn"
             onClick={() => window.location.reload()}
             title="刷新界面"
             aria-label="刷新界面"
           >
-            <ArrowClockwise size={14} />
+            <ArrowClockwise size={16} />
           </button>
         </div>
       </div>

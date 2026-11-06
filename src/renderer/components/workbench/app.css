@@ -18,9 +18,9 @@
 .wb-approval-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   height: 28px;
-  padding: 0 11px;
+  padding: 0 12px;
   font-size: var(--text-xs);
   font-weight: 600;
   border-radius: var(--radius-full);
@@ -137,9 +137,8 @@
   line-height: var(--prose-leading);
   font-size: var(--prose-size);
 }
-/* Claude Code-style conversation flow: no right-aligned chat bubble. User turns
-   read as compact, full-width blocks on a quiet surface; assistant turns are
-   plain borderless prose. Both share one left reading rail. */
+/* Base message rhythm. The reading model (right-aligned user request,
+   plain assistant prose) is owned by transcript-v2.css. */
 .wb-app .message {
   display: flex;
   flex-direction: column;
@@ -932,33 +931,6 @@
   min-height: 0;
   min-width: 0;
 }
-.command-palette > *,
-.command-palette .wb-stack {
-  min-width: 0;
-  max-width: 100%;
-  flex-shrink: 0;
-}
-.command-palette .command-action {
-  min-width: 0;
-  max-width: 100%;
-  width: 100%;
-  height: auto;
-  white-space: normal;
-  padding-block: var(--space-2);
-  justify-content: flex-start;
-  text-align: left;
-  flex-shrink: 0;
-}
-.command-action-label,
-.command-selection {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  min-width: 0;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
 .message-internal pre {
   font-family: var(--font-mono);
 }
@@ -1025,7 +997,7 @@
 .composer-dropdown-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   height: 26px;
   padding: 0 8px;
   border-radius: var(--radius-sm);
@@ -1611,7 +1583,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--text-base);
-  font-weight: 450;
+  font-weight: 400;
 }
 .wb-session-item-meta {
   font-size: var(--text-xs);

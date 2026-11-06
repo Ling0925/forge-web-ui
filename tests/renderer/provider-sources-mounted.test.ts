@@ -482,7 +482,10 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     await expect.poll(() => page.getByRole("dialog").count()).toBe(0);
 
     // Model cards stay simple; parameters are edited in a dialog per model.
-    await chooseOption(page.getByLabel("查看来源的模型", { exact: true }), "a");
+    await page
+      .getByRole("group", { name: "查看来源的模型", exact: true })
+      .getByRole("button", { name: "源 A", exact: true })
+      .click();
     const models = page.locator(".provider-models-body");
     expect(await models.locator(".configured-model-card").count()).toBe(1);
     const cardOne = models.getByRole("article", { name: "模型 a/one" });
@@ -509,8 +512,8 @@ it("adds sources from presets, keeps drafts, reports stale catalogs and cancels 
     await expect.poll(() => cardOne.innerText()).toContain("已自定义");
     expect(await cardOne.innerText()).toContain("256K");
     expect(
-      await cardOne.locator(".configured-model-card-facts").innerText(),
-    ).toMatch(/思考\s*高/);
+      await cardOne.locator(".configured-model-card-summary").innerText(),
+    ).toContain(" · 高");
 
     // Another catalog model is added as a card and configured the same way.
     await page.getByRole("button", { name: "为源 A添加模型" }).click();

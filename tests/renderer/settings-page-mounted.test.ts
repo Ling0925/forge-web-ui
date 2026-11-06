@@ -1,10 +1,15 @@
+import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
-import { chooseOption, selectValue } from "./select-helpers";
+import { chooseOption } from "./select-helpers";
 
 it("settings page auto-saves simple preferences, rolls back failures, confirms risky choices and fits desktop/mobile themes", async () => {
+  const output = resolve(
+    process.env.FORGE_UI_TEST_OUTPUT ?? "../../.forge/tmp/settings-merge",
+  );
+  await mkdir(output, { recursive: true });
   const bundle = await build({
     stdin: {
       resolveDir: resolve("."),
@@ -14,8 +19,11 @@ it("settings page auto-saves simple preferences, rolls back failures, confirms r
     import {Settings} from './src/renderer/components/workbench/Settings';
     import {TestProvider} from './src/renderer/state/workbench-context';
     import './src/renderer/styles/global.css';
+    import './src/renderer/styles/workspace-theme.css';
+    import './src/renderer/styles/design-foundation.css';
     window.calls=[]; window.reads=0; window.fail=false;
-    window.forge={listModels:async()=>{window.reads++;return ['fixture/model']},listMcpServers:async()=>[]};
+    window.forge={listModels:async()=>{window.reads++;return ['fixture/model']},listMcpServers:async()=>[],
+      modelAccess:async input=>({type:'catalog',sourceId:input.sourceId,models:[{id:'fixture/model',contextWindowTokens:128000},{id:'fixture/secondary',contextWindowTokens:256000}],stale:false})};
     createRoot(document.getElementById('root')).render(<TestProvider><Settings/></TestProvider>);
   `,
     },
@@ -41,6 +49,11 @@ it("settings page auto-saves simple preferences, rolls back failures, confirms r
       export function TestProvider({children}) {
         const [settings,setSettings]=useState(current);
         const [isSettingsOpen,openSettings]=useState(true);
+        window.addFixtureSources=()=>{
+          current={...current,activeSourceId:'visual',providerSources:[{id:'visual',label:'示例模型服务',revision:1,baseUrl:'https://fixture.invalid/v1',apiMode:'chat-completions',model:'fixture/model',hasApiKey:true,
+            modelSelection:{mode:'all',models:[],manual:[{id:'fixture/model',contextWindowTokens:128000},{id:'fixture/secondary',contextWindowTokens:256000}],overrides:{'fixture/secondary':{reasoningEffort:'high'}}}}]};
+          setSettings(current);
+        };
         const updateSettings=async input=>{window.calls.push(input); await new Promise(r=>setTimeout(r,50));if(window.fail)return {ok:false,error:'连接已断开'};
           const next={...current,...input.settings,hasApiKey:input.apiKey===undefined?current.hasApiKey:!!input.apiKey};
           current={...next,isConfigured:!!next.baseUrl&&!!next.model};
@@ -167,22 +180,40 @@ it("settings page auto-saves simple preferences, rolls back failures, confirms r
 
     // A failed save shows the error and restores the last saved value.
     await nav("推理与上下文").click();
-    const effort = page.getByLabel("默认思考等级", { exact: true });
-    const before = await selectValue(effort);
+    const effort = page.getByRole("group", {
+      name: "默认思考等级",
+      exact: true,
+    });
+    const selectedEffort = () =>
+      effort.locator('[aria-pressed="true"]').getAttribute("aria-label");
+    const before = await selectedEffort();
     await setFail(true);
-    await chooseOption(effort, "high");
+    await effort.getByRole("button", { name: "高", exact: true }).click();
     await row("reasoningEffort")
       .getByRole("alert")
       .filter({ hasText: "保存失败，已恢复原值" })
       .waitFor();
-    expect(await selectValue(effort)).toBe(before);
+    expect(await selectedEffort()).toBe(before);
     await setFail(false);
-    await chooseOption(effort, "high");
+    await effort.getByRole("button", { name: "高", exact: true }).click();
     await row("reasoningEffort").getByText("已保存", { exact: true }).waitFor();
     expect((await calls()).at(-1)).toEqual({
       settings: { reasoningEffort: "high" },
     });
-    expect(await selectValue(effort)).toBe("high");
+    expect(await selectedEffort()).toBe("高");
+    // A fast change back to the saved value must still follow the queued edit.
+    const burstBefore = (await calls()).length;
+    await effort.evaluate((node) => {
+      node.querySelector<HTMLButtonElement>('[aria-label="低"]')!.click();
+      node.querySelector<HTMLButtonElement>('[aria-label="高"]')!.click();
+    });
+    await expect.poll(async () => (await calls()).length).toBe(burstBefore + 2);
+    await row("reasoningEffort").getByText("已保存", { exact: true }).waitFor();
+    expect((await calls()).slice(-2)).toEqual([
+      { settings: { reasoningEffort: "low" } },
+      { settings: { reasoningEffort: "high" } },
+    ]);
+    expect(await selectedEffort()).toBe("高");
 
     // Compression budget: preset, then a custom token count.
     const budget = page.getByLabel("压缩预算", { exact: true });
@@ -193,10 +224,22 @@ it("settings page auto-saves simple preferences, rolls back failures, confirms r
     await chooseOption(budget, "custom");
     const tokens = page.getByLabel("自定义压缩预算（tokens）");
     await tokens.fill("32000");
+    const budgetCallsBefore = (await calls()).filter(
+      (call) => call.settings?.contextBudgetTokens === 32000,
+    ).length;
     await tokens.press("Enter");
+    await tokens.blur();
     await expect
       .poll(async () => (await calls()).at(-1))
       .toEqual({ settings: { contextBudgetTokens: 32000 } });
+    await row("contextBudgetTokens")
+      .getByText("已保存", { exact: true })
+      .waitFor();
+    expect(
+      (await calls()).filter(
+        (call) => call.settings?.contextBudgetTokens === 32000,
+      ),
+    ).toHaveLength(budgetCallsBefore + 1);
     // Per-model windows live only in each model's parameters now.
     expect(
       await page.getByRole("button", { name: "添加模型窗口" }).count(),
@@ -259,6 +302,7 @@ it("settings page auto-saves simple preferences, rolls back failures, confirms r
     ).toBe(1);
     await page.getByLabel("搜索设置").fill("");
 
+    await page.evaluate(() => Reflect.get(window, "addFixtureSources")());
     for (const width of [1440, 390])
       for (const theme of ["light", "dark"]) {
         await page.setViewportSize({ width, height: 900 });
@@ -273,6 +317,10 @@ it("settings page auto-saves simple preferences, rolls back failures, confirms r
           "MCP 服务器",
         ]) {
           await nav(name).click();
+          await page.screenshot({
+            path: resolve(output, `settings-${name}-${width}-${theme}.png`),
+            animations: "disabled",
+          });
           const rect = await page.locator(".settings-page").boundingBox();
           expect(rect!.width).toBeLessThanOrEqual(width);
           expect(
