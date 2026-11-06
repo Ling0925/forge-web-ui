@@ -1,25 +1,10 @@
+/* Context part colors (--context-*) live in styles/workspace-theme.css. */
 .composer-usage {
-  --context-instructions: #5fafff;
-  --context-memory: #d787ff;
-  --context-conversation: #87d7af;
-  --context-tools: #ffaf5f;
-  --context-reserve-border: var(--error);
-  --context-reserve-stripe-1: color-mix(in srgb, var(--error) 50%, transparent);
-  --context-reserve-stripe-2: color-mix(in srgb, var(--error) 15%, transparent);
   position: relative;
   width: 100%;
   min-width: 0;
   /* Sits directly under the composer card, aligned full width with the card */
   margin-top: 2px;
-}
-[data-theme="light"] .composer-usage {
-  --context-instructions: #005faf;
-  --context-memory: #870087;
-  --context-conversation: #005f5f;
-  --context-tools: #875f00;
-  --context-reserve-border: var(--error);
-  --context-reserve-stripe-1: color-mix(in srgb, var(--error) 50%, transparent);
-  --context-reserve-stripe-2: color-mix(in srgb, var(--error) 15%, transparent);
 }
 .usage-trigger {
   display: flex;

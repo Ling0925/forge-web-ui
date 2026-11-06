@@ -196,6 +196,35 @@
   box-shadow: 0 0 0 3px var(--focus-halo);
 }
 
+/* Settings-style disclosures draw one chevron instead of the browser's
+   triangle, matching the caret icons used elsewhere. */
+:is(.setting-advanced, .provider-advanced, .plugin-schema) > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+}
+:is(.setting-advanced, .provider-advanced, .plugin-schema)
+  > summary::-webkit-details-marker {
+  display: none;
+}
+:is(.setting-advanced, .provider-advanced, .plugin-schema) > summary::before {
+  content: "";
+  flex-shrink: 0;
+  width: 5px;
+  height: 5px;
+  margin-inline: 1px 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  opacity: 0.7;
+  transform: rotate(-45deg);
+  transition: transform var(--dur-short) var(--ease-out);
+}
+:is(.setting-advanced, .provider-advanced, .plugin-schema)[open]
+  > summary::before {
+  transform: translateY(-2px) rotate(45deg);
+}
+
 /* Popovers & menus share one entrance. */
 .composer-model-panel,
 .composer-dropdown-menu {

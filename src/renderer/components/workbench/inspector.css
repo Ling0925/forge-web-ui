@@ -623,10 +623,19 @@
   grid-template-columns: 72px minmax(0, 1fr) !important;
 }
 
+/* The total is the row to read first, but it is data, not a link: primary ink
+   and weight, no accent. */
 .wb-inspector .usage-total-highlight {
-  font-weight: 700;
-  color: var(--accent) !important;
+  font-weight: 600;
+  color: var(--text-primary);
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The header pill summarizes the card while it is folded; once open, the
+   累计 Tokens row says the same thing. */
+.wb-inspector .inspector-usage-card[open] .inspector-token-pill {
+  display: none;
 }
 
 .wb-inspector .inspector-usage-footer {

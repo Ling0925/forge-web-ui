@@ -6,10 +6,15 @@ import { ModelCatalog, type ModelCatalogGroup } from "./ModelCatalog";
 import "../../styles/settings-models.css";
 import "./model-picker-v2.css";
 import { useDismiss } from "../primitives/useDismiss";
+import { GLOBAL_REASONING_EFFORT_OPTIONS } from "./settings/settings-options";
 
 const defaultEfforts = ["low", "medium", "high", "xhigh", "max"] as const;
+// Same names as the settings page, so one level reads the same everywhere.
 const formatEffort = (value: string | undefined) =>
-  value === "max" ? "MAX" : value;
+  value === undefined
+    ? undefined
+    : (GLOBAL_REASONING_EFFORT_OPTIONS.find((option) => option.value === value)
+        ?.shortLabel ?? value);
 
 export function ModelPicker(props: {
   readonly value: string;

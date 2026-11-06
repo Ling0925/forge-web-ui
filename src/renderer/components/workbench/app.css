@@ -931,33 +931,6 @@
   min-height: 0;
   min-width: 0;
 }
-.command-palette > *,
-.command-palette .wb-stack {
-  min-width: 0;
-  max-width: 100%;
-  flex-shrink: 0;
-}
-.command-palette .command-action {
-  min-width: 0;
-  max-width: 100%;
-  width: 100%;
-  height: auto;
-  white-space: normal;
-  padding-block: var(--space-2);
-  justify-content: flex-start;
-  text-align: left;
-  flex-shrink: 0;
-}
-.command-action-label,
-.command-selection {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  min-width: 0;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
 .message-internal pre {
   font-family: var(--font-mono);
 }

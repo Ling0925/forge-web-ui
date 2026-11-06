@@ -161,11 +161,21 @@
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
+/* One quiet line, aligned with the row text (spec §4.4), not a boxed card. */
 .wb-app .wb-inspector .inspector-scroll .inspector-summary-empty {
-  margin: var(--space-2) var(--space-2) 0;
+  align-items: flex-start;
+  margin: 0;
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  text-align: left;
+}
+.wb-app
+  .wb-inspector
+  .inspector-scroll
+  .inspector-summary-empty
+  .empty-state-title {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  line-height: 1.6;
+  line-height: var(--leading-sm);
 }
 
 /* ---------- Row: the one list vocabulary ---------- */

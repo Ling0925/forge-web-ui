@@ -89,6 +89,23 @@
   --chart-cost: #975a06;
   --chart-speed: #55684d;
   --chart-failed: var(--error);
+  /* Context window parts in the composer meter and usage popover. The
+     compaction reserve is neutral: it is held back, not an error. */
+  --context-instructions: #55684d;
+  --context-memory: #7d5a7c;
+  --context-conversation: #a54f35;
+  --context-tools: #975a06;
+  --context-reserve-border: var(--border-strong);
+  --context-reserve-stripe-1: color-mix(
+    in srgb,
+    var(--text-muted) 38%,
+    transparent
+  );
+  --context-reserve-stripe-2: color-mix(
+    in srgb,
+    var(--text-muted) 10%,
+    transparent
+  );
   --surface-raised: #fffefc;
   --surface-sunken: #eceae4;
   --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 80%);
@@ -175,6 +192,10 @@
   --chart-cost: #f0be65;
   --chart-speed: #8fad82;
   --chart-failed: var(--error);
+  --context-instructions: #8fad82;
+  --context-memory: #c39bc1;
+  --context-conversation: #dc9477;
+  --context-tools: #f0be65;
   --surface-raised: #272522;
   --surface-sunken: #141312;
   --edge-highlight: inset 0 1px 0 rgb(255 244 228 / 5%);

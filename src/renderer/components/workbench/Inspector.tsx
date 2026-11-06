@@ -659,7 +659,8 @@ export function Inspector({
               !hasSubtasks &&
               snapshot.changes.length === 0 && (
                 <EmptyState
-                  variant="inline"
+                  variant="compact"
+                  className="inspector-summary-empty"
                   title="执行计划、子任务和文件变更出现后会显示在这里。"
                 />
               )}

@@ -207,6 +207,14 @@
   transform: scaleY(1.15);
 }
 
+/* Phones: the model name needs the room (it was cut to "claud…"); the source
+   stays in the trigger's title and in the open panel. */
+@media (max-width: 640px) {
+  .composer-model-picker .composer-model-summary .composer-model-source {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .composer-model-picker .composer-model-panel,
   .composer-model-picker .composer-model-panel > *,

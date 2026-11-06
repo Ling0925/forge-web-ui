@@ -313,6 +313,9 @@
 }
 .settings-page .configured-model-card-head {
   flex-wrap: nowrap;
+  /* model-access.css top-aligns the legacy card head; rows here center so
+     the 默认 tag sits on the row's midline instead of its top edge. */
+  align-items: center;
   gap: var(--space-2);
   min-height: 44px;
   padding: 0 var(--space-2) 0 0;
@@ -383,12 +386,14 @@
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
+/* Part of the parameter summary, not a second accent tag beside 默认. */
 .settings-page .configured-model-card-custom {
-  padding: 0 6px;
-  border-radius: var(--radius-full);
-  background: var(--accent-subtle);
-  color: var(--accent);
-  line-height: 18px;
+  color: var(--text-secondary);
+}
+.settings-page .configured-model-card-custom::before {
+  content: "·";
+  margin-right: var(--space-2);
+  color: var(--text-muted);
 }
 /* Fixed-width action slot so every row's summary ends on the same line,
    whether it shows "默认" or the hover-only "设为默认 ×". */
