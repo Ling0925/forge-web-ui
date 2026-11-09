@@ -158,7 +158,7 @@ describe("super-agent store", () => {
     expect(pendingSuggestions(store.getSnapshot())).toEqual([]);
   });
 
-  it("degrades to disabled when super-agent is off or the RPCs are missing", async () => {
+  it("distinguishes disabled from missing optional RPCs", async () => {
     const off = bridge({
       getSuperAgentState: vi.fn(async () => {
         throw Object.assign(new Error("Super-agent is disabled"), {
@@ -174,7 +174,8 @@ describe("super-agent store", () => {
     const old = createSuperAgentStore(() => ({}) as never);
     await old.load();
     const view = old.getSnapshot();
-    expect(view.status).toBe("disabled");
+    expect(view.status).toBe("not-supported");
+    expect(view.requests.state).toBe("not-supported");
     expect(pendingOutbox(view)).toEqual([]);
     expect(pendingSuggestions(view)).toEqual([]);
     await expect(old.decideOutbox("out_1", true)).rejects.toThrow(
@@ -192,6 +193,7 @@ describe("super-agent store", () => {
     await store.load();
     expect(store.getSnapshot().status).toBe("enabled");
     expect(store.getSnapshot().outbox).toEqual([]);
+    expect(store.getSnapshot().requests.outbox).toBe("error");
   });
 });
 
@@ -252,6 +254,12 @@ describe("router/worker grouping", () => {
     ({ id, title: id, createdAt, agentRole }) as never;
   const view: SuperAgentView = {
     status: "enabled",
+    requests: {
+      state: "success",
+      workItems: "success",
+      suggestions: "success",
+      outbox: "success",
+    },
     routerSessionId: ROUTER,
     workItems: [work()],
     suggestions: [],
@@ -451,6 +459,12 @@ describe("super-agent delivery marker", () => {
 describe("inspector attention", () => {
   const view: SuperAgentView = {
     status: "enabled",
+    requests: {
+      state: "success",
+      workItems: "success",
+      suggestions: "success",
+      outbox: "success",
+    },
     routerSessionId: ROUTER,
     workItems: [work()],
     suggestions: [suggestion()],
@@ -480,5 +494,21 @@ describe("inspector attention", () => {
         />,
       ),
     ).toBe("");
+  });
+  it("keeps known decisions visible after a probe refresh fails", () => {
+    const failed: SuperAgentView = {
+      ...view,
+      requests: { ...view.requests, state: "error" },
+    };
+    const html = renderToStaticMarkup(
+      <SuperAgentAttention
+        view={failed}
+        outbox={pendingOutbox(failed)}
+        suggestions={pendingSuggestions(failed)}
+      />,
+    );
+    expect(html).toContain("发送队列 · 评论");
+    expect(html).toContain("批准…");
+    expect(html).toContain("接受并开始");
   });
 });
