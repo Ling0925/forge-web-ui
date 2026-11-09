@@ -3,13 +3,12 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
+  groupTurnEntries,
+  partitionTurns,
   PlanStageDivider,
   StoredTranscript,
   ToolPreviews,
-  computeTurnSummary,
   groupExecution,
-  groupTurnEntries,
-  partitionTurns,
 } from "../../src/renderer/components/workbench/Transcript";
 import type { TimelineItem } from "../../src/renderer/state/timeline";
 
@@ -151,17 +150,6 @@ describe("Transcript Turn partitioning and grouping", () => {
     ).toEqual(["", "t2"]);
   });
 
-  it("computes accurate summary statistics for collapsed turns", () => {
-    const items = [
-      { item: toolItem("t1"), index: 0 },
-      { item: toolItem("t2"), index: 1 },
-      { item: assistantItem("a1", "Reply"), index: 2 },
-    ];
-    const summary = computeTurnSummary(items);
-    expect(summary).toContain("2 次工具调用");
-    expect(summary).toContain("已回复");
-  });
-
   it("renders StoredTranscript with turn container, turn badge and compact tool call group", () => {
     const snapshot = sessionSnapshotSchema.parse({
       version: 1,
@@ -190,10 +178,10 @@ describe("Transcript Turn partitioning and grouping", () => {
     );
 
     expect(html).toContain('class="transcript-turn"');
-    expect(html).toContain('class="transcript-turn-badge"');
-    expect(html).toContain("第 1 轮");
-    expect(html).toContain('class="transcript-turn-toggle"');
-    expect(html).toContain("收起本轮");
+    // A turn is the user's request plus the work; no turn badge or toggle.
+    expect(html).not.toContain("第 1 轮");
+    expect(html).not.toContain("收起本轮");
+    expect(html).not.toContain(">你</div>");
     expect(html).toContain('class="tool-call-group"');
     expect(html).toContain("已优化完成");
   });

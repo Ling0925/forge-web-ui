@@ -997,7 +997,8 @@ export function ProviderSources({
                       )}
                     </span>
                     <span className="provider-source-meta-line">
-                      {protocolLabel(item.apiMode)} · {item.baseUrl} ·{" "}
+                      {item.baseUrl.replace(/^https?:\/\//, "")} ·{" "}
+                      {protocolLabel(item.apiMode)} ·{" "}
                       {selection.mode === "none"
                         ? "不提供模型"
                         : `${selectableModelIds(item).length} 个模型`}
@@ -1016,6 +1017,8 @@ export function ProviderSources({
                       size="sm"
                       variant="ghost"
                       icon={<ArrowClockwise size={14} />}
+                      className="provider-icon-action"
+                      title="刷新模型目录"
                       aria-label={`刷新${item.label}的模型`}
                       loading={loading}
                       disabled={busy}
@@ -1025,9 +1028,7 @@ export function ProviderSources({
                           return refreshNotice(loaded);
                         })
                       }
-                    >
-                      刷新
-                    </Button>
+                    />
                     <Button
                       size="sm"
                       variant="secondary"
@@ -1036,7 +1037,7 @@ export function ProviderSources({
                       disabled={busy}
                       onClick={() => openEditor(item.id)}
                     >
-                      编辑来源
+                      编辑
                     </Button>
                   </div>
                 </li>
@@ -1067,15 +1068,23 @@ export function ProviderSources({
           description="每个模型的上下文窗口、最大输出和思考等级在卡片的“编辑参数”中设置，保存后立即生效。"
           actions={
             sources.length > 1 ? (
-              <Select
+              <div
+                className="provider-source-tabs"
+                role="group"
                 aria-label="查看来源的模型"
-                value={tabSource.id}
-                options={sources.map((item) => ({
-                  value: item.id,
-                  label: item.label,
-                }))}
-                onValueChange={setActiveTabId}
-              />
+              >
+                {sources.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`provider-source-tab${tabSource.id === item.id ? " is-active" : ""}`}
+                    aria-pressed={tabSource.id === item.id}
+                    onClick={() => setActiveTabId(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             ) : undefined
           }
         >

@@ -188,9 +188,11 @@ it("unifies navigation and opens recent tasks without loading their histories up
       .poll(() => header.locator("h1").innerText())
       .toBe("整理工作区的会话导航与快捷入口");
     await page.locator(".message-assistant").waitFor();
+    // Only the opened session is read; child sessions load when the
+    // subtask view is opened, not as a side effect of the summary.
     expect(
       await page.evaluate(() => Reflect.get(window, "fixture").reads.length),
-    ).toBe(readCount + 2);
+    ).toBe(readCount + 1);
     expect(await page.locator(".workbench-main").isVisible()).toBe(true);
     expect(await details.isVisible()).toBe(false);
     expect((await page.locator(".workbench-inspector").boundingBox())?.y).toBe(

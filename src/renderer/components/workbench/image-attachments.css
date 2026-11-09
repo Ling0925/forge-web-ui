@@ -104,7 +104,7 @@
   width: 100%;
   margin-top: var(--space-1);
   font-size: var(--text-xs);
-  line-height: var(--leading-xs);
+  line-height: var(--leading-xs, 18px);
   color: var(--text-secondary);
   text-align: center;
   overflow: hidden;
@@ -163,10 +163,10 @@
 }
 
 .composer-image-trigger {
-  width: var(--touch-min-target);
-  min-width: var(--touch-min-target);
-  height: var(--touch-min-target);
-  min-height: var(--touch-min-target);
+  width: var(--touch-min-target, 44px);
+  min-width: var(--touch-min-target, 44px);
+  height: var(--touch-min-target, 44px);
+  min-height: var(--touch-min-target, 44px);
   border-radius: var(--radius-composer);
   padding: 0;
   display: inline-flex;

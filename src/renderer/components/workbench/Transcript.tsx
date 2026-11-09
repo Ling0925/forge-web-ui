@@ -3,7 +3,6 @@ import { commandActivity, toolActivity } from "@forge/core/shared";
 import { webSearchStatus } from "@forge/core/shared";
 import {
   ArrowDown,
-  CaretDown,
   CaretRight,
   Check,
   Copy,
@@ -64,8 +63,9 @@ import { StreamingMarkdown } from "./StreamingMarkdown";
 import { SuperAgentDeliveryCard } from "./SuperAgentDeliveryCard";
 import "./transcript.css";
 import "./tool-live.css";
+import "./transcript-v2.css";
 export { phaseMarkers, foldedTool } from "../../state/transcript-stages";
-export { partitionTurns, groupTurnEntries, computeTurnSummary };
+export { partitionTurns, groupTurnEntries };
 
 /**
  * Live argument-generation rows. They are display metadata only: no arguments,
@@ -151,8 +151,7 @@ export function ToolPreviews({
 }
 
 /**
- * Whole-answer copy. Sits in the quiet author row rather than floating over the
- * prose, so it never covers text and never shifts the message when it appears.
+ * Whole-answer copy sits after the reply so it never covers the prose.
  * The confirmation is exposed through the button's own label, and the icon swap
  * is the only motion (reduced-motion already collapses transitions globally).
  */
@@ -509,30 +508,6 @@ export function groupExecution(
   return sections;
 }
 
-function computeTurnSummary(items: readonly TurnEntry[]): string {
-  let toolCount = 0;
-  let hasAssistant = false;
-  let hasError = false;
-  let hasReasoning = false;
-  for (const { item } of items) {
-    if (item.kind === "tool") {
-      toolCount++;
-      if (item.status === "failed") hasError = true;
-    } else if (item.kind === "error" || item.kind === "hook_diagnostic") {
-      hasError = true;
-    } else if (item.kind === "message" && item.role === "assistant") {
-      if (item.content) hasAssistant = true;
-      if (item.reasoning) hasReasoning = true;
-    }
-  }
-  const parts: string[] = [];
-  if (toolCount > 0) parts.push(`${toolCount} 次工具调用`);
-  if (hasAssistant) parts.push("已回复");
-  if (hasReasoning) parts.push("含思考过程");
-  if (hasError) parts.push("含异常记录");
-  return parts.length > 0 ? parts.join(" · ") : "本轮已完成";
-}
-
 function findBackgroundCommand(
   taskId: string,
   timeline: readonly TimelineItem[],
@@ -757,19 +732,11 @@ function renderTimelineEntry(
           className={`message message-${item.role}${item.streaming ? " message-streaming" : ""}${step && item.role === "assistant" ? " message-step" : ""}`}
           data-generation-id={item.generationId}
         >
-          {item.role === "user" && <div className="message-header">你</div>}
           {item.role === "assistant" &&
             item.content &&
-            step?.showAuthor !== false && (
+            (item.streaming || item.incomplete) && (
               <div className="message-header message-author-row">
-                <span>
-                  {item.streaming
-                    ? "Forge · 实时草稿"
-                    : item.incomplete
-                      ? "Forge · 未完成回复"
-                      : "Forge"}
-                </span>
-                {item.content && <MessageCopyButton text={item.content} />}
+                <span>{item.streaming ? "正在回复" : "回复未完成"}</span>
               </div>
             )}
           {item.role === "user" && item.images && item.images.length > 0 && (
@@ -808,6 +775,11 @@ function renderTimelineEntry(
           {item.webSearchDetails && (
             <div className="message-body">
               <Markdown source={item.webSearchDetails} />
+            </div>
+          )}
+          {item.role === "assistant" && item.content && !item.streaming && (
+            <div className="message-actions">
+              <MessageCopyButton text={item.content} />
             </div>
           )}
         </article>
@@ -872,23 +844,28 @@ function renderTimelineEntry(
 
 function ExecutionProcess({
   execution,
+  actions,
   counts,
   children,
 }: {
   readonly execution: CompletedTurnExecution | undefined;
+  /** Tool actions in this turn; the reader-facing count. */
+  readonly actions: number;
+  /** Raw step/tool/retry counters, kept for the hover detail only. */
   readonly counts?: string | undefined;
   readonly children: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
-  if (!execution)
-    return (
-      <>
-        {counts && (
-          <div className="wb-muted transcript-execution-summary">{counts}</div>
-        )}
-        {children}
-      </>
-    );
+  // A live or unfinished turn shows its process inline; only a settled turn
+  // folds behind the summary.
+  if (!execution) return <>{children}</>;
+  const detail = [
+    `总耗时 ${execution.duration}（含工具执行与等待）`,
+    counts,
+    `输出速度 ${execution.speed}（已计时请求的输出 token ÷ 请求总耗时，不含工具执行、审批、重试间隔及子会话）`,
+  ]
+    .filter(Boolean)
+    .join("\n");
   return (
     <div className="transcript-execution">
       <button
@@ -897,26 +874,23 @@ function ExecutionProcess({
         aria-expanded={expanded}
         aria-label={expanded ? "收起本轮执行过程" : "展开本轮执行过程"}
         onClick={() => setExpanded((value) => !value)}
-        title="本轮总耗时含工具执行与等待；速度 = 已计时请求的输出 token ÷ 请求总耗时（从请求发出到回复结束，含首 token 等待，不含工具执行、审批、重试间隔及子会话）"
+        title={detail}
       >
+        <span>工作了 {execution.duration}</span>
+        {actions > 0 && (
+          <>
+            <span className="transcript-execution-sep" aria-hidden="true">
+              ·
+            </span>
+            <span>{actions} 个操作</span>
+          </>
+        )}
         <CaretRight
-          size={13}
+          size={12}
           weight="bold"
           className={`transcript-execution-caret ${expanded ? "is-expanded" : ""}`}
           aria-hidden="true"
         />
-        <Check size={13} aria-hidden="true" />
-        <span>已完成</span>
-        {counts && (
-          <>
-            <span aria-hidden="true">·</span>
-            <span>{counts}</span>
-          </>
-        )}
-        <span aria-hidden="true">·</span>
-        <span>总耗时 {execution.duration}</span>
-        <span aria-hidden="true">·</span>
-        <span>{execution.speed}</span>
       </button>
       <Collapsible open={expanded}>
         <div className="transcript-execution-items">{children}</div>
@@ -960,13 +934,6 @@ export const StoredTranscript = memo(function StoredTranscript({
     toggle: toggleReasoning,
   };
   const { phases, headers } = transcriptStages(timeline);
-  const [collapsedTurns, setCollapsedTurns] = useState<Record<string, boolean>>(
-    {},
-  );
-  const toggleTurn = useCallback((turnId: string) => {
-    setCollapsedTurns((prev) => ({ ...prev, [turnId]: !prev[turnId] }));
-  }, []);
-
   const historicalErrors = timeline.filter(
     (item) =>
       (item.kind === "error" || item.kind === "hook_diagnostic") &&
@@ -1020,7 +987,6 @@ export const StoredTranscript = memo(function StoredTranscript({
         </details>
       )}
       {turns.map((turn) => {
-        const isCollapsed = Boolean(collapsedTurns[turn.id]);
         const userItem = turn.userEntry?.item;
         const delivery = userItem?.superagent
           ? parseSuperAgentDelivery({
@@ -1042,15 +1008,9 @@ export const StoredTranscript = memo(function StoredTranscript({
           : turn.items;
         const blocks = groupTurnEntries(processItems, headers);
         const counts = record ? executionLabel(record) : "";
-        const hasError = turn.items.some(
-          ({ item }) =>
-            item.kind === "error" ||
-            item.kind === "hook_diagnostic" ||
-            (item.kind === "tool" && item.status === "failed"),
-        );
-        const summaryText = counts
-          ? `${counts}${hasError ? " · 含异常记录" : ""}`
-          : computeTurnSummary(turn.items);
+        const actions = processItems.filter(
+          ({ item }) => item.kind === "tool",
+        ).length;
         const files = turn.items.flatMap(({ item }) =>
           item.kind === "tool" &&
           item.status === "completed" &&
@@ -1066,49 +1026,9 @@ export const StoredTranscript = memo(function StoredTranscript({
             data-turn={turn.turnNumber}
           >
             {userItem && (
-              <article className="message message-user">
-                <div className="message-header">
-                  {delivery ? "Super-agent" : "你"}
-                </div>
-                {turn.turnNumber > 0 && (
-                  <div className="transcript-turn-actions">
-                    <span className="transcript-turn-badge">
-                      第 {turn.turnNumber} 轮
-                    </span>
-                    <button
-                      type="button"
-                      className="transcript-turn-toggle"
-                      onClick={() => toggleTurn(turn.id)}
-                      aria-expanded={!isCollapsed}
-                      aria-label={
-                        isCollapsed
-                          ? `展开第 ${turn.turnNumber} 轮对话`
-                          : `收起第 ${turn.turnNumber} 轮对话`
-                      }
-                      title={isCollapsed ? "展开此轮" : "收起此轮"}
-                    >
-                      {isCollapsed ? (
-                        <>
-                          <CaretRight
-                            size={12}
-                            weight="bold"
-                            aria-hidden="true"
-                          />
-                          <span>展开本轮</span>
-                        </>
-                      ) : (
-                        <>
-                          <CaretDown
-                            size={12}
-                            weight="bold"
-                            aria-hidden="true"
-                          />
-                          <span>收起本轮</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
+              <article
+                className={`message ${delivery ? "message-internal" : "message-user"}`}
+              >
                 {userItem.images && userItem.images.length > 0 && (
                   <ImageAttachments
                     key={snapshot.id}
@@ -1130,137 +1050,107 @@ export const StoredTranscript = memo(function StoredTranscript({
                 )}
               </article>
             )}
-            {turn.items.length > 0 &&
-              (isCollapsed ? (
-                <button
-                  type="button"
-                  className="transcript-turn-collapsed-bar"
-                  onClick={() => toggleTurn(turn.id)}
-                  aria-label={`展开第 ${turn.turnNumber} 轮执行与回复`}
+            {turn.items.length > 0 && (
+              <div className="transcript-turn-body">
+                <ExecutionProcess
+                  execution={finalEntry ? execution : undefined}
+                  actions={actions}
+                  counts={counts}
                 >
-                  <CaretRight
-                    size={13}
-                    weight="bold"
-                    className="transcript-turn-collapsed-caret"
-                    aria-hidden="true"
-                  />
-                  <span className="transcript-turn-collapsed-title">
-                    本轮执行已收起
-                  </span>
-                  <span
-                    className="transcript-turn-collapsed-sep"
-                    aria-hidden="true"
-                  >
-                    ·
-                  </span>
-                  <span className="transcript-turn-collapsed-meta">
-                    {summaryText}
-                  </span>
-                  <span className="transcript-turn-collapsed-action">
-                    点击展开
-                  </span>
-                </button>
-              ) : (
-                <div className="transcript-turn-body">
-                  <ExecutionProcess
-                    execution={finalEntry ? execution : undefined}
-                    counts={counts}
-                  >
-                    {groupExecution(blocks).map((section) => {
-                      const renderBlock = (
-                        block: TurnBlock,
-                        blockIndex: number,
-                      ) => {
-                        if (block.kind === "single") {
-                          // Every block before the turn's last one (or all of
-                          // them when the final answer is rendered separately)
-                          // is process narration, not the answer.
-                          const isStep =
-                            Boolean(finalEntry) ||
-                            blockIndex < blocks.length - 1;
-                          const firstAssistant = blocks.findIndex(
-                            (candidate) =>
-                              candidate.kind === "single" &&
-                              candidate.entry.item.kind === "message" &&
-                              candidate.entry.item.role === "assistant",
-                          );
-                          return (
-                            <Fragment key={block.entry.item.id}>
-                              {renderTimelineEntry(
-                                block.entry,
-                                snapshot,
-                                headers,
-                                phases,
-                                timeline,
-                                reasoningView,
-                                isStep
-                                  ? {
-                                      showAuthor:
-                                        !finalEntry &&
-                                        blockIndex === firstAssistant,
-                                    }
-                                  : undefined,
-                                resolveStatus,
-                              )}
-                            </Fragment>
-                          );
-                        }
-                        return (
-                          <div className="tool-call-group" key={block.id}>
-                            {block.entries.map(({ item, index }) =>
-                              item.kind === "tool"
-                                ? renderToolCard(
-                                    item,
-                                    index,
-                                    phases,
-                                    timeline,
-                                    resolveStatus,
-                                  )
-                                : null,
-                            )}
-                          </div>
+                  {groupExecution(blocks).map((section) => {
+                    const renderBlock = (
+                      block: TurnBlock,
+                      blockIndex: number,
+                    ) => {
+                      if (block.kind === "single") {
+                        // Every block before the turn's last one (or all of
+                        // them when the final answer is rendered separately)
+                        // is process narration, not the answer.
+                        const isStep =
+                          Boolean(finalEntry) || blockIndex < blocks.length - 1;
+                        const firstAssistant = blocks.findIndex(
+                          (candidate) =>
+                            candidate.kind === "single" &&
+                            candidate.entry.item.kind === "message" &&
+                            candidate.entry.item.role === "assistant",
                         );
-                      };
-                      if (section.kind === "loose")
-                        return renderBlock(section.block, section.index);
-                      const active =
-                        live &&
-                        !finalEntry &&
-                        turn === turns.at(-1) &&
-                        section.last &&
-                        !section.complete;
-                      const tail = active && !tailPlaced ? liveTail : null;
-                      if (tail) tailPlaced = true;
+                        return (
+                          <Fragment key={block.entry.item.id}>
+                            {renderTimelineEntry(
+                              block.entry,
+                              snapshot,
+                              headers,
+                              phases,
+                              timeline,
+                              reasoningView,
+                              isStep
+                                ? {
+                                    showAuthor:
+                                      !finalEntry &&
+                                      blockIndex === firstAssistant,
+                                  }
+                                : undefined,
+                              resolveStatus,
+                            )}
+                          </Fragment>
+                        );
+                      }
                       return (
-                        <div
-                          className={`transcript-exec-group${active ? " is-active" : ""}`}
-                          key={`group:${section.header.entry.item.id}`}
-                        >
-                          {renderBlock(section.header, section.index)}
-                          {(section.members.length > 0 || tail) && (
-                            <div className="transcript-exec-group-body">
-                              {section.members.map(({ block, index }) =>
-                                renderBlock(block, index),
-                              )}
-                              {tail}
-                            </div>
+                        <div className="tool-call-group" key={block.id}>
+                          {block.entries.map(({ item, index }) =>
+                            item.kind === "tool"
+                              ? renderToolCard(
+                                  item,
+                                  index,
+                                  phases,
+                                  timeline,
+                                  resolveStatus,
+                                )
+                              : null,
                           )}
                         </div>
                       );
-                    })}
-                  </ExecutionProcess>
-                  {finalEntry &&
-                    renderTimelineEntry(
-                      finalEntry,
-                      snapshot,
-                      headers,
-                      phases,
-                      timeline,
-                      reasoningView,
-                    )}
-                  <PublishedFiles sessionId={snapshot.id} files={files} />
-                </div>
-              ))}
+                    };
+                    if (section.kind === "loose")
+                      return renderBlock(section.block, section.index);
+                    const active =
+                      live &&
+                      !finalEntry &&
+                      turn === turns.at(-1) &&
+                      section.last &&
+                      !section.complete;
+                    const tail = active && !tailPlaced ? liveTail : null;
+                    if (tail) tailPlaced = true;
+                    return (
+                      <div
+                        className={`transcript-exec-group${active ? " is-active" : ""}`}
+                        key={`group:${section.header.entry.item.id}`}
+                      >
+                        {renderBlock(section.header, section.index)}
+                        {(section.members.length > 0 || tail) && (
+                          <div className="transcript-exec-group-body">
+                            {section.members.map(({ block, index }) =>
+                              renderBlock(block, index),
+                            )}
+                            {tail}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </ExecutionProcess>
+                {finalEntry &&
+                  renderTimelineEntry(
+                    finalEntry,
+                    snapshot,
+                    headers,
+                    phases,
+                    timeline,
+                    reasoningView,
+                  )}
+                <PublishedFiles sessionId={snapshot.id} files={files} />
+              </div>
+            )}
           </section>
         );
       })}
@@ -1736,7 +1626,7 @@ export function Transcript() {
           const target = event.target;
           if (!(target instanceof Element)) return;
           const trigger = target.closest<HTMLElement>(
-            ".tool-disclosure-header, .reasoning-head, summary, .transcript-turn-toggle, .transcript-turn-collapsed-bar, .transcript-execution-summary",
+            ".tool-disclosure-header, .reasoning-head, summary, .transcript-execution-summary",
           );
           if (!trigger) return;
 
@@ -1744,7 +1634,6 @@ export function Transcript() {
 
           const isExpanding =
             trigger.getAttribute("aria-expanded") === "false" ||
-            trigger.classList.contains("transcript-turn-collapsed-bar") ||
             (trigger.tagName === "SUMMARY" &&
               !trigger.parentElement?.hasAttribute("open"));
 
@@ -1852,7 +1741,6 @@ export function Transcript() {
                   className="message message-user"
                   key={`steering:${snapshot.id}:${index}`}
                 >
-                  <div className="message-header">你</div>
                   {!!message.images?.length && (
                     <ImageAttachments images={message.images} />
                   )}

@@ -415,3 +415,158 @@
     max-width: 150px;
   }
 }
+
+/* Composer model picker: model field on top, effort section below. */
+.wb-app .composer-model-panel {
+  width: 320px;
+  padding: var(--space-1-5);
+  gap: 0;
+  border-radius: var(--radius-card);
+}
+.model-picker-heading {
+  padding: var(--space-1) var(--space-1) var(--space-1-5) var(--space-2-5);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+.model-picker-current {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  min-height: var(--control-height);
+  padding: 0 var(--space-2) 0 var(--space-2-5);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.model-picker-current > span {
+  min-width: 0;
+}
+.model-picker-current > small {
+  max-width: 96px;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--radius-xs);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.model-picker-current > svg {
+  color: var(--text-muted);
+}
+.model-picker-routes {
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.model-effort-options {
+  padding: var(--space-2-5) var(--space-2-5) var(--space-2);
+}
+.effort-slider-heading {
+  align-items: baseline;
+  margin-top: 0;
+  font-size: var(--text-xs);
+}
+.effort-slider-heading::before {
+  content: "思考等级";
+  color: var(--text-secondary);
+}
+.effort-slider-heading output {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+.effort-slider {
+  height: 28px;
+}
+.effort-slider-track {
+  inset: 12px 7px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--border-control);
+}
+.effort-slider-fill {
+  background: var(--accent);
+}
+.effort-slider input[type="range"] {
+  height: 28px;
+}
+.effort-slider input::-webkit-slider-runnable-track {
+  height: 4px;
+}
+.effort-slider input::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 2px solid var(--accent);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--motion-duration-sm, 120ms) ease-out;
+}
+.effort-slider input:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+.effort-slider input::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--accent);
+  background: var(--surface-elevated);
+}
+.effort-slider-labels {
+  padding-inline: 2px;
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+.effort-slider-labels [data-active="true"] {
+  color: var(--accent);
+  font-weight: 500;
+}
+.model-picker-subheading {
+  padding: 2px var(--space-1) var(--space-1-5);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--space-1-5);
+  font-weight: 500;
+}
+.model-catalog-group-label {
+  padding: var(--space-2) var(--space-2-5) var(--space-1);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.model-catalog-option {
+  min-height: 44px;
+  padding: var(--space-1-5) var(--space-2-5);
+}
+.model-catalog-option small {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+.model-catalog-option:hover {
+  background: var(--surface-hover);
+}
+.model-catalog-option[aria-pressed="true"] {
+  background: var(--surface-selected);
+}
+.model-catalog-option[aria-pressed="true"] svg {
+  color: var(--accent);
+}
+.model-catalog-hint {
+  padding: var(--space-1-5) var(--space-2-5) var(--space-1);
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+}
+
+/* Trigger: quieter effort meter */
+.model-effort-meter {
+  gap: 2px;
+  margin-inline: 2px;
+}
+.model-effort-meter > span {
+  width: 3px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--text-muted);
+  opacity: 0.25;
+}
+.model-effort-meter > .is-filled {
+  background: var(--accent);
+}
+.wb-app .composer-model-summary > svg:last-child {
+  color: var(--text-muted);
+}

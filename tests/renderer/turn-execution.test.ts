@@ -107,7 +107,9 @@ describe("completed turn execution", () => {
     const html = renderToStaticMarkup(
       createElement(StoredTranscript, { snapshot }),
     );
-    expect(html).toContain("已完成");
+    expect(html).toContain("工作了 10.0s");
+    expect(html).toContain("1 个操作");
+    // Run metrics stay available as hover detail, not in the reading flow.
     expect(html).toContain("总耗时 10.0s");
     expect(html).toContain("50 tok/s");
     expect(html).toContain('aria-expanded="false"');
@@ -272,8 +274,9 @@ it("automatically folds on completion, supports reopening, and isolates turn tog
       name: "展开本轮执行过程",
       exact: true,
     });
-    expect(await summary.innerText()).toContain("50 tok/s");
-    expect(await summary.innerText()).toContain("总耗时 10.0s");
+    expect(await summary.innerText()).toContain("工作了 10.0s");
+    expect(await summary.innerText()).not.toContain("tok/s");
+    expect(await summary.getAttribute("title")).toContain("50 tok/s");
     expect(await summary.getAttribute("title")).toContain("请求总耗时");
     expect(
       await page.getByText("Final answer", { exact: true }).isVisible(),

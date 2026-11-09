@@ -154,7 +154,7 @@ export function ModelCatalog({
             {groups && (
               <div className="model-catalog-group-label">{group.label}</div>
             )}
-            {group.models.map((model) => {
+            {group.models.map((model, index) => {
               const selected =
                 model === value && (!groups || group.sourceId === sourceId);
               return (
@@ -165,11 +165,13 @@ export function ModelCatalog({
                   disabled={disabled}
                   aria-pressed={selected}
                   title={model}
+                  style={{ "--i": index } as React.CSSProperties}
                   onClick={() => onSelect(model, group.sourceId)}
                 >
+                  {/* The full ID only adds information when it carries a vendor prefix. */}
                   <span>
                     <strong>{model.split("/").at(-1)}</strong>
-                    <small>{model}</small>
+                    {model.includes("/") && <small>{model}</small>}
                   </span>
                   {selected && <Check size={14} aria-hidden="true" />}
                 </button>

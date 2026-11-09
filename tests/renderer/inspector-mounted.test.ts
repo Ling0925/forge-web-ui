@@ -80,17 +80,9 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
     await page.setContent('<div id="root"></div>');
     await page.addScriptTag({ content: bundle.outputFiles[0]?.text ?? "" });
 
-    // 变更 is a collapsible Inspector section; expand it for every session
-    // (the choice is remembered per session, defaults depend on run state).
-    const changesToggle = page.locator(
-      'section.inspector-sec[aria-label="变更"] .inspector-sec-toggle',
-    );
-    const openChanges = async () => {
-      await changesToggle.waitFor();
-      if ((await changesToggle.getAttribute("aria-expanded")) !== "true")
-        await changesToggle.click();
-    };
-    await openChanges();
+    await page
+      .getByRole("button", { name: "变更与检查点", exact: true })
+      .click();
 
     // Forward/back across all four sessions, revisiting parents so an
     // accumulating sibling navigation would surface as a duplicate section.
@@ -114,7 +106,6 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
           ).selectTestSession(selected),
         id,
       );
-      await openChanges();
       // Wait until the sole navigation section reflects the new session.
       // A stale, accumulated sibling section keeps this false -> failure.
       await page.waitForFunction((selected) => {
@@ -146,7 +137,6 @@ it("mounted Inspector switches sessions without retaining sibling navigation or 
           ).checkpointReads.at(-1) === selected,
         id,
       );
-      expect(await changesToggle.getAttribute("aria-expanded")).toBe("true");
     }
 
     await page.getByText("关联任务的变更", { exact: true }).click();

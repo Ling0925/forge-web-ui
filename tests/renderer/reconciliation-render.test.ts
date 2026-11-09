@@ -25,12 +25,11 @@ it("collapses only tagged internal messages while preserving identical human tex
   const html = renderToStaticMarkup(
     createElement(StoredTranscript, { snapshot }),
   );
-  expect(html).toContain(
-    '<details class="message message-internal"><summary>子代理汇总 · 内部记录</summary>',
-  );
+  // The tagged message folds into a closed internal disclosure…
+  expect(html).toMatch(/<details class="message message-internal[^"]*">/);
+  expect(html).toContain("子任务执行汇总");
   expect(html).not.toContain(" open=");
-  expect(html).toContain(
-    '<article class="message message-user"><div class="message-header">你</div>',
-  );
+  // …while the identical human message stays a normal user request.
+  expect(html).toContain('<article class="message message-user">');
   expect(html.match(/real persisted evidence/g)).toHaveLength(2);
 });

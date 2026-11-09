@@ -36,6 +36,8 @@ import {
 } from "./workbench-reducer";
 
 const SESSION_READ_RETRY_DELAYS = [100, 300] as const;
+// Read before first paint by public/theme-boot.js.
+const THEME_PREFERENCE_STORAGE_KEY = "forge:theme-preference";
 function waitForSessionReadRetry(
   delay: number,
   signal: AbortSignal,
@@ -415,14 +417,15 @@ function useController() {
     };
   }, [externalSessionId, refreshSession]);
   useEffect(() => {
+    const theme = state.settings?.theme;
+    if (!theme) return;
+    try {
+      localStorage.setItem(THEME_PREFERENCE_STORAGE_KEY, theme);
+    } catch {}
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
       document.documentElement.dataset.theme =
-        state.settings?.theme === "system"
-          ? media.matches
-            ? "dark"
-            : "light"
-          : (state.settings?.theme ?? "dark");
+        theme === "system" ? (media.matches ? "dark" : "light") : theme;
     };
     apply();
     media.addEventListener("change", apply);

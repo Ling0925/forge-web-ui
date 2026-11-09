@@ -183,7 +183,7 @@
 }
 
 .phone-pairing-url-field:focus {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid var(--focus-ring, var(--accent));
   outline-offset: var(--focus-ring-offset);
 }
 

@@ -145,7 +145,7 @@ it("keeps project and session positions stable across activity, filtering and re
     expect(await readOrder()).toEqual(expected);
 
     // Simulate refreshed API results promoting active sessions (including a hidden
-    // page-2 item). Status dots must update without moving projects or list items.
+    // page-2 item). Status glyphs must update without moving projects or list items.
     for (const status of [
       "running",
       "awaiting_approval",
@@ -164,7 +164,7 @@ it("keeps project and session positions stable across activity, filtering and re
         await dots.evaluateAll((nodes) =>
           nodes.map((node) => node.getAttribute("data-status")),
         ),
-      ).toEqual(status === "completed" ? [] : Array(13).fill(status));
+      ).toEqual(Array(13).fill(status));
       expect(await readOrder()).toEqual(expected);
       expect(
         await sidebar

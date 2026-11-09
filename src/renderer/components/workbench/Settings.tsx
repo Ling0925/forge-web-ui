@@ -27,6 +27,7 @@ import { LanguageSection } from "./settings/LanguageSection";
 import { SECTION_GROUPS } from "./settings/settings-options";
 import "./settings-page.css";
 import "../../styles/settings-models.css";
+import "./settings-v2.css";
 
 export function Settings() {
   const form = useSettingsForm();
@@ -165,16 +166,14 @@ export function Settings() {
           ))}
         </nav>
 
-        <div className="settings-local-note">
-          <div className="settings-local-note-badge">本机配置</div>
-          <p>配置与本机 CLI 共享 · 密钥受环境隔离保护，不会回显到页面。</p>
-        </div>
+        <p className="settings-local-note">
+          与本机 CLI 共用配置 · 密钥不会回显
+        </p>
       </aside>
 
       <div className="settings-body">
         <header className="settings-page-header">
           <div className="settings-header-meta">
-            <small>{searching ? "设置" : selected.group}</small>
             <h2>{searching ? "搜索结果" : selected.title}</h2>
             <p>
               {searching
@@ -184,20 +183,20 @@ export function Settings() {
                 : selected.description}
             </p>
           </div>
-          <div className="settings-status" title={serviceStatus.hint}>
-            <span
-              className="wb-status-dot"
-              data-status={
-                serviceStatus.state === "configured"
-                  ? "ready"
-                  : serviceStatus.state === "loading"
+          {serviceStatus.state !== "configured" && (
+            <div className="settings-status" title={serviceStatus.hint}>
+              <span
+                className="wb-status-dot"
+                data-status={
+                  serviceStatus.state === "loading"
                     ? "running"
                     : "awaiting_approval"
-              }
-              aria-hidden="true"
-            />
-            <span>{serviceStatus.label}</span>
-          </div>
+                }
+                aria-hidden="true"
+              />
+              <span>{serviceStatus.label}</span>
+            </div>
+          )}
         </header>
 
         <div className="settings-page-scroll">

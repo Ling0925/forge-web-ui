@@ -1,25 +1,10 @@
+/* Context part colors (--context-*) live in styles/workspace-theme.css. */
 .composer-usage {
-  --context-instructions: #5fafff;
-  --context-memory: #d787ff;
-  --context-conversation: #87d7af;
-  --context-tools: #ffaf5f;
-  --context-reserve-border: var(--error);
-  --context-reserve-stripe-1: rgba(248, 113, 113, 0.5);
-  --context-reserve-stripe-2: rgba(248, 113, 113, 0.15);
   position: relative;
   width: 100%;
   min-width: 0;
   /* Sits directly under the composer card, aligned full width with the card */
   margin-top: 2px;
-}
-[data-theme="light"] .composer-usage {
-  --context-instructions: #005faf;
-  --context-memory: #870087;
-  --context-conversation: #005f5f;
-  --context-tools: #875f00;
-  --context-reserve-border: var(--error);
-  --context-reserve-stripe-1: rgba(184, 36, 32, 0.5);
-  --context-reserve-stripe-2: rgba(184, 36, 32, 0.15);
 }
 .usage-trigger {
   display: flex;
@@ -273,7 +258,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   background: var(--surface-soft);
   border: 1px solid var(--border-subtle);
@@ -285,7 +270,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  gap: 5px var(--space-3);
+  gap: 6px var(--space-3, 12px);
   margin: 6px 0 0;
 }
 .usage-panel dt {
@@ -342,7 +327,7 @@
   width: 100%;
   height: 6px;
   margin-top: 6px;
-  border-radius: var(--radius-2xs);
+  border-radius: var(--radius-xs);
   overflow: hidden;
   background: var(--surface-soft);
 }
@@ -383,7 +368,7 @@
   margin: 0;
 }
 .usage-caption-meta {
-  color: var(--text-tertiary);
+  color: var(--text-tertiary, var(--text-secondary));
   font-size: var(--text-2xs);
   white-space: nowrap;
 }

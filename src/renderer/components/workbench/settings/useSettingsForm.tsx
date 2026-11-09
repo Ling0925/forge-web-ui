@@ -238,7 +238,7 @@ export function useSettingsForm() {
       return Promise.resolve(false);
     }
     setDraft((old) => ({ ...old, [name]: value }));
-    if (!Object.keys(input).length) {
+    if (!Object.keys(input).length && pending.current === 0) {
       setStatus((prev) => ({ ...prev, [name]: IDLE }));
       return Promise.resolve(true);
     }
@@ -246,7 +246,19 @@ export function useSettingsForm() {
     setStatus((prev) => ({ ...prev, [name]: { state: "saving" } }));
     const run = queue.current.then(async () => {
       try {
-        const result = await updateSettings(input);
+        // Enter followed by blur can enqueue the same value before its save
+        // finishes. Compare at execution time, after earlier saves settle.
+        // This also preserves a user's change back to the original value
+        // while a different value is still in flight.
+        const latest = originalRef.current;
+        const nextInput = buildSettingsUpdate(
+          { ...createSettingsDraft(latest), [name]: value },
+          latest,
+          "",
+          false,
+        );
+        if (!Object.keys(nextInput).length) return true;
+        const result = await updateSettings(nextInput);
         if (!result.ok) throw Error(result.error);
         if (!alive.current) return true;
         setOriginal(result.settings);

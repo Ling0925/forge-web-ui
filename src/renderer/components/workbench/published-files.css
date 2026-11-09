@@ -12,7 +12,7 @@
   min-width: 0;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-card);
-  background: var(--surface-elevated);
+  background: var(--surface-elevated, transparent);
 }
 .published-file-info {
   display: flex;

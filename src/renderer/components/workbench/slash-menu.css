@@ -17,7 +17,7 @@
 }
 .composer-slash-menu [aria-selected="true"],
 .composer-slash-menu [role="option"]:hover {
-  background: #8882;
+  background: var(--surface-hover);
 }
 .composer-slash-menu strong {
   min-width: 95px;

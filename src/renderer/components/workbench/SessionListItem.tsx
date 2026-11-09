@@ -1,3 +1,11 @@
+import {
+  ChatCircle,
+  CheckCircle,
+  CircleNotch,
+  PauseCircle,
+  WarningCircle,
+  XCircle,
+} from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { SessionSummary } from "../../shared-types";
@@ -11,14 +19,27 @@ import {
 import { SessionActions } from "./SessionActions";
 
 const labels: Readonly<Record<string, string>> = {
-  running: "执行中",
+  running: "运行中",
   awaiting_approval: "待批准",
   completed: "完成",
   failed: "失败",
   cancelled: "已取消",
-  interrupted: "中断",
+  interrupted: "已中断",
   idle: "空闲",
 };
+
+/** One glyph per state so every row carries its status, not only live ones. */
+function SessionStatusIcon({ status }: { readonly status: string }) {
+  const props = { size: 15, "aria-hidden": true } as const;
+  if (status === "running") return <CircleNotch {...props} weight="bold" />;
+  if (status === "awaiting_approval")
+    return <WarningCircle {...props} weight="fill" />;
+  if (status === "completed") return <CheckCircle {...props} />;
+  if (status === "failed") return <XCircle {...props} />;
+  if (status === "interrupted" || status === "cancelled")
+    return <PauseCircle {...props} />;
+  return <ChatCircle {...props} />;
+}
 
 export function SessionListItem({
   session,
@@ -136,13 +157,11 @@ export function SessionListItem({
         aria-current={active ? "true" : undefined}
         aria-describedby={open ? tooltipId : undefined}
       >
+        <span className="session-status-icon" data-status={status}>
+          <SessionStatusIcon status={status} />
+        </span>
         {status !== "completed" && (
-          <span
-            className={`wb-status-dot${pending ? " is-pending" : ""}`}
-            data-status={status}
-            role="img"
-            aria-label={labels[status] ?? status}
-          />
+          <span className="visually-hidden">{labels[status] ?? status}</span>
         )}
         <span className="session-item-title">
           {session.archived ? "归档 · " : ""}

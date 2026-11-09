@@ -221,7 +221,7 @@ it("mounted project resources dialog wraps long resource paths without horizonta
         }, scenario.shellWidth);
       }
 
-      await page.getByRole("button", { name: "项目资源与 MCP" }).click();
+      await page.getByRole("button", { name: "项目资源", exact: true }).click();
       const resourcesPanel = page.locator("#tabpanel-resources");
       await resourcesPanel.waitFor({ state: "visible" });
       await page.waitForFunction(
