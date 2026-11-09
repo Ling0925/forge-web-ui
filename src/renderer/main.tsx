@@ -1,3 +1,5 @@
+// Tailwind/shadcn layer order must be declared before any legacy stylesheet.
+import "./styles/ui.css";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { DeferredPanel } from "./components/primitives/DeferredPanel";

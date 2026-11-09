@@ -1,0 +1,130 @@
+/*
+ * Tailwind v4 + shadcn/ui entry (migration phase 0).
+ *
+ * Cascade order: legacy stylesheets are wrapped in `@layer legacy` at build
+ * time (scripts/legacy-css-layer.ts), so anything in `components` or
+ * `utilities` overrides them, while unlayered CSS still beats every layer.
+ *
+ * No preflight: styles/global.css keeps owning the reset.
+ * No values live here. Scale tokens stay in tokens.css and colors in
+ * workspace-theme.css; `@theme inline` only maps those names into Tailwind,
+ * so utilities read the same runtime variables (and follow data-theme).
+ *
+ * Sources are limited to components/ui, which does not exist yet, so phase 0
+ * generates no utility classes and cannot restyle legacy markup.
+ */
+@layer theme, base, legacy, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+
+@source "../components/ui";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  /* Drop Tailwind defaults whose names collide with tokens.css. */
+  --font-*: initial;
+  --text-*: initial;
+  --leading-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --ease-*: initial;
+  --color-*: initial;
+
+  --spacing: var(--space-1);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --text-2xs: var(--text-2xs);
+  --text-2xs--line-height: var(--leading-2xs);
+  --text-xs: var(--text-xs);
+  --text-xs--line-height: var(--leading-xs);
+  --text-sm: var(--text-sm);
+  --text-sm--line-height: var(--leading-sm);
+  --text-base: var(--text-base);
+  --text-base--line-height: var(--leading-base);
+  --text-md: var(--text-md);
+  --text-md--line-height: var(--leading-md);
+  --text-prose: var(--text-prose);
+  --text-lg: var(--text-lg);
+  --text-lg--line-height: var(--leading-lg);
+  --text-xl: var(--text-xl);
+  --text-xl--line-height: var(--leading-xl);
+  --text-display: var(--text-display);
+  --text-2xl: var(--text-2xl);
+  --text-2xl--line-height: var(--leading-2xl);
+
+  --leading-none: var(--leading-none);
+  --leading-tight: var(--leading-tight);
+  --leading-normal: var(--leading-normal);
+
+  --radius-2xs: var(--radius-2xs);
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-card: var(--radius-card);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-composer: var(--radius-composer);
+  --radius-full: var(--radius-full);
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-card: var(--shadow-card);
+  --shadow-composer: var(--shadow-composer);
+  --shadow-dropdown: var(--shadow-dropdown);
+  --shadow-overlay: var(--shadow-overlay);
+
+  --ease-out: var(--ease-out);
+
+  /* shadcn semantic colors -> workspace-theme.css. shadcn's `accent` is the
+     hover surface; the terracotta brand (legacy --accent) is `brand`. */
+  --color-background: var(--canvas-bg);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--surface-elevated);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--surface-elevated);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--run-bg);
+  --color-primary-foreground: var(--run-ink);
+  --color-secondary: var(--surface-soft);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--surface-soft);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--surface-hover);
+  --color-accent-foreground: var(--text-primary);
+  --color-destructive: var(--error);
+  --color-border: var(--border-subtle);
+  --color-input: var(--border-control);
+  --color-ring: var(--focus-ring);
+  --color-sidebar: var(--sidebar-bg);
+  --color-sidebar-foreground: var(--text-primary);
+  --color-sidebar-accent: var(--surface-hover);
+  --color-sidebar-accent-foreground: var(--text-primary);
+  --color-sidebar-border: var(--border-subtle);
+  --color-sidebar-ring: var(--focus-ring);
+
+  --color-brand: var(--accent);
+  --color-brand-hover: var(--accent-hover);
+  --color-brand-soft: var(--accent-soft);
+  --color-brand-foreground: var(--on-accent);
+  --color-shell: var(--surface-shell);
+  --color-selected: var(--surface-selected);
+  --color-active: var(--surface-active);
+  --color-secondary-text: var(--text-secondary);
+  --color-tertiary-text: var(--text-tertiary);
+  --color-disabled-text: var(--text-disabled);
+  --color-strong-border: var(--border-strong);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-error: var(--error);
+  --color-error-soft: var(--error-bg);
+  --color-error-border: var(--error-border);
+}

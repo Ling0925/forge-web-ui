@@ -8,7 +8,8 @@
       ".build",
       ".omo",
       "references/magpie",
-      "pnpm-lock.yaml"
+      "pnpm-lock.yaml",
+      "src/renderer/styles/ui.css"
     ]
   },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2 },
