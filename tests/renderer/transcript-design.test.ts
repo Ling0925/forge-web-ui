@@ -75,36 +75,15 @@ describe("transcript surface stylesheet", () => {
     const card = transcriptCss.match(/\.wb-app \.message-user-card \{[^}]*\}/);
     expect(card?.[0]).toContain("max-width: var(--user-bubble-measure)");
     expect(tokensCss).toMatch(/--user-bubble-measure:\s*80%/);
-    // Touch-only narrow screens stack the always-visible actions under
-    // the bubble, still on the right.
-    expect(transcriptCss).toMatch(
-      /@media \(max-width: 640px\) and \(hover: none\)\s*\{\s*\.wb-app \.message-user \{[^}]*align-items: flex-end/,
-    );
   });
 
-  it("overlays the turn actions instead of reserving a gap beside the bubble", () => {
-    const actions = transcriptCss.match(
-      /\.wb-app \.message-user > \.transcript-turn-actions \{[^}]*\}/,
-    )?.[0];
-    expect(actions).toContain("width: 0");
-    expect(actions).toContain("flex: 0 0 0");
-    expect(actions).toContain("justify-content: flex-end");
-    expect(actions).toContain("overflow: visible");
+  it("keeps the request row free of per-turn controls (master PR #11)", () => {
+    // Master removed the turn badge and per-turn collapse; the bubble row
+    // reserves no gap for them.
+    expect(transcriptCss).not.toContain("transcript-turn-actions");
+    expect(transcriptCss).not.toContain("transcript-turn-collapsed-bar");
     const row = transcriptCss.match(/\.wb-app \.message-user \{[^}]*\}/)?.[0];
     expect(row).toContain("gap: 0");
-  });
-
-  it("draws the collapsed-turn notice with a solid hairline", () => {
-    const borders = [
-      ...transcriptCss.matchAll(
-        /\.wb-app \.transcript-turn-collapsed-bar \{[^}]*\}/g,
-      ),
-    ]
-      .map((match) => match[0])
-      .filter((rule) => rule.includes("border:"));
-    expect(borders).toHaveLength(1);
-    expect(borders[0]).toMatch(/border: 1px solid var\(--hairline-strong\)/);
-    expect(transcriptCss).not.toContain("dashed");
   });
 
   it("does not centre the latest pill with a transform Motion owns", () => {
@@ -144,20 +123,26 @@ describe("transcript markup", () => {
     createElement(StoredTranscript, { snapshot }),
   );
 
-  it("wraps the request in a bubble card and keeps the author label", () => {
+  it("wraps the request in a bubble card, with no turn badge or author row", () => {
     expect(html).toContain(
-      '<article class="message message-user"><div class="message-header">你</div><div class="message-user-card">',
+      '<article class="message message-user"><div class="message-user-card">',
     );
-    // Turn actions sit after the card, not inside it.
-    const card = html.indexOf('class="message-user-card"');
-    const actions = html.indexOf('class="transcript-turn-actions"');
-    expect(actions).toBeGreaterThan(card);
+    expect(html).not.toContain(">你</div>");
+    expect(html).not.toContain("transcript-turn-actions");
+    expect(html).not.toContain("第 1 轮");
   });
 
-  it("labels assistant replies with the Forge mark, not a bubble", () => {
-    expect(html).toContain("message-author-mark");
-    expect(html).toContain('class="message-author-name">Forge</span>');
+  it("marks only live or unfinished replies with the Forge mark; copy follows the answer", () => {
+    // A settled answer carries no author row (master PR #11) …
+    expect(html).not.toContain("message-author-row");
     expect(html).not.toContain("message-assistant-card");
+    expect(html).toContain(
+      '<div class="message-actions"><button type="button" class="message-copy"',
+    );
+    // … while a streaming / incomplete reply shows the design A mark.
+    expect(transcriptTsx).toMatch(
+      /\(item\.streaming \|\| item\.incomplete\)[\s\S]{0,120}message-author-row[\s\S]{0,80}<ForgeMark className="message-author-mark" \/>/,
+    );
   });
 
   it("keeps the tool row and code block hooks", () => {

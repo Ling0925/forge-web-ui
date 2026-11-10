@@ -14,11 +14,6 @@
 
 /* ---------- Panel ---------- */
 /* Horizontal clip contains the sideways view slide; vertical scroll stays. */
-.composer-model-picker .composer-model-panel {
-  overflow-x: hidden;
-  transform-origin: bottom right;
-  animation: picker-panel-in var(--dur-short) var(--ease-out) both;
-}
 @keyframes picker-panel-in {
   from {
     opacity: 0;
@@ -31,11 +26,6 @@
 }
 
 /* ---------- View switch ---------- */
-.composer-model-picker
-  .composer-model-panel[data-view="catalog"]
-  > .model-picker-subpanel {
-  animation: picker-view-forward var(--dur-medium) var(--ease-out) both;
-}
 /* Only coming back from the catalog slides in from the left; on first open
    the panel entrance is enough. */
 .composer-model-picker
@@ -65,10 +55,6 @@
 }
 
 /* ---------- Current model row ---------- */
-.composer-model-picker .model-picker-current {
-  transition: background-color var(--dur-micro) var(--ease-out), color
-    var(--dur-micro) var(--ease-out);
-}
 .composer-model-picker .model-picker-current > svg {
   transition: transform var(--dur-short) var(--ease-out), color var(--dur-micro)
     var(--ease-out);
@@ -87,11 +73,6 @@
 /* ---------- Effort slider ---------- */
 /* Full-width fill scaled from the left, so the step change animates on
    transform rather than width. */
-.composer-model-picker .effort-slider-fill {
-  width: 100%;
-  transform-origin: left center;
-  transition: transform var(--dur-medium) var(--ease-out);
-}
 .composer-model-picker .effort-slider-ticks {
   position: absolute;
   inset: 12px 7px auto;
@@ -209,16 +190,9 @@
 
 /* Phones: the model name needs the room (it was cut to "claud…"); the source
    stays in the trigger's title and in the open panel. */
-@media (max-width: 640px) {
-  .composer-model-picker .composer-model-summary .composer-model-source {
-    display: none;
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .composer-model-picker .composer-model-panel,
   .composer-model-picker .composer-model-panel > *,
-  .composer-model-picker .model-picker-subpanel,
   .composer-model-picker .effort-slider-heading output,
   .composer-model-picker .model-catalog-option,
   .composer-model-picker .model-catalog-option svg {

@@ -1,14 +1,5 @@
 /* Command palette: one search field over a quiet list. Rows carry no border;
    the keyboard/hover selection is a soft surface, not an inverted block. */
-.native-dialog.command-palette-dialog {
-  width: min(560px, calc(100vw - var(--space-6)));
-  margin-top: min(14dvh, 120px);
-}
-.command-palette-dialog .modal-content.command-palette {
-  gap: var(--space-2);
-  padding: var(--space-3);
-  overflow: hidden;
-}
 
 .command-search {
   display: flex;
@@ -48,15 +39,6 @@
 .command-search-input::placeholder {
   color: var(--text-muted);
 }
-
-.command-list {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  max-height: min(52dvh, 420px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
 .command-group-label {
   padding: var(--space-2) var(--space-2) var(--space-1);
   font-size: var(--text-xs);
@@ -65,37 +47,6 @@
 }
 .command-row:first-child .command-group-label {
   padding-top: var(--space-1);
-}
-
-.command-action {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  width: 100%;
-  min-width: 0;
-  min-height: 36px;
-  padding: 0 var(--space-2);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: var(--text-sm);
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--dur-micro) var(--ease-out), color
-    var(--dur-micro) var(--ease-out);
-}
-.command-action.is-selected {
-  background: var(--surface-active);
-  color: var(--text-primary);
-}
-.command-action:active {
-  transform: scale(0.99);
-}
-.command-action:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: -2px;
 }
 .command-action-icon {
   display: inline-flex;
@@ -155,9 +106,6 @@
   margin-left: -2px;
 }
 @media (pointer: coarse) {
-  .command-action {
-    min-height: var(--touch-min-target);
-  }
   .command-palette-hint {
     display: none;
   }

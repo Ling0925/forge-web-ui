@@ -28,7 +28,7 @@
   flex-direction: column;
   padding: 0;
   margin: 0;
-  border: 1px solid var(--border-control);
+  border: 1px solid var(--border-control, var(--border-subtle));
   border-radius: var(--radius-xl);
   background: var(--surface-elevated);
   box-shadow: 0 24px 56px -12px rgba(0, 0, 0, 0.32), 0 4px 16px -4px
@@ -118,7 +118,7 @@
 .workspace-picker-state-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
+  padding: 1px 8px;
   border-radius: var(--radius-full);
   font-size: var(--text-2xs);
   font-weight: 500;
@@ -146,7 +146,7 @@
 
 .workspace-picker-path {
   font-family: var(--font-mono);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   line-height: 1.4;
   color: var(--text-secondary);
   overflow: hidden;
@@ -213,7 +213,7 @@
 .workspace-picker-section-label {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--text-secondary);
@@ -297,7 +297,7 @@
 .workspace-picker-explorer {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background: var(--canvas-bg);
+  background: var(--canvas-bg, var(--surface-elevated));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -466,7 +466,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-directories-meta {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   font-size: var(--text-2xs);
   font-weight: 500;
   color: var(--text-muted);
@@ -505,7 +505,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-directory {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
   min-height: 36px;
   padding: 6px 10px;
@@ -654,7 +654,7 @@ button.workspace-picker-crumb:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 18px;
+  padding: 12px 18px;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-soft);
   gap: 12px;
@@ -679,7 +679,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-selection-target {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
   padding: 2px 8px;
   border-radius: var(--radius-sm);

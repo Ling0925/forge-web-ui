@@ -494,6 +494,12 @@
     max-width: 8rem;
     line-height: 18px;
   }
+  /* Narrow screens keep the model name; the source label goes (master PR #11). */
+  @media (max-width: 640px) {
+    .composer-model-summary .composer-model-source {
+      display: none;
+    }
+  }
   .composer-model-caret {
     @apply shrink-0 text-muted-foreground;
     transition: transform var(--duration-normal) var(--ease-out);
@@ -539,6 +545,7 @@
     width: 360px;
     max-width: calc(100vw - 32px);
     max-height: min(420px, 60dvh);
+    overflow-x: hidden;
     transform-origin: bottom right;
     animation: composer-pop-in 180ms var(--ease-out) both;
   }
@@ -659,7 +666,11 @@
       color-mix(in srgb, var(--accent) 55%, var(--info)),
       var(--accent)
     );
-    transition: width var(--duration-normal) var(--ease-out);
+    /* ModelPicker sets scaleX (master PR #11), so the fill spans the track
+       and grows from its left edge. */
+    width: 100%;
+    transform-origin: left center;
+    transition: transform var(--duration-normal) var(--ease-out);
   }
   .effort-slider[data-max="true"] .effort-slider-fill::after {
     content: "";
@@ -676,6 +687,11 @@
   }
   .model-effort-options:disabled .effort-slider-fill::after {
     animation: none;
+  }
+  /* Step ticks (master PR #11), centred on the 6px track and on the
+     thumb's travel (thumb 18px, so the end dots sit 9px in). */
+  .effort-slider-ticks {
+    inset: 14px 7px auto;
   }
   .effort-slider input[type="range"] {
     @apply relative m-0 block w-full cursor-pointer appearance-none border-0 bg-transparent p-0;

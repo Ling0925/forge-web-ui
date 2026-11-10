@@ -142,8 +142,16 @@
   --chart-speed: #0f9293;
   --chart-failed: var(--error);
   --context-reserve-border: var(--border-strong);
-  --context-reserve-stripe-1: color-mix(in srgb, var(--text-muted) 38%, transparent);
-  --context-reserve-stripe-2: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  --context-reserve-stripe-1: color-mix(
+    in srgb,
+    var(--text-muted) 38%,
+    transparent
+  );
+  --context-reserve-stripe-2: color-mix(
+    in srgb,
+    var(--text-muted) 10%,
+    transparent
+  );
   --topology-bg-center: #fbfbfd;
   --topology-bg-edge: #eff0f5;
   --topology-orbit: rgb(95 99 110 / 16%);
@@ -286,8 +294,16 @@
   --chart-speed: #5ecbcb;
   --chart-failed: var(--error);
   --context-reserve-border: var(--border-strong);
-  --context-reserve-stripe-1: color-mix(in srgb, var(--text-muted) 38%, transparent);
-  --context-reserve-stripe-2: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  --context-reserve-stripe-1: color-mix(
+    in srgb,
+    var(--text-muted) 38%,
+    transparent
+  );
+  --context-reserve-stripe-2: color-mix(
+    in srgb,
+    var(--text-muted) 10%,
+    transparent
+  );
   --topology-bg-center: #17181e;
   --topology-bg-edge: #0f1015;
   --topology-orbit: rgb(155 158 168 / 16%);

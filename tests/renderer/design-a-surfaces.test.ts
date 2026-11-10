@@ -255,3 +255,74 @@ describe("phase 7 · cleanup", () => {
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 });
+
+describe("rebase onto master PR #11 (ui-polish-v2)", () => {
+  const v2 = (name: string) =>
+    stripComments(read(`src/renderer/components/workbench/${name}`));
+
+  it("defines master's foundation tokens on the Iris palette, both themes", () => {
+    for (const name of [
+      "--surface-raised",
+      "--surface-sunken",
+      "--edge-highlight",
+      "--accent-subtle",
+      "--accent-border",
+      "--accent-glow",
+      "--shadow-color",
+      "--chart-completion",
+      "--chart-failed",
+    ])
+      expect(themeCss.match(new RegExp(`${name}:`, "g")), name).toHaveLength(2);
+    // Brand stays Iris, not master's terracotta.
+    expect(themeCss).not.toContain("#a54f35");
+  });
+
+  it("leaves surfaces design A owns out of master's v2 sheets", () => {
+    const sidebar = v2("sidebar-v2.css");
+    expect(sidebar).not.toMatch(/\.session-item-main\s*\{/);
+    expect(sidebar).not.toMatch(/\.sidebar-search-input\s*\{/);
+    const transcript = v2("transcript-v2.css");
+    expect(transcript).not.toContain(".markdown-content");
+    expect(transcript).not.toMatch(/\.message-user\s*\{/);
+    expect(v2("new-session-v2.css")).not.toMatch(/welcome-|wb-new-session/);
+    const foundation = stripComments(
+      read("src/renderer/styles/design-foundation.css"),
+    );
+    expect(foundation).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    expect(foundation).not.toMatch(/\brgba?\(/);
+  });
+
+  it("styles master's search-first command palette", () => {
+    const css = surface("shell");
+    const list = ruleFor(css, ".command-palette .command-list")[0];
+    expect(list).toContain("overflow-y: auto");
+    expect(list).toContain("var(--palette-list-max)");
+    const row = ruleFor(css, ".command-palette .command-action")[0];
+    expect(row).toContain("display: flex");
+    expect(row).toContain("width: 100%");
+    expect(tokensCss).toMatch(/--palette-width:\s*560px/);
+  });
+
+  it("puts master's icon-only sidebar footer on design A washes", () => {
+    const css = stripComments(read("src/renderer/styles/surfaces/sidebar.css"));
+    expect(css).not.toContain("sidebar-model-status");
+    expect(ruleFor(css, ".wb-app .sidebar-icon-btn:hover")[0]).toContain(
+      "var(--hover-wash)",
+    );
+    expect(ruleFor(css, ".wb-app .sidebar-archive-toggle")[0]).toContain(
+      "position: absolute",
+    );
+  });
+
+  it("grows the effort fill with master's scaleX transform", () => {
+    const css = stripComments(
+      read("src/renderer/styles/surfaces/composer.css"),
+    );
+    const fill = ruleFor(css, ".effort-slider-fill")[0];
+    expect(fill).toContain("transform-origin: left center");
+    expect(fill).toContain("width: 100%");
+    expect(read("src/renderer/components/workbench/ModelPicker.tsx")).toContain(
+      "scaleX(",
+    );
+  });
+});

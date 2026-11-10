@@ -1630,10 +1630,6 @@
   color: var(--accent);
 }
 
-[data-theme="dark"] .usage-energy-telemetry-val.is-forge {
-  color: #dc9477;
-}
-
 .usage-energy-telemetry-val.is-speed {
   font-family: var(--font-mono);
   color: var(--accent);
@@ -1687,21 +1683,12 @@
   border: 1px solid var(--border-subtle);
   background: radial-gradient(
       circle at 50% 48%,
-      rgba(85, 104, 77, 0.08),
+      var(--topology-stage-glow),
       transparent 68%
     ), var(--surface-soft);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-[data-theme="dark"] .usage-3d-canvas-Stage,
-[data-theme="dark"] .usage-3d-canvas-stage {
-  background: radial-gradient(
-      circle at 50% 48%,
-      rgba(143, 173, 130, 0.12),
-      transparent 68%
-    ), #181b17;
 }
 
 .usage-3d-canvas {
@@ -1750,23 +1737,23 @@
 }
 
 .usage-3d-dot.is-forge {
-  background: #a54f35;
+  background: var(--accent);
 }
 
 .usage-3d-dot.is-provider {
-  background: #55684d;
+  background: var(--topology-provider);
 }
 
 .usage-3d-dot.is-model {
-  background: #8c7362;
+  background: var(--topology-model);
 }
 
 .usage-3d-dot.is-session {
-  background: #a54f35;
+  background: var(--accent);
 }
 
 .usage-3d-dot.is-subagent {
-  background: #226d40;
+  background: var(--topology-subagent);
 }
 
 .usage-3d-stage-hint {

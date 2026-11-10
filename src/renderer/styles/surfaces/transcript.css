@@ -53,9 +53,8 @@
   /* ---------------------------------------------------------------- */
   /* Request (user message): a compact bubble on the right             */
   /* ---------------------------------------------------------------- */
-  /* row-reverse keeps the DOM (header, card, actions) and therefore the
-     tab order, while the bubble sits on the right edge of the column and
-     the turn actions sit just to its left. */
+  /* row-reverse puts the bubble on the right edge of the column without
+     reordering the DOM. */
   .wb-app .message-user {
     position: relative;
     flex-direction: row-reverse;
@@ -65,19 +64,6 @@
     padding: 0;
     border-radius: 0;
     background: transparent;
-  }
-
-  /* The author label ("你" / "Super-agent") is announced, not shown: the
-     bubble's side already says who wrote it. */
-  .wb-app .message-user > .message-header {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   .wb-app .message-user-card {
@@ -108,93 +94,10 @@
     line-height: var(--prose-leading);
   }
 
-  /* Turn actions hang just left of the bubble without taking any room:
-     the container is a zero-width flex item whose content overflows
-     toward the start edge (justify-content: flex-end), so a hidden
-     "第 N 轮 · 收起本轮" no longer leaves a gap beside the request. The
-     legacy rules still reveal it on hover / focus-within and keep it
-     visible on hover:none devices. */
-  .wb-app .message-user > .transcript-turn-actions {
-    position: relative;
-    inset: auto;
-    right: var(--space-2);
-    z-index: 1;
-    flex: 0 0 0;
-    justify-content: flex-end;
-    width: 0;
-    margin: 0;
-    padding-top: var(--space-1-5);
-    gap: var(--space-1);
-    overflow: visible;
-    white-space: nowrap;
-  }
-
-  .wb-app .message-user > .transcript-turn-actions > * {
-    flex: none;
-  }
-
-  .wb-app .transcript-turn-badge {
-    height: var(--space-6);
-    padding: 0 var(--space-1);
-    color: var(--text-muted);
-    font-size: var(--text-caption);
-    font-weight: 400;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .wb-app .transcript-turn-toggle {
-    gap: var(--space-1);
-    height: var(--space-6);
-    padding: 0 var(--space-2);
-    border: 0;
-    border-radius: var(--radius-control);
-    color: var(--text-muted);
-    font-size: var(--text-caption);
-    font-weight: 500;
-  }
-
-  .wb-app .transcript-turn-toggle:hover {
-    background: var(--hover-wash);
-    color: var(--text-primary);
-  }
-
-  .wb-app .transcript-turn-toggle:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--focus-halo);
-  }
-
-  @media (pointer: coarse) {
-    .wb-app .transcript-turn-toggle {
-      min-height: var(--touch-min-target);
-    }
-  }
-
-  /* Narrow: the bubble widens a little. With a pointer that can hover the
-     actions keep overlaying (on a canvas-coloured chip, since the bubble
-     may now reach them); touch-only devices, where they are always shown,
-     get them in flow under the bubble, right-aligned. */
+  /* Narrow: the bubble widens a little. */
   @media (max-width: 640px) {
     .wb-app .message-user-card {
       max-width: var(--user-bubble-measure-narrow);
-    }
-
-    .wb-app .message-user > .transcript-turn-actions > * {
-      border-radius: var(--radius-control);
-      background: var(--canvas-bg);
-    }
-  }
-
-  @media (max-width: 640px) and (hover: none) {
-    .wb-app .message-user {
-      flex-direction: column;
-      align-items: flex-end;
-    }
-
-    .wb-app .message-user > .transcript-turn-actions {
-      right: 0;
-      flex: none;
-      width: auto;
-      padding-top: var(--space-1);
     }
   }
 
@@ -605,42 +508,15 @@
   }
 
   .wb-app .transcript-execution-summary:focus-visible,
-  .wb-app .transcript-turn-collapsed-bar:focus-visible,
   .wb-app .transcript-stage-bar.is-interactive:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--focus-halo);
   }
 
   @media (pointer: coarse) {
-    .wb-app .transcript-execution-summary,
-    .wb-app .transcript-turn-collapsed-bar {
+    .wb-app .transcript-execution-summary {
       min-height: var(--touch-min-target);
     }
-  }
-
-  .wb-app .transcript-turn-collapsed-bar {
-    min-height: var(--space-9);
-    padding: 0 var(--space-3);
-    border: 1px solid var(--hairline-strong);
-    border-radius: var(--radius-item);
-    background: transparent;
-    color: var(--text-tertiary);
-    font-size: var(--text-meta);
-  }
-
-  .wb-app .transcript-turn-collapsed-bar:hover {
-    border-color: var(--border-control);
-    background: var(--hover-wash);
-    color: var(--text-secondary);
-  }
-
-  .wb-app .transcript-turn-collapsed-title {
-    color: var(--text-secondary);
-    font-weight: 500;
-  }
-
-  .wb-app .transcript-turn-collapsed-action {
-    font-size: var(--text-caption);
   }
 
   .wb-app .transcript-stage-bar {

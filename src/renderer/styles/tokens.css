@@ -108,6 +108,9 @@
   /* Shell (phase 3): session menu width, dialog header. */
   --menu-width: 176px;
   --dialog-header-height: 52px;
+  /* Command palette dialog and its scrolling list (master PR #11 layout). */
+  --palette-width: 560px;
+  --palette-list-max: 420px;
   /* Inspector (phase 4): compact list rows; section body indent lines the
      copy up with the section title (16px gutter + 11px caret + 8px gap). */
   --row-height-compact: 28px;

@@ -131,7 +131,7 @@
 
   .wb-app .sidebar-search-input {
     height: var(--space-9);
-    padding: 0 var(--space-2) 0 var(--space-9);
+    padding: 0 var(--space-9) 0 var(--space-9);
     border: 1px solid transparent;
     border-radius: var(--radius-control);
     background: transparent;
@@ -159,9 +159,14 @@
     box-shadow: 0 0 0 3px var(--focus-halo);
   }
 
+  /* The archive filter sits inside the search field (master PR #11). */
   .wb-app .sidebar-archive-toggle {
-    width: var(--space-9);
-    height: var(--space-9);
+    position: absolute;
+    top: 50%;
+    right: var(--space-1);
+    translate: 0 -50%;
+    width: var(--space-7);
+    height: var(--space-7);
     border: 1px solid transparent;
     border-radius: var(--radius-control);
     background: transparent;
@@ -184,6 +189,16 @@
   .wb-app .sidebar-archive-toggle:focus-visible {
     outline: none;
     box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .sidebar-search-input {
+      padding-inline-end: var(--touch-min-target);
+    }
+
+    .wb-app .sidebar-archive-toggle {
+      right: 0;
+    }
   }
 
   /* ---------------------------------------------------------------- */
@@ -407,77 +422,49 @@
     background: transparent;
   }
 
-  .wb-app .sidebar-model-status {
-    gap: var(--space-2-5);
-    height: var(--space-9);
-    padding: 0 var(--space-2) 0 var(--space-3);
-    border: 0;
-    border-radius: var(--radius-control);
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: var(--text-meta);
-    line-height: var(--leading-meta);
-    font-weight: 500;
-    transition:
-      background-color var(--duration-fast) ease,
-      color var(--duration-fast) ease;
-  }
-
-  .wb-app .sidebar-model-status .sidebar-status-arrow {
-    color: var(--text-muted);
-  }
-
-  .wb-app .sidebar-model-status:hover {
-    background: var(--hover-wash);
-    color: var(--text-primary);
-  }
-
-  .wb-app .sidebar-model-status:hover .sidebar-status-arrow {
-    color: var(--text-secondary);
-  }
-
+  /* Icon-only actions (master PR #11 dropped the model-service row; a
+     missing service is a small warning dot on the settings icon). */
   .wb-app .sidebar-footer-actions {
     gap: var(--space-1);
   }
 
-  .wb-app .sidebar-settings-btn,
-  .wb-app .sidebar-refresh-btn {
+  .wb-app .sidebar-icon-btn {
+    width: var(--space-8);
     height: var(--space-8);
     border: 0;
     border-radius: var(--radius-control);
     background: transparent;
     color: var(--text-secondary);
-    font-size: var(--text-meta);
-    line-height: var(--leading-meta);
     transition:
       background-color var(--duration-fast) ease,
       color var(--duration-fast) ease;
   }
 
-  .wb-app .sidebar-settings-btn {
-    gap: var(--space-1-5);
-    padding: 0 var(--space-2);
-  }
-
-  .wb-app .sidebar-refresh-btn {
-    width: var(--space-8);
-  }
-
-  .wb-app .sidebar-settings-btn:hover,
-  .wb-app .sidebar-refresh-btn:hover {
+  .wb-app .sidebar-icon-btn:hover {
     background: var(--hover-wash);
     color: var(--text-primary);
   }
 
-  .wb-app .sidebar-settings-btn:active,
-  .wb-app .sidebar-refresh-btn:active {
+  .wb-app .sidebar-icon-btn:active {
     background: var(--active-wash);
   }
 
-  .wb-app .sidebar-model-status:focus-visible,
-  .wb-app .sidebar-settings-btn:focus-visible,
-  .wb-app .sidebar-refresh-btn:focus-visible {
+  .wb-app .sidebar-icon-btn:focus-visible {
     outline: none;
     box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  .wb-app .sidebar-icon-badge {
+    top: var(--space-1-5);
+    right: var(--space-1-5);
+    border-color: var(--sidebar-bg);
+    background: var(--warning);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .sidebar-icon-btn {
+      width: var(--touch-min-target);
+      height: var(--touch-min-target);
+    }
   }
 }

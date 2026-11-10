@@ -226,13 +226,90 @@
     line-height: var(--leading-caption);
   }
 
+  /* Search-first palette (master PR #11): one field over grouped rows. */
+  .native-dialog.command-palette-dialog {
+    width: min(var(--palette-width), calc(100vw - var(--space-6)));
+  }
+
+  .command-palette-dialog .modal-content.command-palette {
+    overflow: hidden;
+  }
+
+  .command-palette .command-search {
+    height: var(--control-height-xl);
+    border-color: var(--hairline-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-elevated);
+  }
+
+  .command-palette .command-search:focus-within {
+    border-color: var(--hairline-strong);
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  .command-palette .command-search-input {
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+  }
+
   .command-palette .command-list {
+    display: flex;
+    flex-direction: column;
     gap: 0;
+    min-height: 0;
+    max-height: min(52dvh, var(--palette-list-max));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .command-palette .command-group-label {
+    padding: var(--space-3) var(--space-3) var(--space-1);
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: 500;
+  }
+
+  .command-palette .command-row:first-child .command-group-label {
+    padding-top: var(--space-1);
+  }
+
+  .command-palette .command-action-icon {
+    color: var(--text-muted);
+  }
+
+  .command-palette .command-action[aria-current="true"] .command-action-icon {
+    color: var(--accent);
+  }
+
+  .command-palette .command-action-meta {
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .command-palette .command-empty {
+    color: var(--text-tertiary);
+    font-size: var(--text-meta);
+  }
+
+  .command-palette .command-palette-hint {
+    border-top-color: var(--hairline);
+    color: var(--text-muted);
+    font-size: var(--text-caption);
   }
 
   /* Rows are quiet list items; the keyboard selection is a wash plus an
      accent rail, not a filled primary button. */
   .command-palette .command-action {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2-5);
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
     min-height: var(--control-height-xl);
     padding: var(--space-2) var(--space-3);
     border: 0;

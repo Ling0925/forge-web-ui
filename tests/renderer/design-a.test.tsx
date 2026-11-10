@@ -229,8 +229,17 @@ describe("Sidebar (design A)", () => {
     expect(html).not.toContain("session-folder-icon");
     expect(html).toContain('class="sidebar-new-kbd" aria-hidden="true"');
     expect(html).toContain('aria-label="新建会话"');
-    for (const label of ["用量看板", "设置", "刷新界面"])
+    // Master PR #11 footer: icon-only actions, no model-service row; the
+    // settings icon names the service state while it is not configured.
+    expect(html).not.toContain("sidebar-model-status");
+    expect(html.match(/class="sidebar-icon-btn[ "]/g)).toHaveLength(3);
+    expect(html).toMatch(/class="sidebar-icon-btn"[^>]*data-service="/);
+    for (const label of ["用量看板", "刷新界面"])
       expect(html).toContain(`aria-label="${label}"`);
+    // The archive filter sits inside the search field.
+    expect(html).toMatch(
+      /<div class="sidebar-search-input-wrap">(?:(?!<\/div>).)*class="sidebar-archive-toggle/,
+    );
   });
 
   it("skin lands in the components layer, colours from tokens only", () => {
