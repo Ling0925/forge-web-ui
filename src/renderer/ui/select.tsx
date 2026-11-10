@@ -1,5 +1,5 @@
 import { CaretDown, CaretUp, Check } from "@phosphor-icons/react";
-import * as SelectPrimitive from "@radix-ui/react-select";
+import { Select as SelectPrimitive } from "radix-ui";
 import type { ComponentProps } from "react";
 import { cn } from "#lib/utils";
 import { fieldClasses } from "#ui/input";

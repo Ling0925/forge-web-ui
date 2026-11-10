@@ -678,15 +678,6 @@
       var(--shadow-hairline);
   }
 
-  .wb-app .transcript-stage-header {
-    color: var(--text-tertiary);
-    font-size: var(--text-caption);
-  }
-
-  .wb-app .transcript-stage-header::after {
-    background: var(--hairline);
-  }
-
   .wb-app .transcript-exec-group {
     --exec-rail: var(--hairline-strong);
     border-radius: var(--radius-item);

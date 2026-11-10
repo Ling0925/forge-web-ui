@@ -207,6 +207,12 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 - **表格**：外框细描边，表头 12/500 三级文字加浅底，行间细线，悬停用底色。
 - **触控与焦点**：粗指针下按钮和筛选不小于 44px，分段按钮不小于 32px；所有可交互元素有 3px 焦点光环。
 
+### 4.11 皮肤层约定（阶段 7）
+
+- 已迁移区域的视觉都在 `styles/surfaces/*.css`（components 层）：composer、sidebar、transcript、shell、inspector、settings、usage。
+- 皮肤文件只能引用主题变量和尺寸 token。stylelint 在这些文件里禁止 hex、具名颜色和颜色函数（`color-mix` 除外）。
+- 旧 CSS 中没有任何源码或测试引用的规则已在阶段 7 删除。新增类名时，在 TSX 里写完整的字面量，或使用 `前缀-${变量}` 形式，以便静态检查找得到。
+
 ---
 
 ## 5. 空间尺度、响应式断点与品牌资源

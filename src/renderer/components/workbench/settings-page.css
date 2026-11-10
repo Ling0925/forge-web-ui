@@ -400,12 +400,6 @@
   width: 100%;
 }
 
-.settings-flat-divider {
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 22px;
-  margin-top: 4px;
-}
-
 .settings-section-hint {
   margin: 0;
   color: var(--text-secondary);
@@ -413,82 +407,13 @@
   line-height: 1.6;
 }
 
-.settings-subgroup-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settings-subgroup-header h3,
-.settings-subgroup-header h4 {
-  font-size: var(--text-base);
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.settings-subgroup-header p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-  line-height: 1.5;
-}
-
 /* Card System (kept for legacy or individual item cards) */
-.settings-card {
-  border: 1px solid var(--border-subtle);
-  background-color: var(--surface-elevated);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  width: 100%;
-}
-
-.settings-card-header {
-  padding: 16px 20px 14px;
-  border-bottom: 1px solid var(--border-subtle);
-  background-color: var(--surface-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.settings-card-header h3,
-.settings-card-header h4 {
-  font-size: var(--text-base);
-  font-weight: 600;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.settings-card-header p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-  line-height: 1.5;
-}
-
-.settings-card-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
 
 .settings-card-action-row {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   padding-top: 2px;
-}
-
-.settings-catalog-wrap {
-  margin-top: 4px;
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 16px;
 }
 
 /* Layout Grids */
@@ -739,33 +664,8 @@
 }
 
 /* Checkbox and Danger clear check */
-.settings-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-.settings-danger-check {
-  padding: 9px 12px;
-  border: 1px dashed var(--border-control);
-  background-color: var(--surface-soft);
-  border-radius: var(--radius-md);
-  align-self: flex-start;
-  transition: all var(--transition-fast);
-}
-
-.settings-danger-check:hover {
-  border-color: var(--error);
-  color: var(--error);
-}
 
 /* Accordion Legacy Details */
-.settings-legacy-container {
-  overflow: hidden;
-}
 
 .settings-page :focus-visible {
   outline: 2px solid var(--focus-ring);
@@ -896,10 +796,6 @@
     min-width: 0;
     max-width: 100%;
     scrollbar-gutter: auto;
-  }
-
-  .settings-card-body {
-    padding: 14px;
   }
 
   .settings-columns {

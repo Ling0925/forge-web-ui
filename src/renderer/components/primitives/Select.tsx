@@ -1,5 +1,5 @@
 import { Check } from "@phosphor-icons/react";
-import * as RadixSelect from "@radix-ui/react-select";
+import { Select as RadixSelect } from "radix-ui";
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,

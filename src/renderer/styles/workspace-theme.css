@@ -113,6 +113,11 @@
   --hover-wash: rgb(21 23 30 / 4.5%);
   --active-wash: rgb(21 23 30 / 7%);
   --inner-highlight: rgb(255 255 255 / 100%);
+  /* Highlights drawn on accent fills and the effort-slider thumb shadow
+     (moved out of surfaces/composer.css in phase 7; same values). */
+  --on-accent-highlight: rgb(255 255 255 / 25%);
+  --on-accent-shimmer: rgb(255 255 255 / 45%);
+  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 18%);
 
   /* Chart series follow the Iris palette, sampled by charts/theme.ts. */
   --chart-series: #4f45db, #027e47, #b46d10, #ac43a5, #0070a6, #0f9293, #5f636e;
@@ -241,6 +246,11 @@
   --hover-wash: rgb(255 255 255 / 5%);
   --active-wash: rgb(255 255 255 / 8%);
   --inner-highlight: rgb(255 255 255 / 6%);
+  /* Highlights drawn on accent fills and the effort-slider thumb shadow
+     (moved out of surfaces/composer.css in phase 7; same values). */
+  --on-accent-highlight: rgb(255 255 255 / 25%);
+  --on-accent-shimmer: rgb(255 255 255 / 45%);
+  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 18%);
 
   /* Chart series follow the Iris palette, sampled by charts/theme.ts. */
   --chart-series: #9ba0ff, #59c886, #eeb154, #dc89d5, #5cb4ef, #5ecbcb, #9b9ea8;

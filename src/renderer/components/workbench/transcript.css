@@ -155,23 +155,6 @@
 }
 
 /* Backward-compatible hairline rule for non-progress stage headers */
-.transcript-stage-header {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--text-secondary);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  line-height: var(--leading-sm);
-}
-.transcript-stage-header::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  min-width: var(--space-4);
-  background: var(--border-subtle);
-}
 
 /* Reasoning: bespoke workbench component, never a native disclosure. */
 .reasoning {
@@ -342,14 +325,6 @@
   align-items: center;
   gap: var(--space-1-5);
   z-index: 1;
-}
-
-.transcript-execution-counts {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  margin-block: var(--space-2);
-  overflow-wrap: anywhere;
 }
 
 .transcript-turn-badge {
