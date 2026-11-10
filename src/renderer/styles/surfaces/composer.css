@@ -18,18 +18,15 @@
   /* ------------------------------------------------------------------ */
   /* New session canvas                                                  */
   /* ------------------------------------------------------------------ */
-  .wb-app .workbench-main.wb-new-session {
-    background-image:
-      radial-gradient(
-        56rem 22rem at 50% -6rem,
-        color-mix(in srgb, var(--accent) 10%, transparent),
-        transparent 72%
-      ),
-      radial-gradient(
-        28rem 16rem at 88% 104%,
-        color-mix(in srgb, var(--info) 6%, transparent),
-        transparent 70%
-      );
+  /* Design A (phase 2a-v2): App.tsx wraps the view and the composer in one
+     `.wb-main-flow`. In a session it is transparent to layout; on the new
+     session page it is the single scroll owner and the composer sits in the
+     reading flow between the greeting and the recent tasks. */
+  .wb-main-flow {
+    display: contents;
+  }
+  .wb-main-flow.wb-new-session-scroll {
+    @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain;
   }
 
   /* ------------------------------------------------------------------ */
@@ -54,9 +51,22 @@
     pointer-events: none;
     background: linear-gradient(to bottom, transparent, var(--canvas-bg));
   }
+  /* Own stacking layer: its model / workspace panels drop below the card
+     and must paint above the recent list that follows. */
   .wb-app .wb-new-session .composer-fresh {
-    @apply relative z-20 mx-auto mt-0 mb-6 max-h-none shrink-0 overflow-visible border-0 bg-transparent p-0;
+    @apply relative z-20 mx-auto mt-8 mb-0 max-h-none shrink-0 overflow-visible border-0 bg-transparent p-0;
     width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
+  }
+  /* Card header: workspace (new session) and the running turn's timer. */
+  .composer-card-header {
+    @apply -mx-1 -mt-1 mb-1 flex min-w-0 items-center gap-2;
+  }
+  .composer-run-timer {
+    @apply ml-auto inline-flex shrink-0 items-center gap-1.5 font-medium text-brand text-caption tabular-nums;
+  }
+  .composer-run-timer-dot {
+    @apply size-1.5 rounded-full bg-brand;
+    animation: composer-timer-pulse 1.6s var(--ease-soft) infinite;
   }
   .composer-inner {
     @apply mx-auto flex w-full flex-col gap-2;
@@ -471,6 +481,13 @@
   .composer-model-name-short {
     display: none;
   }
+  /* New session: the card sits under the greeting, so the panel drops below
+     it (over the recent list) instead of covering the headline. */
+  .composer-fresh .composer-card .composer-model-panel {
+    top: calc(100% + 8px);
+    bottom: auto;
+    transform-origin: top right;
+  }
   .composer-model-summary {
     @apply min-w-0 list-none gap-2 pr-2 pl-1.5;
     max-width: min(280px, 100%);
@@ -722,6 +739,15 @@
       transform-origin: bottom center;
     }
   }
+  @media (max-width: 480px) {
+    /* New session (in flow): keep the panel under the card, never fixed. */
+    .composer-fresh .composer-model:not(.composer-model-inline) > .composer-model-panel {
+      position: absolute;
+      inset: calc(100% + 8px) 0 auto;
+      max-height: min(420px, 60dvh);
+      transform-origin: top center;
+    }
+  }
 
   /* ------------------------------------------------------------------ */
   /* Context / usage meter under the card                                */
@@ -875,10 +901,10 @@
   /* Workspace chip (picker panel itself is phase 4)                      */
   /* ------------------------------------------------------------------ */
   .wb-app .composer-project {
-    @apply relative mb-2.5;
+    @apply relative min-w-0;
   }
   .composer-project .composer-project-trigger {
-    @apply inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-card/85 py-1 pr-3 pl-1 font-sans text-foreground text-xs shadow-xs backdrop-blur-sm;
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-control border-0 bg-transparent py-0.5 pr-2 pl-0.5 font-sans text-foreground text-meta shadow-none;
     max-width: min(100%, 440px);
     min-height: var(--control-height);
     line-height: 1.3;
@@ -889,21 +915,20 @@
       transform var(--duration-fast) var(--ease-out);
   }
   .composer-project .composer-project-trigger:hover:not(:disabled) {
-    @apply border-hover-border bg-card shadow-sm;
+    @apply bg-hover-wash;
   }
   .composer-project .composer-project-trigger:active:not(:disabled) {
     transform: scale(0.98);
   }
   .composer-project .composer-project-trigger.is-open {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+    @apply bg-active-wash;
   }
   .composer-project .composer-project-trigger:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
   .composer-project-trigger-icon {
-    @apply inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand;
+    @apply inline-flex size-6 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand;
   }
   .composer-project-trigger-name {
     @apply truncate font-semibold text-foreground;
@@ -929,13 +954,19 @@
   @media (max-width: 1000px) {
     .wb-app .wb-new-session .composer-fresh {
       width: calc(100% - 2 * var(--space-4));
-      margin-bottom: var(--space-3);
+      margin-top: var(--space-6);
     }
     .composer-project .composer-project-trigger {
       min-height: var(--touch-min-target);
     }
     .composer-status .btn {
       min-height: var(--touch-min-target);
+    }
+  }
+  @media (max-width: 400px) {
+    .composer-toolbar .composer-dropdown-label,
+    .composer-toolbar .composer-dropdown-caret {
+      display: none;
     }
   }
   @media (max-width: 640px) {
@@ -961,7 +992,7 @@
   }
   @media (max-height: 700px) {
     .wb-app .wb-new-session .composer-fresh {
-      margin-bottom: var(--space-4);
+      margin-top: var(--space-6);
     }
   }
 }
@@ -1000,6 +1031,11 @@
     transform: scale(0.92) translateX(8px);
   }
 }
+@keyframes composer-timer-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
 @keyframes composer-sweep {
   from {
     background-position: -66.7% 0;
@@ -1027,6 +1063,9 @@
   .composer-submit:hover:not(:disabled),
   .composer-submit:hover:not(:disabled) svg {
     transform: none;
+  }
+  .composer-run-timer-dot {
+    animation: none;
   }
   /* Reduced motion: the sending edge stays lit instead of sweeping. */
   .composer-card.composer-surface:has(

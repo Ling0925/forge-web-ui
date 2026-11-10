@@ -59,7 +59,7 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
   });
 
   try {
-    // 1. Verify on empty content: no spurious scrolling, composer fixed at bottom
+    // 1. Verify on empty content: no spurious scrolling, composer under the greeting
     const page = await browser.newPage({
       viewport: { width: 1280, height: 800 },
     });
@@ -74,7 +74,12 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
       const scroll = document.querySelector(".wb-new-session-scroll");
       const composer = document.querySelector(".composer-fresh");
       const composerRect = composer?.getBoundingClientRect();
+      const introRect = document
+        .querySelector(".wb-new-session-intro")
+        ?.getBoundingClientRect();
       return {
+        introBottom: introRect?.bottom ?? 0,
+        composerTop: composerRect?.top ?? 0,
         mainScrollHeight: main?.scrollHeight ?? 0,
         mainClientHeight: main?.clientHeight ?? 0,
         scrollScrollHeight: scroll?.scrollHeight ?? 0,
@@ -89,13 +94,19 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
     expect(emptyMetrics.scrollScrollHeight).toBe(
       emptyMetrics.scrollClientHeight,
     );
-    // composer is positioned near the bottom of viewport (800 - 24px margin = 776px)
-    expect(emptyMetrics.composerBottom).toBeGreaterThanOrEqual(750);
+    // Design A (phase 2a-v2): the composer sits in the reading flow right
+    // under the greeting (24-32px gap), not docked to the viewport bottom.
+    expect(
+      emptyMetrics.composerTop - emptyMetrics.introBottom,
+    ).toBeGreaterThanOrEqual(16);
+    expect(
+      emptyMetrics.composerTop - emptyMetrics.introBottom,
+    ).toBeLessThanOrEqual(48);
     expect(emptyMetrics.composerBottom).toBeLessThanOrEqual(800);
 
     await page.close();
 
-    // 2. Verify with tasks on compact viewport: top scroll area scrolls, composer stays fixed and does not move
+    // 2. Verify with tasks on compact viewport: the flow scrolls, composer included
     const compactPage = await browser.newPage({
       viewport: { width: 1280, height: 500 },
     });
@@ -138,12 +149,13 @@ it("home composer is floating and fixed at bottom without spurious page scrollin
     });
 
     expect(afterScroll.scrollTop).toBeGreaterThan(0);
-    // Composer must remain firmly in place: bottom and top coordinates must not shift with scroll!
+    // Design A: the composer scrolls with the flow (one scroll owner).
     expect(
-      Math.abs(afterScroll.composerBottom - beforeScroll.composerBottom),
-    ).toBeLessThan(1);
-    expect(
-      Math.abs(afterScroll.composerTop - beforeScroll.composerTop),
+      Math.abs(
+        beforeScroll.composerTop -
+          afterScroll.composerTop -
+          afterScroll.scrollTop,
+      ),
     ).toBeLessThan(1);
 
     await compactPage.close();

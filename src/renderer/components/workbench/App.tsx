@@ -15,7 +15,7 @@ import { Composer } from "./Composer";
 import { Inspector } from "./Inspector";
 import { Sidebar } from "./Sidebar";
 import { Transcript } from "./Transcript";
-import { Welcome } from "./Welcome";
+import { WelcomeHero, WelcomeRecent } from "./Welcome";
 import { WorkbenchHeader } from "./WorkbenchHeader";
 import { WorkspaceResourcesDialog } from "./WorkspaceResourcesDialog";
 import "./workbench.css";
@@ -188,8 +188,24 @@ function Workbench() {
                   }
                 />
               )}
-              {isNew ? <Welcome /> : <Transcript />}
-              <Composer isNew={isNew} />
+              {/* Design A: one flow wrapper keeps the Composer at the same tree
+                  position in both views, so it stays mounted (in-flight
+                  submissions and drafts live in it). New session: the wrapper
+                  scrolls greeting -> composer -> recent tasks. A session: it is
+                  `display: contents`; the transcript scrolls and the composer
+                  docks below it. */}
+              <div
+                className={
+                  isNew ? "wb-main-flow wb-new-session-scroll" : "wb-main-flow"
+                }
+                {...(isNew
+                  ? { role: "region", "aria-label": "欢迎与最近任务" }
+                  : {})}
+              >
+                {isNew ? <WelcomeHero /> : <Transcript />}
+                <Composer isNew={isNew} />
+                {isNew && <WelcomeRecent />}
+              </div>
             </main>
             {!inspectorCollapsed && (
               <button

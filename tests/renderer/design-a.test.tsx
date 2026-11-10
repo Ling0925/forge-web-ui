@@ -29,8 +29,16 @@ const { relativeTime, greeting, dateEyebrow } = await import(
   "../../src/renderer/lib/relative-time"
 );
 const { spring } = await import("../../src/renderer/lib/springs");
-const { Welcome } = await import(
+const { WelcomeHero, WelcomeRecent } = await import(
   "../../src/renderer/components/workbench/Welcome"
+);
+// Design A: App.tsx renders the greeting, the composer and the recent list
+// in one flow wrapper; the welcome parts are rendered together here.
+const Welcome = () => (
+  <>
+    <WelcomeHero />
+    <WelcomeRecent />
+  </>
 );
 const { SessionListItem } = await import(
   "../../src/renderer/components/workbench/SessionListItem"
@@ -302,5 +310,50 @@ describe("Composer skin (design A)", () => {
     expect(composerCss).toMatch(
       /@media \(max-width: 640px\) \{\s*\.composer-model-name-full \{\s*display: none;/,
     );
+  });
+});
+
+describe("Design A structure (App / Composer)", () => {
+  const app = read("src/renderer/components/workbench/App.tsx");
+  const composer = read("src/renderer/components/workbench/Composer.tsx");
+
+  it("keeps one Composer position across views inside the flow wrapper", () => {
+    expect(app).toMatch(
+      /isNew \? "wb-main-flow wb-new-session-scroll" : "wb-main-flow"/,
+    );
+    expect(app).toContain('role: "region", "aria-label": "欢迎与最近任务"');
+    expect(app).toMatch(
+      /\{isNew \? <WelcomeHero \/> : <Transcript \/>\}\s*<Composer isNew=\{isNew\} \/>\s*\{isNew && <WelcomeRecent \/>\}/,
+    );
+  });
+
+  it("puts the workspace and run timer in the card header, labels the toolbar", () => {
+    const card = composer.slice(
+      composer.indexOf('"composer-card composer-surface"'),
+    );
+    expect(card.indexOf("composer-card-header")).toBeLessThan(
+      card.indexOf("composer-input-row"),
+    );
+    expect(card).toContain("<WorkspacePicker");
+    expect(card).toContain("<RunTimer startedAt={runStartedAt} />");
+    expect(composer).not.toContain("iconOnly");
+    // Logic lives in the controller hook; the view only renders.
+    expect(composer).toContain("useComposerController({ isNew })");
+    expect(composer).not.toMatch(/\buse(State|Effect|Ref)\(/);
+  });
+});
+
+describe("RunTimer", () => {
+  it("formats elapsed time from the run_started timestamp", async () => {
+    const { formatElapsed } = await import(
+      "../../src/renderer/components/workbench/RunTimer"
+    );
+    const start = "2026-11-10T02:00:00.000Z";
+    const at = (s: number) => Date.parse(start) + s * 1000;
+    expect(formatElapsed(start, at(5))).toBe("0:05");
+    expect(formatElapsed(start, at(125))).toBe("2:05");
+    expect(formatElapsed(start, at(3725))).toBe("1:02:05");
+    expect(formatElapsed(start, at(-3))).toBe("0:00");
+    expect(formatElapsed("bad", at(1))).toBe("");
   });
 });
