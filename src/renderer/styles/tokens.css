@@ -38,6 +38,25 @@
   --leading-2xl: 32px;
 
   /* Unitless line heights */
+  /* Design A type roles (UI migration phase 2a-v2, design-v2/spec.md §2.1).
+     Semantic sizes for migrated surfaces; the numeric ladder above stays for
+     pages not yet migrated. Nothing below 12px except <kbd> (--text-2xs). */
+  --text-ui: 14px;
+  --leading-ui: 20px;
+  --text-body: 15px;
+  --leading-body: 24px;
+  --text-meta: 13px;
+  --leading-meta: 18px;
+  --text-caption: 12px;
+  --leading-caption: 16px;
+  --text-title: 20px;
+  --leading-title: 28px;
+  --text-hero: 34px;
+  --leading-hero: 42px;
+  --tracking-hero: -0.025em;
+  --text-hero-narrow: 26px;
+  --leading-hero-narrow: 34px;
+
   --leading-none: 1;
   --leading-tight: 1.25;
   --leading-normal: 1.5;
@@ -53,7 +72,9 @@
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
+  --space-7: 28px;
   --space-8: 32px;
+  --space-9: 36px;
   --space-10: 40px;
   --space-12: 48px;
 
@@ -67,6 +88,11 @@
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-full: 9999px;
+  /* Design A radius tiers: control (toolbar / icon buttons), item (list
+     rows, menu items, sidebar rows), surface (composer card, popovers). */
+  --radius-control: 8px;
+  --radius-item: 10px;
+  --radius-surface: 20px;
 
   /* Layout Dimensions */
   --rail-width: 264px;
@@ -121,6 +147,9 @@
   --motion-ease-out: var(--ease-out);
   --motion-ease-in-out: var(--ease-in-out);
   --motion-ease-dialog: var(--ease-out);
+  /* CSS twin of the spring presets in lib/springs.ts (snappy/smooth/bouncy/gentle). */
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-slow: 240ms;
 }
 
 :root,
@@ -149,7 +178,7 @@
 
   --radius-user: var(--radius-lg);
   --welcome-title-size: var(--text-display);
-  --radius-composer: var(--radius-xl);
+  --radius-composer: var(--radius-surface);
   --user-inset: 12px 16px;
   --content-inset: 24px 36px;
   --composer-inset: 6px 32px 16px;

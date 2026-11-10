@@ -1,13 +1,6 @@
-import {
-  ChatCircle,
-  CheckCircle,
-  CircleNotch,
-  PauseCircle,
-  WarningCircle,
-  XCircle,
-} from "@phosphor-icons/react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { relativeTime } from "#lib/relative-time";
 import type { SessionSummary } from "../../shared-types";
 import { readSessionInfo } from "../../state/session-info-cache";
 import { seedSessionUsage } from "../../state/session-usage";
@@ -27,19 +20,6 @@ const labels: Readonly<Record<string, string>> = {
   interrupted: "已中断",
   idle: "空闲",
 };
-
-/** One glyph per state so every row carries its status, not only live ones. */
-function SessionStatusIcon({ status }: { readonly status: string }) {
-  const props = { size: 15, "aria-hidden": true } as const;
-  if (status === "running") return <CircleNotch {...props} weight="bold" />;
-  if (status === "awaiting_approval")
-    return <WarningCircle {...props} weight="fill" />;
-  if (status === "completed") return <CheckCircle {...props} />;
-  if (status === "failed") return <XCircle {...props} />;
-  if (status === "interrupted" || status === "cancelled")
-    return <PauseCircle {...props} />;
-  return <ChatCircle {...props} />;
-}
 
 export function SessionListItem({
   session,
@@ -131,9 +111,11 @@ export function SessionListItem({
     });
     setOpen(true);
   };
+  const when = relativeTime(session.updatedAt);
   return (
     <div
       className={`session-item ${active ? "is-active" : ""}${isMenuOpen ? " is-menu-open" : ""}`}
+      data-status={status}
       onMouseEnter={reveal}
       onMouseLeave={() => setOpen(false)}
     >
@@ -157,18 +139,36 @@ export function SessionListItem({
         aria-current={active ? "true" : undefined}
         aria-describedby={open ? tooltipId : undefined}
       >
-        <span className="session-status-icon" data-status={status}>
-          <SessionStatusIcon status={status} />
+        {/* Design A: a fixed dot column keeps titles aligned. Only states
+            that need attention get a dot (running, awaiting approval, failed,
+            cancelled, interrupted); completed and idle rows show none. */}
+        <span className="session-item-dot">
+          {status !== "completed" && status !== "idle" && (
+            <span
+              className={`wb-status-dot${pending ? " is-pending" : ""}`}
+              data-status={status}
+              role="img"
+              aria-label={labels[status] ?? status}
+            />
+          )}
         </span>
-        {status !== "completed" && (
-          <span className="visually-hidden">{labels[status] ?? status}</span>
-        )}
         <span className="session-item-title">
           {session.archived ? "归档 · " : ""}
           {displayTitle ?? session.title}
         </span>
         {badge}
       </button>
+      {when && (
+        // Outside the row button so its accessible name stays the title; the
+        // tooltip (aria-describedby) carries the full timestamps.
+        <time
+          className="session-item-time"
+          dateTime={session.updatedAt}
+          aria-hidden="true"
+        >
+          {when}
+        </time>
+      )}
       <SessionActions
         session={session}
         onMouseEnter={() => setOpen(false)}

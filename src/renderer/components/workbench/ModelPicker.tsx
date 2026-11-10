@@ -53,6 +53,9 @@ export function ModelPicker(props: {
     (route) => route.id === props.routeGroupId,
   );
   const shownValue = selectedRoute?.label || props.value || "选择模型";
+  // Narrow screens show the last path segment ("provider/model" -> "model");
+  // the full id stays in the title and in the panel.
+  const shortValue = shownValue.split("/").pop() || shownValue;
   const initialized = useRef(false);
   // Capability metadata limits new choices, not the effective request setting.
   // Keep the configured value even if discovery omits it; otherwise the slider
@@ -166,7 +169,16 @@ export function ModelPicker(props: {
         <span className="composer-model-icon" aria-hidden="true">
           <Cpu size={14} weight="bold" />
         </span>
-        <span className="composer-dropdown-label">{shownValue}</span>
+        <span className="composer-dropdown-label">
+          {shortValue === shownValue ? (
+            shownValue
+          ) : (
+            <>
+              <span className="composer-model-name-full">{shownValue}</span>
+              <span className="composer-model-name-short">{shortValue}</span>
+            </>
+          )}
+        </span>
         {selectedRoute && <span className="composer-model-source">路由组</span>}
         {props.sourceLabel && !selectedRoute && (
           // The source is not a separate choice: it always travels with the

@@ -1,0 +1,441 @@
+/*
+ * Sidebar skin, design A "light inline" (UI migration phase 2a-v2,
+ * design-v2/spec.md §3.A).
+ *
+ * Imported by styles/ui.css, so it lands in the `components` layer and beats
+ * the legacy sheets. Structure (layout, drawer, collapse, reveal, touch
+ * minimums) stays in components/workbench/workbench.css; this file only sets
+ * color, type, radius, elevation and spacing. Sizes are set with `height`, so
+ * the legacy `min-height` touch rules (coarse pointer, <=1000px) still win.
+ *
+ * Hierarchy comes from type weight and space, not boxes: the rail shares the
+ * canvas plane with a hairline edge, group labels are 12px tertiary, rows are
+ * 30px with a lifted card for the selected one.
+ *
+ * Colors come only from workspace-theme.css tokens.
+ */
+@layer components {
+  .wb-app .workbench-sidebar {
+    background-color: var(--sidebar-bg);
+    border-right: 0;
+    color: var(--text-primary);
+  }
+
+  @media (min-width: 1001px) {
+    .wb-app .workbench-sidebar {
+      box-shadow: inset -1px 0 0 var(--hairline);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Brand + new task                                                  */
+  /* ---------------------------------------------------------------- */
+  .wb-app .sidebar-header {
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    border-bottom: 0;
+  }
+
+  .wb-app .sidebar-brand-row {
+    gap: var(--space-3);
+  }
+
+  .wb-app .sidebar-logo {
+    gap: var(--space-2-5);
+    height: var(--space-8);
+    padding-inline: var(--space-1);
+  }
+
+  .wb-app .sidebar-mark {
+    width: var(--space-6);
+    height: var(--space-6);
+  }
+
+  .wb-app .sidebar-title {
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+
+  .wb-app .sidebar-brand-actions {
+    gap: var(--space-1-5);
+  }
+
+  .wb-app .sidebar-new-btn {
+    gap: var(--space-2-5);
+    height: var(--space-9);
+    padding: 0 var(--space-2) 0 var(--space-3);
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+    font-weight: 500;
+    box-shadow: var(--shadow-hairline);
+    transition:
+      box-shadow var(--duration-normal) var(--ease-soft),
+      transform var(--duration-fast) var(--ease-soft),
+      border-color var(--duration-fast) ease;
+  }
+
+  .wb-app .sidebar-new-btn > svg {
+    color: var(--accent);
+  }
+
+  .wb-app .sidebar-new-btn:hover {
+    background: var(--surface-elevated);
+    border-color: var(--border-control);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .wb-app .sidebar-new-btn:active {
+    transform: scale(0.99);
+    box-shadow: var(--shadow-hairline);
+  }
+
+  .wb-app .sidebar-new-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      var(--shadow-hairline),
+      0 0 0 3px var(--focus-halo);
+    border-color: var(--focus-ring);
+  }
+
+  .wb-app .sidebar-new-kbd {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  @media (pointer: coarse), (max-width: 1000px) {
+    .wb-app .sidebar-new-kbd {
+      display: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Search                                                            */
+  /* ---------------------------------------------------------------- */
+  .wb-app .sidebar-search {
+    gap: var(--space-1);
+    padding: 0 var(--space-3) var(--space-2);
+  }
+
+  .wb-app .sidebar-search-icon {
+    left: var(--space-3);
+    color: var(--text-muted);
+  }
+
+  .wb-app .sidebar-search-input {
+    height: var(--space-9);
+    padding: 0 var(--space-2) 0 var(--space-9);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+    transition:
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
+  }
+
+  .wb-app .sidebar-search-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .wb-app .sidebar-search-input:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .sidebar-search-input:focus {
+    outline: none;
+    background: var(--surface-elevated);
+    border-color: var(--hairline-strong);
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  .wb-app .sidebar-archive-toggle {
+    width: var(--space-9);
+    height: var(--space-9);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-muted);
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .wb-app .sidebar-archive-toggle:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .sidebar-archive-toggle.is-active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .wb-app .sidebar-archive-toggle:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Groups                                                            */
+  /* ---------------------------------------------------------------- */
+  .wb-app .sidebar-sessions-list {
+    gap: 0;
+    padding: var(--space-1) var(--space-3) var(--space-4);
+  }
+
+  .wb-app .session-folder + .session-folder {
+    margin-top: var(--space-3);
+  }
+
+  .wb-app .session-folder-header-row {
+    border-radius: var(--radius-item);
+  }
+
+  .wb-app .session-folder-header {
+    gap: var(--space-1-5);
+    height: var(--space-7);
+    padding: 0 var(--space-1) 0 var(--space-2);
+    border-radius: var(--radius-item);
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: color var(--duration-fast) ease;
+  }
+
+  .wb-app .session-folder-header:hover,
+  .wb-app .session-folder-header-row:hover .session-folder-header {
+    color: var(--text-primary);
+  }
+
+  .wb-app .session-folder-header:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  .wb-app .session-folder-caret {
+    color: var(--text-muted);
+  }
+
+  .wb-app .session-folder-count {
+    font-size: var(--text-caption);
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .wb-app .session-folder-create-btn,
+  .wb-app .session-folder-resources-btn {
+    width: var(--space-6);
+    height: var(--space-6);
+    margin-right: 2px;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-muted);
+  }
+
+  .wb-app .session-folder-create-btn:hover,
+  .wb-app .session-folder-resources-btn:hover {
+    background: var(--active-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .session-folder-body {
+    gap: 1px;
+    padding: 2px 0 var(--space-1);
+  }
+
+  .wb-app .session-folder-more {
+    height: var(--space-7);
+    margin: 2px 0;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-item);
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .wb-app .session-folder-more:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .session-folder-more:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Rows                                                              */
+  /* ---------------------------------------------------------------- */
+  .wb-app .session-item {
+    border: 1px solid transparent;
+    border-radius: var(--radius-item);
+    background: transparent;
+    transition:
+      background-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease,
+      transform var(--duration-fast) var(--ease-soft);
+  }
+
+  .wb-app .session-item:hover {
+    background: var(--hover-wash);
+  }
+
+  /* Selected: a lifted card on the shared plane (no tinted block). */
+  .wb-app .session-item.is-active {
+    background: var(--surface-elevated);
+    border-color: var(--hairline-strong);
+    box-shadow: var(--shadow-hairline);
+  }
+
+  .wb-app .session-item-main {
+    gap: var(--space-2-5);
+    height: 30px;
+    padding: 0 var(--space-2-5);
+    border-radius: var(--radius-item);
+  }
+
+  .wb-app .session-item-main:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  .wb-app .session-item-title {
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+    font-weight: 400;
+    color: var(--text-secondary);
+    text-align: left;
+  }
+
+  .wb-app .session-item:hover .session-item-title,
+  .wb-app .session-item.is-active .session-item-title {
+    color: var(--text-primary);
+  }
+
+  .wb-app .session-item.is-active .session-item-title {
+    font-weight: 500;
+  }
+
+  .wb-app .session-item-time {
+    padding-right: var(--space-2-5);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    color: var(--text-muted);
+  }
+
+  .wb-app .session-item[data-status="running"] .session-item-time {
+    color: var(--accent);
+  }
+
+  .wb-app .session-item .wb-status-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .wb-app .sidebar-empty {
+    margin-block: var(--space-10);
+    text-align: center;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Footer: model service, usage, settings, refresh                   */
+  /* ---------------------------------------------------------------- */
+  .wb-app .sidebar-footer {
+    gap: var(--space-1);
+    margin: 0 var(--space-3);
+    padding: var(--space-2) 0 var(--space-3);
+    border-top: 1px solid var(--hairline);
+    background: transparent;
+  }
+
+  .wb-app .sidebar-model-status {
+    gap: var(--space-2-5);
+    height: var(--space-9);
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    font-weight: 500;
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .wb-app .sidebar-model-status .sidebar-status-arrow {
+    color: var(--text-muted);
+  }
+
+  .wb-app .sidebar-model-status:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .sidebar-model-status:hover .sidebar-status-arrow {
+    color: var(--text-secondary);
+  }
+
+  .wb-app .sidebar-footer-actions {
+    gap: var(--space-1);
+  }
+
+  .wb-app .sidebar-settings-btn,
+  .wb-app .sidebar-refresh-btn {
+    height: var(--space-8);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    transition:
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .wb-app .sidebar-settings-btn {
+    gap: var(--space-1-5);
+    padding: 0 var(--space-2);
+  }
+
+  .wb-app .sidebar-refresh-btn {
+    width: var(--space-8);
+  }
+
+  .wb-app .sidebar-settings-btn:hover,
+  .wb-app .sidebar-refresh-btn:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .sidebar-settings-btn:active,
+  .wb-app .sidebar-refresh-btn:active {
+    background: var(--active-wash);
+  }
+
+  .wb-app .sidebar-model-status:focus-visible,
+  .wb-app .sidebar-settings-btn:focus-visible,
+  .wb-app .sidebar-refresh-btn:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+}

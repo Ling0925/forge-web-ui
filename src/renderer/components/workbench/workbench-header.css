@@ -13,7 +13,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-3);
-  padding-inline: var(--space-6);
+  padding-inline: var(--space-4);
   height: var(--header-height);
   min-height: var(--header-height);
   flex-shrink: 0;
@@ -32,25 +32,53 @@
   align-items: center;
   gap: var(--space-1);
 }
+/* Design A breadcrumb (phase 2a-v2): workspace / title, both real (the
+   active snapshot's workspace and title). The h1 stays the title alone. */
 .wb-header-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
   min-width: 0;
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+}
+.wb-header-crumb {
+  flex: 0 1 auto;
+  max-width: 40%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-tertiary);
+}
+.wb-header-sep {
+  flex-shrink: 0;
+  color: var(--text-muted);
 }
 .wb-app .wb-header-title h1 {
+  flex: 0 1 auto;
+  min-width: 0;
   margin: 0;
-  font-size: var(--text-base);
-  font-weight: 600;
-  line-height: var(--leading-md);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  line-height: var(--leading-ui);
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .wb-header-crumb,
+  .wb-header-sep {
+    display: none;
+  }
 }
 .wb-app .wb-header-actions .btn-icon {
   width: var(--control-height-lg);
   min-width: var(--control-height-lg);
   height: var(--control-height-lg);
   min-height: var(--control-height-lg);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-control);
 }
 .wb-app .wb-drawer-toggle,
 .wb-app .sidebar-mobile-close,
@@ -98,33 +126,29 @@
     padding: 0 var(--space-2-5) 0 var(--space-2);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    gap: var(--space-1-5);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-control);
     color: var(--text-secondary);
-    font-size: var(--text-xs);
+    font-size: var(--text-meta);
     font-weight: 500;
     line-height: 1;
-    transition: all 0.15s ease;
+    transition: background-color var(--transition-fast), color
+      var(--transition-fast);
     cursor: pointer;
-    box-shadow: var(--shadow-sm);
   }
   .wb-app .wb-header-actions .wb-details-toggle:hover {
-    background: var(--surface-hover);
+    background: var(--hover-wash);
     color: var(--text-primary);
-    border-color: var(--border-control);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
   .wb-app .wb-header-actions .wb-details-toggle:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 1px;
   }
   .wb-app .wb-header-actions .wb-details-toggle.is-active {
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    background: var(--accent-soft);
     color: var(--accent);
-    border-color: var(--accent);
-    font-weight: 600;
   }
   .wb-app .wb-header-actions .wb-details-icon {
     transform: scaleX(-1);
@@ -135,8 +159,7 @@
   .wb-app .wb-header-actions .wb-details-label {
     display: inline-block;
     white-space: nowrap;
-    font-size: var(--text-xs);
-    letter-spacing: -0.01em;
+    font-size: var(--text-meta);
   }
   .wb-app .wb-header-actions .wb-details-toggle .wb-header-pending {
     display: inline-flex;

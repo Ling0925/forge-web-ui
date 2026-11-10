@@ -1,32 +1,7 @@
-.wb-app .sidebar-sessions-list {
-  gap: 0;
-  padding: var(--space-1) var(--space-2);
-}
-.wb-app .session-folder-body {
-  gap: 0;
-  padding-block: 0 var(--space-1);
-  padding-left: var(--space-2);
-}
-.wb-app .session-folder-header {
-  padding-block: var(--space-1);
-}
-.wb-app .session-folder-more {
-  min-height: 22px;
-  padding: 2px var(--space-2);
-}
+/* Sidebar row skin (padding, gap, type) lives in styles/surfaces/sidebar.css
+   (UI migration phase 2a-v2); only the minimum heights stay here. */
 .wb-app .session-item-main {
-  flex-direction: row;
-  align-items: center;
   min-height: var(--control-height);
-  padding: var(--space-1) var(--space-2);
-  gap: var(--space-1-5);
-}
-.wb-app .session-item-title {
-  line-height: var(--leading-xs);
-  text-align: left;
-}
-.wb-app .sidebar-empty {
-  margin-block: var(--space-5);
 }
 .session-hover-info {
   position: fixed;
