@@ -73,6 +73,13 @@ export function useSettingsForm() {
   // Auto-saves run one at a time so a slow save can never land after a newer one.
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const pending = useRef(0);
+  const intents = useRef(new Map<AutoSaveKey, { value: string }>());
+  const saves = useRef(
+    new Map<
+      AutoSaveKey,
+      { intent: { value: string }; run: Promise<boolean> }
+    >(),
+  );
   // Bumped when a save settles so settings that arrived meanwhile are adopted.
   const [settled, setSettled] = useState(0);
   const settle = useCallback(() => {
@@ -106,6 +113,7 @@ export function useSettingsForm() {
     setOriginal(next);
     setDraft((old) => {
       const fresh = createSettingsDraft(next);
+      for (const [name, intent] of intents.current) fresh[name] = intent.value;
       return lspDirtyRef.current
         ? { ...fresh, lspServers: old.lspServers }
         : fresh;
@@ -209,11 +217,6 @@ export function useSettingsForm() {
     );
   };
 
-  /**
-   * Save one simple preference immediately. Validation errors keep the old
-   * value; a failed save rolls the control back to the last saved value.
-   * Resolves true once the value is persisted (or nothing needed saving).
-   */
   const commit = <K extends AutoSaveKey>(
     name: K,
     value: SettingsDraft[K],
@@ -237,8 +240,15 @@ export function useSettingsForm() {
       }));
       return Promise.resolve(false);
     }
+    const previous = intents.current.get(name);
+    const saving = saves.current.get(name);
+    if (previous?.value === value && saving?.intent === previous)
+      return saving.run;
+    const intent = { value };
+    intents.current.set(name, intent);
     setDraft((old) => ({ ...old, [name]: value }));
-    if (!Object.keys(input).length) {
+    if (!Object.keys(input).length && pending.current === 0) {
+      intents.current.delete(name);
       setStatus((prev) => ({ ...prev, [name]: IDLE }));
       return Promise.resolve(true);
     }
@@ -246,34 +256,59 @@ export function useSettingsForm() {
     setStatus((prev) => ({ ...prev, [name]: { state: "saving" } }));
     const run = queue.current.then(async () => {
       try {
+        const latest = originalRef.current;
+        input = buildSettingsUpdate(
+          { ...createSettingsDraft(latest), [name]: value },
+          latest,
+          "",
+          false,
+        );
+        if (!Object.keys(input).length) {
+          if (alive.current && intents.current.get(name) === intent) {
+            intents.current.delete(name);
+            setStatus((prev) => ({ ...prev, [name]: IDLE }));
+          }
+          return true;
+        }
         const result = await updateSettings(input);
         if (!result.ok) throw Error(result.error);
         if (!alive.current) return true;
         setOriginal(result.settings);
         originalRef.current = result.settings;
-        setStatus((prev) => ({ ...prev, [name]: { state: "saved" } }));
-        markSaved(name);
+        if (intents.current.get(name) === intent) {
+          intents.current.delete(name);
+          setStatus((prev) => ({ ...prev, [name]: { state: "saved" } }));
+          markSaved(name);
+        }
         return true;
       } catch (failure) {
-        if (!alive.current) return false;
-        const rollback = createSettingsDraft(originalRef.current)[name];
-        setDraft((old) => ({ ...old, [name]: rollback }));
+        if (!alive.current || intents.current.get(name) !== intent)
+          return false;
         setStatus((prev) => ({
           ...prev,
           [name]: {
             state: "error",
-            message: `保存失败，已恢复原值：${
+            retryable: true,
+            message: `未保存，修改已保留：${
               failure instanceof Error ? failure.message : "未知错误"
             }`,
           },
         }));
         return false;
       } finally {
+        if (saves.current.get(name)?.intent === intent)
+          saves.current.delete(name);
         settle();
       }
     });
     queue.current = run;
+    saves.current.set(name, { intent, run });
     return run;
+  };
+
+  const retry = (name: AutoSaveKey) => {
+    const intent = intents.current.get(name);
+    return intent ? commit(name, intent.value) : Promise.resolve(true);
   };
 
   const statusOf = (name: string): SaveStatus => status[name] ?? IDLE;
@@ -404,6 +439,7 @@ export function useSettingsForm() {
     focusSetting,
     setFocusSetting,
     commit,
+    retry,
     statusOf,
     changeLsp,
     resetLsp,

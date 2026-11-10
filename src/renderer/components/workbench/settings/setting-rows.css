@@ -172,6 +172,7 @@
 .setting-save.is-error {
   color: var(--error);
   white-space: normal;
+  flex-wrap: wrap;
 }
 .setting-hint {
   margin: 0;

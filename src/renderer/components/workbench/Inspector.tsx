@@ -119,6 +119,7 @@ export function Inspector({
     ({ state }) => ({
       activeSessionId: state.activeSessionId,
       activeSnapshot: state.activeSnapshot,
+      isNewSessionOpen: state.isNewSessionOpen,
       isSnapshotLoading: state.isSnapshotLoading,
       sessions: state.sessions,
       settings: state.settings,
@@ -126,9 +127,10 @@ export function Inspector({
     shallowEqual,
   );
   const run = useWorkbenchSelector(({ state }) => {
-    const active = state.activeSessionId
-      ? state.activeRuns[state.activeSessionId]
-      : undefined;
+    const active =
+      !state.isNewSessionOpen && state.activeSessionId
+        ? state.activeRuns[state.activeSessionId]
+        : undefined;
     return active
       ? {
           status: active.status,
@@ -156,6 +158,7 @@ export function Inspector({
   }, [focusToken]);
   // Never show another session's provenance while selection/read is in flight.
   const snapshot =
+    !state.isNewSessionOpen &&
     state.activeSnapshot?.id === state.activeSessionId
       ? state.activeSnapshot
       : null;
@@ -294,13 +297,22 @@ export function Inspector({
                 有 {drawerApprovals.length} 个后台请求待批准，打开对应会话处理。
               </p>
             )}
-            {state.isSnapshotLoading ? (
+            {!state.isNewSessionOpen && state.isSnapshotLoading ? (
               <p className="wb-muted inspector-empty">正在读取执行记录…</p>
             ) : (
               <EmptyState
                 variant="compact"
                 className="inspector-empty"
-                title="选择一个会话，查看详情"
+                title={
+                  state.isNewSessionOpen
+                    ? "新会话尚未开始"
+                    : "选择一个会话，查看详情"
+                }
+                description={
+                  state.isNewSessionOpen
+                    ? "发送第一条消息后，可在这里查看进度和会话信息。"
+                    : undefined
+                }
               />
             )}
           </>

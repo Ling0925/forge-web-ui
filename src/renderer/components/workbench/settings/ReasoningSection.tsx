@@ -13,7 +13,7 @@ import type { SettingsForm } from "./useSettingsForm";
 const CUSTOM = "custom";
 
 export function ReasoningSection({ form }: { readonly form: SettingsForm }) {
-  const { draft, commit, statusOf, confirm, original } = form;
+  const { draft, commit, retry, statusOf, confirm, original } = form;
   const disabled = !form.state.settings;
   const presetBudget = CONTEXT_BUDGET_PRESETS.some(
     (preset) => preset.value === draft.contextBudgetTokens,
@@ -70,7 +70,12 @@ export function ReasoningSection({ form }: { readonly form: SettingsForm }) {
               onValueChange={(value) => void commit("reasoningEffort", value)}
             />
           }
-          status={<SaveIndicator status={statusOf("reasoningEffort")} />}
+          status={
+            <SaveIndicator
+              status={statusOf("reasoningEffort")}
+              onRetry={() => void retry("reasoningEffort")}
+            />
+          }
         />
       </SettingGroup>
 
@@ -107,7 +112,12 @@ export function ReasoningSection({ form }: { readonly form: SettingsForm }) {
               }}
             />
           }
-          status={<SaveIndicator status={statusOf("contextBudgetTokens")} />}
+          status={
+            <SaveIndicator
+              status={statusOf("contextBudgetTokens")}
+              onRetry={() => void retry("contextBudgetTokens")}
+            />
+          }
         >
           {customBudget && (
             <div className="setting-inline-input">
@@ -171,6 +181,7 @@ export function ReasoningSection({ form }: { readonly form: SettingsForm }) {
             }
             status={
               <SaveIndicator
+                onRetry={() => void retry("contextBudgetChars")}
                 status={
                   charsError
                     ? { state: "error", message: charsError }

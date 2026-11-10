@@ -170,6 +170,7 @@ function Workbench() {
                 <ErrorState
                   title="操作未完成"
                   error={state.alertError}
+                  impact="刷新状态只重新读取设置和会话，不会重新发送消息。发送未确认时，请在输入框核对草稿后手动发送。"
                   actions={
                     <>
                       <Button
@@ -180,7 +181,7 @@ function Workbench() {
                           void refreshActiveSession();
                         }}
                       >
-                        刷新 / 重试
+                        刷新状态
                       </Button>
                       <Button onClick={clearAlert}>关闭提示</Button>
                     </>

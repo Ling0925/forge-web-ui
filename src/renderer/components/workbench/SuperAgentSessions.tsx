@@ -4,10 +4,12 @@ import {
   WORK_STATUS_LABELS,
   type WorkerEntry,
   groupAgentSessions,
+  superAgentStore,
   useSuperAgent,
 } from "../../state/superagent";
 import { Tag } from "../primitives/Tag";
 import { SessionListItem } from "./SessionListItem";
+import { SuperAgentLoadState } from "./SuperAgentLoadState";
 import "./superagent.css";
 
 function WorkerRow({ entry }: { readonly entry: WorkerEntry<SessionSummary> }) {
@@ -36,7 +38,7 @@ function WorkerRow({ entry }: { readonly entry: WorkerEntry<SessionSummary> }) {
 /**
  * Super-agent Router and Worker sessions (core `agentRole`), kept out of the
  * workspace folders: Workers live in per-session worktrees, so folder grouping
- * would scatter them. Renders nothing when there are no such sessions.
+ * would scatter them.
  */
 export function SuperAgentSessions({
   sessions,
@@ -48,7 +50,20 @@ export function SuperAgentSessions({
   readonly onToggle: () => void;
 }) {
   const view = useSuperAgent();
-  if (sessions.length === 0) return null;
+  if (
+    sessions.length === 0 &&
+    (view.status === "disabled" || view.status === "not-supported") &&
+    view.requests.state !== "loading" &&
+    view.requests.state !== "error"
+  )
+    return null;
+  const loadState = (
+    <SuperAgentLoadState
+      view={view}
+      onRetry={() => void superAgentStore.load()}
+    />
+  );
+  if (sessions.length === 0) return loadState;
   const { routers, unassigned } = groupAgentSessions(sessions, view);
   const bodyId = "sidebar-folder-superagent";
   return (
@@ -78,6 +93,7 @@ export function SuperAgentSessions({
           <span className="session-folder-count">{sessions.length}</span>
         </button>
       </div>
+      {loadState}
       <div
         className={`session-folder-collapse${collapsed ? " is-collapsed" : ""}`}
         id={bodyId}

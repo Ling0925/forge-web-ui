@@ -1,5 +1,6 @@
 import { Check, WarningCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
+import { Button } from "../../primitives/Button";
 import "./setting-rows.css";
 
 /** A titled block of setting rows on one settings page. */
@@ -133,11 +134,17 @@ export type SaveStatus = Readonly<
   | { state: "idle" }
   | { state: "saving" }
   | { state: "saved" }
-  | { state: "error"; message: string }
+  | { state: "error"; message: string; retryable?: boolean }
 >;
 
 /** Inline auto-save feedback next to a control. */
-export function SaveIndicator({ status }: { readonly status: SaveStatus }) {
+export function SaveIndicator({
+  status,
+  onRetry,
+}: {
+  readonly status: SaveStatus;
+  readonly onRetry?: () => void;
+}) {
   if (status.state === "idle") return null;
   if (status.state === "saving")
     return (
@@ -156,6 +163,11 @@ export function SaveIndicator({ status }: { readonly status: SaveStatus }) {
     <span className="setting-save is-error" role="alert">
       <WarningCircle size={13} weight="bold" aria-hidden="true" />
       {status.message}
+      {status.retryable && onRetry && (
+        <Button size="sm" onClick={onRetry}>
+          重试保存
+        </Button>
+      )}
     </span>
   );
 }
