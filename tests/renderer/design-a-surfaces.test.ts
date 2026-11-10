@@ -13,7 +13,7 @@ const themeCss = read("src/renderer/styles/workspace-theme.css");
 const surface = (name: string) =>
   stripComments(read(`src/renderer/styles/surfaces/${name}.css`));
 
-const SURFACES = ["shell", "inspector"];
+const SURFACES = ["shell", "inspector", "settings"];
 
 const ruleFor = (css: string, selector: string) => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -130,5 +130,43 @@ describe("phase 4 · inspector + workspace", () => {
   it("defines the compact row and body indent tokens", () => {
     expect(tokensCss).toMatch(/--row-height-compact:\s*28px/);
     expect(tokensCss).toMatch(/--inspector-body-indent:\s*35px/);
+  });
+});
+
+describe("phase 5 · settings", () => {
+  const css = surface("settings");
+
+  it("scopes everything to the settings page (it renders outside .wb-app)", () => {
+    const selectors = [...css.matchAll(/^\s*([^@{}\s][^{}]*)\{/gm)]
+      .map((match) => (match[1] ?? "").trim())
+      .filter((selector) => !/^(from|to|\d)/.test(selector));
+    expect(selectors.length).toBeGreaterThan(40);
+    for (const selector of selectors)
+      expect(selector.startsWith(".settings-page"), selector).toBe(true);
+  });
+
+  it("marks the selected nav item as a small lifted card", () => {
+    const active = ruleFor(
+      css,
+      ".settings-page :is(.settings-nav-item.is-active, .settings-nav-item[aria-current])",
+    )[0];
+    expect(active).toContain("var(--surface-elevated)");
+    expect(active).toContain("var(--shadow-xs)");
+    expect(tokensCss).toMatch(/--row-height-rail:\s*34px/);
+  });
+
+  it("caps the content at the shared reading measure", () => {
+    expect(ruleFor(css, ".settings-page .settings-section")[0]).toContain(
+      "max-width: var(--reading-measure)",
+    );
+  });
+
+  it("uses 600 for the page title (no 700) and hairline rows", () => {
+    const title = ruleFor(css, ".settings-page .settings-header-meta h2")[0];
+    expect(title).toContain("font-weight: 600");
+    expect(css).not.toMatch(/font-weight:\s*700/);
+    expect(ruleFor(css, ".settings-page .setting-row")[0]).toContain(
+      "var(--setting-row-min-height)",
+    );
   });
 });
