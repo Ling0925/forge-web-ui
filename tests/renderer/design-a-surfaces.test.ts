@@ -217,3 +217,41 @@ describe("phase 6 · usage", () => {
     expect(value).toContain("tabular-nums");
   });
 });
+
+describe("phase 7 · cleanup", () => {
+  const pkg = JSON.parse(read("package.json")) as {
+    dependencies?: Record<string, string>;
+  };
+  const stylelint = read("stylelint.config.mjs");
+
+  it("imports Radix only through the radix-ui umbrella package", () => {
+    expect(Object.keys(pkg.dependencies ?? {})).not.toContain(
+      "@radix-ui/react-checkbox",
+    );
+    expect(Object.keys(pkg.dependencies ?? {})).not.toContain(
+      "@radix-ui/react-select",
+    );
+    for (const file of [
+      "src/renderer/ui/checkbox.tsx",
+      "src/renderer/ui/select.tsx",
+      "src/renderer/components/primitives/Checkbox.tsx",
+      "src/renderer/components/primitives/Select.tsx",
+    ]) {
+      expect(read(file), file).not.toContain("@radix-ui/react-");
+      expect(read(file), file).toContain('from "radix-ui"');
+    }
+  });
+
+  it("lints the surfaces for literal colours", () => {
+    expect(stylelint).toContain(
+      'files: ["src/renderer/styles/surfaces/*.css"]',
+    );
+    expect(stylelint).toContain('"color-no-hex": true');
+  });
+
+  it("keeps the composer surface free of literal colours too", () => {
+    const css = surface("composer");
+    expect(css).not.toMatch(/\b(rgb|rgba|hsl|hsla|oklch)\(/);
+    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+  });
+});

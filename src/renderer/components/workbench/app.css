@@ -364,11 +364,6 @@
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-soft);
 }
-.native-dialog .settings-form {
-  display: flex;
-  flex-direction: column;
-  max-height: 75dvh;
-}
 @media (max-width: 640px) {
   .native-dialog {
     width: calc(100vw - var(--space-4));
@@ -384,15 +379,11 @@
   .native-dialog .modal-footer {
     padding: var(--space-3) var(--space-4);
   }
-  .native-dialog .settings-form {
-    max-height: calc(100dvh - 160px);
-  }
 }
 .tool-disclosure-target,
 .approval-command-content,
 .approval-cwd,
 .code-line-content,
-.diff-file-path,
 .error-state-message,
 .wb-details dd {
   user-select: text;
@@ -935,20 +926,6 @@
   font-size: var(--text-xs);
   color: var(--text-primary);
 }
-.settings-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  padding-bottom: var(--space-6);
-}
-.settings-group + .settings-group {
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border-subtle);
-}
-.settings-group-title {
-  font-size: var(--text-base);
-  font-weight: 600;
-}
 .modal-close {
   width: var(--icon-size);
   min-width: var(--icon-size);
@@ -1086,46 +1063,12 @@
   }
 }
 
-.wb-approval-pill,
-.wb-approval-count {
+.wb-approval-pill {
   color: var(--warning);
   background: var(--warning-bg);
   border-radius: var(--radius-full);
   font-size: var(--text-xs);
   padding: var(--space-1) var(--space-2);
-}
-.wb-overflow {
-  position: relative;
-}
-.wb-overflow > summary {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--icon-size);
-  height: var(--icon-size);
-  border-radius: var(--radius-quiet);
-  list-style: none;
-}
-.wb-overflow > summary::-webkit-details-marker {
-  display: none;
-}
-.wb-overflow > summary:hover {
-  background: var(--hover-bg);
-}
-.wb-overflow-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-2));
-  width: 240px;
-  padding: var(--space-4);
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-overlay);
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
 }
 .wb-menu-item {
   width: 100%;
@@ -1145,60 +1088,28 @@
 }
 /* `.wb-status-dot` is owned by workbench.css; the duplicate status->color
    mapping here (6px, different status keys) conflicted with it. */
-.wb-new-task {
-  width: 100%;
-  min-height: var(--icon-size-touch);
-  justify-content: flex-start;
-  background: var(--surface-selected);
-  border: none;
-  border-radius: var(--radius-card);
-}
-.wb-search {
-  border: none;
-  background: transparent;
-}
 .wb-inspector-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
 }
-.wb-approvals-summary {
-  padding: var(--space-3);
-  background: var(--warning-bg);
-  border-radius: var(--radius-card);
-}
 .wb-disclosure {
   border: none;
   padding: var(--space-3) 0;
-}
-.wb-disclosure-summary {
-  color: var(--text-secondary);
-  font-size: var(--type-small);
-  min-height: var(--icon-size);
 }
 .wb-disclosure-body {
   padding: var(--space-3) 0;
   overflow-wrap: anywhere;
 }
 .wb-child-row,
-.wb-plan-progress,
-.wb-approval-row {
+.wb-plan-progress {
   padding: var(--space-3) 0;
   border: none;
 }
 @media (max-width: 1000px) {
   .wb-inspector-close {
     display: none;
-  }
-}
-@media (max-width: 768px) {
-  .wb-overflow > summary {
-    min-width: var(--icon-size-touch);
-    min-height: var(--icon-size-touch);
-  }
-  .wb-disclosure-summary {
-    min-height: var(--icon-size-touch);
   }
 }
 
@@ -1209,10 +1120,6 @@
   font-size: var(--text-xs);
   color: var(--text-secondary);
   overflow-wrap: anywhere;
-}
-.wb-approvals-title {
-  font-size: var(--text-base);
-  font-weight: 600;
 }
 @media (max-width: 768px) {
   .session-item-main {
@@ -1231,8 +1138,7 @@
   font-weight: 600;
   margin-bottom: var(--space-2);
 }
-.inspector-scroll > .wb-stack,
-.inspector-tabs .tab-panel {
+.inspector-scroll > .wb-stack {
   gap: var(--space-4);
 }
 .inspector-scroll .wb-details {
@@ -1245,9 +1151,4 @@
 .inspector-scroll .wb-details dd {
   font-size: var(--text-sm);
   line-height: var(--leading-sm);
-}
-@media (max-width: 768px) {
-  .wb-icon-btn {
-    height: var(--icon-size-touch);
-  }
 }

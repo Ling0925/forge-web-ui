@@ -563,7 +563,7 @@
   }
   .model-picker-current > .composer-model-icon {
     @apply size-7 rounded-sm bg-brand text-brand-foreground;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
+    box-shadow: inset 0 1px 0 var(--on-accent-highlight);
   }
   .model-picker-current:focus-visible,
   .model-picker-back:focus-visible {
@@ -668,7 +668,7 @@
     background: linear-gradient(
       100deg,
       transparent 25%,
-      rgb(255 255 255 / 45%) 50%,
+      var(--on-accent-shimmer) 50%,
       transparent 75%
     );
     transform: translateX(-100%);
@@ -694,7 +694,7 @@
     border-radius: 50%;
     background: var(--surface-elevated);
     box-shadow:
-      0 1px 2px rgb(0 0 0 / 18%),
+      var(--shadow-thumb),
       0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
     transition: transform var(--duration-fast) var(--ease-out);
   }
@@ -711,7 +711,7 @@
     border: 2px solid var(--accent);
     border-radius: 50%;
     background: var(--surface-elevated);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 18%);
+    box-shadow: var(--shadow-thumb);
   }
   .effort-slider input:focus-visible {
     outline: 2px solid var(--focus-ring);

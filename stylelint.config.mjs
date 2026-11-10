@@ -38,5 +38,21 @@ export default {
       files: ["src/renderer/styles/tokens.css"],
       rules: { "declaration-property-value-disallowed-list": null },
     },
+    {
+      // Design A surfaces (UI migration phases 2a–6): colours come only from
+      // workspace-theme.css variables.
+      files: ["src/renderer/styles/surfaces/*.css"],
+      rules: {
+        "color-no-hex": true,
+        "color-named": "never",
+        "function-disallowed-list": [
+          ["rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch"],
+          {
+            message:
+              "Design A surfaces take colours from workspace-theme.css variables",
+          },
+        ],
+      },
+    },
   ],
 };
