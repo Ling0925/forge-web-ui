@@ -133,7 +133,8 @@ it("unifies navigation and opens recent tasks without loading their histories up
         const composer = await page.locator(".composer-fresh").boundingBox();
         if (!intro || !composer) throw new Error("Missing home bounds");
         expect(composer.y).toBeGreaterThanOrEqual(intro.y + intro.height);
-        expect(composer.y + composer.height).toBeGreaterThanOrEqual(850);
+        // Design A: composer in the flow right under the greeting.
+        expect(composer.y - (intro.y + intro.height)).toBeLessThanOrEqual(48);
         expect(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
@@ -173,10 +174,14 @@ it("unifies navigation and opens recent tasks without loading their histories up
         .locator(".wb-new-session-scroll")
         .evaluate((el) => el.scrollTop),
     ).toBeGreaterThan(0);
+    // Design A: the recent list follows the composer in the same scroll flow.
     const shortComposer = await page.locator(".composer-fresh").boundingBox();
+    const lastTask = await page.locator(".welcome-task").last().boundingBox();
     expect(
-      shortComposer && shortComposer.y + shortComposer.height,
-    ).toBeGreaterThanOrEqual(480);
+      shortComposer &&
+        lastTask &&
+        lastTask.y >= shortComposer.y + shortComposer.height,
+    ).toBe(true);
     expect((await header.boundingBox())?.y).toBe(0);
     await page.screenshot({ path: `${evidence}/home-390-short-scrolled.png` });
     await page.setViewportSize({ width: 1440, height: 900 });
