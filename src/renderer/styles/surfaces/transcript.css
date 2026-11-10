@@ -61,7 +61,7 @@
     flex-direction: row-reverse;
     justify-content: flex-start;
     align-items: flex-start;
-    gap: var(--space-2);
+    gap: 0;
     padding: 0;
     border-radius: 0;
     background: transparent;
@@ -108,13 +108,29 @@
     line-height: var(--prose-leading);
   }
 
-  /* Turn actions sit beside the bubble (not over it). */
+  /* Turn actions hang just left of the bubble without taking any room:
+     the container is a zero-width flex item whose content overflows
+     toward the start edge (justify-content: flex-end), so a hidden
+     "第 N 轮 · 收起本轮" no longer leaves a gap beside the request. The
+     legacy rules still reveal it on hover / focus-within and keep it
+     visible on hover:none devices. */
   .wb-app .message-user > .transcript-turn-actions {
-    position: static;
-    flex: none;
+    position: relative;
+    inset: auto;
+    right: var(--space-2);
+    z-index: 1;
+    flex: 0 0 0;
+    justify-content: flex-end;
+    width: 0;
     margin: 0;
     padding-top: var(--space-1-5);
     gap: var(--space-1);
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  .wb-app .message-user > .transcript-turn-actions > * {
+    flex: none;
   }
 
   .wb-app .transcript-turn-badge {
@@ -153,20 +169,31 @@
     }
   }
 
-  /* Narrow: the bubble widens a little and the actions drop below it,
-     right-aligned under the bubble's edge. */
+  /* Narrow: the bubble widens a little. With a pointer that can hover the
+     actions keep overlaying (on a canvas-coloured chip, since the bubble
+     may now reach them); touch-only devices, where they are always shown,
+     get them in flow under the bubble, right-aligned. */
   @media (max-width: 640px) {
-    .wb-app .message-user {
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0;
-    }
-
     .wb-app .message-user-card {
       max-width: var(--user-bubble-measure-narrow);
     }
 
+    .wb-app .message-user > .transcript-turn-actions > * {
+      border-radius: var(--radius-control);
+      background: var(--canvas-bg);
+    }
+  }
+
+  @media (max-width: 640px) and (hover: none) {
+    .wb-app .message-user {
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
     .wb-app .message-user > .transcript-turn-actions {
+      right: 0;
+      flex: none;
+      width: auto;
       padding-top: var(--space-1);
     }
   }

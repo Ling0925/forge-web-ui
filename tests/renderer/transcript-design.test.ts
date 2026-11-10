@@ -75,10 +75,23 @@ describe("transcript surface stylesheet", () => {
     const card = transcriptCss.match(/\.wb-app \.message-user-card \{[^}]*\}/);
     expect(card?.[0]).toContain("max-width: var(--user-bubble-measure)");
     expect(tokensCss).toMatch(/--user-bubble-measure:\s*80%/);
-    // Narrow screens stack the actions under the bubble, still on the right.
+    // Touch-only narrow screens stack the always-visible actions under
+    // the bubble, still on the right.
     expect(transcriptCss).toMatch(
-      /@media \(max-width: 640px\)\s*\{\s*\.wb-app \.message-user \{[^}]*align-items: flex-end/,
+      /@media \(max-width: 640px\) and \(hover: none\)\s*\{\s*\.wb-app \.message-user \{[^}]*align-items: flex-end/,
     );
+  });
+
+  it("overlays the turn actions instead of reserving a gap beside the bubble", () => {
+    const actions = transcriptCss.match(
+      /\.wb-app \.message-user > \.transcript-turn-actions \{[^}]*\}/,
+    )?.[0];
+    expect(actions).toContain("width: 0");
+    expect(actions).toContain("flex: 0 0 0");
+    expect(actions).toContain("justify-content: flex-end");
+    expect(actions).toContain("overflow: visible");
+    const row = transcriptCss.match(/\.wb-app \.message-user \{[^}]*\}/)?.[0];
+    expect(row).toContain("gap: 0");
   });
 
   it("draws the collapsed-turn notice with a solid hairline", () => {
