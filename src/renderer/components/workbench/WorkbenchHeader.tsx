@@ -8,6 +8,12 @@ import {
 import { IconButton } from "../primitives/IconButton";
 import { CommandPalette } from "./CommandPalette";
 
+/** Folder label for a workspace path; the full path stays in the tooltip. */
+function workspaceName(workspace: string) {
+  const trimmed = workspace.replace(/[\\/]+$/, "");
+  return trimmed.split(/[\\/]/).pop() || workspace;
+}
+
 interface WorkbenchHeaderProps {
   readonly isNew: boolean;
   readonly pending: number;
@@ -37,6 +43,7 @@ export function WorkbenchHeader({
   const state = useWorkbenchSelector(
     ({ state }) => ({
       activeTitle: state.activeSnapshot?.title,
+      activeWorkspace: state.activeSnapshot?.workspace,
       isMobileSidebarOpen: state.isMobileSidebarOpen,
       mobileTab: state.mobileTab,
     }),
@@ -55,6 +62,10 @@ export function WorkbenchHeader({
     ? state.mobileTab === "inspector"
     : !inspector.collapsed;
   const title = isNew ? "新会话" : (state.activeTitle ?? "Forge 工作台");
+  // Breadcrumb parent: the open session's workspace folder. A new session has
+  // no workspace until the composer picks one (that state is Composer-local),
+  // so it shows the title alone instead of a guessed folder.
+  const workspace = isNew ? undefined : state.activeWorkspace;
   return (
     <header className="workbench-task-header">
       <div className="wb-header-start">
@@ -69,6 +80,16 @@ export function WorkbenchHeader({
         <CommandPalette />
       </div>
       <div className="wb-header-title">
+        {workspace && (
+          <>
+            <span className="wb-header-crumb" title={workspace}>
+              {workspaceName(workspace)}
+            </span>
+            <span className="wb-header-sep" aria-hidden="true">
+              /
+            </span>
+          </>
+        )}
         <h1 title={title}>{title}</h1>
       </div>
       <div className="wb-header-end wb-header-actions">

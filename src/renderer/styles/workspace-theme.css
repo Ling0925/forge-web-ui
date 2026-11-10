@@ -93,6 +93,18 @@
   --shadow-dropdown: 0 2px 4px -2px rgb(20 22 27 / 6%), 0 6px 16px -4px
     rgb(20 22 27 / 10%);
 
+  /* Design A elevation tiers + washes (UI migration phase 2a-v2). */
+  --shadow-hairline: 0 1px 2px rgb(16 18 40 / 5%);
+  --shadow-raised: 0 1px 2px rgb(16 18 40 / 4%), 0 8px 24px -12px
+    rgb(16 18 40 / 14%);
+  --shadow-floating: 0 2px 6px rgb(16 18 40 / 5%), 0 24px 48px -16px
+    rgb(16 18 40 / 22%);
+  --hairline: rgb(21 23 30 / 8%);
+  --hairline-strong: rgb(21 23 30 / 14%);
+  --hover-wash: rgb(21 23 30 / 4.5%);
+  --active-wash: rgb(21 23 30 / 7%);
+  --inner-highlight: rgb(255 255 255 / 100%);
+
   /* Chart series follow the Iris palette, sampled by charts/theme.ts. */
   --chart-series: #4f45db, #027e47, #b46d10, #ac43a5, #0070a6, #0f9293, #5f636e;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
@@ -180,59 +192,25 @@
   --shadow-dropdown: 0 6px 16px -4px rgb(0 0 0 / 50%), inset 0 0 0 1px
     rgb(255 255 255 / 5%);
 
+  /* Design A elevation tiers + washes (UI migration phase 2a-v2). Dark
+     dividers are white 8-14% so they stay visible on near-black (小修 3). */
+  --shadow-hairline: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 40%), 0 12px 28px -12px
+    rgb(0 0 0 / 60%);
+  --shadow-floating: 0 2px 6px rgb(0 0 0 / 40%), 0 28px 56px -16px
+    rgb(0 0 0 / 70%);
+  --hairline: rgb(255 255 255 / 8%);
+  --hairline-strong: rgb(255 255 255 / 14%);
+  --hover-wash: rgb(255 255 255 / 5%);
+  --active-wash: rgb(255 255 255 / 8%);
+  --inner-highlight: rgb(255 255 255 / 6%);
+
   /* Chart series follow the Iris palette, sampled by charts/theme.ts. */
   --chart-series: #9ba0ff, #59c886, #eeb154, #dc89d5, #5cb4ef, #5ecbcb, #9b9ea8;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
   --chart-heat: #14161c, #6262cc, #c7cdff;
 }
 
-.wb-app .workbench-task-header {
-  border-bottom-color: transparent;
-  padding-inline: var(--space-6);
-}
-.wb-app .wb-header-title h1 {
-  /* The active conversation is the primary wayfinding label of the whole
-     surface, so it keeps primary ink at 14px/600 inside the 44px header
-     rather than receding to muted 13px secondary text. */
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-.wb-app .sidebar-brand-row {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-}
-.wb-app .sidebar-title {
-  font-size: var(--text-lg);
-  letter-spacing: -0.04em;
-}
-.wb-app .sidebar-new-btn {
-  background: var(--surface-selected);
-  color: var(--text-primary);
-  border-color: transparent;
-  min-height: var(--control-height-lg);
-}
-/* Brand row stacks on wide screens, so the primary action owns the full rail
-   width (DESIGN.md §7.2: 通栏静默新建任务按钮) instead of hugging its label. */
-.wb-app .sidebar-brand-actions {
-  width: 100%;
-}
-.wb-app .sidebar-brand-actions .sidebar-new-btn {
-  flex: 1;
-  min-width: 0;
-}
-.wb-app .sidebar-search-input-wrap {
-  background: transparent;
-  border-color: transparent;
-}
-.wb-app .sidebar-search-input-wrap:focus-within {
-  border-color: transparent;
-}
-.wb-app .sidebar-empty {
-  margin-block: var(--space-12);
-  text-align: center;
-}
 .forge-mark {
   display: block;
   flex-shrink: 0;

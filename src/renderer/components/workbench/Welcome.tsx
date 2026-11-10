@@ -1,17 +1,24 @@
 import { isPrimarySession } from "@forge/core/shared";
 import {
-  ArrowUpRight,
-  ChatCircleText,
-  ClockCounterClockwise,
+  ArrowRight,
+  CheckCircle,
+  CircleNotch,
   FolderSimple,
+  HandPalm,
+  type Icon,
+  Pause,
   Sparkle,
+  StopCircle,
+  WarningCircle,
 } from "@phosphor-icons/react";
 import * as m from "motion/react-m";
 import { useId, useState } from "react";
+import { dateEyebrow, greeting, relativeTime } from "#lib/relative-time";
+import { spring } from "#lib/springs";
 import { cn } from "#lib/utils";
-import { Badge } from "#ui/badge";
 import { Skeleton } from "#ui/skeleton";
 import { Spinner } from "#ui/spinner";
+import type { SessionStatus } from "../../shared-types";
 import {
   shallowEqual,
   useWorkbenchActions,
@@ -23,15 +30,59 @@ import { ForgeMark } from "../primitives/ForgeMark";
 const column =
   "mx-auto w-[min(var(--reading-measure),calc(100%-2*var(--space-8)))] max-[1000px]:w-[calc(100%-2*var(--space-4))]";
 
-const listShell =
-  "m-0 grid list-none gap-0.5 rounded-xl border border-border bg-card/80 p-1 shadow-xs backdrop-blur-sm";
-
 const workspaceName = (workspace: string) =>
   workspace
     .replace(/[\\/]+$/, "")
     .split(/[\\/]/)
     .pop() || workspace;
 
+/** Status tile for a recent row: icon, tint and the spoken label. */
+const statusTile: Readonly<
+  Record<SessionStatus, { icon: Icon; tone: string; label: string }>
+> = {
+  running: {
+    icon: CircleNotch,
+    tone: "bg-brand-soft text-brand",
+    label: "执行中",
+  },
+  awaiting_approval: {
+    icon: HandPalm,
+    tone: "bg-warning-soft text-warning",
+    label: "待批准",
+  },
+  completed: {
+    icon: CheckCircle,
+    tone: "bg-success-soft text-success",
+    label: "完成",
+  },
+  failed: {
+    icon: WarningCircle,
+    tone: "bg-error-soft text-error",
+    label: "失败",
+  },
+  cancelled: {
+    icon: StopCircle,
+    tone: "bg-muted text-muted-foreground",
+    label: "已取消",
+  },
+  interrupted: {
+    icon: Pause,
+    tone: "bg-warning-soft text-warning",
+    label: "中断",
+  },
+  idle: {
+    icon: Sparkle,
+    tone: "bg-muted text-muted-foreground",
+    label: "空闲",
+  },
+};
+
+/**
+ * Design A welcome (design-v2/spec.md §3.A): date eyebrow, two-line greeting
+ * headline, and a hairline list of recent tasks. Every field is real: the
+ * clock, and each session's status / title / workspace / updatedAt. The
+ * composer stays docked below this scroll region (App.tsx owns that order).
+ */
 export function Welcome() {
   const { selectSession } = useWorkbenchActions();
   const state = useWorkbenchSelector(
@@ -48,6 +99,7 @@ export function Welcome() {
   // One shared highlight glides between rows on hover / keyboard focus.
   const highlightId = useId();
   const [active, setActive] = useState<string | null>(null);
+  const now = new Date();
 
   return (
     <div
@@ -57,157 +109,226 @@ export function Welcome() {
     >
       <section
         className={cn(
-          "wb-new-session-intro my-auto flex shrink-0 flex-col py-8 max-[1000px]:py-4 [@media(max-height:700px)]:py-4",
-          "fade-in-0 slide-in-from-bottom-2 animate-in duration-300 ease-out",
+          "wb-new-session-intro my-auto flex shrink-0 flex-col py-10 max-[1000px]:py-5 [@media(max-height:700px)]:py-4",
           column,
         )}
         aria-labelledby="welcome-title"
       >
-        <div className="welcome-heading flex flex-col items-center gap-4 text-center">
-          <div className="relative">
-            <span
-              aria-hidden="true"
-              className="-inset-5 absolute rounded-full bg-brand/25 blur-2xl"
-            />
-            <span className="relative flex size-14 items-center justify-center rounded-xl border border-border bg-card shadow-card">
-              <ForgeMark className="welcome-mark size-9" />
-            </span>
-          </div>
+        <div className="welcome-heading fade-in-0 slide-in-from-bottom-1 flex animate-in flex-col gap-3 duration-300 ease-out">
+          <p className="m-0 inline-flex items-center gap-2 font-medium text-brand text-meta">
+            <ForgeMark className="welcome-mark size-5" />
+            <span>{dateEyebrow(now)}</span>
+          </p>
           <h2
             id="welcome-title"
-            className="m-0 text-balance font-semibold text-2xl text-foreground tracking-tight max-[640px]:text-xl"
+            className="m-0 text-balance font-semibold text-foreground text-hero max-[640px]:text-[length:var(--text-hero-narrow)] max-[640px]:leading-[var(--leading-hero-narrow)]"
           >
-            今天，想做点什么？
+            {greeting(now)}。
+            <br />
+            <span className="text-tertiary-text">今天，想做点什么？</span>
           </h2>
         </div>
-        <p className="mx-auto mt-2 mb-0 max-w-[36ch] text-balance text-center text-secondary-text text-sm">
-          继续之前的工作，或开始一项新任务。
-        </p>
         <section
-          className="welcome-recent mt-8 max-[640px]:mt-6"
+          className="welcome-recent mt-12 max-[640px]:mt-8 [@media(max-height:700px)]:mt-6"
           aria-labelledby="recent-tasks-title"
           aria-busy={state.isSessionsLoading}
         >
-          <div className="mb-2 flex items-center justify-between gap-2 px-1">
+          <div className="mb-1 flex items-baseline justify-between gap-2 px-3 max-[640px]:px-1">
             <h3
               id="recent-tasks-title"
-              className="m-0 inline-flex items-center gap-1.5 font-medium text-secondary-text text-xs"
+              className="m-0 font-medium text-meta text-tertiary-text"
             >
-              <ClockCounterClockwise size={14} aria-hidden="true" />
               最近任务
             </h3>
             {recent.length > 0 && (
-              <Badge variant="secondary" aria-hidden="true">
+              <span
+                aria-hidden="true"
+                className="text-caption text-muted-foreground tabular-nums"
+              >
                 {recent.length}
-              </Badge>
+              </span>
             )}
           </div>
           {recent.length > 0 ? (
             <ul
-              className={cn("welcome-task-list", listShell)}
+              className="welcome-task-list m-0 grid list-none p-0"
               onPointerLeave={() => setActive(null)}
             >
-              {recent.map((session, index) => (
-                <li
-                  key={session.id}
-                  className="relative fade-in-0 slide-in-from-bottom-1 animate-in fill-mode-backwards duration-200 ease-out"
-                  style={{ animationDelay: `${index * 40}ms` }}
-                >
-                  {active === session.id && (
-                    <m.span
-                      layoutId={highlightId}
-                      aria-hidden="true"
-                      className="absolute inset-0 rounded-lg bg-accent"
-                    />
-                  )}
-                  <button
-                    className={cn(
-                      "welcome-task group relative flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent px-3 py-2.5 text-left font-[inherit] text-foreground",
-                      "outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus-ring)]",
-                    )}
-                    type="button"
-                    onPointerEnter={() => setActive(session.id)}
-                    onFocus={() => setActive(session.id)}
-                    onBlur={() => setActive(null)}
-                    onClick={() => void selectSession(session.id)}
+              {recent.map((session, index) => {
+                const tile = statusTile[session.status] ?? statusTile.idle;
+                const TileIcon = tile.icon;
+                const when = relativeTime(session.updatedAt, now);
+                return (
+                  <li
+                    key={session.id}
+                    className="relative fade-in-0 slide-in-from-bottom-1 animate-in fill-mode-backwards duration-200 ease-out"
+                    style={{ animationDelay: `${80 + index * 40}ms` }}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand transition-transform duration-[var(--duration-normal)] ease-out group-hover:scale-105"
+                    {active === session.id && (
+                      <m.span
+                        layoutId={highlightId}
+                        transition={spring.snappy}
+                        aria-hidden="true"
+                        className="absolute inset-0 rounded-item bg-hover-wash"
+                      />
+                    )}
+                    <button
+                      className={cn(
+                        "welcome-task group relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 rounded-item border-0 bg-transparent px-3 py-3 text-left font-[inherit] text-foreground max-[640px]:px-1",
+                        "outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus-ring)]",
+                      )}
+                      type="button"
+                      onPointerEnter={() => setActive(session.id)}
+                      onFocus={() => setActive(session.id)}
+                      onBlur={() => setActive(null)}
+                      onClick={() => void selectSession(session.id)}
                     >
-                      <ChatCircleText size={18} weight="duotone" />
-                    </span>
-                    <span className="welcome-task-content min-w-0 flex-1">
-                      <span className="welcome-task-title line-clamp-2 font-medium text-sm [overflow-wrap:anywhere]">
-                        {session.title}
+                      <span
+                        aria-hidden="true"
+                        title={tile.label}
+                        className={cn(
+                          "welcome-task-status flex size-8 shrink-0 items-center justify-center rounded-control",
+                          tile.tone,
+                        )}
+                      >
+                        <TileIcon
+                          size={15}
+                          weight={
+                            session.status === "running" ? "bold" : "fill"
+                          }
+                          className={
+                            session.status === "running"
+                              ? "motion-safe:animate-spin motion-safe:[animation-duration:1.6s]"
+                              : undefined
+                          }
+                        />
                       </span>
-                      <span className="welcome-task-meta mt-0.5 flex min-w-0 items-center gap-3 text-muted-foreground text-xs">
-                        <span
-                          className="inline-flex min-w-0 items-center gap-1"
-                          title={session.workspace}
-                        >
-                          <FolderSimple
-                            size={12}
-                            aria-hidden="true"
-                            className="shrink-0"
-                          />
-                          <span className="truncate">
-                            {workspaceName(session.workspace)}
+                      <span className="welcome-task-content min-w-0 flex-1">
+                        <span className="welcome-task-title block truncate font-medium text-ui">
+                          {session.title}
+                        </span>
+                        <span className="welcome-task-meta mt-0.5 flex min-w-0 items-center gap-2 text-meta text-tertiary-text">
+                          <span className="sr-only">{tile.label}，</span>
+                          <span
+                            className="inline-flex min-w-0 items-center gap-1"
+                            title={session.workspace}
+                          >
+                            <FolderSimple
+                              size={12}
+                              aria-hidden="true"
+                              className="shrink-0"
+                            />
+                            <span className="truncate">
+                              {workspaceName(session.workspace)}
+                            </span>
                           </span>
                         </span>
-                        <time className="shrink-0" dateTime={session.updatedAt}>
-                          {new Date(session.updatedAt).toLocaleDateString(
-                            "zh-CN",
-                            { month: "numeric", day: "numeric" },
-                          )}
-                        </time>
                       </span>
-                    </span>
-                    <ArrowUpRight
-                      size={16}
-                      aria-hidden="true"
-                      className="shrink-0 text-muted-foreground transition-[color,transform] duration-[var(--duration-normal)] ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand group-focus-visible:text-brand"
-                    />
-                  </button>
-                </li>
-              ))}
+                      <time
+                        className="shrink-0 text-caption text-muted-foreground tabular-nums"
+                        dateTime={session.updatedAt}
+                      >
+                        {when}
+                      </time>
+                      <ArrowRight
+                        size={15}
+                        aria-hidden="true"
+                        className="-translate-x-1 shrink-0 text-tertiary-text opacity-0 transition-[opacity,transform] duration-[var(--duration-normal)] ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 max-[640px]:hidden"
+                      />
+                    </button>
+                    {index < recent.length - 1 && (
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-3 bottom-0 left-[58px] h-px bg-hairline max-[640px]:left-[46px]"
+                      />
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           ) : state.isSessionsLoading ? (
-            <div className={listShell}>
-              <p className="welcome-empty m-0 flex min-h-11 items-center gap-2 px-3 text-muted-foreground text-xs">
+            <div>
+              <p className="welcome-empty m-0 flex min-h-11 items-center gap-2 px-3 text-meta text-muted-foreground">
                 <Spinner className="size-3.5" />
                 正在读取最近任务…
               </p>
-              {[0, 1].map((row) => (
+              {[72, 60, 48].map((width) => (
                 <div
-                  key={row}
+                  key={width}
                   aria-hidden="true"
-                  className="flex items-center gap-3 px-3 py-2.5"
+                  className="flex items-center gap-3.5 px-3 py-3"
                 >
-                  <Skeleton className="size-9 rounded-lg" />
-                  <div className="grid flex-1 gap-1.5">
-                    <Skeleton className="h-3 w-3/5" />
-                    <Skeleton className="h-2.5 w-2/5" />
+                  <Skeleton className="size-8 rounded-control" />
+                  <div className="grid flex-1 gap-2">
+                    <Skeleton
+                      className="h-3.5 rounded-full"
+                      style={{ width: `${width}%` }}
+                    />
+                    <Skeleton className="h-3 w-2/5 rounded-full" />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <section
-              className="welcome-empty flex items-center gap-3 rounded-xl border border-border border-dashed bg-card/60 px-4 py-3 text-secondary-text text-sm"
+              className="welcome-empty flex items-center gap-4 rounded-card border border-hairline-strong border-dashed px-5 py-4 text-meta text-secondary-text"
               aria-label="还没有历史任务，从下方开始。"
             >
-              <span
-                aria-hidden="true"
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
-              >
-                <Sparkle size={18} weight="duotone" />
-              </span>
+              <EmptyIllustration />
               <p className="m-0">还没有历史任务，从下方开始。</p>
             </section>
           )}
         </section>
       </section>
     </div>
+  );
+}
+
+/** Inline empty-state illustration; tokens only, no external asset. */
+function EmptyIllustration() {
+  return (
+    <svg
+      width="66"
+      height="54"
+      viewBox="0 0 88 72"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <rect
+        x="14"
+        y="14"
+        width="60"
+        height="46"
+        rx="10"
+        fill="var(--surface-soft)"
+        transform="rotate(-6 44 37)"
+      />
+      <rect
+        x="12"
+        y="10"
+        width="64"
+        height="48"
+        rx="11"
+        fill="var(--surface-elevated)"
+        stroke="var(--hairline-strong)"
+      />
+      <rect
+        x="22"
+        y="22"
+        width="26"
+        height="5"
+        rx="2.5"
+        fill="var(--hairline-strong)"
+      />
+      <rect x="22" y="32" width="40" height="4" rx="2" fill="var(--hairline)" />
+      <rect x="22" y="40" width="32" height="4" rx="2" fill="var(--hairline)" />
+      <circle cx="70" cy="14" r="9" fill="var(--accent)" />
+      <path
+        d="M70 9.5v9M65.5 14h9"
+        stroke="var(--on-accent)"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

@@ -3,7 +3,7 @@ import { build } from "esbuild";
 import { chromium } from "playwright";
 import { expect, it } from "vitest";
 
-it("sidebar hides completed dots and inline metadata, loads honest usage on hover", async () => {
+it("sidebar hides completed dots, keeps the time outside the row button, loads honest usage on hover", async () => {
   const bundle = await build({
     stdin: {
       resolveDir: resolve("."),
@@ -70,7 +70,12 @@ it("sidebar hides completed dots and inline metadata, loads honest usage on hove
     await done.waitFor();
     expect(await done.locator(".wb-status-dot").count()).toBe(0);
     expect(await page.locator(".wb-status-dot").count()).toBe(2);
-    expect(await page.locator(".session-item-time").count()).toBe(0);
+    // Design A (phase 2a-v2) brings back one quiet relative time per row. It
+    // sits after the row button, so the button's name stays the bare title.
+    expect(await page.locator(".session-item-time").count()).toBe(3);
+    expect(
+      await done.locator("xpath=..").locator(".session-item-time").count(),
+    ).toBe(1);
     expect(await page.locator("body").getAttribute("data-reads")).toBeNull();
     await done.hover();
     await page.getByRole("tooltip").getByText("1,500（部分统计）").waitFor();

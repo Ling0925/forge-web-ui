@@ -5,14 +5,14 @@ import {
   CaretRight,
   ChartBar,
   Files,
-  Folder,
-  FolderOpen,
   Gear,
   MagnifyingGlass,
+  NotePencil,
   Plus,
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { Kbd } from "#ui/kbd";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
 import {
@@ -43,6 +43,12 @@ const DEFAULT_VISIBLE_COUNT = 10;
 /** Collapse-state key; workspace keys are absolute paths, so this never clashes. */
 const SUPER_AGENT_FOLDER = "superagent:";
 const PAGE_SIZE = 10;
+/** Modifier label for the real Ctrl/Cmd+N shortcut (state/modal-shortcuts.ts). */
+const NEW_TASK_MOD =
+  typeof navigator !== "undefined" &&
+  /Mac|iPhone|iPad/.test(navigator.userAgent)
+    ? "⌘"
+    : "Ctrl";
 
 export function Sidebar() {
   const {
@@ -189,8 +195,12 @@ export function Sidebar() {
               title="新建会话 (Ctrl+N / Cmd+N)"
               aria-label="新建会话"
             >
-              <Plus size={15} weight="bold" />
+              <NotePencil size={17} weight="duotone" />
               <span>新任务</span>
+              <span className="sidebar-new-kbd" aria-hidden="true">
+                <Kbd>{NEW_TASK_MOD}</Kbd>
+                <Kbd>N</Kbd>
+              </span>
             </button>
             <IconButton
               className="sidebar-mobile-close"
@@ -281,21 +291,6 @@ export function Sidebar() {
                       className="session-folder-caret"
                       aria-hidden="true"
                     />
-                    {isCollapsed ? (
-                      <Folder
-                        size={13}
-                        weight="regular"
-                        className="session-folder-icon"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <FolderOpen
-                        size={13}
-                        weight="regular"
-                        className="session-folder-icon"
-                        aria-hidden="true"
-                      />
-                    )}
                     <span className="session-folder-name">
                       {workspaceName(group.workspace)}
                     </span>

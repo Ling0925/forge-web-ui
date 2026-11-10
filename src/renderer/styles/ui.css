@@ -24,6 +24,7 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @import "tw-animate-css";
 @import "./surfaces/composer.css";
+@import "./surfaces/sidebar.css";
 
 @source "../ui";
 @source "../showcase/UiGallery.tsx";
@@ -31,6 +32,10 @@
 @source "../components/workbench/Welcome.tsx";
 @source "../components/workbench/ComposerDropdown.tsx";
 @source "../components/workbench/useSlashCommands.tsx";
+/* Phase 2a-v2: design A sidebar / header. */
+@source "../components/workbench/Sidebar.tsx";
+@source "../components/workbench/SessionListItem.tsx";
+@source "../components/workbench/WorkbenchHeader.tsx";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -67,6 +72,20 @@
   --text-display: var(--text-display);
   --text-2xl: var(--text-2xl);
   --text-2xl--line-height: var(--leading-2xl);
+  /* Design A semantic roles (tokens.css). */
+  --text-ui: var(--text-ui);
+  --text-ui--line-height: var(--leading-ui);
+  --text-body: var(--text-body);
+  --text-body--line-height: var(--leading-body);
+  --text-meta: var(--text-meta);
+  --text-meta--line-height: var(--leading-meta);
+  --text-caption: var(--text-caption);
+  --text-caption--line-height: var(--leading-caption);
+  --text-title: var(--text-title);
+  --text-title--line-height: var(--leading-title);
+  --text-hero: var(--text-hero);
+  --text-hero--line-height: var(--leading-hero);
+  --text-hero--letter-spacing: var(--tracking-hero);
 
   --leading-none: var(--leading-none);
   --leading-tight: var(--leading-tight);
@@ -81,6 +100,9 @@
   --radius-xl: var(--radius-xl);
   --radius-composer: var(--radius-composer);
   --radius-full: var(--radius-full);
+  --radius-control: var(--radius-control);
+  --radius-item: var(--radius-item);
+  --radius-surface: var(--radius-surface);
 
   --shadow-xs: var(--shadow-xs);
   --shadow-sm: var(--shadow-sm);
@@ -88,8 +110,12 @@
   --shadow-composer: var(--shadow-composer);
   --shadow-dropdown: var(--shadow-dropdown);
   --shadow-overlay: var(--shadow-overlay);
+  --shadow-hairline: var(--shadow-hairline);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-floating: var(--shadow-floating);
 
   --ease-out: var(--ease-out);
+  --ease-soft: var(--ease-soft);
 
   /* shadcn semantic colors -> workspace-theme.css. shadcn's `accent` is the
      hover surface; the Iris brand (legacy --accent) is `brand`. */
@@ -147,4 +173,8 @@
   --color-info-soft: var(--info-bg);
   --color-info-border: var(--info-border);
   --color-hover-border: var(--border-hover);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-hover-wash: var(--hover-wash);
+  --color-active-wash: var(--active-wash);
 }

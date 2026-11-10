@@ -18,7 +18,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 2. [workspace-theme.css](../src/renderer/styles/workspace-theme.css)：唯一的颜色来源（浅色 / 深色两套：表面、五级墨色、边框、主强调、焦点、状态色、阴影、图表色），其后是工作台级的组件覆盖规则。
 3. [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 与 [app.css](../src/renderer/components/workbench/app.css)：负责主框架、侧栏紧凑密度与响应式断点。
 4. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现。
-5. 已迁移区域的新样式在 `styles/surfaces/*.css`（UI 迁移阶段 2a 起，目前是 `composer.css`）：由 `ui.css` 内联，落在 Tailwind 的 `@layer components`，按层序压过 `@layer legacy` 的旧规则；被替换的旧规则同步删除，避免未覆盖的属性漏过来。新的组件 JSX 优先直接写 Tailwind 工具类；受保护文件（如 `Composer.tsx`）通过原有 class 钩子在 surfaces 里换皮。
+5. 已迁移区域的新样式在 `styles/surfaces/*.css`（UI 迁移阶段 2a 起，目前是 `composer.css`、`sidebar.css`）：由 `ui.css` 内联，落在 Tailwind 的 `@layer components`，按层序压过 `@layer legacy` 的旧规则；被替换的旧规则同步删除，避免未覆盖的属性漏过来。新的组件 JSX 优先直接写 Tailwind 工具类；受保护文件（如 `Composer.tsx`）通过原有 class 钩子在 surfaces 里换皮。
 
 ---
 
@@ -99,6 +99,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 ### 4.2 会话输入框（`Composer`）与执行态表现
 
 - **阶段 2a 重做（2026-11-10）**：新会话页（`Welcome`）与输入区的外观在 `styles/surfaces/composer.css` 与组件内 Tailwind 工具类中；行为、键盘、ARIA 与测试依赖的 class/几何（续写输入框 36px、新会话输入框 100px、发送键 44px、新会话输入框距底 24px）保持不变。上下文分段色使用 `--context-instructions` / `--context-memory` / `--context-conversation` / `--context-tools` token。
+- **阶段 2a-v2 设计稿 A（2026-11-10）**：字号角色 `--text-ui/body/meta/caption`（14/15/13/12）、`--space-7/9`、圆角三档 `--radius-control/item/surface`（8/10/20）在 `tokens.css`；阴影三档 `--shadow-hairline/raised/floating` 与 `--hairline`、`--hover-wash` 等颜色在 `workspace-theme.css`；弹簧预设在 `lib/springs.ts`（CSS 对应 `--ease-soft`）。侧栏外观在 `styles/surfaces/sidebar.css`，`workbench.css` 只保留结构、折叠/显隐机制与触屏 44px 下限（外观用 `height`，触屏规则用 `min-height` 抬高）。侧栏行 30px，行尾相对时间 `.session-item-time` 在行按钮之外，悬停/聚焦时让位给操作按钮，粗指针下隐藏。顶栏标题区为“工作区 / 标题”面包屑（≤640px 只留标题），高度仍 44 / 56。
 - **垂直高度稳定铁律**：当会话在「空闲 ↔ 正在执行」之间切换时，**严禁在输入框上方动态挂载/卸载独立的文字提示横幅行**（会导致上方对话流与输入框整体上下跳动）。
 - **执行态动画合成到上下文进度条**：
   - 会话执行状态直接体现在底部工具栏的**上下文用量胶囊（`UsagePopover` `.usage-trigger-pill`）**上。
