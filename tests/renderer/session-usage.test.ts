@@ -186,7 +186,8 @@ it("usage popover stays readable and dismissible on desktop/mobile in both theme
           document.documentElement.dataset.theme = value;
         }, theme);
         const trigger = page.getByLabel("上下文与用量", { exact: true });
-        expect(await trigger.innerText()).toContain("CH 97.6%");
+        // Design A: the trigger shows the context share; CH lives in the panel.
+        expect(await trigger.innerText()).toContain("上下文 46.4%");
         expect(await trigger.innerText()).toContain("1M");
         const track = await page.locator(".usage-track").boundingBox();
         if (!track) throw new Error("Missing context track");

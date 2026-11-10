@@ -1430,42 +1430,6 @@
   overflow-wrap: anywhere;
 }
 
-.configured-model-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.configured-model-card-facts {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 2px 10px;
-  margin: 0;
-  font-size: var(--text-xs);
-}
-
-.configured-model-card-facts > div {
-  display: contents;
-}
-
-.configured-model-card-facts dt {
-  color: var(--text-muted);
-}
-
-.configured-model-card-facts dd {
-  margin: 0;
-  color: var(--text-secondary);
-  overflow-wrap: anywhere;
-}
-
-.configured-model-card-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 4px;
-}
-
 .provider-models-body {
   padding: 12px 16px 16px;
   min-width: 0;

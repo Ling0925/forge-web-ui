@@ -19,6 +19,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 3. [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 与 [app.css](../src/renderer/components/workbench/app.css)：负责主框架、侧栏紧凑密度与响应式断点。
 4. [design-foundation.css](../src/renderer/styles/design-foundation.css)：共享动画和基础控件外观，只引用上述 token，不再覆盖 token。
 5. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现。
+6. 已迁移区域的新样式在 `styles/surfaces/*.css`（UI 迁移阶段 2a 起，目前是 `composer.css`、`sidebar.css`）：由 `ui.css` 内联，落在 Tailwind 的 `@layer components`，按层序压过 `@layer legacy` 的旧规则；被替换的旧规则同步删除，避免未覆盖的属性漏过来。新的组件 JSX 优先直接写 Tailwind 工具类；受保护文件（如 `Composer.tsx`）通过原有 class 钩子在 surfaces 里换皮。
 
 ---
 
@@ -28,37 +29,39 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ### 2.1 主强调色 vs 完成/成功色
 
+> 调色板：**雾紫 Iris**（UI 迁移阶段 1，2026-11-10 起）。交互控件边框 `--border-control` 浅 `#85878f` / 深 `#6a6b73`，对画布、侧栏、卡片、内嵌槽位均 ≥ 3:1（WCAG 1.4.11）；装饰分隔线 `--border-subtle` 保持淡色。
+
 | 语义场景 | 必须使用的 Token | 浅色实际值 | 深色实际值 | 严禁使用的错误写法 |
 | :--- | :--- | :--- | :--- | :--- |
-| **主强调 / 进行中 / 激活** | `var(--accent)`、`var(--accent-soft)`、`var(--on-accent)` | `#a54f35`（赤陶色） | `#dc9477`（暖赤陶） | 严禁使用蓝色 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
-| **键盘焦点 / 输入聚焦** | `var(--focus-ring)`、`var(--focus-halo)` | `#4a4740`（中性墨） | `#cfcbc1` | 不要用 `--accent` 做焦点色，赤陶与错误红同色系，聚焦会像报错 |
-| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#226d40`（森林鼠尾草绿） | `#34d399`（柔翠绿） | 严禁硬编码刺眼亮绿 `#16a34a` |
-| **警告 / 待确认 / 队列提示** | `var(--warning)`、`var(--warning-bg)`、`var(--warning-border)` | `#975a06` | `#fbbf24` | 严禁使用无对比度的纯黄 `#ffff00` |
-| **错误 / 失败 / 危险操作** | `var(--error)`、`var(--error-bg)`、`var(--error-border)` | `#b82420` | `#f87171` | 严禁使用纯红 `#ff0000`；`--danger` 已移除 |
+| **主强调 / 进行中 / 激活** | `var(--accent)`、`var(--accent-soft)`、`var(--on-accent)` | `#4f45db`（雾紫 Iris） | `#9ba0ff` | 只经 token 引用；严禁硬编码 Tailwind 蓝 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
+| **键盘焦点 / 输入聚焦** | `var(--focus-ring)`、`var(--focus-halo)` | `#696bf4`（亮雾紫） | `#8d90ff` | 焦点只用 `--focus-ring`，不要用 `--error` 系；与错误红不同色相，对所有底色 ≥ 3:1 |
+| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#027e47` | `#59c886` | 严禁硬编码刺眼亮绿 `#16a34a` |
+| **警告 / 待确认 / 队列提示** | `var(--warning)`、`var(--warning-bg)`、`var(--warning-border)` | `#925601` | `#eeb154` | 严禁使用无对比度的纯黄 `#ffff00` |
+| **错误 / 失败 / 危险操作** | `var(--error)`、`var(--error-bg)`、`var(--error-border)` | `#d61b2a` | `#f0555b` | 严禁使用纯红 `#ff0000`；`--danger` 已移除 |
 
 > 旧的 `--accent-sage`（名为绿、值为赤陶）已移除。需要「绿色」表示步骤完成、任务成功或连接正常时，使用 `var(--success)` 或 `color-mix(in srgb, var(--success) XX%, transparent)`；token 均全局定义，`var()` 不需要写十六进制 fallback。
 
 ### 2.2 严禁出现原生蓝（Off-Brand Blue）与脏渐变
 
-- **禁止任何蓝色残留**：工作台调色板中**没有任何蓝色**。严禁在边框、阴影、徽章或 fallback 中写入 `rgba(59, 130, 246, ...)`、`#2563eb`、`#3b82f6`。半透明主色边框统一写为 `color-mix(in srgb, var(--accent) 24%, transparent)`。
-- **禁止跨色相红绿渐变**：严禁编写 `linear-gradient(90deg, var(--accent) 0%, var(--success) 100%)`（赤陶红到绿色会在中间产生浑浊的褐色）。多状态进度条必须采用**分段拼接（Segmented Track）**：已完成段使用 `var(--success)`，进行中/缓存段紧随其后使用 `var(--accent)`。
+- **禁止硬编码蓝色**：Iris 调色板的蓝紫只通过 `--accent` / `--focus-ring` / `--info` 等 token 出现。严禁在边框、阴影、徽章或 fallback 中写入 `rgba(59, 130, 246, ...)`、`#2563eb`、`#3b82f6` 等字面量。半透明主色边框统一写为 `color-mix(in srgb, var(--accent) 24%, transparent)`。
+- **禁止跨色相红绿渐变**：严禁编写 `linear-gradient(90deg, var(--accent) 0%, var(--success) 100%)`（主色到绿色会在中间产生浑浊的过渡色）。多状态进度条必须采用**分段拼接（Segmented Track）**：已完成段使用 `var(--success)`，进行中/缓存段紧随其后使用 `var(--accent)`。
 
 ### 2.3 表面层级（Surface Hierarchy）与反套娃原则
 
 | 层级 | Token | 浅色值 | 深色值 | 典型用途 |
 | :--- | :--- | :--- | :--- | :--- |
-| 外壳 | `var(--surface-shell)` | `#ebe9e3` | `#0f0e0d` | 应用最外层背景 |
-| 画布底色 | `var(--canvas-bg)` | `#f9f8f5` | `#181715` | 主对话阅读区、设置主背景 |
-| 侧栏底色 | `var(--sidebar-bg)` | `#f1efea` | `#131211` | 左侧会话栏、设置左侧导航 |
-| 一级卡片 / 浮层 | `var(--surface-elevated)` | `#ffffff` | `#211f1d` | 卡片、Popover、输入框主体 |
-| 抬升层 | `var(--surface-raised)` | `#fffefc` | `#272522` | 卡片上的悬停态、浮层内的突出块 |
-| 二级内嵌槽位 | `var(--surface-soft)` | `#f3f1ec` | `#1d1c1a` | 卡片内子块、代码块、空状态底框 |
-| 下沉槽位 | `var(--surface-sunken)` | `#eceae4` | `#141312` | 输入槽、进度条底轨 |
-| 悬停 / 按下 / 选中 | `--surface-hover` / `--surface-active` / `--surface-selected` | 暖墨色 6% / 10% / 8% 透明叠加 | 暖白 5% / 9% / 7% 透明叠加 | 列表项、菜单项、幽灵按钮 |
+| 外壳 | `var(--surface-shell)` | `#eef0f4` | `#0a0b0f` | 应用最外层背景 |
+| 画布底色 | `var(--canvas-bg)` | `#f9fafc` | `#0d0e12` | 主对话阅读区、设置主背景 |
+| 侧栏底色 | `var(--sidebar-bg)` | `#f5f6f8` | `#090a0e` | 左侧会话栏、设置左侧导航 |
+| 一级卡片 / 浮层 | `var(--surface-elevated)` | `#ffffff` | `#14151a` | 卡片、Popover、输入框主体 |
+| 抬升层 | `var(--surface-raised)` | `#ffffff` | `#1b1c23` | 卡片上的悬停态、浮层内的突出块 |
+| 二级内嵌槽位 | `var(--surface-soft)` | `#f1f2f6` | `#1d1e23` | 卡片内子块、代码块、空状态底框 |
+| 下沉槽位 | `var(--surface-sunken)` | `#f3f4f7` | `#0f1015` | 输入槽、进度条底轨 |
+| 悬停 / 按下 / 选中 | `--surface-hover` / `--surface-active` / `--surface-selected` | `#edeffc` / `#e3e5f7` / `#e7e9f3` | `#23243a` / `#292b44` / `#1b1d2c` | 列表项、菜单项、幽灵按钮 |
 
-- **边框**：`--border-subtle`（分隔线、卡片描边）→ `--border-control`（输入框、次按钮）→ `--border-hover`（悬停）→ `--border-strong`（强调），都是暖墨色半透明，不写死灰色。
-- **阴影**：只用 `--shadow-xs / sm / card / composer / dropdown / overlay` 六档，暖色调分层阴影（环境阴影 + 贴合阴影）。浮层（下拉、Popover）用 `--shadow-dropdown`，不再加边框；对话框用 `--shadow-overlay`。卡片顶部可叠加 `var(--edge-highlight)` 表现纸面受光。
-- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`（14%）、描边 `--accent-border`、光晕 `--accent-glow`。主色按钮用 `.btn-accent`（`--accent` 底 + `--on-accent` 字）。
+- **边框**：`--border-subtle`（分隔线、卡片描边）→ `--border-control`（输入框、次按钮）→ `--border-hover`（悬停）→ `--border-strong`（强调），统一取 Iris 冷灰阶，不写死灰色。
+- **阴影**：只用 `--shadow-xs / sm / card / composer / dropdown / overlay` 六档；浮层（下拉、Popover）用 `--shadow-dropdown`，对话框用 `--shadow-overlay`。卡片顶部可叠加 `var(--edge-highlight)`。
+- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`、描边 `--accent-border`、光晕 `--accent-glow`，都由 Iris `--accent` 经 `color-mix` 派生。主色按钮用 `.btn-accent`（`--accent` 底 + `--on-accent` 字）。
 
 - **表面交替铁律**：当卡片内部需要再分组时，外层用 `--surface-elevated`，内层子块必须用 `--surface-soft`（反之亦然），通过明度差建立秩序。
 - **反套娃铁律**：严禁出现「外层带边框大卡片 → 中层带边框分组卡 → 内层带边框表单卡」的 3 层以上无意义边框套娃（尤其是在 `SettingsModal` 中，右侧页面级容器不得再包裹多余的外层 `.settings-card`）。
@@ -103,6 +106,8 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ### 4.2 会话输入框（`Composer`）与执行态表现
 
+- **阶段 2a 重做（2026-11-10）**：新会话页（`Welcome`）与输入区的外观在 `styles/surfaces/composer.css` 与组件内 Tailwind 工具类中；行为、键盘、ARIA 与测试依赖的 class/几何（续写输入框 36px、新会话输入框 100px、发送键 44px、新会话输入框距底 24px）保持不变。上下文分段色使用 `--context-instructions` / `--context-memory` / `--context-conversation` / `--context-tools` token。
+- **阶段 2a-v2 设计稿 A（2026-11-10）**：字号角色 `--text-ui/body/meta/caption`（14/15/13/12）、`--space-7/9`、圆角三档 `--radius-control/item/surface`（8/10/20）在 `tokens.css`；阴影三档 `--shadow-hairline/raised/floating` 与 `--hairline`、`--hover-wash` 等颜色在 `workspace-theme.css`；弹簧预设在 `lib/springs.ts`（CSS 对应 `--ease-soft`）。侧栏外观在 `styles/surfaces/sidebar.css`，`workbench.css` 只保留结构、折叠/显隐机制与触屏 44px 下限（外观用 `height`，触屏规则用 `min-height` 抬高）。侧栏行 30px，行尾相对时间 `.session-item-time` 在行按钮之外，悬停/聚焦时让位给操作按钮，粗指针下隐藏。顶栏标题区为“工作区 / 标题”面包屑（≤640px 只留标题），高度仍 44 / 56。新会话页的问候和最近任务放在 `Welcome` 的 `.wb-new-session-scroll` 滚动区里（命名 region“欢迎与最近任务”，两者合成一块，在区内垂直居中，禁止横向滚动）。输入区固定在底部，距底 24px（≤1000px 为 12px，高度 ≤700px 时为 16px）。会话视图下消息流滚动，输入区同样贴底。两种视图里 Composer 在树中的位置不变，切换视图不会重新挂载。Composer 的状态逻辑在 `useComposerController.ts`，`Composer.tsx` 只负责渲染；卡片头左边放工作区选择器（新会话），右边放本轮计时（`RunTimer`，起点取本会话最后一个 `run_started` 事件的时间戳），工具栏的模式和权限显示文字标签（≤400px 只显示图标）。卡片头最右边是上下文用量：一条 48px 细条加“上下文 N%”，点开后在卡片上方显示分段明细。缓存命中（CH）只在明细面板里显示；压缩预留区用中性色，不再用红色斜纹。模型面板、模式/权限菜单和用量面板都以卡片为定位盒，弹层底边在卡片上沿上方 8px（`bottom: calc(100% + 8px)`），不会盖住输入区和发送键；≤640px 时左右撑满卡片宽度。侧栏行左侧有固定宽度的状态点列：执行中、待批准、失败、已取消、中断这几种状态显示圆点，已完成和空闲不显示。分组标题是 12px 的说明文字，折叠箭头和计数只在悬停、键盘聚焦或分组折叠时出现（粗指针下一直显示）。
 - **垂直高度稳定铁律**：当会话在「空闲 ↔ 正在执行」之间切换时，**严禁在输入框上方动态挂载/卸载独立的文字提示横幅行**（会导致上方对话流与输入框整体上下跳动）。
 - **执行态动画合成到上下文进度条**：
   - 会话执行状态直接体现在底部工具栏的**上下文用量胶囊（`UsagePopover` `.usage-trigger-pill`）**上。
@@ -180,23 +185,76 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 - **焦点**：键盘焦点用 `outline: 2px solid var(--focus-ring)`；输入框聚焦用中性 `--focus-ring` 描边和 `--focus-halo` 光晕。程序设置焦点的非交互元素（`tabindex="-1"` 的标题、区域）不显示焦点环。
 - **减少动态效果**：`prefers-reduced-motion: reduce` 时所有时长 token 归零，循环动画停止；新增的循环动画必须在该媒体查询中关闭。
 - **固定定位浮层**：390px 手机视口的 `position: fixed` 浮层，其祖先不得带 `transform`，否则会改变定位参照。
-- **模型选择器（`model-picker-v2.css`）**：面板从触发按钮一侧缩放淡入（`--dur-short`）；进入模型目录时新视图从右侧滑入，返回时设置视图从左侧滑入（`--dur-medium`），首次打开不滑动。思考等级填充条用 `transform: scaleX()` 而不是宽度，切换档位时平滑过渡；轨道上每个档位有刻度点，已达到的点放大点亮；档位读数每次变化重新入场；拖动滑块时手柄外圈出现主色光晕。目录项以 24ms 间隔依次入场（最多 8 项），当前项的勾弹出；触发按钮上的档位条依次填充。`prefers-reduced-motion` 下全部关闭。只有带厂商前缀的模型才在名称下重复完整 ID。
+- **模型选择器（`model-picker-v2.css`）**：面板从触发按钮一侧缩放淡入（`--dur-short`）；进入模型目录时新视图从右侧滑入，返回时设置视图从左侧滑入（`--dur-medium`），首次打开不滑动。思考等级填充条用 `transform: scaleX()` 而不是宽度，切换档位时平滑过渡；轨道上每个档位有刻度点，已达到的点放大点亮；档位读数每次变化重新入场；拖动滑块时手柄外圈出现主色光晕。目录项以 24ms 间隔依次入场（最多 8 项），当前项的勾弹出；触发按钮上的档位条依次填充。`prefers-reduced-motion` 下全部关闭。只有带厂商前缀的模型才在名称下重复完整 ID。 设计 A 下面板与子面板的入场动效由 `styles/surfaces/composer.css` 负责（master 的视图滑动规则已让位）；`scaleX` 填充与刻度点保留，刻度点对齐设计 A 的 6px 轨道。
 
-### 4.7 对话区（`Transcript`）
+### 4.7 会话正文（`Transcript`，阶段 2b 设计稿 A「轻盈一体」，已合入 master PR #11 的结构）
 
-- **阅读模型**：用户请求是右对齐的柔和气泡（`--surface-active` 底色、无边框、最大宽度 `min(84%, 620px)`，390px 下 92%），不带「你」作者行；助手回复是左侧无框正文。已完成的回答不显示作者行，只有正在生成（「正在回复」，带流光文字）或未完成（「回复未完成」）时显示一行小字状态。
-- **不显示轮次控件**：不渲染「第 N 轮」徽章与「收起本轮」按钮；一轮就是用户请求加随后的工作与回答。
-- **执行摘要**：已完成的一轮把过程折叠在一行摘要后：`工作了 22s · 4 个操作 ⌄`（`.transcript-execution-summary`，13px，`--text-muted`，无边框无底色，悬停浅底）。「操作」只计工具调用。步数、工具次数、重试、总耗时口径与 `tok/s` 输出速度只放在摘要按钮的 `title` 里，不进入阅读流。运行中或未完成的一轮直接展示过程，不显示计数行。
-- **工具行**：写成「动作 · 目标」（13px，动作 `--text-secondary`、目标 `--text-muted`，目标不用等宽字体），行内无边框。耗时与成功的勾只在悬停或展开时显示；运行中、失败（保留错误底色与「失败」字样）和 `+N -N` 始终可见。
-- **复制**：整段回答的「复制」放在回答末尾（`.message-actions`），细指针设备悬停回答时出现，触屏常显。
-- **字号**：对话正文 16px，用户气泡 15px，过程叙述与工具行 13–15px，状态小字 12px。等宽字体只用于代码、命令与路径值。
+- **样式归属**：正文皮肤集中在 `styles/surfaces/transcript.css`（components 层，覆盖 legacy 层）；颜色只引用 `workspace-theme.css` 变量（含 `--code-surface` 与 `--syntax-*`），尺寸只引用 `tokens.css`（`--prose-*`、`--transcript-block-gap` 12px、`--transcript-turn-gap` 32px、`--code-*`）。旧类名与 DOM 结构作为测试钩子保留。
+- **排版**：正文 15px / 1.7（≤768px 为 16px），阅读列 720px；标题 20/18/15/14px 逐级；段距 12px，代码块与表格上下 16px。
+- **用户消息**：右对齐的紧凑气泡（`.message-user-card`，最大占阅读列 80%，`--user-bubble-measure`；14px 圆角、右下角 6px，浅底加内描边；≤640px 最大 88%）。用 `row-reverse` 实现靠右，DOM 顺序不变。不渲染「你」作者行；Super-agent 交付走 `.message-internal`，交付卡占满整列。
+- **不显示轮次控件**（master PR #11）：不渲染「第 N 轮」徽章与「收起本轮」按钮，气泡旁不预留任何宽度；一轮就是用户请求加随后的工作与回答。
+- **助手消息**：无气泡、无底色。已完成的回答不显示作者行（master PR #11）；只有正在生成（「正在回复」）或未完成（「回复未完成」）时显示一行 12px 三级文字作者行，带 14px `ForgeMark`，生成中名字用强调色。整段「复制」放在回答末尾（`.message-actions`），悬停/聚焦时出现（无悬停设备常显）。过程叙述 14px 二级文字。
+- **执行摘要**（master PR #11 的内容，设计 A 的胶囊外观）：已完成的一轮把过程折叠在 `工作了 22s · 4 个操作 ⌄` 后面；步数、工具次数、重试、总耗时口径与 `tok/s` 只放在按钮 `title` 里，不进入阅读流；运行中或未完成的一轮直接展示过程。
+- **工具行**：静止为 32px 安静行（运行中图标用强调色；失败时图标、名称和目标都用错误色）；展开后变为细描边卡片，失败卡片用错误色描边；输出区用代码底色。状态文字、差异统计、失败标签保持既有 `data-status` 与类名。
+- **代码块**：代码底色 + 内描边，13/20px，头部 36px，语言名不再大写；行号用禁用色；差异视图与代码块同底。
+- **审批与错误**：内联审批为带警示描边与浮起阴影的卡片，按钮 36px；正文内错误为错误底色 + 错误描边，不再叠加多层边框。
+- **加载与空态**：读取会话时显示只有形状、不含假内容的骨架（`<output>` 播报「正在读取会话…」）；空态标题 20px。
+- **查看最新消息**：底部居中胶囊，进入/离开使用 `spring.snappy`；定位不使用 `transform`（交给 Motion）。
+- **动效与触控**：遵循 `prefers-reduced-motion`（骨架与过渡全部停用）；粗指针下所有正文按钮不小于 44px。
+
+### 4.8 外壳：抽屉、遮罩、会话菜单、命令面板与对话框（阶段 3）
+
+- **样式归属**：`styles/surfaces/shell.css`（components 层）。会话菜单和对话框通过 portal 挂到 body，不在 `.wb-app` 下，所以选择器不加前缀。
+- **遮罩**：≤1000px 侧栏抽屉用 `--overlay-bg`，不再模糊；1001–1280px 详情栏浮层用 `--overlay-bg-soft`（两套主题各一份）。抽屉和浮层详情栏用 `--shadow-floating` 加 1px 细边，缓动 `--ease-soft`。
+- **会话「…」菜单**：触发按钮 24px（粗指针 44px），悬停或打开时用 active 底色。菜单宽 176px（`--menu-width`），12px 圆角，细描边加浮起阴影；菜单项 32px（粗指针 44px），13px；危险项用错误色，悬停用错误底色；导出状态和错误为 12px 说明文字。出现时有 120ms 缩放淡入，减少动效时关闭。
+- **命令面板**（master PR #11 的搜索优先结构：搜索框 + 分组列表 + 图标/元信息 + 快捷键提示）：搜索框 40px，细描边加聚焦光环；分组标题 12px 三级文字；条目是安静的 40px 列表行（粗指针 44px），列表最高 `min(52dvh, --palette-list-max)` 内部滚动，对话框宽 `--palette-width`；键盘选中项用 active 底色加左侧 2px 强调色细条，图标转为强调色。提示行 12px，粗指针下隐藏。
+- **原生对话框**：20px 圆角（≤640px 为 12px），细描边加浮起阴影；头部 52px，标题与内容之间用细线；底栏用浅底加细线。
+- **Super-agent 分组**：子任务缩进处用一条细竖线，角色标签 12px 三级文字。
+
+### 4.9 详情栏与工作区皮肤（阶段 4，设计稿 A）
+
+- **样式归属**：`styles/surfaces/inspector.css`（components 层）。4.4 节的结构、默认收起与揭示规则不变。
+- **平面与字号**：详情栏和画布同一底色（`--canvas-bg`），宽屏下左侧用 1px 细线分隔。基础字号 13/18。栏内旧的 11px 档在作用域内映射为 12px 说明文字，因此栏内除 `<kbd>` 外不低于 12px。
+- **头部**：标题 14/600；按钮 32px（粗指针 44px），悬停用底色，聚焦用光环。
+- **分区**：分区之间用细线分隔；标题行 40px（粗指针 44px）。标题 13/600 主色，摘要 12px 三级文字，正文与标题文字左对齐（`--inspector-body-indent`）。需要处理的分区用警示底色加左侧 2px 细条。分区内的次级展开和检查点改用实线细线，不再用虚线。
+- **计划步骤**：步骤文字 13px，序号用禁用色；当前步骤只用 active 底色和 500 字重，不再加框；「当前步骤」标签为 6px 圆角软底。
+- **列表行**：变更、检查点、文件树行为 28px（`--row-height-compact`，粗指针 44px），悬停用底色，选中用 active 底色；路径 12px 等宽。
+- **卡片与胶囊**：卡片 10px 圆角，靠细描边分层；静止时无阴影，悬停加深描边并加发丝阴影。子任务卡左侧 2px 细条，运行中或待审批时变为强调色。统计、记忆和顾问胶囊为 6px 圆角、12px、细描边；完成、进行中、中断分别用成功、强调、警示软底。
+- **工作区选择**：搜索框 32px，用细描边加聚焦光环。分区标签不再大写，为 12px 三级文字。目录行 40px（粗指针 44px），最近工作区芯片 32px，当前工作区用 active 底色。错误框和受限框分别用错误、警示底色加描边。
+
+### 4.10 设置中心皮肤（阶段 5，设计稿 A）
+
+- **样式归属**：`styles/surfaces/settings.css`（components 层）。设置在 `.wb-app` 之外渲染，所有选择器都以 `.settings-page` 开头。4.5 节的行为（冲突保护、离开拦截、繁忙锁定）不变。
+- **导航栏**：与侧栏同一平面，右侧用细线分隔。导航项 34px（`--row-height-rail`，粗指针 44px），14px；选中项是一张小白卡（细描边加 `--shadow-xs`），图标变为强调色。分组标题 12px 三级文字，不加字距。搜索框 32px，用细描边加聚焦光环。
+- **页头**：标题 20/28、600（不用 700）；眉题 12px，说明 13px；底部细线。
+- **内容列**：最大宽度与阅读列相同（`--reading-measure`，720px），分区间距 32px，组内间距 24px。
+- **设置组与行**：组为 12px 圆角、细描边的白卡；行最小 56px（`--setting-row-min-height`），行间用细线；标签 14/500，说明 13px 三级文字；危险组用错误色描边。
+- **卡片**：通用、MCP、插件、智能体、模型、路由、推理卡统一为 12px 圆角细描边，静止时无阴影，悬停加深描边并加发丝阴影。徽章为 6px 圆角、12px。
+- **开关卡与执行权限卡**：静止时细描边；选中时强调软底加强调色描边，「不受限」选中时改用警示底色加警示描边。
+- **字号下限**：设置页内旧的 11px 档映射为 12px。
+
+### 4.11 用量看板皮肤（阶段 6，设计稿 A）
+
+- **样式归属**：`styles/surfaces/usage.css`（components 层）。看板在 `.wb-app` 之外渲染，所有选择器都以 `.usage-dashboard-overlay` 开头。图表几何和布局仍在 `usage-dashboard.css` 里。
+- **配色**：图表系列（`--chart-cached/uncached/cost/speed`）和 3D 拓扑画布（`--topology-*`）都改为在 `workspace-theme.css` 中定义，明暗两套，全部取自雾紫 Iris 色板。旧的暖色字面量已从 `usage-dashboard.css` 和 `UsageOverview.tsx` 中移除：画布在绘制时读取 CSS 变量，代码里的字面量只是没有样式表时的兜底。`charts/theme.ts` 的兜底值也改为 Iris。
+- **头部**：52px，画布底色，底部细线；标题 14/600。时间范围和模式切换都是浅底槽位里的小白卡（细描边加 `--shadow-xs`），与侧栏的选中样式一致。工作区筛选是 10px 圆角、细描边；有筛选时描边变为焦点色。
+- **KPI 与分区**：卡片 12px 圆角、细描边，无阴影。KPI 数字使用 UI 字体，24/32、600、等宽数字（不再用等宽字体和 700）；标签和单位 12px 三级文字。分区标题 14/600，图标为三级文字色。
+- **表格**：外框细描边，表头 12/500 三级文字加浅底，行间细线，悬停用底色。
+- **触控与焦点**：粗指针下按钮和筛选不小于 44px，分段按钮不小于 32px；所有可交互元素有 3px 焦点光环。
+
+### 4.12 皮肤层约定（阶段 7）
+
+- 已迁移区域的视觉都在 `styles/surfaces/*.css`（components 层）：composer、sidebar、transcript、shell、inspector、settings、usage。
+- 皮肤文件只能引用主题变量和尺寸 token。stylelint 在这些文件里禁止 hex、具名颜色和颜色函数（`color-mix` 除外）。
+- 旧 CSS 中没有任何源码或测试引用的规则已在阶段 7 删除。新增类名时，在 TSX 里写完整的字面量，或使用 `前缀-${变量}` 形式，以便静态检查找得到。
+- **与 master PR #11（ui-polish-v2）的 v2 样式表共存**：`sidebar-v2.css`、`transcript-v2.css`、`new-session-v2.css`、`model-picker-v2.css`、`command-palette.css`、`settings-v2.css`、`inspector-v2.css`、`design-foundation.css` 仍由各组件引入（legacy 层），但其中凡是落在设计 A 皮肤已覆盖类名上的规则都已删除，避免未被覆盖的属性漏进来；保留的只是 master 新增结构（如侧栏图标按钮、命令面板分组、详情栏概要/下钻、思考等级刻度、设置模型连接页）的规则，颜色全部来自 Iris 主题变量。master 新增的基础 token（`--surface-raised/sunken`、`--edge-highlight`、`--accent-subtle/border/glow`、`--shadow-color`、`--chart-completion/failed`、`--context-reserve-*`）在 `workspace-theme.css` 中按 Iris 色板定义了明暗两套值。
 
 ---
 
 ## 5. 空间尺度、响应式断点与品牌资源
 
-- **桌面尺度**：标题栏高度 `44px`，主阅读列最大宽度 `760px`，左侧栏 `264px`（`1001–1366px` 紧凑模式下为 `232px`），右侧详情栏基础宽度 `380px`（紧凑模式 `320px`）。宽屏详情栏收起后不接收指针与焦点。
-- **左侧会话栏**：工作区分组头是一行灰色小标题「名称 计数」（12px、`--text-muted`，无文件夹图标与计数胶囊），悬停或收起时显示折叠箭头。**每个会话行都带状态图标**（完成 `--success` 勾、运行中 `--accent` 旋转、待批准 `--warning`、失败 `--error`、中断/取消暂停、空闲聊天气泡），图标固定 16px 槽位，标题统一左对齐；选中行用 `--surface-active` 浅底，不加阴影。行高不超过 30px。
+- **桌面尺度**：标题栏高度 `44px`，主阅读列最大宽度 `720px`（`--reading-measure`，对话正文、输入框与新会话页共用），左侧栏 `264px`（`1001–1366px` 紧凑模式下为 `232px`），右侧详情栏基础宽度 `380px`（紧凑模式 `320px`）。宽屏详情栏收起后不接收指针与焦点。
+- **左侧会话栏**：工作区分组头是一行灰色小标题「折叠箭头 名称 计数」（12px、`--text-muted`，无文件夹图标与计数胶囊）。会话行采用设计 A 的状态点规则：固定圆点列保证标题对齐，只有需要关注的状态（运行中、待批准、失败、已取消、中断）显示圆点，完成与空闲不显示；行尾一枚安静的相对时间。选中行用 `--surface-active` 浅底，不加阴影。
 - **侧栏底部**：只放图标按钮（`.sidebar-icon-btn`，32px，触屏 44px）：设置、用量看板在左，刷新靠右；每个按钮都有 `aria-label` 与 `title`，不显示文字标签。**不单独显示模型服务状态行**：已保存服务端点时设置图标就是「设置」；尚未添加时设置按钮的名称为「添加模型服务」并带一个 `--warning` 小圆点；配置读取中名称为「正在加载配置」。这只表示是否保存了服务端点，不代表网络连通或全局默认模型就绪，不能用全局 `isConfigured` 把会话自带的来源误报为未连接。
 - **响应式断点**：
   - `<= 1000px`：转为单列纵向工作台，通过顶部/底部导航切换对话与详情，左侧栏转为抽屉。

@@ -9,6 +9,8 @@ import {
   Robot,
   WarningCircle,
 } from "@phosphor-icons/react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import {
   Fragment,
   type ReactNode,
@@ -19,6 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { spring } from "#lib/springs";
 import type {
   ApprovalRequest,
   SessionId,
@@ -48,6 +51,7 @@ import { Button } from "../primitives/Button";
 import { Collapsible } from "../primitives/Collapsible";
 import { EmptyState } from "../primitives/EmptyState";
 import { ErrorState } from "../primitives/ErrorState";
+import { ForgeMark } from "../primitives/ForgeMark";
 import {
   type PlanItemData,
   PlanStepsList,
@@ -736,11 +740,32 @@ function renderTimelineEntry(
             item.content &&
             (item.streaming || item.incomplete) && (
               <div className="message-header message-author-row">
-                <span>{item.streaming ? "正在回复" : "回复未完成"}</span>
+                <ForgeMark className="message-author-mark" />
+                <span className="message-author-name">
+                  {item.streaming ? "正在回复" : "回复未完成"}
+                </span>
               </div>
             )}
-          {item.role === "user" && item.images && item.images.length > 0 && (
-            <ImageAttachments key={snapshot.id} images={item.images} />
+          {item.role === "user" && (
+            <div className="message-user-card">
+              {item.images && item.images.length > 0 && (
+                <ImageAttachments key={snapshot.id} images={item.images} />
+              )}
+              {item.content && (
+                <div className="message-body">
+                  {item.truncated && (
+                    <p className="wb-muted">
+                      实时预览已达显示上限，完整内容以同步后的记录为准。
+                    </p>
+                  )}
+                  {item.streaming ? (
+                    <StreamingMarkdown source={item.content} enableCharts />
+                  ) : (
+                    <Markdown source={item.content} enableCharts />
+                  )}
+                </div>
+              )}
+            </div>
           )}
           {item.reasoning && (
             <Reasoning
@@ -758,7 +783,7 @@ function renderTimelineEntry(
               }
             />
           )}
-          {item.content && (
+          {item.role === "assistant" && item.content && (
             <div className="message-body">
               {item.truncated && (
                 <p className="wb-muted">
@@ -1029,24 +1054,35 @@ export const StoredTranscript = memo(function StoredTranscript({
               <article
                 className={`message ${delivery ? "message-internal" : "message-user"}`}
               >
-                {userItem.images && userItem.images.length > 0 && (
-                  <ImageAttachments
-                    key={snapshot.id}
-                    images={userItem.images}
-                  />
-                )}
                 {delivery ? (
-                  <SuperAgentDeliveryCard
-                    delivery={delivery}
-                    raw={userItem.content}
-                    embedded
-                  />
+                  <>
+                    {userItem.images && userItem.images.length > 0 && (
+                      <ImageAttachments
+                        key={snapshot.id}
+                        images={userItem.images}
+                      />
+                    )}
+                    <SuperAgentDeliveryCard
+                      delivery={delivery}
+                      raw={userItem.content}
+                      embedded
+                    />
+                  </>
                 ) : (
-                  userItem.content && (
-                    <div className="message-body">
-                      <Markdown source={userItem.content} />
-                    </div>
-                  )
+                  // Design A: the request is a compact right-aligned bubble.
+                  <div className="message-user-card">
+                    {userItem.images && userItem.images.length > 0 && (
+                      <ImageAttachments
+                        key={snapshot.id}
+                        images={userItem.images}
+                      />
+                    )}
+                    {userItem.content && (
+                      <div className="message-body">
+                        <Markdown source={userItem.content} />
+                      </div>
+                    )}
+                  </div>
                 )}
               </article>
             )}
@@ -1700,7 +1736,29 @@ export function Transcript() {
               )}
             </div>
           )}
-          {state.isSnapshotLoading && <p className="wb-muted">正在读取会话…</p>}
+          {state.isSnapshotLoading && (
+            // Shape-only skeleton (no invented content) while the first
+            // snapshot loads; with a snapshot on screen only the label shows.
+            <output className="transcript-loading">
+              <span className="transcript-loading-label">正在读取会话…</span>
+              {!snapshot && (
+                <>
+                  <span
+                    className="transcript-loading-line is-card"
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="transcript-loading-line is-wide"
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="transcript-loading-line is-mid"
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+            </output>
+          )}
           {snapshot ? (
             <StoredTranscript
               key={snapshot.id}
@@ -1741,32 +1799,44 @@ export function Transcript() {
                   className="message message-user"
                   key={`steering:${snapshot.id}:${index}`}
                 >
-                  {!!message.images?.length && (
-                    <ImageAttachments images={message.images} />
-                  )}
-                  {message.content && (
-                    <div className="message-body">
-                      <Markdown source={message.content} />
-                    </div>
-                  )}
+                  <div className="message-user-card">
+                    {!!message.images?.length && (
+                      <ImageAttachments images={message.images} />
+                    )}
+                    {message.content && (
+                      <div className="message-body">
+                        <Markdown source={message.content} />
+                      </div>
+                    )}
+                  </div>
                 </article>
               )
             );
           })}
         </div>
       </div>
-      {hasNewContent && (
-        <div className="transcript-latest" aria-live="polite">
-          <Button
-            size="sm"
-            className="transcript-latest-btn"
-            onClick={jumpToLatest}
-            icon={<ArrowDown size={13} weight="bold" aria-hidden="true" />}
+      <AnimatePresence>
+        {hasNewContent && (
+          <m.div
+            key="latest"
+            className="transcript-latest"
+            aria-live="polite"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={spring.snappy}
           >
-            查看最新消息
-          </Button>
-        </div>
-      )}
+            <Button
+              size="sm"
+              className="transcript-latest-btn"
+              onClick={jumpToLatest}
+              icon={<ArrowDown size={13} weight="bold" aria-hidden="true" />}
+            >
+              查看最新消息
+            </Button>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

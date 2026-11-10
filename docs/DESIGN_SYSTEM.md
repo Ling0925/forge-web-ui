@@ -1,5 +1,13 @@
 # Forge Web UI 设计系统
 
+> **UI 迁移后的装配（设计稿 A，阶段 0–7，2026-11-10）**：
+> - **层序**：`ui.css` 是第一个导入，声明 `theme, base, legacy, components, utilities` 五层。旧 CSS 在构建期被 `scripts/legacy-css-layer.ts` 包进 `legacy` 层；`styles/surfaces/*.css`（composer、sidebar、transcript、shell、inspector、settings、usage）位于 `components` 层，因此不论特异性高低都会覆盖旧规则。例外是旧规则中的 `!important`，它仍然优先。
+> - **颜色**：颜色只在 `workspace-theme.css` 定义（雾紫 Iris）。阶段 2b–7 新增：代码与语法色（`--code-surface`、`--syntax-*`）、遮罩（`--overlay-bg-soft`）、用量图表（`--chart-cached/uncached/cost/speed`）、3D 拓扑（`--topology-*`）、强调色上的高光与滑块阴影（`--on-accent-*`、`--shadow-thumb`）。皮肤文件禁止字面颜色，由 stylelint 强制。
+> - **尺寸**：尺寸只在 `tokens.css` 定义。阶段 2b–6 新增 `--prose-*`、`--transcript-*-gap`、`--code-*`、`--user-bubble-measure*`、`--control-height-xl`、`--menu-width`、`--dialog-header-height`、`--row-height-compact`、`--row-height-rail`、`--inspector-body-indent`、`--setting-row-min-height`；`--reading-measure` 改为 720px。
+> - **字号下限**：详情栏、设置页、用量看板在各自作用域内把旧的 11px 档（`--text-2xs`）映射为 12px。
+> - **阶段 7 清理**：删掉 114 条已无任何源码或测试引用的旧 CSS 规则（另删 10 个选择器）；`@radix-ui/react-checkbox` 和 `@radix-ui/react-select` 改从 `radix-ui` 汇总包导入，并从依赖中移除（版本相同）。
+> - **未重测**：下文 §2 起的十六进制取值与对比度仍是换色前测得的旧值，当前对比度以 `tests/renderer/theme-contrast.test.ts` 为准，当前色值以 `workspace-theme.css` 为准。
+
 本文件是 `forge-web-ui` 的**设计与实现对照参考**：记录当前真实生效的视觉系统，以及实现与系统之间的已知偏差。
 
 它与 [WEB_UI_LAYOUT_SPEC.md](WEB_UI_LAYOUT_SPEC.md) 的分工：

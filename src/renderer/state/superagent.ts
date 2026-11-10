@@ -12,21 +12,36 @@ import { useSyncExternalStore } from "react";
 export const isRunEvent = (event: HostEvent): event is RunEvent =>
   "event" in event;
 
+type SuperAgentLoadStatus =
+  | "idle"
+  | "loading"
+  | "success"
+  | "error"
+  | "not-supported";
+
 export interface SuperAgentView {
-  /**
-   * `unknown` until probed. `disabled` covers every "not available" case: an
-   * older host without the RPCs, super-agent turned off (`not_found`) or any
-   * probe failure. Nothing super-agent related renders unless `enabled`.
-   */
-  readonly status: "unknown" | "disabled" | "enabled";
+  readonly status: "unknown" | "disabled" | "not-supported" | "enabled";
+  readonly requests: Readonly<
+    Record<
+      "state" | "workItems" | "suggestions" | "outbox",
+      SuperAgentLoadStatus
+    >
+  >;
   readonly routerSessionId: string | null;
   readonly workItems: readonly WorkItem[];
   readonly suggestions: readonly Suggestion[];
   readonly outbox: readonly OutboxItem[];
 }
 
+const IDLE_REQUESTS: SuperAgentView["requests"] = {
+  state: "idle",
+  workItems: "idle",
+  suggestions: "idle",
+  outbox: "idle",
+};
 const EMPTY: SuperAgentView = Object.freeze({
   status: "unknown",
+  requests: IDLE_REQUESTS,
   routerSessionId: null,
   workItems: [],
   suggestions: [],
@@ -57,90 +72,175 @@ function upsert<T extends { readonly id: string }>(
 export function createSuperAgentStore(bridge: () => Bridge | undefined) {
   let view = EMPTY;
   let generation = 0;
+  let scope = {};
+  let currentHost: Bridge | undefined;
+  let workspace: string | undefined;
   const listeners = new Set<() => void>();
   const set = (next: SuperAgentView) => {
     view = next;
     for (const listener of listeners) listener();
   };
-  const quiet = <T>(call: (() => Promise<T>) | undefined, fallback: T) =>
-    call ? call().catch(() => fallback) : Promise.resolve(fallback);
+  let changes: {
+    workItems: readonly WorkItem[];
+    suggestions: readonly Suggestion[];
+    outbox: readonly OutboxItem[];
+  } | null = null;
+
+  async function read<T>(call: (() => Promise<readonly T[]>) | undefined) {
+    if (!call) return { status: "not-supported" as const, items: null };
+    try {
+      return { status: "success" as const, items: await call() };
+    } catch {
+      return { status: "error" as const, items: null };
+    }
+  }
 
   async function load(): Promise<void> {
     const host = bridge();
+    if (host && currentHost && host !== currentHost) reset();
+    if (host) currentHost = host;
     const run = ++generation;
+    const live: NonNullable<typeof changes> = {
+      workItems: [],
+      suggestions: [],
+      outbox: [],
+    };
+    changes = live;
+    set({ ...view, requests: { ...view.requests, state: "loading" } });
     const getState = host?.getSuperAgentState;
     if (!host || !getState) {
-      set({ ...EMPTY, status: "disabled" });
+      if (host) reset();
+      changes = null;
+      set({
+        ...view,
+        status: host ? "not-supported" : view.status,
+        requests: { ...IDLE_REQUESTS, state: host ? "not-supported" : "error" },
+      });
       return;
     }
-    let routerSessionId: string | null;
+    let state: Awaited<ReturnType<NonNullable<Bridge["getSuperAgentState"]>>>;
     try {
-      routerSessionId = (await getState.call(host)).routerSessionId;
-    } catch {
-      // `not_found` (disabled), an older host rejecting the method, or a
-      // transport failure: all mean "no super-agent UI", never an error.
-      if (run === generation) set({ ...EMPTY, status: "disabled" });
+      state = await getState.call(host);
+    } catch (error) {
+      if (run !== generation) return;
+      changes = null;
+      const disabled =
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "not_found";
+      if (disabled) reset();
+      set({
+        ...view,
+        status: disabled ? "disabled" : view.status,
+        requests: disabled
+          ? { ...IDLE_REQUESTS, state: "success" }
+          : { ...view.requests, state: "error" },
+      });
       return;
     }
-    const listWorkItems = host.listWorkItems?.bind(host);
+    if (run !== generation) return;
+    const sameWorkspace =
+      workspace === undefined || workspace === state.workspace;
+    if (!sameWorkspace) scope = {};
+    workspace = state.workspace;
+    set({
+      ...(sameWorkspace ? view : { ...EMPTY, ...live }),
+      status: "enabled",
+      routerSessionId: state.routerSessionId,
+      requests: {
+        state: "success",
+        workItems: "loading",
+        suggestions: "loading",
+        outbox: "loading",
+      },
+    });
     const listSuggestions = host.listSuggestions?.bind(host);
     const listOutbox = host.listOutbox?.bind(host);
     const [workItems, suggestions, outbox] = await Promise.all([
-      quiet(listWorkItems && (() => listWorkItems()), []),
-      quiet(listSuggestions && (() => listSuggestions("pending")), []),
-      quiet(listOutbox && (() => listOutbox("pending")), []),
+      read(host.listWorkItems?.bind(host)),
+      read(listSuggestions && (() => listSuggestions("pending"))),
+      read(listOutbox && (() => listOutbox("pending"))),
     ]);
     if (run !== generation) return;
-    // Events that raced the lists are newer than the list snapshot.
+    changes = null;
+    // Only updates received during this read may override its snapshot.
     const merge = <T extends { readonly id: string }>(
-      base: readonly T[],
-      live: readonly T[],
-    ) => live.reduce(upsert, base);
+      items: readonly T[] | null,
+      previous: readonly T[],
+      updates: readonly T[],
+    ) => (items === null ? previous : updates.reduce(upsert, items));
     set({
-      status: "enabled",
-      routerSessionId,
-      workItems: merge(workItems, view.workItems),
-      suggestions: merge(suggestions, view.suggestions),
-      outbox: merge(outbox, view.outbox),
+      ...view,
+      requests: {
+        state: "success",
+        workItems: workItems.status,
+        suggestions: suggestions.status,
+        outbox: outbox.status,
+      },
+      workItems: merge(workItems.items, view.workItems, live.workItems),
+      suggestions: merge(suggestions.items, view.suggestions, live.suggestions),
+      outbox: merge(outbox.items, view.outbox, live.outbox),
     });
   }
 
+  function updateOutbox(item: OutboxItem) {
+    if (changes) changes.outbox = upsert(changes.outbox, item);
+    set({ ...view, outbox: upsert(view.outbox, item) });
+  }
+
+  function updateSuggestion(suggestion: Suggestion) {
+    if (changes) changes.suggestions = upsert(changes.suggestions, suggestion);
+    set({ ...view, suggestions: upsert(view.suggestions, suggestion) });
+  }
+
   function apply(event: SuperAgentEvent): void {
+    const needsState =
+      view.status !== "enabled" && view.requests.state !== "loading";
     switch (event.type) {
       case "superagent_work":
+        if (changes) changes.workItems = upsert(changes.workItems, event.work);
         set({ ...view, workItems: upsert(view.workItems, event.work) });
         break;
       case "superagent_suggestion":
-        set({
-          ...view,
-          suggestions: upsert(view.suggestions, event.suggestion),
-        });
+        updateSuggestion(event.suggestion);
         break;
       case "superagent_outbox":
-        set({ ...view, outbox: upsert(view.outbox, event.item) });
+        updateOutbox(event.item);
         break;
       default:
         // Triggers, catch-up and board-stream status are not shown yet.
         return;
     }
-    // An event proves super-agent is running even if the probe lost a race.
-    if (view.status !== "enabled") void load();
+    if (view.status !== "enabled") set({ ...view, status: "enabled" });
+    if (needsState) void load();
   }
 
   async function decideOutbox(id: string, approve: boolean) {
     const host = bridge();
     if (!host?.decideOutbox) throw new Error("当前服务不支持发送队列审批。");
+    const decidingScope = scope;
     const item = await host.decideOutbox(id, approve);
-    set({ ...view, outbox: upsert(view.outbox, item) });
+    if (decidingScope === scope) updateOutbox(item);
     return item;
   }
 
   async function decideSuggestion(id: string, accept: boolean) {
     const host = bridge();
     if (!host?.decideSuggestion) throw new Error("当前服务不支持处理建议。");
+    const decidingScope = scope;
     const suggestion = await host.decideSuggestion(id, accept);
-    set({ ...view, suggestions: upsert(view.suggestions, suggestion) });
+    if (decidingScope === scope) updateSuggestion(suggestion);
     return suggestion;
+  }
+
+  function reset() {
+    generation++;
+    scope = {};
+    currentHost = undefined;
+    workspace = undefined;
+    changes = null;
+    set(EMPTY);
   }
 
   return {
@@ -153,10 +253,7 @@ export function createSuperAgentStore(bridge: () => Bridge | undefined) {
     apply,
     decideOutbox,
     decideSuggestion,
-    reset: () => {
-      generation++;
-      set(EMPTY);
-    },
+    reset,
   };
 }
 

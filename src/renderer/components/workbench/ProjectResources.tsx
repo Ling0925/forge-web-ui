@@ -7,6 +7,7 @@ import {
   useWorkbenchSelector,
 } from "../../state/workbench-store";
 import { Button } from "../primitives/Button";
+import { ErrorState } from "../primitives/ErrorState";
 import { requestSettingsSection } from "./settings/settings-options";
 
 export function ProjectResources({
@@ -24,15 +25,16 @@ export function ProjectResources({
   );
   const id = state.activeSessionId;
   const scope = useRef(new OperationScope());
-  useEffect(() => {
-    scope.current = new OperationScope();
-    return () => scope.current.close();
-  }, []);
   const [context, setContext] = useState<ProjectContextDto | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
+    const operation = new OperationScope();
+    scope.current = operation;
     let alive = true;
+    setContext(null);
+    setError("");
+    setBusy(Boolean(id));
     if (id)
       void window.forge
         .getProjectContext(id)
@@ -41,9 +43,13 @@ export function ProjectResources({
         })
         .catch((err) => {
           if (alive) setError(err instanceof Error ? err.message : "读取失败");
+        })
+        .finally(() => {
+          if (alive) setBusy(false);
         });
     return () => {
       alive = false;
+      operation.close();
     };
   }, [id]);
   const action = async (operation: (valid: () => boolean) => Promise<void>) => {
@@ -58,25 +64,29 @@ export function ProjectResources({
       if (valid()) setBusy(false);
     }
   };
+  const reload = () =>
+    void action(async (valid) => {
+      if (!id) return;
+      const value = await window.forge.getProjectContext(id);
+      if (valid()) setContext(value);
+    });
   return (
     <>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <ErrorState
+          title="项目资源读取失败"
+          error={error}
+          retryable
+          onRetry={reload}
+        />
+      )}
       <section className="wb-stack">
         <h3>项目指令与技能</h3>
-        <Button
-          size="sm"
-          disabled={!id || busy}
-          onClick={() =>
-            void action(async (valid) => {
-              if (!id) return;
-              const value = await window.forge.getProjectContext(id);
-              if (valid()) setContext(value);
-            })
-          }
-        >
+        <Button size="sm" disabled={!id || busy} onClick={reload}>
           重新读取项目上下文
         </Button>
-        {context && (
+        {busy && <output>正在读取项目资源…</output>}
+        {!busy && !error && context && (
           <>
             <p>
               {context.counts.instructions} 个指令来源 · {context.counts.skills}{" "}

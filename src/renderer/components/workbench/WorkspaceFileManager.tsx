@@ -23,6 +23,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Button } from "../primitives/Button";
@@ -177,9 +178,11 @@ export function WorkspaceFileManager({
     useState<WorkspaceFilePreviewDto | null>(null);
   const [previewLoading, setPreviewLoading] = useState<boolean>(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const previewRequest = useRef(0);
 
   // Reset directory navigation when switching sessions
   useEffect(() => {
+    previewRequest.current++;
     setCurrentPath(".");
     setFilterText("");
     setListing(null);
@@ -187,6 +190,10 @@ export function WorkspaceFileManager({
     setSelectedFile(null);
     setFilePreview(null);
     setPreviewError(null);
+    setPreviewLoading(false);
+    return () => {
+      previewRequest.current++;
+    };
   }, [session.id]);
 
   const changesByPath = useMemo(() => {
@@ -211,6 +218,7 @@ export function WorkspaceFileManager({
       }
       setLoading(true);
       setError(null);
+      setListing(null);
       try {
         const result = await window.forge.listWorkspaceEntries(
           session.id,
@@ -241,18 +249,27 @@ export function WorkspaceFileManager({
     };
   }, [active, currentPath, refreshTick, loadDirectory]);
 
+  const closePreview = useCallback(() => {
+    previewRequest.current++;
+    setSelectedFile(null);
+    setFilePreview(null);
+    setPreviewError(null);
+    setPreviewLoading(false);
+  }, []);
+
   const handleOpenFile = useCallback(
     async (filePath: string) => {
       if (selectedFile === filePath && filePreview?.path === filePath) {
-        setSelectedFile(null);
-        setFilePreview(null);
-        setPreviewError(null);
+        closePreview();
         return;
       }
+      const request = ++previewRequest.current;
       setSelectedFile(filePath);
       setPreviewError(null);
+      setFilePreview(null);
 
       if (typeof window.forge?.readWorkspaceFile !== "function") {
+        setPreviewLoading(false);
         const change = changesByPath.get(filePath);
         const content = extractPatchPreviewText(change);
         setFilePreview({
@@ -271,15 +288,17 @@ export function WorkspaceFileManager({
           session.id,
           filePath,
         );
-        setFilePreview(preview);
+        if (request === previewRequest.current) setFilePreview(preview);
       } catch (err) {
-        setPreviewError(err instanceof Error ? err.message : String(err));
-        setFilePreview(null);
+        if (request === previewRequest.current) {
+          setPreviewError(err instanceof Error ? err.message : String(err));
+          setFilePreview(null);
+        }
       } finally {
-        setPreviewLoading(false);
+        if (request === previewRequest.current) setPreviewLoading(false);
       }
     },
-    [selectedFile, filePreview, changesByPath, session.id],
+    [selectedFile, filePreview, changesByPath, session.id, closePreview],
   );
 
   const breadcrumbs = useMemo(() => {
@@ -399,8 +418,6 @@ export function WorkspaceFileManager({
         </div>
       </div>
 
-      {error ? <ErrorState title="目录读取失败" error={error} /> : null}
-
       {selectedFile ? (
         <section
           className="inspector-card inspector-file-preview-card"
@@ -419,15 +436,7 @@ export function WorkspaceFileManager({
               {isHtmlPath(selectedFile) ? (
                 <HtmlPreview path={selectedFile} label="HTML 预览" />
               ) : null}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setSelectedFile(null);
-                  setFilePreview(null);
-                  setPreviewError(null);
-                }}
-              >
+              <Button size="sm" variant="ghost" onClick={closePreview}>
                 收起预览
               </Button>
             </div>
@@ -435,7 +444,12 @@ export function WorkspaceFileManager({
           {previewLoading ? (
             <p className="inspector-meta-note">正在读取文件内容…</p>
           ) : previewError ? (
-            <ErrorState title="文件预览失败" error={previewError} />
+            <ErrorState
+              title="文件预览失败"
+              error={previewError}
+              retryable
+              onRetry={() => void handleOpenFile(selectedFile)}
+            />
           ) : filePreview ? (
             filePreview.binary ? (
               <p className="inspector-meta-note">
@@ -458,9 +472,16 @@ export function WorkspaceFileManager({
       ) : null}
 
       <div className="inspector-card inspector-file-tree-card">
-        {loading && !listing ? (
+        {loading ? (
           <p className="inspector-meta-note">正在加载目录条目…</p>
-        ) : filteredEntries.length === 0 ? (
+        ) : error ? (
+          <ErrorState
+            title="目录读取失败"
+            error={error}
+            retryable
+            onRetry={() => setRefreshTick((tick) => tick + 1)}
+          />
+        ) : !listing ? null : filteredEntries.length === 0 ? (
           <EmptyState
             title={filterText ? "无匹配文件或目录" : "当前目录为空"}
             description={

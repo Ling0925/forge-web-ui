@@ -53,6 +53,9 @@ export function ModelPicker(props: {
     (route) => route.id === props.routeGroupId,
   );
   const shownValue = selectedRoute?.label || props.value || "选择模型";
+  // Narrow screens show the last path segment ("provider/model" -> "model");
+  // the full id stays in the title and in the panel.
+  const shortValue = shownValue.split("/").pop() || shownValue;
   const initialized = useRef(false);
   // Capability metadata limits new choices, not the effective request setting.
   // Keep the configured value even if discovery omits it; otherwise the slider
@@ -163,8 +166,19 @@ export function ModelPicker(props: {
         className="composer-dropdown-trigger composer-model-summary"
         title={`${shownValue}${selectedRoute ? " · 路由组" : ""}${props.sourceLabel ? ` · ${props.sourceLabel}` : ""}${effortLabel ? ` · 思考：${effortLabel}` : ""}`}
       >
-        <Cpu size={16} aria-hidden="true" />
-        <span className="composer-dropdown-label">{shownValue}</span>
+        <span className="composer-model-icon" aria-hidden="true">
+          <Cpu size={14} weight="bold" />
+        </span>
+        <span className="composer-dropdown-label">
+          {shortValue === shownValue ? (
+            shownValue
+          ) : (
+            <>
+              <span className="composer-model-name-full">{shownValue}</span>
+              <span className="composer-model-name-short">{shortValue}</span>
+            </>
+          )}
+        </span>
         {selectedRoute && <span className="composer-model-source">路由组</span>}
         {props.sourceLabel && !selectedRoute && (
           // The source is not a separate choice: it always travels with the
@@ -191,7 +205,11 @@ export function ModelPicker(props: {
             ))}
           </span>
         )}
-        <CaretDown size={16} aria-hidden="true" />
+        <CaretDown
+          size={14}
+          aria-hidden="true"
+          className="composer-model-caret"
+        />
       </summary>
       {open && (
         <div
@@ -201,7 +219,7 @@ export function ModelPicker(props: {
         >
           {!modelsOpen && (
             <div className="model-picker-heading">
-              <span>模型</span>
+              <span>当前模型</span>
               <button
                 type="button"
                 className="model-picker-current"
@@ -209,6 +227,9 @@ export function ModelPicker(props: {
                 aria-label={`选择模型：${shownValue}${props.sourceLabel ? ` · ${props.sourceLabel}` : ""}`}
                 onClick={() => setModelsOpen(true)}
               >
+                <span className="composer-model-icon" aria-hidden="true">
+                  <Cpu size={14} weight="bold" />
+                </span>
                 <span>{shownValue}</span>
                 {props.sourceLabel && !selectedRoute && (
                   <small>{props.sourceLabel}</small>
@@ -247,6 +268,10 @@ export function ModelPicker(props: {
               disabled={props.reasoning.disabled}
             >
               <legend className="visually-hidden">思考等级</legend>
+              <div className="model-effort-title" aria-hidden="true">
+                <span>思考等级</span>
+                <small>越高越慢，也更周全</small>
+              </div>
               <div className="effort-slider-heading">
                 <output key={draftEffort}>
                   {formatEffort(efforts[draftEffort])}

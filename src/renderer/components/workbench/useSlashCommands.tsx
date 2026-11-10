@@ -6,13 +6,15 @@ import {
   useRef,
   useState,
 } from "react";
+import { cn } from "#lib/utils";
+import { Kbd } from "#ui/kbd";
+import { Spinner } from "#ui/spinner";
 import {
   type DesktopSlashHost,
   type DesktopSlashResult,
   desktopSlashLimitation,
   executeDesktopSlash,
 } from "./desktop-slash";
-import "./slash-menu.css";
 
 export function useSlashCommands(options: {
   prompt: string;
@@ -140,7 +142,10 @@ export function useSlashCommands(options: {
       <>
         {open && (
           <div
-            className="composer-slash-menu"
+            className={cn(
+              "composer-slash-menu mb-2 max-h-[min(280px,35vh)] overflow-y-auto rounded-xl border border-border bg-popover p-1.5 text-sm shadow-dropdown",
+              "fade-in-0 slide-in-from-bottom-1 animate-in duration-150 ease-out",
+            )}
             id={menuId}
             role="listbox"
             aria-label="Forge 命令"
@@ -151,24 +156,62 @@ export function useSlashCommands(options: {
                 id={`${menuId}-${position}`}
                 role="option"
                 aria-selected={position === index}
+                className={cn(
+                  "flex cursor-pointer items-baseline gap-3 rounded-lg px-2.5 py-2 transition-colors duration-[var(--duration-fast)] hover:bg-accent",
+                  position === index &&
+                    "bg-brand-soft shadow-[inset_2px_0_0_var(--accent)] hover:bg-brand-soft",
+                )}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => void execute(command.name)}
               >
-                <strong>{command.name}</strong>
-                <span>
+                <strong
+                  className={cn(
+                    "min-w-24 shrink-0 font-medium font-mono text-xs",
+                    position === index ? "text-brand" : "text-foreground",
+                  )}
+                >
+                  {command.name}
+                </strong>
+                <span className="min-w-0 text-secondary-text text-xs [overflow-wrap:anywhere]">
                   {command.args} {command.description}
                   {desktopSlashLimitation(command.name) && (
-                    <small>{desktopSlashLimitation(command.name)}</small>
+                    <small className="mt-0.5 block text-2xs text-warning">
+                      {desktopSlashLimitation(command.name)}
+                    </small>
                   )}
                 </span>
               </div>
             ))}
-            <small>↑↓ 选择 · Enter 执行 · Tab 补全 · Esc 关闭</small>
+            <small className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 border-border border-t px-2.5 pt-2 pb-1 text-2xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Kbd>↑↓</Kbd> 选择
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>Enter</Kbd> 执行
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>Tab</Kbd> 补全
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Kbd>Esc</Kbd> 关闭
+              </span>
+            </small>
           </div>
         )}
-        {executing && <output aria-live="polite">正在执行命令…</output>}
+        {executing && (
+          <output
+            aria-live="polite"
+            className="inline-flex items-center gap-2 px-1 text-muted-foreground text-xs"
+          >
+            <Spinner className="size-3.5" />
+            正在执行命令…
+          </output>
+        )}
         {result.text && (
-          <output className="composer-slash-message" aria-live="polite">
+          <output
+            className="composer-slash-message block max-h-[35vh] overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted px-3 py-2 font-mono text-xs [overflow-wrap:anywhere]"
+            aria-live="polite"
+          >
             {result.text}
           </output>
         )}
@@ -177,6 +220,7 @@ export function useSlashCommands(options: {
             key={session.id}
             type="button"
             disabled={executing}
+            className="flex min-h-9 w-full cursor-pointer items-center gap-2 truncate rounded-lg border border-border bg-card px-3 text-left text-foreground text-xs transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => void execute(`/resume ${session.id}`)}
           >
             {session.title} · {session.id}

@@ -1,0 +1,519 @@
+/*
+ * Inspector + workspace skin, design A "light inline" (UI migration
+ * phase 4, design-v2/spec.md §1–2): the details rail, its collapsible
+ * sections, plan steps, change / checkpoint / file rows, cards and pills,
+ * the workspace resources dialog and the workspace picker.
+ *
+ * Imported by styles/ui.css into the `components` layer, so it beats the
+ * legacy sheets. Structure (grid, drawer, collapse, scroll, focus) stays in
+ * inspector.css / inspector-sections.css / workspace-picker.css; this file
+ * sets color, type, radius, elevation and spacing only.
+ *
+ * Type floor: design A uses nothing below 12px outside <kbd>. Inside the
+ * migrated rail the legacy 11px step is aliased to the 12px caption role.
+ *
+ * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
+ */
+@layer components {
+  /* ---------------------------------------------------------------- */
+  /* Rail                                                              */
+  /* ---------------------------------------------------------------- */
+  .wb-app .wb-inspector,
+  .workspace-resources-content.wb-inspector {
+    --text-2xs: var(--text-caption);
+    --leading-2xs: var(--leading-caption);
+    background: var(--canvas-bg);
+    color: var(--text-primary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+  }
+
+  @media (min-width: 1281px) {
+    .wb-app .workbench-inspector {
+      border-left: 0;
+      box-shadow: inset 1px 0 0 var(--hairline);
+    }
+  }
+
+  .wb-app .wb-inspector .wb-inspector-head {
+    padding: 0 var(--space-2) 0 var(--space-4);
+    border-bottom: 0;
+    background: var(--canvas-bg);
+    box-shadow: inset 0 -1px 0 var(--hairline);
+  }
+
+  .wb-app .wb-inspector .inspector-head-title,
+  .wb-app .wb-inspector .inspector-title-row {
+    color: var(--text-primary);
+    font-size: var(--text-ui);
+    font-weight: 600;
+    line-height: var(--leading-ui);
+  }
+
+  .wb-app .wb-inspector .wb-inspector-close,
+  .wb-app .wb-inspector .inspector-head-btn {
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-tertiary);
+  }
+
+  .wb-app .wb-inspector .inspector-head-btn {
+    width: var(--control-height-lg);
+    height: var(--control-height-lg);
+  }
+
+  .wb-app .wb-inspector :is(.wb-inspector-close, .inspector-head-btn):hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .wb-inspector :is(.wb-inspector-close, .inspector-head-btn):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .wb-inspector :is(.wb-inspector-close, .inspector-head-btn) {
+      min-width: var(--touch-min-target);
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Sections                                                          */
+  /* ---------------------------------------------------------------- */
+  .wb-app .inspector-sec {
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--hairline);
+  }
+
+  .wb-app .inspector-sec-toggle {
+    min-height: var(--control-height-xl);
+    padding: var(--space-2) var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .wb-app .inspector-sec-toggle:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .inspector-sec-toggle:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .inspector-sec-toggle {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  .wb-app .inspector-sec-caret {
+    color: var(--text-tertiary);
+  }
+
+  .wb-app .inspector-sec-title {
+    color: var(--text-primary);
+    font-size: var(--text-meta);
+    font-weight: 600;
+    line-height: var(--leading-meta);
+  }
+
+  .wb-app .inspector-sec-summary {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  /* Body copy lines up with the title text (16px gutter + caret + gap). */
+  .wb-app .inspector-sec-body {
+    gap: var(--space-3);
+    padding: 0 var(--space-4) var(--space-4) var(--inspector-body-indent);
+  }
+
+  .wb-app .inspector-sec.is-attention {
+    background: var(--warning-bg);
+    box-shadow:
+      inset 2px 0 0 var(--warning),
+      inset 0 -1px 0 var(--hairline);
+  }
+
+  .wb-app .inspector-row-hint,
+  .wb-app .wb-inspector .inspector-meta-note {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  /* Secondary disclosures and checkpoints: a solid hairline, like the
+     transcript's collapsed-turn notice. */
+  .wb-app .inspector-row-disclosure,
+  .wb-app .inspector-checkpoints {
+    border-top: 0;
+    box-shadow: inset 0 1px 0 var(--hairline);
+    padding-top: var(--space-2-5);
+  }
+
+  .wb-app .inspector-row-disclosure > summary {
+    min-height: var(--control-height-lg);
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .inspector-row-disclosure > summary {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* Session overview title */
+  .wb-app .wb-inspector .inspector-card-title {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .wb-app .inspector-plan-overview-title {
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Plan steps                                                        */
+  /* ---------------------------------------------------------------- */
+  .wb-app .wb-inspector ol.wb-plan-progress > li {
+    padding-left: var(--space-6);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+  }
+
+  .wb-app .wb-inspector ol.wb-plan-progress > li::before {
+    background: var(--hairline-strong);
+    opacity: 1;
+  }
+
+  .wb-app .wb-inspector ol.wb-plan-progress > li.plan-step-completed::before {
+    background: var(--success-border);
+    opacity: 1;
+  }
+
+  .wb-app .wb-inspector ol.wb-plan-progress .plan-completed {
+    border-color: var(--success);
+    color: var(--on-accent);
+  }
+
+  .wb-app .wb-inspector ol.wb-plan-progress .plan-in_progress {
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  .wb-app .wb-inspector .plan-step-row {
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-radius: var(--radius-control);
+  }
+
+  .wb-app .wb-inspector .plan-step-item:hover .plan-step-row {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .wb-inspector .plan-step-in_progress .plan-step-row {
+    background: var(--active-wash);
+  }
+
+  .wb-app .wb-inspector .plan-step-index {
+    color: var(--text-disabled);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    line-height: var(--leading-meta);
+  }
+
+  .wb-app .wb-inspector .plan-step-in_progress .plan-step-text {
+    font-weight: 500;
+  }
+
+  .wb-app .wb-inspector .plan-step-tag {
+    height: auto;
+    min-height: var(--space-5);
+    padding: 0 var(--space-1-5);
+    border: 0;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  .wb-app .wb-inspector .plan-step-tag.is-active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Rows: changes, checkpoints, files                                 */
+  /* ---------------------------------------------------------------- */
+  .wb-app .inspector-change-row,
+  .wb-app .inspector-checkpoint-row,
+  .wb-app .wb-inspector .inspector-file-tree-row {
+    min-height: var(--row-height-compact);
+    border: 0;
+    border-radius: var(--radius-control);
+  }
+
+  .wb-app .inspector-change-row:hover,
+  .wb-app .inspector-checkpoint-row:hover,
+  .wb-app .wb-inspector .inspector-file-tree-row:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .inspector-checkpoint-row.is-selected,
+  .wb-app .wb-inspector .inspector-file-tree-row.is-selected {
+    background: var(--active-wash);
+  }
+
+  .wb-app .wb-inspector .inspector-file-tree-row:focus-visible,
+  .wb-app .inspector-change-row:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .inspector-change-row,
+    .wb-app .inspector-checkpoint-row,
+    .wb-app .wb-inspector .inspector-file-tree-row {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  .wb-app :is(.inspector-change-path, .inspector-checkpoint-path) {
+    font-size: var(--text-caption);
+  }
+
+  .wb-app :is(.inspector-change-caret, .inspector-change-icon),
+  .wb-app .wb-inspector .inspector-file-tree-icon {
+    color: var(--text-tertiary);
+  }
+
+  .wb-app .wb-inspector .inspector-file-tree-icon.is-directory {
+    color: var(--accent);
+  }
+
+  /* Info grid */
+  .wb-app .inspector-scroll .inspector-info-grid {
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .wb-app .inspector-scroll .inspector-info-grid dt {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .inspector-scroll .inspector-info-grid dd {
+    font-size: var(--text-meta);
+  }
+
+  .wb-app .wb-inspector .inspector-footer {
+    padding: var(--space-2) var(--space-3);
+    border-top: 0;
+    box-shadow: inset 0 1px 0 var(--hairline);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Cards and pills                                                   */
+  /* ---------------------------------------------------------------- */
+  .wb-app .wb-inspector :is(.inspector-card, .inspector-disclosure-card, .agent-card),
+  .workspace-resources-content :is(.inspector-card, .inspector-disclosure-card) {
+    padding: var(--space-2-5) var(--space-3);
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--surface-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .wb-app .wb-inspector :is(.inspector-card, .inspector-disclosure-card, .agent-card):hover,
+  .workspace-resources-content :is(.inspector-card, .inspector-disclosure-card):hover {
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      var(--shadow-hairline);
+  }
+
+  .wb-app .wb-inspector .inspector-card-header {
+    padding-bottom: var(--space-2);
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--hairline);
+  }
+
+  .wb-app .wb-inspector .inspector-overview {
+    box-shadow: none;
+  }
+
+  .wb-app .wb-inspector .child-session-card {
+    border-left: 0;
+    border-radius: var(--radius-item);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      inset 2px 0 0 var(--hairline-strong);
+  }
+
+  .wb-app .wb-inspector .child-session-card:is(.is-running, .is-awaiting_approval) {
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      inset 2px 0 0 var(--accent);
+  }
+
+  .wb-app .wb-inspector .child-session-card:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      inset 2px 0 0 var(--hairline-strong),
+      var(--shadow-hairline);
+  }
+
+  .wb-app .wb-inspector :is(.inspector-plan-stat-pill, .inspector-memory-ref-pill, .inspector-memory-trunc-pill, .inspector-memory-meta-pill, .advisor-badge) {
+    height: auto;
+    min-height: var(--space-5);
+    padding: 0 var(--space-1-5);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    color: var(--text-secondary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    line-height: var(--leading-caption);
+  }
+
+  .wb-app .wb-inspector .inspector-plan-stat-pill.is-completed {
+    background: var(--success-bg);
+    box-shadow: none;
+    color: var(--success);
+  }
+
+  .wb-app .wb-inspector .inspector-plan-stat-pill.is-active {
+    background: var(--accent-soft);
+    box-shadow: none;
+    color: var(--accent);
+  }
+
+  .wb-app .wb-inspector .inspector-plan-stat-pill.is-interrupted {
+    background: var(--warning-bg);
+    box-shadow: none;
+    color: var(--warning);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Workspace picker dialog                                           */
+  /* ---------------------------------------------------------------- */
+  .workspace-picker-search-box {
+    min-height: var(--control-height-lg);
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+
+  .workspace-picker-search-box:focus-within {
+    box-shadow:
+      inset 0 0 0 1px var(--focus-ring),
+      0 0 0 3px var(--focus-halo);
+  }
+
+  .workspace-picker-section-label {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .workspace-picker-section-hint,
+  .workspace-picker-helper,
+  .workspace-picker-status-hint,
+  .workspace-picker-directories-meta {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .workspace-picker-directory {
+    min-height: var(--control-height-xl);
+    border-radius: var(--radius-item);
+  }
+
+  .workspace-picker-recent-chip {
+    min-height: var(--control-height-lg);
+    border: 0;
+    border-radius: var(--radius-control);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .workspace-picker-recent-chip.is-selected {
+    background: var(--active-wash);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+
+  .workspace-picker-recent-chip:hover,
+  .workspace-picker-directory:hover {
+    background: var(--hover-wash);
+  }
+
+  .workspace-picker-recent-chip:focus-visible,
+  .workspace-picker-directory:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .workspace-picker-recent-chip,
+    .workspace-picker-directory {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  .workspace-picker-recent-name {
+    color: var(--text-primary);
+    font-size: var(--text-ui);
+    font-weight: 500;
+  }
+
+  .workspace-picker-recent-parent,
+  .workspace-picker-path {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .workspace-picker-error-box,
+  .workspace-picker-restricted-box {
+    border: 0;
+    border-radius: var(--radius-item);
+  }
+
+  .workspace-picker-error-box {
+    background: var(--error-bg);
+    box-shadow: inset 0 0 0 1px var(--error-border);
+  }
+
+  .workspace-picker-restricted-box {
+    background: var(--warning-bg);
+    box-shadow: inset 0 0 0 1px var(--warning-border);
+  }
+
+  /* Master PR #11 summary/subview structure: the summary lists plan steps
+     without index or tag, and the file subview drops its card title. */
+  .wb-app .wb-inspector .inspector-summary :is(.plan-step-index, .plan-step-tag) {
+    display: none;
+  }
+
+  .wb-app
+    .wb-inspector
+    .inspector-subview
+    .inspector-file-manager-header-card
+    .inspector-card-title {
+    display: none;
+  }
+
+  .wb-app
+    .wb-inspector
+    .inspector-subview
+    .inspector-file-manager-header-card
+    .inspector-card-header {
+    justify-content: flex-end;
+  }
+}

@@ -2,90 +2,7 @@
    Workspace Picker Trigger & Modal
    ========================================================================== */
 
-/* Trigger Button in New Session Composer */
-.composer-project .composer-project-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  max-width: min(100%, 420px);
-  min-height: 30px;
-  padding: 4px 10px 4px 8px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-elevated);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  line-height: 1.3;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: background-color var(--transition-fast), border-color
-    var(--transition-fast), box-shadow var(--transition-fast), color
-    var(--transition-fast);
-}
-
-.composer-project .composer-project-trigger:hover:not(:disabled) {
-  background: var(--surface-hover);
-  border-color: var(--border-control);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.composer-project .composer-project-trigger.is-open {
-  border-color: var(--accent);
-  background: var(--surface-elevated);
-  box-shadow: 0 0 0 2px var(--accent-soft);
-}
-
-.composer-project .composer-project-trigger:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-.composer-project-trigger-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-xs);
-  background: var(--accent-soft);
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
-.composer-project-trigger-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.composer-project-trigger-parent {
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 160px;
-  padding-left: 6px;
-  border-left: 1px solid var(--border-subtle);
-}
-
-.composer-project-trigger-caret {
-  color: var(--text-muted);
-  flex-shrink: 0;
-  margin-left: 2px;
-  transition: transform var(--transition-fast), color var(--transition-fast);
-}
-
-.composer-project
-  .composer-project-trigger.is-open
-  .composer-project-trigger-caret {
-  transform: rotate(180deg);
-  color: var(--accent);
-}
+/* The trigger chip is skinned in styles/surfaces/composer.css (phase 2a). */
 
 /* Backdrop overlay */
 .workspace-picker-backdrop {
@@ -273,33 +190,6 @@
   font-size: var(--text-xs);
   color: var(--text-secondary);
   line-height: 1.45;
-}
-
-.workspace-picker-close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background-color var(--transition-fast), color
-    var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.workspace-picker-close-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.workspace-picker-close-btn:focus-visible {
-  outline: 2px solid var(--focus-ring, var(--accent));
-  outline-offset: 1px;
 }
 
 /* Modal Body */
@@ -719,31 +609,6 @@ button.workspace-picker-crumb:focus-visible {
   gap: 4px;
 }
 
-.workspace-picker-empty-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-full);
-  background: var(--surface-soft);
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-}
-
-.workspace-picker-empty-text {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.workspace-picker-empty-hint {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin: 0;
-}
-
 /* Restricted / Non-browsable Info Box */
 .workspace-picker-restricted-box {
   padding: 12px 14px;
@@ -769,7 +634,7 @@ button.workspace-picker-crumb:focus-visible {
 .workspace-picker-error-box {
   padding: 8px 12px;
   border-radius: var(--radius-md);
-  background: var(--error-bg, #fef3f2);
+  background: var(--error-bg);
   border: 1px solid var(--error-border);
   color: var(--error);
   font-size: var(--text-xs);

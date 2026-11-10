@@ -22,7 +22,7 @@ const THEMES = [
 const CUSTOM = "custom";
 
 export function GeneralSection({ form }: { readonly form: SettingsForm }) {
-  const { draft, commit, statusOf, confirm } = form;
+  const { draft, commit, retry, statusOf, confirm } = form;
   const disabled = !form.state.settings;
   const presetTimeout = REQUEST_TIMEOUT_PRESETS.some(
     (preset) => preset.value === draft.requestTimeoutMs,
@@ -80,7 +80,12 @@ export function GeneralSection({ form }: { readonly form: SettingsForm }) {
               onChange={(value) => void commit("theme", value)}
             />
           }
-          status={<SaveIndicator status={statusOf("theme")} />}
+          status={
+            <SaveIndicator
+              status={statusOf("theme")}
+              onRetry={() => void retry("theme")}
+            />
+          }
         />
       </SettingGroup>
 
@@ -93,7 +98,12 @@ export function GeneralSection({ form }: { readonly form: SettingsForm }) {
           stacked
           label="默认权限"
           description="命令以当前系统用户身份执行，不在操作系统沙箱内。"
-          status={<SaveIndicator status={statusOf("defaultPermission")} />}
+          status={
+            <SaveIndicator
+              status={statusOf("defaultPermission")}
+              onRetry={() => void retry("defaultPermission")}
+            />
+          }
         >
           <fieldset className="execution-permission-grid" aria-label="默认权限">
             {EXECUTION_PERMISSION_OPTIONS.map((option) => {
@@ -191,7 +201,12 @@ export function GeneralSection({ form }: { readonly form: SettingsForm }) {
               }}
             />
           }
-          status={<SaveIndicator status={statusOf("requestTimeoutMs")} />}
+          status={
+            <SaveIndicator
+              status={statusOf("requestTimeoutMs")}
+              onRetry={() => void retry("requestTimeoutMs")}
+            />
+          }
         >
           {customTimeout && (
             <div className="setting-inline-input">

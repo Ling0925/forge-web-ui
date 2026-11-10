@@ -1,0 +1,164 @@
+import { readFileSync } from "node:fs";
+import { sessionSnapshotSchema } from "@forge/core/shared/schemas";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { StoredTranscript } from "../../src/renderer/components/workbench/Transcript";
+
+// Phase 2b (design A "light inline") transcript contract. Pure Node:
+// server rendering + stylesheet assertions, no browser.
+
+const read = (path: string) =>
+  readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
+const uiCss = read("src/renderer/styles/ui.css");
+const tokensCss = read("src/renderer/styles/tokens.css");
+const themeCss = read("src/renderer/styles/workspace-theme.css");
+const transcriptCss = stripComments(
+  read("src/renderer/styles/surfaces/transcript.css"),
+);
+const transcriptTsx = read("src/renderer/components/workbench/Transcript.tsx");
+
+const toolCall = {
+  id: "call-1",
+  type: "function" as const,
+  function: { name: "read_file", arguments: '{"path":"main.ts"}' },
+};
+
+const snapshot = sessionSnapshotSchema.parse({
+  version: 1,
+  id: "33333333-3333-4333-8333-333333333333",
+  title: "design test",
+  workspace: "/tmp",
+  model: "m",
+  status: "completed",
+  createdAt: "2026-01-01T00:00:00Z",
+  updatedAt: "2026-01-01T00:00:00Z",
+  messages: [
+    { role: "user", content: "修复日期测试" },
+    { role: "assistant", content: "先读文件。", tool_calls: [toolCall] },
+    { role: "tool", tool_call_id: "call-1", content: "ok" },
+    {
+      role: "assistant",
+      content: "已修复。\n\n```ts\nconst a = 1;\n```",
+    },
+  ],
+  events: [],
+  changes: [],
+});
+
+describe("transcript surface stylesheet", () => {
+  it("is imported by ui.css after the other surfaces, in the components layer", () => {
+    const sidebar = uiCss.indexOf('@import "./surfaces/sidebar.css"');
+    const transcript = uiCss.indexOf('@import "./surfaces/transcript.css"');
+    expect(sidebar).toBeGreaterThan(-1);
+    expect(transcript).toBeGreaterThan(sidebar);
+    expect(transcriptCss.trimStart().startsWith("@layer components")).toBe(
+      true,
+    );
+  });
+
+  it("uses theme variables only (no literal colours)", () => {
+    expect(transcriptCss).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    expect(transcriptCss).not.toMatch(/\b(rgb|rgba|hsl|hsla|oklch)\(/);
+  });
+
+  it("keeps coarse pointers at 44px and honours reduced motion", () => {
+    expect(transcriptCss).toMatch(/@media \(pointer: coarse\)/);
+    expect(transcriptCss).toContain("var(--touch-min-target)");
+    expect(transcriptCss).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
+  });
+
+  it("right-aligns the request as a compact bubble without reordering the DOM", () => {
+    const row = transcriptCss.match(/\.wb-app \.message-user \{[^}]*\}/);
+    expect(row?.[0]).toContain("flex-direction: row-reverse");
+    const card = transcriptCss.match(/\.wb-app \.message-user-card \{[^}]*\}/);
+    expect(card?.[0]).toContain("max-width: var(--user-bubble-measure)");
+    expect(tokensCss).toMatch(/--user-bubble-measure:\s*80%/);
+  });
+
+  it("keeps the request row free of per-turn controls (master PR #11)", () => {
+    // Master removed the turn badge and per-turn collapse; the bubble row
+    // reserves no gap for them.
+    expect(transcriptCss).not.toContain("transcript-turn-actions");
+    expect(transcriptCss).not.toContain("transcript-turn-collapsed-bar");
+    const row = transcriptCss.match(/\.wb-app \.message-user \{[^}]*\}/)?.[0];
+    expect(row).toContain("gap: 0");
+  });
+
+  it("does not centre the latest pill with a transform Motion owns", () => {
+    const block = transcriptCss.match(/\.transcript-latest\s*\{[^}]*\}/);
+    expect(block?.[0]).toContain("transform: none");
+  });
+});
+
+describe("reading tokens", () => {
+  it("sets the 15px prose / 720px measure / transcript rhythm", () => {
+    expect(tokensCss).toMatch(/--prose-size:\s*var\(--text-body\)/);
+    expect(tokensCss).toMatch(/--prose-leading:\s*1\.7/);
+    expect(tokensCss).toMatch(/--reading-measure:\s*720px/);
+    expect(tokensCss).toMatch(/--transcript-block-gap:/);
+    expect(tokensCss).toMatch(/--transcript-turn-gap:/);
+    expect(tokensCss).toMatch(/--code-size:/);
+  });
+
+  it("defines code surface and syntax colours in both themes", () => {
+    for (const name of [
+      "--code-surface",
+      "--syntax-keyword",
+      "--syntax-string",
+      "--syntax-number",
+      "--syntax-comment",
+      "--syntax-property",
+      "--syntax-attribute",
+    ]) {
+      const hits = themeCss.match(new RegExp(`${name}:`, "g")) ?? [];
+      expect(hits.length, name).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
+
+describe("transcript markup", () => {
+  const html = renderToStaticMarkup(
+    createElement(StoredTranscript, { snapshot }),
+  );
+
+  it("wraps the request in a bubble card, with no turn badge or author row", () => {
+    expect(html).toContain(
+      '<article class="message message-user"><div class="message-user-card">',
+    );
+    expect(html).not.toContain(">你</div>");
+    expect(html).not.toContain("transcript-turn-actions");
+    expect(html).not.toContain("第 1 轮");
+  });
+
+  it("marks only live or unfinished replies with the Forge mark; copy follows the answer", () => {
+    // A settled answer carries no author row (master PR #11) …
+    expect(html).not.toContain("message-author-row");
+    expect(html).not.toContain("message-assistant-card");
+    expect(html).toContain(
+      '<div class="message-actions"><button type="button" class="message-copy"',
+    );
+    // … while a streaming / incomplete reply shows the design A mark.
+    expect(transcriptTsx).toMatch(
+      /\(item\.streaming \|\| item\.incomplete\)[\s\S]{0,120}message-author-row[\s\S]{0,80}<ForgeMark className="message-author-mark" \/>/,
+    );
+  });
+
+  it("keeps the tool row and code block hooks", () => {
+    expect(html).toContain('class="tool-call-group"');
+    expect(html).toContain("tool-disclosure-header");
+    expect(html).toContain("code-block");
+  });
+
+  it("uses a shape-only status skeleton while a session loads", () => {
+    expect(transcriptTsx).toContain('<output className="transcript-loading">');
+    expect(transcriptTsx).toContain("正在读取会话…");
+    expect(transcriptTsx).toContain('className="transcript-loading-line');
+  });
+
+  it("animates the jump-to-latest pill with the shared springs", () => {
+    expect(transcriptTsx).toContain("<AnimatePresence>");
+    expect(transcriptTsx).toContain("transition={spring.snappy}");
+  });
+});

@@ -7,10 +7,12 @@ import {
   Files,
   Gear,
   MagnifyingGlass,
+  NotePencil,
   Plus,
   X,
 } from "@phosphor-icons/react";
 import { useState } from "react";
+import { Kbd } from "#ui/kbd";
 import type { SessionSummary } from "../../shared-types";
 import { modelServiceStatus } from "../../state/model-service-status";
 import {
@@ -26,10 +28,12 @@ import { SessionListItem } from "./SessionListItem";
 import { SuperAgentSessions } from "./SuperAgentSessions";
 import "./sidebar-v2.css";
 
-const newSessionShortcut =
-  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
-    ? "⌘N"
-    : "Ctrl N";
+/** Modifier label for the real Ctrl/Cmd+N shortcut (state/modal-shortcuts.ts). */
+const NEW_TASK_MOD =
+  typeof navigator !== "undefined" &&
+  /Mac|iPhone|iPad/.test(navigator.userAgent)
+    ? "⌘"
+    : "Ctrl";
 
 /** Folder label for a workspace path; the full path stays available as a tooltip. */
 function workspaceName(workspace: string) {
@@ -193,11 +197,12 @@ export function Sidebar() {
               title="新建会话 (Ctrl+N / Cmd+N)"
               aria-label="新建会话"
             >
-              <Plus size={16} weight="bold" />
+              <NotePencil size={17} weight="duotone" />
               <span>新任务</span>
-              <kbd className="sidebar-new-kbd" aria-hidden="true">
-                {newSessionShortcut}
-              </kbd>
+              <span className="sidebar-new-kbd" aria-hidden="true">
+                <Kbd>{NEW_TASK_MOD}</Kbd>
+                <Kbd>N</Kbd>
+              </span>
             </button>
             <IconButton
               className="sidebar-mobile-close"
@@ -282,18 +287,18 @@ export function Sidebar() {
                     aria-controls={bodyId}
                     title={group.workspace}
                   >
+                    <CaretRight
+                      size={11}
+                      weight="bold"
+                      className="session-folder-caret"
+                      aria-hidden="true"
+                    />
                     <span className="session-folder-name">
                       {workspaceName(group.workspace)}
                     </span>
                     <span className="session-folder-count">
                       {group.sessions.length}
                     </span>
-                    <CaretRight
-                      size={10}
-                      weight="bold"
-                      className="session-folder-caret"
-                      aria-hidden="true"
-                    />
                   </button>
                   <button
                     type="button"

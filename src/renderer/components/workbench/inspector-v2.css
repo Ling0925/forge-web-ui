@@ -7,21 +7,6 @@
  */
 
 /* ---------- Shell & header ---------- */
-.wb-app .workbench-inspector.wb-inspector {
-  background: var(--sidebar-bg);
-  font-size: var(--text-sm);
-}
-.wb-app .wb-inspector .wb-inspector-head {
-  padding: 0 var(--space-2) 0 var(--space-4);
-  border-bottom: 0;
-  background: transparent;
-}
-.wb-app .wb-inspector .inspector-title-row {
-  gap: var(--space-2);
-  font-size: var(--text-md);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
 .wb-app .wb-inspector .wb-inspector-head .status-badge {
   padding: 0 var(--space-2);
   border-radius: var(--radius-full);
@@ -38,24 +23,6 @@
 .wb-app .wb-inspector .inspector-back:hover {
   background: var(--surface-hover);
   color: var(--text-primary);
-}
-.wb-app .wb-inspector .wb-inspector-close {
-  width: var(--control-height);
-  height: var(--control-height);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  transition: background-color var(--dur-micro) var(--ease-out), color
-    var(--dur-micro) var(--ease-out);
-}
-.wb-app .wb-inspector .wb-inspector-close:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
-.wb-app .wb-inspector .inspector-scroll {
-  padding: 0 var(--space-2) var(--space-4);
 }
 .wb-app .wb-inspector .inspector-scroll > .wb-stack,
 .wb-app .wb-inspector .wb-stack,
@@ -168,15 +135,6 @@
   padding: var(--space-2) var(--space-2) var(--space-1);
   text-align: left;
 }
-.wb-app
-  .wb-inspector
-  .inspector-scroll
-  .inspector-summary-empty
-  .empty-state-title {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  line-height: var(--leading-sm);
-}
 
 /* ---------- Row: the one list vocabulary ---------- */
 .wb-app .wb-inspector .inspector-row {
@@ -269,9 +227,6 @@
 }
 
 /* ---------- Progress: plan steps as plain rows ---------- */
-.wb-app .wb-inspector .inspector-summary ol.wb-plan-progress {
-  margin: 0;
-}
 .wb-app .wb-inspector .inspector-summary ol.wb-plan-progress > li {
   min-height: 32px;
   align-items: center;
@@ -287,38 +242,6 @@
   left: 9px;
   margin-top: -7px;
   box-shadow: none;
-}
-.wb-app .wb-inspector .inspector-summary ol.wb-plan-progress .plan-completed {
-  border: 0;
-}
-.wb-app .wb-inspector .inspector-summary ol.wb-plan-progress .plan-in_progress {
-  background: transparent;
-}
-.wb-app .wb-inspector .inspector-summary .plan-step-row {
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-.wb-app .wb-inspector .inspector-summary .plan-step-item:hover .plan-step-row,
-.wb-app .wb-inspector .inspector-summary .plan-step-in_progress .plan-step-row {
-  border: 0;
-  background: transparent;
-}
-.wb-app .wb-inspector .inspector-summary .plan-step-index,
-.wb-app .wb-inspector .inspector-summary .plan-step-tag {
-  display: none;
-}
-.wb-app .wb-inspector .inspector-summary .plan-step-completed .plan-step-text {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--border-control);
-}
-.wb-app
-  .wb-inspector
-  .inspector-summary
-  .plan-step-in_progress
-  .plan-step-text {
-  font-weight: 500;
 }
 
 /* ---------- Session facts ---------- */
@@ -376,7 +299,6 @@
   animation: fx-slide-in-right var(--dur-medium) var(--ease-out) both;
 }
 .wb-app .wb-inspector .inspector-section,
-.wb-app .wb-inspector .inspector-card,
 .wb-app .wb-inspector .wb-disclosure {
   border: 0;
   border-radius: var(--radius-card);
@@ -384,26 +306,18 @@
   box-shadow: none;
 }
 [data-theme="dark"] .wb-app .wb-inspector .inspector-section,
-[data-theme="dark"] .wb-app .wb-inspector .inspector-card,
 [data-theme="dark"] .wb-app .wb-inspector .wb-disclosure {
   background: var(--surface-elevated);
 }
-.wb-app .wb-inspector .inspector-section,
-.wb-app .wb-inspector .inspector-card {
+.wb-app .wb-inspector .inspector-section {
   padding: var(--space-3);
 }
 .wb-app .wb-inspector .inspector-section:hover,
-.wb-app .wb-inspector .inspector-card:hover,
 .wb-app .wb-inspector .wb-disclosure[open] {
   border: 0;
   box-shadow: none;
 }
-.wb-app .wb-inspector .inspector-card-header {
-  padding-bottom: var(--space-2);
-  border-bottom-color: var(--border-subtle);
-}
-.wb-app .wb-inspector .inspector-scroll h3,
-.wb-app .wb-inspector .inspector-card-title {
+.wb-app .wb-inspector .inspector-scroll h3 {
   font-size: var(--text-sm);
   font-weight: 600;
   letter-spacing: 0;
@@ -429,7 +343,6 @@
   font-size: var(--text-sm);
 }
 .wb-app .wb-inspector .inspector-plan-badge,
-.wb-app .wb-inspector .inspector-plan-stat-pill,
 .wb-app .wb-inspector .inspector-subagents-count,
 .wb-app .wb-inspector .inspector-token-pill,
 .wb-app .wb-inspector .inspector-subtab-badge {
@@ -522,17 +435,3 @@
 
 /* The drill-in header already names the view; panel headings that repeat it
    are hidden so the title reads once. Actions in the same row stay. */
-.wb-app
-  .wb-inspector
-  .inspector-subview
-  .inspector-file-manager-header-card
-  .inspector-card-title {
-  display: none;
-}
-.wb-app
-  .wb-inspector
-  .inspector-subview
-  .inspector-file-manager-header-card
-  .inspector-card-header {
-  justify-content: flex-end;
-}

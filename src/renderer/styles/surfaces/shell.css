@@ -1,0 +1,392 @@
+/*
+ * App shell skin, design A "light inline" (UI migration phase 3,
+ * design-v2/spec.md §1–2): mobile drawer + scrims, the session actions
+ * menu, the command palette, native dialogs and the super-agent group.
+ *
+ * Imported by styles/ui.css into the `components` layer, so it beats the
+ * legacy sheets. Structure (drawer transforms, inert/hidden, focus return,
+ * portals, menu positioning) stays where it is; this file sets color, type,
+ * radius, elevation and spacing. Portalled surfaces (menu, dialogs) are not
+ * inside `.wb-app`, so their selectors are unprefixed.
+ *
+ * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
+ */
+@layer components {
+  /* ---------------------------------------------------------------- */
+  /* Scrims and the <=1000px drawer                                    */
+  /* ---------------------------------------------------------------- */
+  @media (max-width: 1000px) {
+    .wb-sidebar-backdrop {
+      background: var(--overlay-bg);
+      backdrop-filter: none;
+    }
+
+    .wb-app .workbench-sidebar {
+      box-shadow: var(--shadow-floating);
+      transition-timing-function: var(--ease-soft);
+    }
+
+    .wb-app .workbench-sidebar.is-open {
+      box-shadow:
+        var(--shadow-floating),
+        inset -1px 0 0 var(--hairline);
+    }
+  }
+
+  @media (min-width: 1001px) and (max-width: 1280px) {
+    .wb-app .wb-inspector-scrim {
+      background: var(--overlay-bg-soft);
+    }
+
+    .wb-app .workbench-inspector {
+      box-shadow:
+        var(--shadow-floating),
+        inset 1px 0 0 var(--hairline);
+    }
+
+    .wb-app.inspector-collapsed .workbench-inspector {
+      box-shadow: none;
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Session row "…" trigger and its menu                              */
+  /* ---------------------------------------------------------------- */
+  .wb-app .session-actions {
+    right: var(--space-1);
+  }
+
+  .wb-app .session-action-btn {
+    width: var(--space-6);
+    height: var(--space-6);
+    border-radius: var(--radius-control);
+    color: var(--text-tertiary);
+  }
+
+  .wb-app .session-action-btn:hover,
+  .wb-app .session-action-btn.is-active {
+    background: var(--active-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .session-action-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .session-actions {
+      right: 0;
+    }
+
+    .wb-app .btn-icon.session-action-btn {
+      width: var(--touch-min-target);
+      height: var(--touch-min-target);
+    }
+  }
+
+  .session-actions-menu-dropdown {
+    width: var(--menu-width);
+    padding: var(--space-1);
+    gap: 0;
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      var(--shadow-floating);
+    transform-origin: top left;
+    animation: shell-menu-in var(--duration-fast) var(--ease-soft) both;
+  }
+
+  .session-actions-menu-dropdown .wb-menu-item {
+    height: var(--control-height-lg);
+    padding: 0 var(--space-2-5);
+    border-radius: var(--radius-control);
+    color: var(--text-primary);
+    font-size: var(--text-meta);
+    font-weight: 400;
+    line-height: var(--leading-meta);
+  }
+
+  .session-actions-menu-dropdown .wb-menu-item:hover:not(:disabled),
+  .session-actions-menu-dropdown .wb-menu-item:focus-visible {
+    outline: none;
+    background: var(--hover-wash);
+  }
+
+  .session-actions-menu-dropdown .wb-menu-item:focus-visible {
+    box-shadow: 0 0 0 2px var(--focus-halo);
+  }
+
+  .session-actions-menu-dropdown .wb-menu-item:disabled {
+    color: var(--text-disabled);
+    opacity: 1;
+  }
+
+  .session-actions-menu-dropdown .wb-menu-item.is-danger:not(:disabled) {
+    color: var(--error);
+  }
+
+  .session-actions-menu-dropdown .wb-menu-item.is-danger:hover:not(:disabled) {
+    background: var(--error-bg);
+  }
+
+  .session-actions-menu-dropdown :is(.wb-inline-note, .form-error) {
+    margin: var(--space-1) var(--space-2-5) var(--space-1-5);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .session-actions-menu-dropdown .wb-inline-note {
+    color: var(--text-tertiary);
+  }
+
+  @media (pointer: coarse) {
+    .session-actions-menu-dropdown .wb-menu-item {
+      height: var(--touch-min-target);
+    }
+  }
+
+  @keyframes shell-menu-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Native dialogs (rename, command palette, resources …)             */
+  /* ---------------------------------------------------------------- */
+  .native-dialog {
+    border: 0;
+    border-radius: var(--radius-surface);
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      var(--shadow-floating);
+  }
+
+  .native-dialog .modal-header {
+    min-height: var(--dialog-header-height);
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--hairline);
+  }
+
+  .native-dialog .modal-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: var(--leading-md);
+    letter-spacing: -0.01em;
+  }
+
+  .native-dialog .modal-kicker {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .native-dialog .modal-close {
+    color: var(--text-tertiary);
+  }
+
+  .native-dialog .modal-close:hover:not(:disabled) {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .native-dialog .modal-footer {
+    border-top: 0;
+    background: var(--surface-soft);
+    box-shadow: inset 0 1px 0 var(--hairline);
+  }
+
+  @media (max-width: 640px) {
+    .native-dialog {
+      border-radius: var(--radius-card);
+    }
+
+    .native-dialog .modal-header {
+      padding-left: var(--space-4);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Command palette                                                   */
+  /* ---------------------------------------------------------------- */
+  .command-palette {
+    gap: var(--space-2);
+  }
+
+  .command-palette .command-selection {
+    margin: 0;
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  /* Search-first palette (master PR #11): one field over grouped rows. */
+  .native-dialog.command-palette-dialog {
+    width: min(var(--palette-width), calc(100vw - var(--space-6)));
+  }
+
+  .command-palette-dialog .modal-content.command-palette {
+    overflow: hidden;
+  }
+
+  .command-palette .command-search {
+    height: var(--control-height-xl);
+    border-color: var(--hairline-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-elevated);
+  }
+
+  .command-palette .command-search:focus-within {
+    border-color: var(--hairline-strong);
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  .command-palette .command-search-input {
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+  }
+
+  .command-palette .command-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: 0;
+    max-height: min(52dvh, var(--palette-list-max));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .command-palette .command-group-label {
+    padding: var(--space-3) var(--space-3) var(--space-1);
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: 500;
+  }
+
+  .command-palette .command-row:first-child .command-group-label {
+    padding-top: var(--space-1);
+  }
+
+  .command-palette .command-action-icon {
+    color: var(--text-muted);
+  }
+
+  .command-palette .command-action[aria-current="true"] .command-action-icon {
+    color: var(--accent);
+  }
+
+  .command-palette .command-action-meta {
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .command-palette .command-empty {
+    color: var(--text-tertiary);
+    font-size: var(--text-meta);
+  }
+
+  .command-palette .command-palette-hint {
+    border-top-color: var(--hairline);
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+  }
+
+  /* Rows are quiet list items; the keyboard selection is a wash plus an
+     accent rail, not a filled primary button. */
+  .command-palette .command-action {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2-5);
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    min-height: var(--control-height-xl);
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-radius: var(--radius-item);
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-secondary);
+    font-size: var(--text-ui);
+    font-weight: 400;
+    line-height: var(--leading-ui);
+  }
+
+  .command-palette .command-action:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .command-palette .command-action[aria-current="true"] {
+    background: var(--active-wash);
+    box-shadow: inset 2px 0 0 var(--accent);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .command-palette .command-action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .command-palette .command-action {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* Header trigger: a quiet search chip. */
+  .wb-app .command-palette-trigger {
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    font-weight: 500;
+  }
+
+  .wb-app .command-palette-trigger:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Super-agent group in the rail                                     */
+  /* ---------------------------------------------------------------- */
+  .wb-app .superagent-workers {
+    margin-left: var(--space-3);
+    padding-left: var(--space-2);
+    border-left: 0;
+    box-shadow: inset 1px 0 0 var(--hairline-strong);
+  }
+
+  .wb-app .superagent-workers.is-unassigned {
+    margin-left: 0;
+    padding-left: 0;
+    box-shadow: none;
+  }
+
+  .wb-app .superagent-role-tag {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    line-height: var(--leading-caption);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .session-actions-menu-dropdown {
+      animation: none;
+    }
+
+    .wb-app .workbench-sidebar {
+      transition-duration: 0.01ms;
+    }
+  }
+}

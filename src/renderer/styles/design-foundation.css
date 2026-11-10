@@ -139,20 +139,11 @@
   ):focus-visible {
   outline: none;
 }
-
-.btn {
-  transition:
-    background-color var(--dur-micro) var(--ease-out),
-    border-color var(--dur-micro) var(--ease-out),
-    color var(--dur-micro) var(--ease-out),
-    box-shadow var(--dur-short) var(--ease-out),
-    transform var(--dur-micro) var(--ease-out);
-}
 .btn-primary {
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgb(255 255 255 / 10%);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 var(--on-accent-highlight);
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-card), inset 0 1px 0 rgb(255 255 255 / 12%);
+  box-shadow: var(--shadow-card), inset 0 1px 0 var(--on-accent-highlight);
 }
 .btn-secondary {
   background: var(--surface-elevated);
@@ -163,14 +154,12 @@
   background: var(--surface-raised);
   border-color: var(--border-hover);
 }
-.btn-accent,
-.btn.is-accent {
+.btn-accent {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-accent);
 }
-.btn-accent:hover:not(:disabled),
-.btn.is-accent:hover:not(:disabled) {
+.btn-accent:hover:not(:disabled) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
 }
@@ -226,21 +215,18 @@
 }
 
 /* Popovers & menus share one entrance. */
-.composer-model-panel,
 .composer-dropdown-menu {
   transform-origin: bottom right;
   animation: fx-pop-in var(--dur-short) var(--ease-out) both;
   box-shadow: var(--shadow-dropdown);
   border-color: transparent;
 }
-.native-dialog[open],
 .modal-card:not(.composer-model-panel) {
   animation: fx-pop-in var(--dur-medium) var(--ease-out) both;
   box-shadow: var(--shadow-overlay);
 }
-.native-dialog::backdrop,
 .modal-backdrop {
-  background: rgb(20 16 12 / 32%);
+  background: var(--overlay-bg);
   backdrop-filter: blur(3px);
   animation: fx-fade var(--dur-medium) var(--ease-out) both;
 }
@@ -258,7 +244,6 @@
   .fx-fade,
   .fx-stagger > *,
   .fx-skeleton,
-  .composer-model-panel,
   .composer-dropdown-menu {
     animation: none !important;
   }

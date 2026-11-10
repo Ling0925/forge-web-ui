@@ -1,6 +1,17 @@
 import { CaretDown, Check } from "@phosphor-icons/react";
+import * as m from "motion/react-m";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { cn } from "#lib/utils";
 import { useDismiss } from "../primitives/useDismiss";
+
+/**
+ * Composer toolbar choice (mode / permission). Behaviour, roles and keyboard
+ * handling are unchanged from the legacy control; only the skin moved to
+ * Tailwind utilities (trigger chrome lives in styles/surfaces/composer.css so
+ * the plain image button in Composer shares it). The hover highlight is a
+ * Motion shared-layout pill that glides between items; without a
+ * MotionProvider (or with reduced motion) it simply jumps.
+ */
 
 export function ComposerDropdown<T extends string>({
   value,
@@ -29,10 +40,15 @@ export function ComposerDropdown<T extends string>({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const descId = useId();
+  const highlightId = useId();
+  const [hovered, setHovered] = useState<T | null>(null);
   const current = options.find((option) => option.value === value);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setHovered(null);
+      return;
+    }
     if (disabled) {
       setOpen(false);
       return;
@@ -47,9 +63,12 @@ export function ComposerDropdown<T extends string>({
     onDismiss: () => setOpen(false),
   });
 
+  // Not a positioning box: the menu anchors to the composer card (the
+  // nearest positioned ancestor), so it opens above the card's top edge and
+  // never covers the input or the send button.
   return (
     <div
-      className={`composer-dropdown ${open ? "is-open" : ""}`}
+      className={cn("composer-dropdown inline-flex", open && "is-open")}
       ref={containerRef}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -88,7 +107,7 @@ export function ComposerDropdown<T extends string>({
       <button
         ref={triggerRef}
         type="button"
-        className={`composer-dropdown-trigger ${iconOnly ? "is-icon-only" : ""}`}
+        className={cn("composer-dropdown-trigger", iconOnly && "is-icon-only")}
         onClick={() => setOpen(!open)}
         disabled={disabled}
         aria-label={ariaLabel}
@@ -100,15 +119,24 @@ export function ComposerDropdown<T extends string>({
         aria-controls={menuId}
         aria-expanded={open}
       >
-        {icon && <span className="composer-dropdown-icon">{icon}</span>}
+        {icon && (
+          <span className="composer-dropdown-icon inline-flex items-center">
+            {icon}
+          </span>
+        )}
         {!iconOnly && (
-          <span className="composer-dropdown-label">{current?.label}</span>
+          <span className="composer-dropdown-label truncate">
+            {current?.label}
+          </span>
         )}
         {!iconOnly && (
           <CaretDown
-            size={10}
+            size={12}
             aria-hidden="true"
-            className="composer-dropdown-caret"
+            className={cn(
+              "composer-dropdown-caret text-muted-foreground transition-transform duration-[var(--duration-normal)] ease-out",
+              open && "is-open rotate-180",
+            )}
           />
         )}
       </button>
@@ -119,10 +147,21 @@ export function ComposerDropdown<T extends string>({
         <div
           ref={menuRef}
           id={menuId}
-          className="composer-dropdown-menu"
+          className={cn(
+            "composer-dropdown-menu absolute bottom-[calc(100%+8px)] left-0 z-50 flex min-w-60 flex-col gap-0.5 p-1.5 max-[640px]:right-0 max-[640px]:min-w-0",
+            "rounded-xl border border-border bg-popover text-popover-foreground shadow-overlay",
+            "origin-bottom-left animate-in fade-in-0 zoom-in-[0.97] slide-in-from-bottom-1 duration-150 ease-out",
+          )}
           role="menu"
           aria-label={ariaLabel}
+          onPointerLeave={() => setHovered(null)}
         >
+          <p
+            aria-hidden="true"
+            className="px-2.5 pt-1.5 pb-1 font-medium text-2xs text-muted-foreground uppercase tracking-wide"
+          >
+            {ariaLabel}
+          </p>
           {options.map((option) => (
             <button
               key={option.value}
@@ -130,31 +169,59 @@ export function ComposerDropdown<T extends string>({
               role="menuitemradio"
               aria-checked={option.value === value}
               tabIndex={-1}
-              className={`composer-dropdown-item ${option.value === value ? "is-selected" : ""}`}
+              className={cn(
+                "composer-dropdown-item group/item relative flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left font-[inherit] text-foreground",
+                "outline-none focus-visible:bg-accent focus-visible:shadow-[inset_0_0_0_2px_var(--focus-ring)]",
+                option.value === value && "is-selected",
+              )}
+              onPointerEnter={() => setHovered(option.value)}
+              onFocus={() => setHovered(option.value)}
               onClick={() => {
                 onChange(option.value);
                 setOpen(false);
                 triggerRef.current?.focus();
               }}
             >
-              <span className="composer-dropdown-item-main">
-                <span className="composer-dropdown-item-title">
+              {hovered === option.value && (
+                <m.span
+                  layoutId={highlightId}
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-lg bg-accent"
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "relative flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-[var(--duration-fast)]",
+                  option.value === value
+                    ? "border-brand bg-brand text-brand-foreground"
+                    : "border-input bg-card",
+                )}
+              >
+                {option.value === value && (
+                  <Check
+                    size={10}
+                    weight="bold"
+                    aria-hidden="true"
+                    className="composer-dropdown-check"
+                  />
+                )}
+              </span>
+              <span className="composer-dropdown-item-main relative flex min-w-0 flex-col gap-0.5">
+                <span
+                  className={cn(
+                    "composer-dropdown-item-title text-sm leading-tight",
+                    option.value === value && "font-medium",
+                  )}
+                >
                   {option.label}
                 </span>
                 {option.sub && (
-                  <span className="composer-dropdown-item-sub">
+                  <span className="composer-dropdown-item-sub text-muted-foreground text-xs leading-tight">
                     {option.sub}
                   </span>
                 )}
               </span>
-              {option.value === value && (
-                <Check
-                  size={12}
-                  weight="bold"
-                  aria-hidden="true"
-                  className="composer-dropdown-check"
-                />
-              )}
             </button>
           ))}
         </div>

@@ -38,6 +38,25 @@
   --leading-2xl: 32px;
 
   /* Unitless line heights */
+  /* Design A type roles (UI migration phase 2a-v2, design-v2/spec.md §2.1).
+     Semantic sizes for migrated surfaces; the numeric ladder above stays for
+     pages not yet migrated. Nothing below 12px except <kbd> (--text-2xs). */
+  --text-ui: 14px;
+  --leading-ui: 20px;
+  --text-body: 15px;
+  --leading-body: 24px;
+  --text-meta: 13px;
+  --leading-meta: 18px;
+  --text-caption: 12px;
+  --leading-caption: 16px;
+  --text-title: 20px;
+  --leading-title: 28px;
+  --text-hero: 34px;
+  --leading-hero: 42px;
+  --tracking-hero: -0.025em;
+  --text-hero-narrow: 26px;
+  --leading-hero-narrow: 34px;
+
   --leading-none: 1;
   --leading-tight: 1.25;
   --leading-normal: 1.5;
@@ -53,7 +72,9 @@
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
+  --space-7: 28px;
   --space-8: 32px;
+  --space-9: 36px;
   --space-10: 40px;
   --space-12: 48px;
 
@@ -67,6 +88,11 @@
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-full: 9999px;
+  /* Design A radius tiers: control (toolbar / icon buttons), item (list
+     rows, menu items, sidebar rows), surface (composer card, popovers). */
+  --radius-control: 8px;
+  --radius-item: 10px;
+  --radius-surface: 20px;
 
   /* Layout Dimensions */
   --rail-width: 264px;
@@ -77,10 +103,39 @@
   --control-height: 28px;
   --control-height-sm: 24px;
   --control-height-lg: 32px;
-  --reading-measure: 760px;
+  /* Command palette / list rows (design A 40px rhythm). */
+  --control-height-xl: 40px;
+  /* Shell (phase 3): session menu width, dialog header. */
+  --menu-width: 176px;
+  --dialog-header-height: 52px;
+  /* Command palette dialog and its scrolling list (master PR #11 layout). */
+  --palette-width: 560px;
+  --palette-list-max: 420px;
+  /* Inspector (phase 4): compact list rows; section body indent lines the
+     copy up with the section title (16px gutter + 11px caret + 8px gap). */
+  --row-height-compact: 28px;
+  --inspector-body-indent: 35px;
+  /* Settings (phase 5): rail rows match the sidebar's 34px; setting rows
+     keep a 56px rhythm so one-line and two-line rows align. */
+  --row-height-rail: 34px;
+  --setting-row-min-height: 56px;
+  /* Design A content column (spec §2.4): 720px for transcript, composer
+     and welcome alike. */
+  --reading-measure: 720px;
+  /* User request bubble: share of the reading column it may take. */
+  --user-bubble-measure: 80%;
+  --user-bubble-measure-narrow: 88%;
   /* Running prose inside the reading column; code blocks and tables keep the
      full --reading-measure. */
   --prose-measure: 720px;
+  /* Transcript rhythm (phase 2b): blocks inside a turn, and the larger break
+     that opens each new request. */
+  --transcript-block-gap: var(--space-3);
+  --transcript-turn-gap: var(--space-8);
+  /* Code surfaces: 13/20 mono for blocks, inline code a step under prose. */
+  --code-size: var(--text-sm);
+  --code-leading: 20px;
+  --code-inline-size: 0.875em;
   /* Compact phone navigation bar; also the offset reserved for it in the
      stacked mobile layout so the reading flow never hides behind it. */
   --mobile-nav-height: 56px;
@@ -94,8 +149,9 @@
   --radius-quiet: var(--radius-sm);
 
   /* Narrow / touch prose metrics: 17px / 1.75 on touch */
-  --prose-size-narrow: 17px;
-  --prose-leading-narrow: 1.75;
+  /* Phase 2b (design A): narrow/touch prose one step above desktop. */
+  --prose-size-narrow: 16px;
+  --prose-leading-narrow: 1.7;
   --text-touch: var(--text-prose);
   --leading-touch: 28px;
 
@@ -121,6 +177,9 @@
   --motion-ease-out: var(--ease-out);
   --motion-ease-in-out: var(--ease-in-out);
   --motion-ease-dialog: var(--ease-out);
+  /* CSS twin of the spring presets in lib/springs.ts (snappy/smooth/bouncy/gentle). */
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-slow: 240ms;
 }
 
 :root,
@@ -140,18 +199,18 @@
   --hover-bg: var(--surface-hover);
   --active-bg: var(--surface-active);
   --selection-bg: var(--surface-selected);
-  --info: var(--accent);
-  --info-bg: var(--accent-soft);
   --inset-highlight: transparent;
   --type-small: var(--text-sm);
   /* Desktop body copy: 16px / 1.75 gives CJK + Latin mixed prose a
      comfortable 28px rhythm. */
-  --prose-size: var(--text-prose);
-  --prose-leading: 1.75;
+  /* Phase 2b (design A): 15px body with a 1.7 leading (25.5px), which
+     keeps mixed CJK/Latin prose open without the old 16px/1.75 bulk. */
+  --prose-size: var(--text-body);
+  --prose-leading: 1.7;
 
   --radius-user: var(--radius-lg);
   --welcome-title-size: var(--text-display);
-  --radius-composer: var(--radius-xl);
+  --radius-composer: var(--radius-surface);
   --user-inset: 12px 16px;
   --content-inset: 24px 36px;
   --composer-inset: 6px 32px 16px;
