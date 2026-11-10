@@ -149,7 +149,9 @@ export function ModelPicker(props: {
         className="composer-dropdown-trigger composer-model-summary"
         title={`${shownValue}${selectedRoute ? " · 路由组" : ""}${props.sourceLabel ? ` · ${props.sourceLabel}` : ""}${effortLabel ? ` · 思考：${effortLabel}` : ""}`}
       >
-        <Cpu size={16} aria-hidden="true" />
+        <span className="composer-model-icon" aria-hidden="true">
+          <Cpu size={14} weight="bold" />
+        </span>
         <span className="composer-dropdown-label">{shownValue}</span>
         {selectedRoute && <span className="composer-model-source">路由组</span>}
         {props.sourceLabel && !selectedRoute && (
@@ -176,7 +178,11 @@ export function ModelPicker(props: {
             ))}
           </span>
         )}
-        <CaretDown size={16} aria-hidden="true" />
+        <CaretDown
+          size={14}
+          aria-hidden="true"
+          className="composer-model-caret"
+        />
       </summary>
       {open && (
         <div className="composer-model-panel">
@@ -190,6 +196,9 @@ export function ModelPicker(props: {
                 aria-label={`选择模型：${shownValue}${props.sourceLabel ? ` · ${props.sourceLabel}` : ""}`}
                 onClick={() => setModelsOpen(true)}
               >
+                <span className="composer-model-icon" aria-hidden="true">
+                  <Cpu size={14} weight="bold" />
+                </span>
                 <span>{shownValue}</span>
                 {props.sourceLabel && !selectedRoute && (
                   <small>{props.sourceLabel}</small>

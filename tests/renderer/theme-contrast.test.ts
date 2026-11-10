@@ -142,6 +142,22 @@ describe.each(Object.entries(THEMES))("Iris %s theme", (_name, tokens) => {
     }
   });
 
+  it("keeps context usage segments >= 3:1 (graphical objects)", () => {
+    for (const segment of [
+      "--context-instructions",
+      "--context-memory",
+      "--context-conversation",
+      "--context-tools",
+    ]) {
+      for (const surface of SURFACES) {
+        expect(
+          contrast(get(segment), get(surface)),
+          `${segment} on ${surface}`,
+        ).toBeGreaterThanOrEqual(3);
+      }
+    }
+  });
+
   it("keeps decorative dividers faint", () => {
     expect(
       contrast(get("--border-subtle"), get("--surface-elevated")),

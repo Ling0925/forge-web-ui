@@ -1,0 +1,983 @@
+/*
+ * New session + composer surfaces (UI migration phase 2a).
+ *
+ * Imported by styles/ui.css, so it is compiled by Tailwind (for @apply) and
+ * lands in the `components` layer: it beats every legacy sheet regardless of
+ * specificity, and Tailwind utilities written in TSX still beat it.
+ *
+ * Composer.tsx is not restyled through utilities in its JSX: its markup is
+ * kept byte-for-byte (behaviour, ids, aria and the test hook classes), and
+ * these rules skin those hook classes instead. Welcome, ComposerDropdown and
+ * the slash menu carry their utilities in TSX; ModelPicker, the usage meter,
+ * image chips and the workspace chip are skinned here because their states
+ * live on native elements (`details[open]`, range thumbs, scrollbars).
+ *
+ * Colors come only from workspace-theme.css tokens.
+ */
+@layer components {
+  /* ------------------------------------------------------------------ */
+  /* New session canvas                                                  */
+  /* ------------------------------------------------------------------ */
+  .wb-app .workbench-main.wb-new-session {
+    background-image:
+      radial-gradient(
+        56rem 22rem at 50% -6rem,
+        color-mix(in srgb, var(--accent) 10%, transparent),
+        transparent 72%
+      ),
+      radial-gradient(
+        28rem 16rem at 88% 104%,
+        color-mix(in srgb, var(--info) 6%, transparent),
+        transparent 70%
+      );
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Composer frame                                                      */
+  /* ------------------------------------------------------------------ */
+  .wb-app .workbench-composer {
+    @apply sticky bottom-0 z-20 shrink-0 bg-background;
+    padding: var(--composer-inset);
+  }
+  .wb-app .workbench-composer:has(.composer-split) {
+    @apply max-h-none overflow-visible;
+  }
+  .wb-app .workbench-composer:not(.composer-fresh):has(.composer-split) {
+    @apply w-full min-w-0;
+  }
+  /* Continuing task: fade the transcript into the composer instead of a hard edge. */
+  .wb-app .workbench-composer:not(.composer-fresh)::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--space-6)) 0 auto;
+    height: var(--space-6);
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, var(--canvas-bg));
+  }
+  .wb-app .wb-new-session .composer-fresh {
+    @apply relative z-20 mx-auto mt-0 mb-6 max-h-none shrink-0 overflow-visible border-0 bg-transparent p-0;
+    width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
+  }
+  .composer-inner {
+    @apply mx-auto flex w-full flex-col gap-2;
+    max-width: var(--reading-measure);
+  }
+  .wb-app .composer-split {
+    @apply gap-1.5;
+  }
+
+  /* One card: prompt band + toolbar band share a single silhouette. */
+  .composer-surface {
+    @apply rounded-composer border border-input bg-card;
+    box-shadow:
+      var(--shadow-composer),
+      0 16px 40px -28px color-mix(in srgb, var(--accent) 45%, transparent);
+    transition:
+      border-color var(--duration-normal) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out);
+  }
+  .composer-card.composer-surface {
+    @apply flex min-w-0 flex-col gap-0.5 px-3 pt-3 pb-2;
+  }
+  .composer-surface:hover {
+    border-color: var(--border-hover);
+  }
+  .composer-surface:focus-within {
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--border-control));
+    box-shadow:
+      var(--shadow-composer),
+      0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent),
+      0 18px 44px -26px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .composer-surface:has(.composer-textarea:focus-visible) {
+    border-color: var(--focus-ring);
+  }
+  /* Plan mode is read-only planning: the card takes the info hue. */
+  .composer-surface:has(.composer-mode-arrow.is-plan):focus-within {
+    border-color: color-mix(in srgb, var(--info) 65%, var(--border-control));
+    box-shadow:
+      var(--shadow-composer),
+      0 0 0 4px color-mix(in srgb, var(--info) 12%, transparent);
+  }
+
+  .composer-fresh .composer-surface {
+    @apply px-4 pt-4;
+  }
+
+  .composer-split .composer-input-row {
+    @apply grid w-full items-end gap-2;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .composer-prompt {
+    @apply relative m-0 flex min-w-0 flex-col gap-2 border-0 bg-transparent py-1 shadow-none;
+  }
+  .composer-mode-arrow {
+    @apply pointer-events-none hidden size-0 overflow-hidden opacity-0;
+  }
+
+  .composer-textarea {
+    @apply m-0 block w-full resize-none rounded-none border-0 bg-transparent text-foreground shadow-none outline-none;
+    min-height: 60px;
+    max-height: 200px;
+    padding: 4px 6px 8px;
+    font: inherit;
+    font-size: var(--text-md);
+    line-height: 1.6;
+    caret-color: var(--accent);
+  }
+  .composer-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+  .composer-textarea:focus,
+  .composer-textarea:focus-visible {
+    @apply border-0 shadow-none outline-none;
+  }
+  .composer-split .composer-textarea {
+    min-height: 36px;
+    height: 36px;
+  }
+  .composer-fresh .composer-textarea {
+    min-height: 100px;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Send / cancel / dual buttons                                        */
+  /* ------------------------------------------------------------------ */
+  .composer-split .composer-submit-col {
+    @apply relative flex h-full items-end justify-end gap-1.5;
+    min-width: 44px;
+  }
+  .composer-split .composer-submit-col .btn,
+  .composer-split .composer-submit-col .composer-action {
+    @apply inline-flex items-center justify-center p-0;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: var(--radius-xl);
+    flex: 0 0 44px;
+  }
+  .composer-submit {
+    @apply cursor-pointer border-0;
+    color: var(--run-ink);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--run-bg) 80%, white),
+      var(--run-bg) 60%
+    );
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 22%),
+      0 1px 2px color-mix(in srgb, var(--run-bg) 35%, transparent),
+      0 6px 16px -6px color-mix(in srgb, var(--run-bg) 70%, transparent);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      filter var(--duration-fast) var(--ease-out),
+      background-color var(--duration-normal) var(--ease-out);
+  }
+  .composer-submit:hover:not(:disabled) {
+    filter: brightness(1.06) saturate(1.05);
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 24%),
+      0 2px 4px color-mix(in srgb, var(--run-bg) 35%, transparent),
+      0 10px 22px -8px color-mix(in srgb, var(--run-bg) 75%, transparent);
+  }
+  .composer-submit:active:not(:disabled) {
+    transform: translateY(0) scale(0.95);
+    filter: brightness(0.97);
+  }
+  .composer-submit:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .composer-submit:disabled {
+    @apply cursor-not-allowed opacity-100;
+    filter: none;
+    transform: none;
+    color: var(--text-muted);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
+  }
+  /* Sending keeps the brand fill so "busy" never reads as "disabled". */
+  .composer-submit[aria-busy="true"],
+  .composer-run:has(.btn-busy-status) {
+    color: var(--run-ink);
+    background: var(--run-bg);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--run-bg) 18%, transparent);
+  }
+  .composer-submit svg {
+    transition: transform var(--duration-normal) var(--ease-out);
+  }
+  .composer-submit:hover:not(:disabled) svg {
+    transform: translateY(-1px);
+  }
+  .composer-action .btn-busy-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .composer-action .btn-spinner {
+    flex: 0 0 16px;
+  }
+
+  .composer-cancel.composer-action {
+    @apply cursor-pointer;
+    color: var(--error);
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    box-shadow: none;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .composer-cancel.composer-action:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--error) 16%, var(--error-bg));
+  }
+  .composer-cancel.composer-action:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  .composer-cancel.composer-action:disabled {
+    opacity: 1;
+    cursor: progress;
+  }
+
+  .composer-split .composer-submit-col.is-dual .composer-cancel {
+    animation: composer-cancel-shift-left 320ms var(--ease-out) both;
+  }
+  .composer-split .composer-submit-col.is-rebounding:not(.is-dual) .composer-cancel {
+    animation: composer-cancel-shift-right 250ms var(--ease-out) both;
+  }
+  .composer-dual-send-wrap {
+    @apply relative inline-flex items-center justify-end gap-1.5;
+    animation: composer-dual-send-in 280ms var(--ease-out) both;
+  }
+  .composer-split .composer-submit-col .composer-steer-btn,
+  .composer-split .composer-submit-col .composer-queue-btn {
+    @apply inline-flex w-auto items-center justify-center gap-1.5 whitespace-nowrap font-semibold text-sm;
+    min-width: 72px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 14px;
+    flex: 0 0 auto;
+    border-radius: var(--radius-xl);
+  }
+  .composer-split .composer-submit-col .composer-steer-btn {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .composer-split .composer-submit-col .composer-steer-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 16%, var(--accent-soft));
+    border-color: var(--accent);
+  }
+  .composer-split .composer-submit-col .composer-steer-btn:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  .composer-split .composer-submit-col .composer-steer-btn:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+  .composer-dual-btn-label {
+    line-height: 1;
+  }
+  @media (max-width: 420px) {
+    .composer-split .composer-submit-col .composer-steer-btn,
+    .composer-split .composer-submit-col .composer-queue-btn {
+      @apply gap-1 text-xs;
+      min-width: 54px;
+      padding: 0 10px;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Toolbar and its triggers                                            */
+  /* ------------------------------------------------------------------ */
+  .composer-toolbar {
+    @apply flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 p-0;
+  }
+  .composer-toolbar-start {
+    @apply flex shrink-0 items-center gap-0.5;
+  }
+  .composer-toolbar-end {
+    @apply ml-auto flex min-w-0 flex-auto items-center justify-end;
+  }
+  .composer-toolbar svg {
+    flex-shrink: 0;
+  }
+
+  .composer-dropdown-trigger {
+    @apply inline-flex cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-2.5 font-medium text-secondary-text text-sm;
+    height: 36px;
+    min-height: 36px;
+    font-family: inherit;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .composer-dropdown-trigger:hover:not(:disabled) {
+    @apply bg-accent text-foreground;
+  }
+  .composer-dropdown-trigger:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  .composer-dropdown-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+  .composer-dropdown-trigger:disabled {
+    @apply cursor-not-allowed bg-transparent opacity-45;
+  }
+  .composer-dropdown-trigger[aria-expanded="true"],
+  .composer-model-picker[open] > .composer-model-summary {
+    @apply bg-selected text-foreground;
+  }
+  .composer-dropdown-trigger.is-icon-only {
+    @apply justify-center p-0;
+    width: 36px;
+    min-width: 36px;
+  }
+  .composer-dropdown-icon {
+    @apply inline-flex items-center text-secondary-text;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+  /* Mode (first chooser): Build = brand, Plan = info. */
+  .composer-toolbar-start > .composer-dropdown:first-of-type .composer-dropdown-icon {
+    color: var(--accent);
+  }
+  .composer-card:has(.composer-mode-arrow.is-plan)
+    .composer-toolbar-start
+    > .composer-dropdown:first-of-type
+    .composer-dropdown-icon {
+    color: var(--info);
+  }
+  /* Permission (second chooser): unrestricted reads as a warning. */
+  .composer-card:has(#run-permission option[value="unrestricted"]:checked)
+    .composer-toolbar-start
+    > .composer-dropdown:nth-of-type(2)
+    .composer-dropdown-icon {
+    color: var(--warning);
+  }
+  .composer-dropdown-trigger:disabled .composer-dropdown-icon {
+    color: inherit;
+  }
+  .composer-dropdown-label {
+    @apply min-w-0 truncate;
+  }
+  @media (pointer: coarse), (max-width: 1000px) {
+    .composer-dropdown-trigger {
+      height: var(--touch-min-target);
+      min-height: var(--touch-min-target);
+    }
+    .composer-dropdown-trigger.is-icon-only {
+      width: var(--touch-min-target);
+      min-width: var(--touch-min-target);
+    }
+    .composer-dropdown-item {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Inline status, errors and hints                                     */
+  /* ------------------------------------------------------------------ */
+  .composer-status {
+    @apply flex flex-wrap gap-2 text-xs;
+    overflow-wrap: anywhere;
+  }
+  .composer-status:not(.composer-queue) {
+    @apply items-center px-1;
+  }
+  .composer-status > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .composer-status .btn {
+    min-height: var(--control-height-sm);
+    height: var(--control-height-sm);
+  }
+  .composer-error {
+    @apply flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-sm;
+    margin: 0;
+    color: var(--error);
+    background: var(--error-bg);
+    border-color: var(--error-border);
+    line-height: var(--leading-sm);
+    animation: composer-status-in 180ms var(--ease-out) both;
+  }
+  .composer-error::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 6px;
+    height: 6px;
+    margin-top: 0.5lh;
+    translate: 0 -50%;
+    border-radius: var(--radius-full);
+    background: currentcolor;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 18%, transparent);
+  }
+  .composer-plan-note {
+    max-width: 100%;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Model picker                                                        */
+  /* ------------------------------------------------------------------ */
+  .composer-model {
+    @apply relative min-w-0;
+  }
+  .composer-model-picker {
+    @apply ml-auto min-w-0 max-w-full;
+    flex: 0 1 auto;
+  }
+  .composer-model-summary {
+    @apply min-w-0 list-none gap-2 pr-2 pl-1.5;
+    max-width: min(280px, 100%);
+  }
+  .composer-model-summary::-webkit-details-marker {
+    display: none;
+  }
+  .composer-model-summary .composer-dropdown-label {
+    @apply text-foreground;
+  }
+  .composer-model-icon {
+    @apply inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand;
+  }
+  .composer-model-source {
+    @apply min-w-0 truncate rounded-sm border border-border bg-muted px-1.5 font-medium text-2xs text-muted-foreground;
+    flex: 0 1 auto;
+    max-width: 8rem;
+    line-height: 18px;
+  }
+  .composer-model-caret {
+    @apply shrink-0 text-muted-foreground;
+    transition: transform var(--duration-normal) var(--ease-out);
+  }
+  .composer-model-picker[open] .composer-model-caret {
+    transform: rotate(180deg);
+  }
+  /* Effort meter: ascending bars, filled in brand. */
+  .model-effort-meter {
+    @apply inline-flex shrink-0 items-end gap-0.5;
+    height: 12px;
+  }
+  .model-effort-meter > span {
+    width: 3px;
+    border-radius: var(--radius-2xs);
+    background: color-mix(in srgb, var(--text-primary) 16%, transparent);
+    transition: background-color var(--duration-normal) var(--ease-out);
+  }
+  .model-effort-meter > span:nth-child(1) {
+    height: 5px;
+  }
+  .model-effort-meter > span:nth-child(2) {
+    height: 7px;
+  }
+  .model-effort-meter > span:nth-child(3) {
+    height: 9px;
+  }
+  .model-effort-meter > span:nth-child(4) {
+    height: 11px;
+  }
+  .model-effort-meter > span:nth-child(n + 5) {
+    height: 12px;
+  }
+  .model-effort-meter > .is-filled {
+    background: var(--accent);
+  }
+
+  .composer-model-panel {
+    @apply absolute right-0 z-50 flex flex-col gap-3 overflow-y-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-overlay;
+    bottom: calc(100% + 8px);
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    max-height: min(420px, 60dvh);
+    transform-origin: bottom right;
+    animation: composer-pop-in 180ms var(--ease-out) both;
+  }
+  .model-picker-heading {
+    @apply flex min-w-0 flex-col items-stretch gap-1.5 text-xs;
+  }
+  .model-picker-heading > span,
+  .model-picker-subheading > span,
+  .model-effort-options legend {
+    @apply px-1 font-medium text-2xs text-muted-foreground tracking-wide;
+  }
+  .model-picker-current {
+    @apply flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-2 text-left text-foreground text-sm;
+    min-height: 44px;
+    font: inherit;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .model-picker-current:hover {
+    @apply border-hover-border bg-accent;
+  }
+  .model-picker-current:focus-visible,
+  .model-picker-back:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+  .model-picker-current > span:not(.composer-model-icon) {
+    @apply min-w-0 flex-1 truncate font-medium;
+  }
+  .model-picker-current > small {
+    @apply shrink-0 truncate rounded-sm bg-muted px-1.5 text-2xs text-muted-foreground;
+    max-width: 96px;
+    line-height: 18px;
+  }
+  .model-picker-current > svg {
+    @apply shrink-0 text-muted-foreground;
+  }
+  .model-picker-subheading {
+    @apply flex min-w-0 items-center gap-1 text-xs;
+  }
+  .model-picker-back {
+    @apply inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-secondary-text;
+  }
+  .model-picker-back:hover {
+    @apply bg-accent text-foreground;
+  }
+  .model-picker-subpanel {
+    @apply flex min-w-0 flex-col gap-2;
+    animation: composer-slide-in 180ms var(--ease-out) both;
+  }
+  .model-picker-routes {
+    @apply flex flex-wrap gap-1.5;
+  }
+  .model-picker-routes > button {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-3 text-foreground text-xs;
+    min-height: 32px;
+    font: inherit;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .model-picker-routes > button small {
+    @apply text-2xs text-muted-foreground;
+  }
+  .model-picker-routes > button:hover:not(:disabled) {
+    @apply bg-accent;
+  }
+  .model-picker-routes > button[aria-pressed="true"] {
+    @apply border-brand bg-brand-soft text-brand;
+  }
+  .model-picker-routes > button:disabled {
+    @apply cursor-not-allowed opacity-45;
+  }
+
+  .model-effort-options {
+    @apply m-0 min-w-0 rounded-lg border border-border bg-muted/60 px-3 pt-2 pb-2.5;
+  }
+  .model-effort-options:disabled {
+    opacity: 0.5;
+  }
+  .effort-slider-heading {
+    @apply mt-0 flex justify-end text-2xs text-secondary-text;
+  }
+  .effort-slider-heading output {
+    @apply rounded-sm bg-brand-soft px-1.5 font-semibold text-brand text-xs;
+    line-height: 20px;
+  }
+  .effort-slider {
+    @apply relative;
+    height: 32px;
+  }
+  .effort-slider-track {
+    @apply pointer-events-none absolute overflow-hidden rounded-full;
+    inset: 13px 9px;
+    background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  }
+  .effort-slider-fill {
+    @apply relative block h-full overflow-hidden rounded-full;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent) 55%, var(--info)),
+      var(--accent)
+    );
+    transition: width var(--duration-normal) var(--ease-out);
+  }
+  .effort-slider[data-max="true"] .effort-slider-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 25%,
+      rgb(255 255 255 / 45%) 50%,
+      transparent 75%
+    );
+    transform: translateX(-100%);
+    animation: effort-shimmer 2.4s ease-in-out infinite;
+  }
+  .model-effort-options:disabled .effort-slider-fill::after {
+    animation: none;
+  }
+  .effort-slider input[type="range"] {
+    @apply relative m-0 block w-full cursor-pointer appearance-none border-0 bg-transparent p-0;
+    height: 32px;
+  }
+  .effort-slider input::-webkit-slider-runnable-track {
+    height: 6px;
+    background: transparent;
+  }
+  .effort-slider input::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -6px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: var(--surface-elevated);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 18%),
+      0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  .effort-slider input:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+  .effort-slider input::-moz-range-track {
+    height: 6px;
+    background: transparent;
+  }
+  .effort-slider input::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    background: var(--surface-elevated);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 18%);
+  }
+  .effort-slider input:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  .effort-slider-labels {
+    @apply flex justify-between px-0.5 text-2xs text-muted-foreground;
+  }
+  .effort-slider-labels [data-active="true"] {
+    @apply font-semibold text-brand;
+  }
+
+  /* Narrow continuation editor escapes the scrolling composer. */
+  @media (max-width: 480px) {
+    .workbench-composer .composer-model:not(.composer-model-inline) > .composer-model-panel {
+      position: fixed;
+      inset: auto var(--space-3) calc(var(--icon-size-touch) + var(--icon-size-touch));
+      width: auto;
+      min-width: 0;
+      max-width: none;
+      max-height: calc(
+        100dvh - var(--header-height) - var(--space-4) - var(--icon-size-touch) -
+        var(--icon-size-touch)
+      );
+      margin: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding: var(--space-4);
+      transform-origin: bottom center;
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Context / usage meter under the card                                */
+  /* ------------------------------------------------------------------ */
+  .composer-usage {
+    --text-secondary: var(--composer-usage-ink);
+    --context-reserve-border: var(--error);
+    --context-reserve-stripe-1: color-mix(in srgb, var(--error) 50%, transparent);
+    --context-reserve-stripe-2: color-mix(in srgb, var(--error) 15%, transparent);
+    @apply relative w-full min-w-0;
+    margin-top: 2px;
+  }
+  .usage-trigger {
+    @apply flex w-full cursor-pointer list-none items-center gap-3 rounded-lg px-2.5 text-2xs text-secondary-text;
+    min-height: 28px;
+    padding-block: 4px;
+    font-variant-numeric: tabular-nums;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
+  .usage-trigger::-webkit-details-marker {
+    display: none;
+  }
+  .usage-trigger:hover,
+  .composer-usage[open] > .usage-trigger {
+    @apply bg-accent text-foreground;
+  }
+  .usage-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+  @media (pointer: coarse) {
+    .usage-trigger {
+      min-height: var(--touch-min-target);
+    }
+  }
+  .usage-track {
+    --usage-run-color: var(--accent);
+    @apply relative flex flex-1 overflow-hidden rounded-full;
+    min-width: 24px;
+    height: 4px;
+    background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+    transition: background-color var(--duration-normal) ease;
+  }
+  .usage-trigger:hover .usage-track {
+    height: 6px;
+  }
+  .usage-footer-stats {
+    @apply flex shrink-0 items-center gap-1.5 whitespace-nowrap;
+  }
+  .usage-speed-chip,
+  .usage-cache-chip {
+    @apply rounded-sm border border-border bg-card px-1.5 font-mono text-2xs text-secondary-text;
+    line-height: 16px;
+  }
+  .usage-footer-total {
+    @apply font-medium font-mono text-foreground;
+  }
+  .usage-panel {
+    @apply absolute right-0 z-[60] overflow-y-auto rounded-xl border border-border bg-popover text-foreground text-sm shadow-overlay;
+    bottom: calc(100% + 8px);
+    width: min(360px, calc(100vw - 32px));
+    max-height: min(62dvh, 540px);
+    padding: 14px 16px;
+    font-variant-numeric: tabular-nums;
+    transform-origin: bottom right;
+    animation: composer-pop-in 180ms var(--ease-out) both;
+  }
+  @media (max-width: 640px) {
+    .usage-panel {
+      position: fixed;
+      bottom: var(--space-6);
+      right: var(--space-4);
+    }
+  }
+  .usage-panel-header {
+    @apply flex items-center justify-between gap-2 border-border border-b pb-2.5;
+  }
+  .usage-panel-header strong {
+    @apply font-semibold text-sm;
+  }
+  .usage-model-badge {
+    @apply truncate rounded-sm bg-brand-soft px-1.5 font-medium text-2xs text-brand;
+    max-width: 200px;
+    line-height: 20px;
+  }
+  .usage-panel-track {
+    @apply relative mt-2 flex w-full overflow-hidden rounded-full;
+    height: 8px;
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  }
+  .usage-section {
+    @apply mt-3 border-border border-t pt-3;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Image chips above the card                                          */
+  /* ------------------------------------------------------------------ */
+  .composer-image-attachments {
+    @apply mb-1 flex max-w-full flex-row items-start gap-2 overflow-x-auto overflow-y-hidden px-0.5 py-1;
+  }
+  .composer-image-attachments .image-attachment-item {
+    @apply flex w-[72px] flex-none flex-col items-center;
+    animation: composer-pop-in 180ms var(--ease-out) both;
+  }
+  .composer-image-attachments .image-attachment-thumb-wrap {
+    @apply relative flex size-[72px] items-center justify-center overflow-hidden rounded-lg border border-border bg-muted shadow-xs;
+  }
+  .composer-image-attachments .image-attachment-thumb-wrap:hover {
+    @apply border-hover-border;
+  }
+  /* 44px hit area, 24px visual chip (the icon carries the chip). */
+  .composer-image-attachments .image-attachment-remove,
+  .composer-image-attachments .btn.image-attachment-remove {
+    @apply absolute top-0 right-0 z-[2] inline-flex cursor-pointer items-start justify-end border-0 bg-transparent p-1 shadow-none;
+    width: var(--touch-min-target);
+    height: var(--touch-min-target);
+    min-width: var(--touch-min-target);
+    min-height: var(--touch-min-target);
+    color: var(--text-secondary);
+  }
+  .composer-image-attachments .image-attachment-remove svg {
+    @apply rounded-full border border-border bg-card shadow-sm;
+    width: 22px;
+    height: 22px;
+    padding: 3px;
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+  .composer-image-attachments .image-attachment-remove:hover:not(:disabled) {
+    @apply bg-transparent;
+    color: var(--error);
+  }
+  .composer-image-attachments .image-attachment-remove:hover:not(:disabled) svg {
+    transform: scale(1.08);
+  }
+  .composer-image-attachments .image-attachment-remove:focus-visible {
+    outline: none;
+  }
+  .composer-image-attachments .image-attachment-remove:focus-visible svg {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+  }
+  .composer-image-attachments .image-attachment-name {
+    @apply mt-1 block w-full truncate text-center text-2xs text-muted-foreground;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Workspace chip (picker panel itself is phase 4)                      */
+  /* ------------------------------------------------------------------ */
+  .wb-app .composer-project {
+    @apply relative mb-2.5;
+  }
+  .composer-project .composer-project-trigger {
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-card/85 py-1 pr-3 pl-1 font-sans text-foreground text-xs shadow-xs backdrop-blur-sm;
+    max-width: min(100%, 440px);
+    min-height: var(--control-height);
+    line-height: 1.3;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-normal) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+  .composer-project .composer-project-trigger:hover:not(:disabled) {
+    @apply border-hover-border bg-card shadow-sm;
+  }
+  .composer-project .composer-project-trigger:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .composer-project .composer-project-trigger.is-open {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .composer-project .composer-project-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .composer-project-trigger-icon {
+    @apply inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand;
+  }
+  .composer-project-trigger-name {
+    @apply truncate font-semibold text-foreground;
+  }
+  .composer-project-trigger-parent {
+    @apply truncate border-border border-l pl-2 font-mono text-2xs text-muted-foreground;
+    max-width: 160px;
+  }
+  .composer-project-trigger-caret {
+    @apply ml-0.5 shrink-0 text-muted-foreground;
+    transition:
+      transform var(--duration-normal) var(--ease-out),
+      color var(--duration-fast) var(--ease-out);
+  }
+  .composer-project .composer-project-trigger.is-open .composer-project-trigger-caret {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Narrow layouts                                                      */
+  /* ------------------------------------------------------------------ */
+  @media (max-width: 1000px) {
+    .wb-app .wb-new-session .composer-fresh {
+      width: calc(100% - 2 * var(--space-4));
+      margin-bottom: var(--space-3);
+    }
+    .composer-project .composer-project-trigger {
+      min-height: var(--touch-min-target);
+    }
+    .composer-status .btn {
+      min-height: var(--touch-min-target);
+    }
+  }
+  @media (max-width: 480px) {
+    .wb-app .workbench-composer {
+      padding: var(--space-2) var(--space-3);
+      max-height: 60dvh;
+      overflow: auto;
+    }
+    .composer-card.composer-surface {
+      @apply px-2.5 pt-2.5 pb-1.5;
+    }
+    .composer-project-trigger-parent {
+      display: none;
+    }
+  }
+  @media (max-height: 700px) {
+    .wb-app .wb-new-session .composer-fresh {
+      margin-bottom: var(--space-4);
+    }
+  }
+}
+
+@keyframes composer-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+@keyframes composer-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+@keyframes composer-status-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+@keyframes composer-cancel-shift-left {
+  from {
+    transform: translateX(50px);
+  }
+}
+@keyframes composer-cancel-shift-right {
+  from {
+    transform: translateX(-50px);
+  }
+}
+@keyframes composer-dual-send-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateX(8px);
+  }
+}
+@keyframes effort-shimmer {
+  0%,
+  15% {
+    transform: translateX(-100%);
+  }
+  85%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .effort-slider[data-max="true"] .effort-slider-fill::after {
+    animation: none;
+    transform: none;
+    opacity: 0.35;
+  }
+  .composer-submit:hover:not(:disabled),
+  .composer-submit:hover:not(:disabled) svg {
+    transform: none;
+  }
+}
