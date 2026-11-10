@@ -100,9 +100,10 @@ function useController() {
     if (alive.current) rawDispatch(action);
   }, []);
   const fail = useCallback(
-    (err: unknown) =>
+    (err: unknown, startSessionId?: SessionId) =>
       dispatch({
         type: "SET_ALERT_ERROR",
+        ...(startSessionId ? { startSessionId } : {}),
         error:
           err instanceof Error ? err.message : "操作失败，请检查设置后重试",
       }),
@@ -258,6 +259,7 @@ function useController() {
   const sessionListGeneration = useRef(0);
   const loadSessions = useCallback(async () => {
     const generation = ++sessionListGeneration.current;
+    dispatch({ type: "SET_SESSIONS_LOADING", isLoading: true });
     try {
       const sessions = await window.forge.listSessions();
       if (generation !== sessionListGeneration.current) return;
@@ -270,7 +272,10 @@ function useController() {
       )
         await selectSession(first.id);
     } catch (err) {
-      fail(err);
+      if (generation === sessionListGeneration.current) fail(err);
+    } finally {
+      if (generation === sessionListGeneration.current)
+        dispatch({ type: "SET_SESSIONS_LOADING", isLoading: false });
     }
   }, [dispatch, fail, selectSession]);
   const loadSettings = useCallback(async () => {
@@ -467,7 +472,7 @@ function useController() {
         dispatch({ type: "SELECT_SESSION", sessionId: snapshot.id });
         dispatch({ type: "SET_ACTIVE_SNAPSHOT", snapshot });
       }
-      await loadSessions();
+      void loadSessions();
       return snapshot;
     } catch (err) {
       fail(err);
@@ -511,9 +516,9 @@ function useController() {
       return true;
     } catch (err) {
       starting.current.delete(id);
-      fail(err);
+      fail(err, id);
       dispatch({ type: "START_RUN_FAILED", sessionId: id });
-      await refreshSession(id);
+      void refreshSession(id);
       return false;
     }
   };

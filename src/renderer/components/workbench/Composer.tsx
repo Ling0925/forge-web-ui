@@ -354,6 +354,9 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
   const [submissions, setSubmissions] = useState<
     Readonly<Record<string, PendingSubmission>>
   >({});
+  const [failedStarts, setFailedStarts] = useState<
+    Readonly<Record<string, boolean>>
+  >({});
   const submission = submissions[draftId];
   useEffect(() => {
     const entries = Object.entries(submissions);
@@ -817,6 +820,7 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
         : false;
       if (!alive.current) return;
       if (ok && id) {
+        setFailedStarts((old) => ({ ...old, [capturedDraftId]: false }));
         // Acceptance settles this draft only; a sibling session may still be
         // submitting or waiting on its own run.
         setSubmissions((old) => ({
@@ -828,8 +832,13 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
             ...(capturedImages.length > 0 ? { images: capturedImages } : {}),
           },
         }));
-      } else if (selectedDraft.current === capturedDraftId)
-        setError("未能开始对话，草稿已保留。请检查错误详情后重试。");
+      } else {
+        setFailedStarts((old) => ({ ...old, [capturedDraftId]: true }));
+        if (selectedDraft.current === capturedDraftId)
+          setError(
+            "未能确认对话已开始，草稿已保留。先核对会话，再点击发送按钮重试。",
+          );
+      }
     } finally {
       submitting.current.delete(capturedDraftId);
       if (alive.current) setDraftBusy(capturedDraftId, false);
@@ -1451,9 +1460,21 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
                     variant="danger"
                     size="sm"
                     className="composer-cancel composer-action"
-                    loading={Boolean(run?.isCancelling)}
-                    aria-label={run?.isCancelling ? "正在取消" : "取消"}
-                    title={run?.isCancelling ? "正在取消…" : "停止生成"}
+                    loading={!run?.runId || Boolean(run.isCancelling)}
+                    aria-label={
+                      !run?.runId
+                        ? "等待运行确认"
+                        : run.isCancelling
+                          ? "正在取消"
+                          : "取消"
+                    }
+                    title={
+                      !run?.runId
+                        ? "等待运行确认后可取消"
+                        : run.isCancelling
+                          ? "正在取消…"
+                          : "停止生成"
+                    }
                     icon={<Stop size={16} weight="fill" aria-hidden="true" />}
                     onClick={() => void cancelRun()}
                   />
@@ -1510,15 +1531,23 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
                     !!submission ||
                     savingEffort
                   }
-                  aria-label={isNew ? "发送并开始会话" : "运行"}
+                  aria-label={
+                    failedStarts[draftId]
+                      ? "重新发送草稿"
+                      : isNew
+                        ? "发送并开始会话"
+                        : "发送消息"
+                  }
                   title={
                     busy || submission
                       ? "正在发送…"
                       : reading
                         ? "正在读取图片…"
-                        : manualSend
-                          ? "发送消息"
-                          : "发送 · Enter"
+                        : failedStarts[draftId]
+                          ? "核对会话后，重新发送保留的草稿"
+                          : manualSend
+                            ? "发送消息"
+                            : "发送 · Enter"
                   }
                   icon={<ArrowUp size={16} weight="bold" aria-hidden="true" />}
                 />

@@ -114,6 +114,7 @@ export interface WorkbenchState {
   readonly isMobileSidebarOpen: boolean;
   readonly alertError: string | null;
   readonly alertReadSessionId: SessionId | null;
+  readonly alertStartSessionId: SessionId | null;
 }
 export function streamedOutput(
   run: ActiveRunState,
@@ -214,6 +215,7 @@ export const initialWorkbenchState: WorkbenchState = {
   isMobileSidebarOpen: false,
   alertError: null,
   alertReadSessionId: null,
+  alertStartSessionId: null,
 };
 export type WorkbenchAction =
   | { readonly type: "SET_SETTINGS"; readonly settings: PublicSettings }
@@ -261,7 +263,11 @@ export type WorkbenchAction =
   | { readonly type: "OPEN_NEW_SESSION"; readonly isOpen: boolean }
   | { readonly type: "SET_MOBILE_TAB"; readonly tab: "task" | "inspector" }
   | { readonly type: "SET_MOBILE_SIDEBAR"; readonly isOpen: boolean }
-  | { readonly type: "SET_ALERT_ERROR"; readonly error: string | null }
+  | {
+      readonly type: "SET_ALERT_ERROR";
+      readonly error: string | null;
+      readonly startSessionId?: SessionId;
+    }
   | {
       readonly type: "SET_SESSION_READ_ERROR";
       readonly sessionId: SessionId;
@@ -520,8 +526,12 @@ export function workbenchReducer(
     }
     case "SET_SNAPSHOT_LOADING":
       return { ...state, isSnapshotLoading: action.isLoading };
-    case "START_RUN_INITIATED":
-      return putRun(state, {
+    case "START_RUN_INITIATED": {
+      const next =
+        state.alertStartSessionId === action.sessionId
+          ? { ...state, alertError: null, alertStartSessionId: null }
+          : state;
+      return putRun(next, {
         sessionId: action.sessionId,
         status: "running",
         streamingText: "",
@@ -530,6 +540,7 @@ export function workbenchReducer(
         pendingReasoning:
           state.activeRuns[action.sessionId]?.pendingReasoning ?? [],
       });
+    }
     case "START_RUN_FAILED": {
       const runs = { ...state.activeRuns };
       const run = runs[action.sessionId];
@@ -1136,7 +1147,12 @@ export function workbenchReducer(
     case "SET_MOBILE_SIDEBAR":
       return { ...state, isMobileSidebarOpen: action.isOpen };
     case "SET_ALERT_ERROR":
-      return { ...state, alertError: action.error, alertReadSessionId: null };
+      return {
+        ...state,
+        alertError: action.error,
+        alertReadSessionId: null,
+        alertStartSessionId: action.startSessionId ?? null,
+      };
     case "SET_SESSION_READ_ERROR":
       return state.activeSessionId === action.sessionId
         ? {
@@ -1144,6 +1160,7 @@ export function workbenchReducer(
             isSnapshotLoading: false,
             alertError: action.error,
             alertReadSessionId: action.sessionId,
+            alertStartSessionId: null,
           }
         : state;
     case "CLEAR_SESSION_READ_ERROR":
