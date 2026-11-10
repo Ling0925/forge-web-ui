@@ -112,6 +112,10 @@
      copy up with the section title (16px gutter + 11px caret + 8px gap). */
   --row-height-compact: 28px;
   --inspector-body-indent: 35px;
+  /* Settings (phase 5): rail rows match the sidebar's 34px; setting rows
+     keep a 56px rhythm so one-line and two-line rows align. */
+  --row-height-rail: 34px;
+  --setting-row-min-height: 56px;
   /* Design A content column (spec §2.4): 720px for transcript, composer
      and welcome alike. */
   --reading-measure: 720px;

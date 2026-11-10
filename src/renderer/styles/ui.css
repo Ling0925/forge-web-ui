@@ -28,6 +28,7 @@
 @import "./surfaces/transcript.css";
 @import "./surfaces/shell.css";
 @import "./surfaces/inspector.css";
+@import "./surfaces/settings.css";
 
 @source "../ui";
 @source "../showcase/UiGallery.tsx";
