@@ -89,6 +89,7 @@
 
   /* Modal scrim behind dialogs. */
   --overlay-bg: rgb(19 21 31 / 36%);
+  --overlay-bg-soft: rgb(19 21 31 / 14%);
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgb(20 22 27 / 5%);
@@ -214,6 +215,7 @@
 
   /* Modal scrim behind dialogs. */
   --overlay-bg: rgb(0 0 0 / 58%);
+  --overlay-bg-soft: rgb(0 0 0 / 36%);
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgb(0 0 0 / 30%);

@@ -103,6 +103,11 @@
   --control-height: 28px;
   --control-height-sm: 24px;
   --control-height-lg: 32px;
+  /* Command palette / list rows (design A 40px rhythm). */
+  --control-height-xl: 40px;
+  /* Shell (phase 3): session menu width, dialog header. */
+  --menu-width: 176px;
+  --dialog-header-height: 52px;
   /* Design A content column (spec §2.4): 720px for transcript, composer
      and welcome alike. */
   --reading-measure: 720px;
