@@ -103,10 +103,20 @@
   --control-height: 28px;
   --control-height-sm: 24px;
   --control-height-lg: 32px;
-  --reading-measure: 760px;
+  /* Design A content column (spec §2.4): 720px for transcript, composer
+     and welcome alike. */
+  --reading-measure: 720px;
   /* Running prose inside the reading column; code blocks and tables keep the
      full --reading-measure. */
   --prose-measure: 720px;
+  /* Transcript rhythm (phase 2b): blocks inside a turn, and the larger break
+     that opens each new request. */
+  --transcript-block-gap: var(--space-3);
+  --transcript-turn-gap: var(--space-8);
+  /* Code surfaces: 13/20 mono for blocks, inline code a step under prose. */
+  --code-size: var(--text-sm);
+  --code-leading: 20px;
+  --code-inline-size: 0.875em;
   /* Compact phone navigation bar; also the offset reserved for it in the
      stacked mobile layout so the reading flow never hides behind it. */
   --mobile-nav-height: 56px;
@@ -120,8 +130,9 @@
   --radius-quiet: var(--radius-sm);
 
   /* Narrow / touch prose metrics: 17px / 1.75 on touch */
-  --prose-size-narrow: 17px;
-  --prose-leading-narrow: 1.75;
+  /* Phase 2b (design A): narrow/touch prose one step above desktop. */
+  --prose-size-narrow: 16px;
+  --prose-leading-narrow: 1.7;
   --text-touch: var(--text-prose);
   --leading-touch: 28px;
 
@@ -173,8 +184,10 @@
   --type-small: var(--text-sm);
   /* Desktop body copy: 16px / 1.75 gives CJK + Latin mixed prose a
      comfortable 28px rhythm. */
-  --prose-size: var(--text-prose);
-  --prose-leading: 1.75;
+  /* Phase 2b (design A): 15px body with a 1.7 leading (25.5px), which
+     keeps mixed CJK/Latin prose open without the old 16px/1.75 bulk. */
+  --prose-size: var(--text-body);
+  --prose-leading: 1.7;
 
   --radius-user: var(--radius-lg);
   --welcome-title-size: var(--text-display);

@@ -67,6 +67,14 @@
   --error: #d61b2a; /* oklch(0.56 0.215 25) */
   --error-bg: #ffefef; /* oklch(0.965 0.017 20) */
   --error-border: #f6c2c1; /* oklch(0.86 0.06 20) */
+  /* Code surface and syntax (phase 2b): one calm well, Iris keywords. */
+  --code-surface: #f4f5f8;
+  --syntax-keyword: #4f45db;
+  --syntax-string: #0f7356;
+  --syntax-number: #9a5a06;
+  --syntax-comment: #6b6f7a;
+  --syntax-property: #0b67a3;
+  --syntax-attribute: #8a3aa8;
   --on-error: #fcfcfc; /* oklch(0.99 0 0) */
 
   --info: #0070a6; /* oklch(0.52 0.119 240) */
@@ -185,6 +193,13 @@
   --error: #f0555b; /* oklch(0.66 0.19 22) */
   --error-bg: #39191a; /* oklch(0.26 0.05 20) */
   --error-border: #6a2b2e; /* oklch(0.38 0.09 20) */
+  --code-surface: #121318;
+  --syntax-keyword: #a9adff;
+  --syntax-string: #6fd3a8;
+  --syntax-number: #eeb562;
+  --syntax-comment: #8b8e98;
+  --syntax-property: #73bdf0;
+  --syntax-attribute: #d59ff0;
   --on-error: #150a0a; /* oklch(0.16 0.02 20) */
 
   --info: #5cb4ef; /* oklch(0.74 0.12 240) */

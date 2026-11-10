@@ -1,0 +1,1055 @@
+/*
+ * Transcript skin, design A "light inline" (UI migration phase 2b,
+ * design-v2/spec.md §2).
+ *
+ * Imported by styles/ui.css, so it lands in the `components` layer and beats
+ * the legacy sheets (transcript.css, app.css, tool-disclosure.css,
+ * code-diff.css, approval-panel.css) without raising specificity. Those keep
+ * structure and behaviour hooks; this file sets type, colour, radius,
+ * elevation and the spacing rhythm.
+ *
+ * One reading rail, 720px: assistant prose is plain text on the canvas; the
+ * request is a compact well card; work (tools, plan steps, reasoning) is a
+ * quiet row at rest and a hairline card when opened. Colours come only from
+ * workspace-theme.css tokens; sizes from tokens.css.
+ */
+@layer components {
+  /* ---------------------------------------------------------------- */
+  /* Column and rhythm                                                 */
+  /* ---------------------------------------------------------------- */
+  .wb-app .transcript-region .workbench-conversation-scroll {
+    padding: var(--space-6) var(--space-6) var(--space-4);
+  }
+
+  .wb-app .conversation-inner {
+    gap: var(--transcript-block-gap);
+  }
+
+  .wb-app .transcript-turn,
+  .wb-app .transcript-turn-body,
+  .wb-app .transcript-execution-items {
+    gap: var(--transcript-block-gap);
+  }
+
+  /* Each request opens a 32px break; inside a turn blocks sit 12px apart. */
+  .wb-app .transcript-turn + .transcript-turn {
+    margin-top: calc(var(--transcript-turn-gap) - var(--transcript-block-gap));
+  }
+
+  .wb-app .conversation-inner > .message-user {
+    margin-top: calc(var(--transcript-turn-gap) - var(--transcript-block-gap));
+  }
+
+  .wb-app .conversation-inner > .message-user:first-child {
+    margin-top: 0;
+  }
+
+  @media (max-width: 768px) {
+    .wb-app .transcript-region .workbench-conversation-scroll {
+      padding: var(--space-4) var(--space-4) var(--space-3);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Request (user message): a compact well card                       */
+  /* ---------------------------------------------------------------- */
+  .wb-app .message-user {
+    position: relative;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  /* The author label ("你" / "Super-agent") is announced, not shown: the
+     card shape already says who wrote it. */
+  .wb-app .message-user > .message-header {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .wb-app .message-user-card {
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    max-width: 100%;
+    padding: var(--space-2-5) var(--space-3-5);
+    border-radius: var(--radius-lg);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .wb-app .message-user .message-body {
+    color: var(--text-primary);
+    font-size: var(--prose-size);
+    line-height: var(--prose-leading);
+  }
+
+  /* Turn actions sit beside the card (not over it) and appear on hover or
+     keyboard focus; their space is reserved so nothing shifts. */
+  .wb-app .message-user > .transcript-turn-actions {
+    position: static;
+    flex: none;
+    margin-left: auto;
+    padding-top: var(--space-1-5);
+    gap: var(--space-1);
+  }
+
+  .wb-app .transcript-turn-badge {
+    height: var(--space-6);
+    padding: 0 var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wb-app .transcript-turn-toggle {
+    gap: var(--space-1);
+    height: var(--space-6);
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  .wb-app .transcript-turn-toggle:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .transcript-turn-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .transcript-turn-toggle {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* Narrow: the actions move under the card, right-aligned. */
+  @media (max-width: 640px) {
+    .wb-app .message-user {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .wb-app .message-user-card {
+      align-self: flex-start;
+    }
+
+    .wb-app .message-user > .transcript-turn-actions {
+      align-self: flex-end;
+      padding-top: var(--space-1);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Answer (assistant message): plain prose, no bubble                */
+  /* ---------------------------------------------------------------- */
+  .wb-app .message-assistant .message-body {
+    color: var(--text-primary);
+    font-size: var(--prose-size);
+    line-height: var(--prose-leading);
+  }
+
+  .wb-app .message-header.message-author-row {
+    gap: var(--space-2);
+    min-height: var(--space-6);
+    margin-bottom: var(--space-1);
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .wb-app .message-header.message-author-row::before {
+    display: none;
+  }
+
+  .wb-app .message-author-mark {
+    width: var(--space-3-5);
+    height: var(--space-3-5);
+    flex: none;
+  }
+
+  .wb-app .message-streaming .message-author-name {
+    color: var(--accent);
+  }
+
+  .wb-app .message-copy {
+    height: var(--space-6);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    opacity: 0;
+    transition:
+      opacity var(--duration-fast) var(--ease-soft),
+      background-color var(--duration-fast) ease,
+      color var(--duration-fast) ease;
+  }
+
+  .wb-app .message-assistant:hover .message-copy,
+  .wb-app .message-assistant:focus-within .message-copy,
+  .wb-app .message-copy.is-copied {
+    opacity: 1;
+  }
+
+  .wb-app .message-copy:hover {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  .wb-app .message-copy:focus-visible {
+    outline: none;
+    opacity: 1;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    .wb-app .message-copy {
+      opacity: 1;
+    }
+  }
+
+  /* Process narration between tool calls: one step down in size and ink. */
+  .wb-app .message-assistant.message-step .message-body {
+    color: var(--text-secondary);
+    font-size: var(--text-ui);
+    line-height: var(--leading-body);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Markdown prose                                                    */
+  /* ---------------------------------------------------------------- */
+  .wb-app .markdown-content p,
+  .wb-app .markdown-content ul,
+  .wb-app .markdown-content ol {
+    margin: var(--space-3) 0;
+  }
+
+  .wb-app .markdown-content :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--text-primary);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .wb-app .markdown-content h1 {
+    margin: var(--space-6) 0 var(--space-2);
+    font-size: var(--text-title);
+    line-height: var(--leading-title);
+    letter-spacing: -0.012em;
+  }
+
+  .wb-app .markdown-content h2 {
+    margin: var(--space-6) 0 var(--space-2);
+    font-size: var(--text-lg);
+    line-height: var(--leading-title);
+  }
+
+  .wb-app .markdown-content h3 {
+    margin: var(--space-5) 0 var(--space-1-5);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+  }
+
+  .wb-app .markdown-content :is(h4, h5, h6) {
+    margin: var(--space-4) 0 var(--space-1);
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+  }
+
+  .wb-app .markdown-content :is(h5, h6) {
+    color: var(--text-secondary);
+  }
+
+  .wb-app .markdown-content > :first-child {
+    margin-top: 0;
+  }
+
+  .wb-app .markdown-content ul,
+  .wb-app .markdown-content ol {
+    padding-left: 1.4em;
+  }
+
+  .wb-app .markdown-content li + li {
+    margin-top: var(--space-1);
+  }
+
+  .wb-app .markdown-content li::marker {
+    color: var(--text-muted);
+  }
+
+  .wb-app .markdown-content blockquote {
+    margin: var(--space-4) 0;
+    padding-left: var(--space-3-5);
+    border-left: 2px solid var(--hairline-strong);
+    color: var(--text-secondary);
+  }
+
+  .wb-app .markdown-content hr {
+    margin: var(--space-6) 0;
+    border: 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .wb-app .markdown-content a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    text-underline-offset: 3px;
+    transition: text-decoration-color var(--duration-fast) ease;
+  }
+
+  .wb-app .markdown-content a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .wb-app .markdown-content code:not(.markdown-code code) {
+    padding: 0.12em 0.4em;
+    border-radius: var(--radius-sm);
+    background: var(--code-surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    color: var(--text-primary);
+    font-size: var(--code-inline-size);
+  }
+
+  .wb-app .markdown-table-scroll {
+    margin: var(--space-4) 0;
+    border-radius: var(--radius-item);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .wb-app .markdown-content table {
+    font-size: var(--text-meta);
+    line-height: var(--leading-ui);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wb-app .markdown-content th,
+  .wb-app .markdown-content td {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .wb-app .markdown-content th {
+    background: var(--code-surface);
+    border-bottom: 1px solid var(--hairline);
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .wb-app .markdown-content td {
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .wb-app .markdown-code {
+    margin: var(--space-4) 0;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Code block                                                        */
+  /* ---------------------------------------------------------------- */
+  .wb-app .code-block {
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--code-surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    font-size: var(--code-size);
+    line-height: var(--code-leading);
+  }
+
+  .wb-app .code-block-header {
+    min-height: var(--space-9);
+    padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-3-5);
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
+  }
+
+  .wb-app .code-block-meta {
+    gap: var(--space-2);
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .code-block-lang {
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .wb-app .code-block-actions .btn {
+    height: var(--space-7);
+    min-height: var(--space-7);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--text-tertiary);
+    font-family: var(--font-sans);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .code-block-actions .btn:hover:not(:disabled) {
+    background: var(--hover-wash);
+    color: var(--text-primary);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .code-block-actions .btn {
+      height: var(--touch-min-target);
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  .wb-app .code-block-scroll {
+    padding: var(--space-2-5) 0;
+  }
+
+  .wb-app .code-line {
+    min-height: var(--code-leading);
+  }
+
+  .wb-app .code-line:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .code-line-number {
+    min-width: var(--space-10);
+    padding: 0 var(--space-3) 0 var(--space-2);
+    color: var(--text-disabled);
+    font-size: var(--text-caption);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wb-app .code-line-content {
+    padding-right: var(--space-4);
+  }
+
+  .wb-app .code-token-comment {
+    color: var(--syntax-comment);
+  }
+
+  .wb-app :is(.code-token-keyword, .code-token-tag) {
+    color: var(--syntax-keyword);
+    font-weight: 500;
+  }
+
+  .wb-app .code-token-string {
+    color: var(--syntax-string);
+  }
+
+  .wb-app .code-token-attribute {
+    color: var(--syntax-attribute);
+  }
+
+  .wb-app :is(.code-token-number, .code-token-meta) {
+    color: var(--syntax-number);
+  }
+
+  .wb-app .code-token-property {
+    color: var(--syntax-property);
+  }
+
+  .wb-app :is(.code-token-operator, .code-token-punctuation) {
+    color: var(--text-tertiary);
+  }
+
+  /* Diff viewer: same surface family as the code block. */
+  .wb-app .diff-viewer {
+    border-radius: var(--radius-item);
+    background: var(--code-surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .wb-app .diff-header {
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
+    font-size: var(--text-caption);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Reasoning                                                         */
+  /* ---------------------------------------------------------------- */
+  .wb-app .reasoning {
+    color: var(--text-tertiary);
+    font-size: var(--text-meta);
+  }
+
+  .wb-app .reasoning-head {
+    gap: var(--space-2);
+    min-height: var(--space-7);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-control);
+  }
+
+  .wb-app .reasoning-done .reasoning-head:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .reasoning-done .reasoning-head:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  .wb-app .reasoning-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .wb-app .reasoning-summary {
+    color: var(--text-tertiary);
+  }
+
+  .wb-app .reasoning-viewport,
+  .wb-app .reasoning-full {
+    margin-left: var(--space-3-5);
+    padding: var(--space-1) 0 var(--space-1) var(--space-3);
+    border-left: 1px solid var(--hairline-strong);
+    color: var(--text-tertiary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-ui);
+  }
+
+  .wb-app .reasoning-viewport {
+    max-height: calc(var(--leading-ui) * 5 + var(--space-2));
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .reasoning-head {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Work: completed-run summary, collapsed turn, plan steps            */
+  /* ---------------------------------------------------------------- */
+  .wb-app .transcript-execution-summary {
+    gap: var(--space-1-5);
+    min-height: var(--space-7);
+    padding: 0 var(--space-2-5);
+    border-radius: var(--radius-full);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .wb-app button.transcript-execution-summary:hover {
+    background: var(--hover-wash);
+    color: var(--text-secondary);
+  }
+
+  .wb-app .transcript-execution-summary > svg:not(.transcript-execution-caret) {
+    color: var(--success);
+  }
+
+  .wb-app div.transcript-execution-summary {
+    box-shadow: none;
+    padding-inline: var(--space-2);
+  }
+
+  .wb-app .transcript-execution-summary:focus-visible,
+  .wb-app .transcript-turn-collapsed-bar:focus-visible,
+  .wb-app .transcript-stage-bar.is-interactive:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .transcript-execution-summary,
+    .wb-app .transcript-turn-collapsed-bar {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  .wb-app .transcript-turn-collapsed-bar {
+    min-height: var(--space-9);
+    padding: 0 var(--space-3);
+    border: 1px dashed var(--hairline-strong);
+    border-radius: var(--radius-item);
+    background: transparent;
+    color: var(--text-tertiary);
+    font-size: var(--text-meta);
+  }
+
+  .wb-app .transcript-turn-collapsed-bar:hover {
+    border-color: var(--border-control);
+    background: var(--hover-wash);
+    color: var(--text-secondary);
+  }
+
+  .wb-app .transcript-turn-collapsed-title {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .wb-app .transcript-turn-collapsed-action {
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .transcript-stage-bar {
+    gap: var(--space-2-5);
+    min-height: var(--space-7);
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+  }
+
+  .wb-app .transcript-stage-bar.is-interactive:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .transcript-stage-track {
+    height: 3px;
+    background: var(--active-wash);
+  }
+
+  .wb-app .transcript-stage-count {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .transcript-stage-details {
+    padding: var(--space-3) var(--space-3-5);
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      var(--shadow-hairline);
+  }
+
+  .wb-app .transcript-stage-header {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .transcript-stage-header::after {
+    background: var(--hairline);
+  }
+
+  .wb-app .transcript-exec-group {
+    --exec-rail: var(--hairline-strong);
+    border-radius: var(--radius-item);
+  }
+
+  .wb-app .transcript-exec-group.is-active {
+    --exec-rail: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 3%, transparent);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Tool calls: a quiet row at rest, a hairline card when opened       */
+  /* ---------------------------------------------------------------- */
+  .wb-app .tool-disclosure {
+    border-radius: var(--radius-item);
+    transition:
+      background-color var(--duration-normal) var(--ease-soft),
+      box-shadow var(--duration-normal) var(--ease-soft);
+  }
+
+  .wb-app .tool-disclosure-header {
+    min-height: var(--space-8);
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-radius: var(--radius-item);
+  }
+
+  .wb-app .tool-disclosure-header:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .tool-disclosure-header:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus-ring);
+  }
+
+  .wb-app .tool-disclosure-summary {
+    gap: var(--space-2);
+  }
+
+  .wb-app .tool-disclosure-icon {
+    color: var(--text-tertiary);
+  }
+
+  .wb-app .tool-disclosure-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .wb-app .tool-disclosure-label {
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    font-weight: 500;
+  }
+
+  .wb-app .tool-disclosure-target {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .tool-disclosure-meta {
+    gap: var(--space-2);
+  }
+
+  .wb-app .tool-disclosure-time {
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .tool-disclosure-failure {
+    height: var(--space-5);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  .wb-app .tool-diff-stat {
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-size: var(--text-caption);
+    font-weight: 500;
+    line-height: var(--leading-caption);
+  }
+
+  /* Running / awaiting rows tint their icon, so status reads at the start
+     of the line as well as from the glyph at its end. */
+  .wb-app .tool-disclosure:is([data-status="running"], [data-status="generating"])
+    .tool-disclosure-icon {
+    color: var(--accent);
+  }
+
+  /* Opened: the row and its evidence become one hairline card. */
+  .wb-app .tool-disclosure[data-expanded="true"]:not(:has(> .tool-disclosure-header:disabled)) {
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      var(--shadow-hairline);
+  }
+
+  .wb-app .tool-disclosure[data-expanded="true"] .tool-disclosure-header {
+    background: transparent;
+  }
+
+  .wb-app .tool-disclosure[data-expanded="true"] .tool-disclosure-header:hover {
+    background: var(--hover-wash);
+  }
+
+  .wb-app .tool-disclosure[data-expanded="true"][data-status="failed"] {
+    box-shadow:
+      inset 0 0 0 1px var(--error-border),
+      var(--shadow-hairline);
+  }
+
+  .wb-app .tool-disclosure-body {
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-1) var(--space-3) var(--space-3);
+    border-left: 0;
+  }
+
+  .wb-app .tool-section-title {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .wb-app .tool-section-content {
+    padding: var(--space-2-5) var(--space-3);
+    border-radius: var(--radius-control);
+    background: var(--code-surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    font-size: var(--text-caption);
+    line-height: var(--leading-ui);
+  }
+
+  .wb-app .tool-section-error {
+    border: 0;
+    background: var(--error-bg);
+    box-shadow: inset 0 0 0 1px var(--error-border);
+    color: var(--error);
+  }
+
+  .wb-app .tool-terminal-card {
+    border-radius: var(--radius-control);
+  }
+
+  .wb-app .tool-call-group {
+    gap: 2px;
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .tool-disclosure-header {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Approval in the reading flow                                      */
+  /* ---------------------------------------------------------------- */
+  .wb-app .transcript-approval {
+    gap: var(--space-2);
+  }
+
+  .wb-app .transcript-approval-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--warning);
+    font-size: var(--text-meta);
+    font-weight: 600;
+  }
+
+  .wb-app .transcript-approval-title::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--warning);
+    box-shadow: 0 0 0 3px var(--warning-bg);
+  }
+
+  .wb-app .transcript-approval .approval-panel {
+    padding: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--warning-border),
+      var(--shadow-raised);
+  }
+
+  .wb-app .transcript-approval .approval-command-box {
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--code-surface);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .wb-app .transcript-approval .approval-command-content {
+    font-size: var(--text-caption);
+    line-height: var(--leading-ui);
+  }
+
+  .wb-app .transcript-approval :is(.approval-description, .approval-cwd, .approval-risk) {
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+  }
+
+  .wb-app .transcript-approval .approval-actions .btn {
+    min-height: var(--space-9);
+    border-radius: var(--radius-control);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .transcript-approval .approval-actions .btn {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Errors and diagnostics                                            */
+  /* ---------------------------------------------------------------- */
+  .wb-app .conversation-inner .error-state {
+    padding: var(--space-3) var(--space-3-5);
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--error-bg);
+    box-shadow: inset 0 0 0 1px var(--error-border);
+  }
+
+  .wb-app .conversation-inner .error-state-title {
+    color: var(--error);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+    font-weight: 600;
+  }
+
+  .wb-app .conversation-inner :is(.error-state-message, .error-state-impact) {
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+  }
+
+  .wb-app .hook-diagnostic-badge {
+    border-radius: var(--radius-control);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .wb-app .message-internal {
+    border-radius: var(--radius-item);
+    color: var(--text-tertiary);
+    font-size: var(--text-meta);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* History, loading, empty                                           */
+  /* ---------------------------------------------------------------- */
+  .wb-app .transcript-history-button,
+  .wb-app .transcript-history-status {
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .transcript-history-button:hover {
+    border-color: transparent;
+    background: var(--hover-wash);
+    color: var(--text-secondary);
+  }
+
+  .wb-app .transcript-history-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .transcript-history-button {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  .wb-app .transcript-loading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+  }
+
+  .wb-app .transcript-loading-label {
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+  }
+
+  .wb-app .transcript-loading-line {
+    height: var(--space-3);
+    border-radius: var(--radius-full);
+    background: linear-gradient(
+      90deg,
+      var(--active-wash) 0%,
+      var(--hover-wash) 50%,
+      var(--active-wash) 100%
+    );
+    background-size: 200% 100%;
+    animation: transcript-skeleton 1.6s var(--ease-soft) infinite;
+  }
+
+  .wb-app .transcript-loading-line.is-card {
+    width: min(55%, 360px);
+    height: var(--space-10);
+    border-radius: var(--radius-lg);
+  }
+
+  .wb-app .transcript-loading-line.is-wide {
+    width: 92%;
+  }
+
+  .wb-app .transcript-loading-line.is-mid {
+    width: 74%;
+  }
+
+  @keyframes transcript-skeleton {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
+    }
+  }
+
+  .wb-app .conversation-inner .empty-state .empty-state-title {
+    font-size: var(--text-title);
+    line-height: var(--leading-title);
+  }
+
+  .wb-app .conversation-inner .empty-state .empty-state-description {
+    font-size: var(--text-ui);
+    line-height: var(--leading-body);
+    color: var(--text-tertiary);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Jump to latest: a floating pill above the docked composer         */
+  /* ---------------------------------------------------------------- */
+  /* Centred by the full-width flex row, not a transform: Motion owns the
+     transform for its spring entrance (MotionConfig drops it for reduced
+     motion, which would otherwise un-centre the pill). */
+  .wb-app .transcript-latest {
+    left: 0;
+    right: 0;
+    bottom: var(--space-3);
+    transform: none;
+  }
+
+  .wb-app .transcript-latest .btn {
+    height: var(--space-8);
+    min-height: var(--space-8);
+    padding: 0 var(--space-3-5) 0 var(--space-3);
+    border: 0;
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      var(--shadow-floating);
+    color: var(--text-secondary);
+    font-size: var(--text-meta);
+    font-weight: 500;
+    animation: none;
+  }
+
+  .wb-app .transcript-latest .btn:hover:not(:disabled) {
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+  }
+
+  .wb-app .transcript-latest .btn:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px var(--focus-ring),
+      0 0 0 3px var(--focus-halo),
+      var(--shadow-floating);
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .transcript-latest .btn {
+      height: var(--touch-min-target);
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Reduced motion                                                    */
+  /* ---------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .wb-app .transcript-loading-line {
+      animation: none;
+    }
+
+    .wb-app :is(.message-copy, .tool-disclosure) {
+      transition: none;
+    }
+  }
+}
