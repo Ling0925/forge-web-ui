@@ -2,6 +2,7 @@
 import "./styles/ui.css";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { MotionProvider } from "#ui/motion-provider";
 import { DeferredPanel } from "./components/primitives/DeferredPanel";
 import { App } from "./components/workbench/App";
 import "./styles/global.css";
@@ -71,7 +72,9 @@ void installWebHost()
     if (container) {
       createRoot(container).render(
         <StrictMode>
-          <Root />
+          <MotionProvider>
+            <Root />
+          </MotionProvider>
         </StrictMode>,
       );
     }

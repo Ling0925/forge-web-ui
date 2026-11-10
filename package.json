@@ -10,7 +10,7 @@
   "packageManager": "pnpm@11.18.0",
   "imports": {
     "#components/*": "./src/renderer/components/*.tsx",
-    "#ui/*": "./src/renderer/components/ui/*.tsx",
+    "#ui/*": "./src/renderer/ui/*.tsx",
     "#lib/*": "./src/renderer/lib/*.ts",
     "#hooks/*": "./src/renderer/hooks/*.ts"
   },

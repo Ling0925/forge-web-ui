@@ -28,37 +28,39 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ### 2.1 主强调色 vs 完成/成功色
 
+> 调色板：**雾紫 Iris**（UI 迁移阶段 1，2026-11-10 起）。交互控件边框 `--border-control` 浅 `#85878f` / 深 `#6a6b73`，对画布、侧栏、卡片、内嵌槽位均 ≥ 3:1（WCAG 1.4.11）；装饰分隔线 `--border-subtle` 保持淡色。
+
 | 语义场景 | 必须使用的 Token | 浅色实际值 | 深色实际值 | 严禁使用的错误写法 |
 | :--- | :--- | :--- | :--- | :--- |
-| **主强调 / 进行中 / 激活** | `var(--accent)`、`var(--accent-soft)`、`var(--on-accent)` | `#a54f35`（赤陶色） | `#dc9477`（暖赤陶） | 严禁使用蓝色 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
-| **键盘焦点 / 输入聚焦** | `var(--focus-ring)`、`var(--focus-halo)` | `#4a4740`（中性墨） | `#cfcbc1` | 不要用 `--accent` 做焦点色，赤陶与错误红同色系，聚焦会像报错 |
-| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#226d40`（森林鼠尾草绿） | `#34d399`（柔翠绿） | 严禁硬编码刺眼亮绿 `#16a34a` |
-| **警告 / 待确认 / 队列提示** | `var(--warning)`、`var(--warning-bg)`、`var(--warning-border)` | `#975a06` | `#fbbf24` | 严禁使用无对比度的纯黄 `#ffff00` |
-| **错误 / 失败 / 危险操作** | `var(--error)`、`var(--error-bg)`、`var(--error-border)` | `#b82420` | `#f87171` | 严禁使用纯红 `#ff0000`；`--danger` 已移除 |
+| **主强调 / 进行中 / 激活** | `var(--accent)`、`var(--accent-soft)`、`var(--on-accent)` | `#4f45db`（雾紫 Iris） | `#9ba0ff` | 只经 token 引用；严禁硬编码 Tailwind 蓝 `#3b82f6` / `#2563eb` / `rgba(59, 130, 246, ...)` |
+| **键盘焦点 / 输入聚焦** | `var(--focus-ring)`、`var(--focus-halo)` | `#696bf4`（亮雾紫） | `#8d90ff` | 焦点只用 `--focus-ring`，不要用 `--error` 系；与错误红不同色相，对所有底色 ≥ 3:1 |
+| **已完成 / 成功 / 正常 / 缓存命中** | `var(--success)`、`var(--success-bg)`、`var(--success-border)` | `#027e47` | `#59c886` | 严禁硬编码刺眼亮绿 `#16a34a` |
+| **警告 / 待确认 / 队列提示** | `var(--warning)`、`var(--warning-bg)`、`var(--warning-border)` | `#925601` | `#eeb154` | 严禁使用无对比度的纯黄 `#ffff00` |
+| **错误 / 失败 / 危险操作** | `var(--error)`、`var(--error-bg)`、`var(--error-border)` | `#d61b2a` | `#f0555b` | 严禁使用纯红 `#ff0000`；`--danger` 已移除 |
 
 > 旧的 `--accent-sage`（名为绿、值为赤陶）已移除。需要「绿色」表示步骤完成、任务成功或连接正常时，使用 `var(--success)` 或 `color-mix(in srgb, var(--success) XX%, transparent)`；token 均全局定义，`var()` 不需要写十六进制 fallback。
 
 ### 2.2 严禁出现原生蓝（Off-Brand Blue）与脏渐变
 
-- **禁止任何蓝色残留**：工作台调色板中**没有任何蓝色**。严禁在边框、阴影、徽章或 fallback 中写入 `rgba(59, 130, 246, ...)`、`#2563eb`、`#3b82f6`。半透明主色边框统一写为 `color-mix(in srgb, var(--accent) 24%, transparent)`。
-- **禁止跨色相红绿渐变**：严禁编写 `linear-gradient(90deg, var(--accent) 0%, var(--success) 100%)`（赤陶红到绿色会在中间产生浑浊的褐色）。多状态进度条必须采用**分段拼接（Segmented Track）**：已完成段使用 `var(--success)`，进行中/缓存段紧随其后使用 `var(--accent)`。
+- **禁止硬编码蓝色**：Iris 调色板的蓝紫只通过 `--accent` / `--focus-ring` / `--info` 等 token 出现。严禁在边框、阴影、徽章或 fallback 中写入 `rgba(59, 130, 246, ...)`、`#2563eb`、`#3b82f6` 等字面量。半透明主色边框统一写为 `color-mix(in srgb, var(--accent) 24%, transparent)`。
+- **禁止跨色相红绿渐变**：严禁编写 `linear-gradient(90deg, var(--accent) 0%, var(--success) 100%)`（主色到绿色会在中间产生浑浊的过渡色）。多状态进度条必须采用**分段拼接（Segmented Track）**：已完成段使用 `var(--success)`，进行中/缓存段紧随其后使用 `var(--accent)`。
 
 ### 2.3 表面层级（Surface Hierarchy）与反套娃原则
 
 | 层级 | Token | 浅色值 | 深色值 | 典型用途 |
 | :--- | :--- | :--- | :--- | :--- |
-| 外壳 | `var(--surface-shell)` | `#ebe9e3` | `#0f0e0d` | 应用最外层背景 |
-| 画布底色 | `var(--canvas-bg)` | `#f9f8f5` | `#181715` | 主对话阅读区、设置主背景 |
-| 侧栏底色 | `var(--sidebar-bg)` | `#f1efea` | `#131211` | 左侧会话栏、设置左侧导航 |
-| 一级卡片 / 浮层 | `var(--surface-elevated)` | `#ffffff` | `#211f1d` | 卡片、Popover、输入框主体 |
-| 抬升层 | `var(--surface-raised)` | `#fffefc` | `#272522` | 卡片上的悬停态、浮层内的突出块 |
-| 二级内嵌槽位 | `var(--surface-soft)` | `#f3f1ec` | `#1d1c1a` | 卡片内子块、代码块、空状态底框 |
-| 下沉槽位 | `var(--surface-sunken)` | `#eceae4` | `#141312` | 输入槽、进度条底轨 |
-| 悬停 / 按下 / 选中 | `--surface-hover` / `--surface-active` / `--surface-selected` | 暖墨色 6% / 10% / 8% 透明叠加 | 暖白 5% / 9% / 7% 透明叠加 | 列表项、菜单项、幽灵按钮 |
+| 外壳 | `var(--surface-shell)` | `#eef0f4` | `#0a0b0f` | 应用最外层背景 |
+| 画布底色 | `var(--canvas-bg)` | `#f9fafc` | `#0d0e12` | 主对话阅读区、设置主背景 |
+| 侧栏底色 | `var(--sidebar-bg)` | `#f5f6f8` | `#090a0e` | 左侧会话栏、设置左侧导航 |
+| 一级卡片 / 浮层 | `var(--surface-elevated)` | `#ffffff` | `#14151a` | 卡片、Popover、输入框主体 |
+| 抬升层 | `var(--surface-raised)` | `#ffffff` | `#1b1c23` | 卡片上的悬停态、浮层内的突出块 |
+| 二级内嵌槽位 | `var(--surface-soft)` | `#f1f2f6` | `#1d1e23` | 卡片内子块、代码块、空状态底框 |
+| 下沉槽位 | `var(--surface-sunken)` | `#f3f4f7` | `#0f1015` | 输入槽、进度条底轨 |
+| 悬停 / 按下 / 选中 | `--surface-hover` / `--surface-active` / `--surface-selected` | `#edeffc` / `#e3e5f7` / `#e7e9f3` | `#23243a` / `#292b44` / `#1b1d2c` | 列表项、菜单项、幽灵按钮 |
 
-- **边框**：`--border-subtle`（分隔线、卡片描边）→ `--border-control`（输入框、次按钮）→ `--border-hover`（悬停）→ `--border-strong`（强调），都是暖墨色半透明，不写死灰色。
-- **阴影**：只用 `--shadow-xs / sm / card / composer / dropdown / overlay` 六档，暖色调分层阴影（环境阴影 + 贴合阴影）。浮层（下拉、Popover）用 `--shadow-dropdown`，不再加边框；对话框用 `--shadow-overlay`。卡片顶部可叠加 `var(--edge-highlight)` 表现纸面受光。
-- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`（14%）、描边 `--accent-border`、光晕 `--accent-glow`。主色按钮用 `.btn-accent`（`--accent` 底 + `--on-accent` 字）。
+- **边框**：`--border-subtle`（分隔线、卡片描边）→ `--border-control`（输入框、次按钮）→ `--border-hover`（悬停）→ `--border-strong`（强调），统一取 Iris 冷灰阶，不写死灰色。
+- **阴影**：只用 `--shadow-xs / sm / card / composer / dropdown / overlay` 六档；浮层（下拉、Popover）用 `--shadow-dropdown`，对话框用 `--shadow-overlay`。卡片顶部可叠加 `var(--edge-highlight)`。
+- **主色衍生**：浅底 `--accent-subtle`（9%）、选中底 `--accent-soft`、描边 `--accent-border`、光晕 `--accent-glow`，都由 Iris `--accent` 经 `color-mix` 派生。主色按钮用 `.btn-accent`（`--accent` 底 + `--on-accent` 字）。
 
 - **表面交替铁律**：当卡片内部需要再分组时，外层用 `--surface-elevated`，内层子块必须用 `--surface-soft`（反之亦然），通过明度差建立秩序。
 - **反套娃铁律**：严禁出现「外层带边框大卡片 → 中层带边框分组卡 → 内层带边框表单卡」的 3 层以上无意义边框套娃（尤其是在 `SettingsModal` 中，右侧页面级容器不得再包裹多余的外层 `.settings-card`）。

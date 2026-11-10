@@ -34,6 +34,7 @@ import {
   SAMPLE_TRUNCATED_FILE_CHANGE,
 } from "./showcase-data";
 import "./showcase.css";
+import { UiGallery } from "./UiGallery";
 
 type ThemeMode = "system" | "dark" | "light";
 type ViewportWidth =
@@ -220,6 +221,7 @@ export function PrimitiveShowcase() {
                 { id: "code", label: "06 代码与差异" },
                 { id: "approval", label: "07 审批与权限" },
                 { id: "layout", label: "08 响应式分栏" },
+                { id: "ui", label: "09 新原语" },
               ]}
             />
 
@@ -1156,6 +1158,9 @@ export function PrimitiveShowcase() {
                 </section>
               </div>
             )}
+
+            {/* TAB 9: shadcn-style primitives (src/renderer/ui) */}
+            {activeTab === "ui" && <UiGallery />}
           </div>
         </div>
       </div>

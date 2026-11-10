@@ -140,8 +140,6 @@
   --hover-bg: var(--surface-hover);
   --active-bg: var(--surface-active);
   --selection-bg: var(--surface-selected);
-  --info: var(--accent);
-  --info-bg: var(--accent-soft);
   --inset-highlight: transparent;
   --type-small: var(--text-sm);
   /* Desktop body copy: 16px / 1.75 gives CJK + Latin mixed prose a

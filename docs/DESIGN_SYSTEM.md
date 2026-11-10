@@ -1,5 +1,7 @@
 # Forge Web UI 设计系统
 
+> **阶段 1 换色说明（2026-11-10）**：调色板已整体换为雾紫 Iris，本文中的十六进制取值与对比度测量仍是换色前的旧值，待 UI 迁移阶段 7 重新测量；当前值以 `src/renderer/styles/workspace-theme.css` 为准。
+
 本文件是 `forge-web-ui` 的**设计与实现对照参考**：记录当前真实生效的视觉系统，以及实现与系统之间的已知偏差。
 
 它与 [WEB_UI_LAYOUT_SPEC.md](WEB_UI_LAYOUT_SPEC.md) 的分工：

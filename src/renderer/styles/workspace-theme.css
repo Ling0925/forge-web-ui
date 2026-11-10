@@ -1,208 +1,215 @@
 /*
  * Single source of color tokens for the workbench (light + dark).
+ * Palette: "Iris" (UI migration phase 1): cool neutral greys with a
+ * saturated blue-violet brand. Designed in oklch (kept in the trailing
+ * comments); values are the gamut-mapped sRGB hex so ECharts and older
+ * WebViews parse every token. Text >= 4.5:1 on every surface it sits on;
+ * --border-control >= 3:1 against surrounding surfaces (WCAG 1.4.11).
  * Scale tokens (type, spacing, radius, layout, motion) live in tokens.css.
- * Components reference semantic names only; never hard-code a hex value
+ * Components reference semantic names only; never hard-code a color value
  * that one of these tokens already covers.
  */
 :root,
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Surfaces: warm paper */
-  --canvas-bg: #f9f8f5;
-  --sidebar-bg: #f1efea;
-  --surface-shell: #ebe9e3;
-  --surface-elevated: #ffffff;
-  --surface-soft: #f3f1ec;
-  --surface-hover: rgb(64 52 36 / 6%);
-  --surface-active: rgb(64 52 36 / 10%);
-  --surface-selected: rgb(64 52 36 / 8%);
+  /* Surfaces: cool mist */
+  --canvas-bg: #f9fafc; /* oklch(0.985 0.003 270) */
+  --sidebar-bg: #f5f6f8; /* oklch(0.972 0.004 270) */
+  --surface-shell: #eef0f4; /* oklch(0.955 0.006 270) */
+  --surface-elevated: #ffffff; /* oklch(1 0 0) */
+  --surface-soft: #f1f2f6; /* oklch(0.962 0.005 270) */
+  --surface-hover: #edeffc; /* oklch(0.955 0.018 280) */
+  --surface-active: #e3e5f7; /* oklch(0.925 0.024 280) */
+  --surface-selected: #e7e9f3; /* oklch(0.935 0.014 278) */
 
   /* Ink levels (primary > secondary > muted >= tertiary > disabled).
-     muted / tertiary stay >= 4.5:1 on the canvas; disabled is decorative. */
-  --text-primary: #292824;
-  --text-secondary: #57554f;
-  --text-muted: #716e66;
-  /* Composer usage bar keeps its previous ink (intentionally untouched). */
-  --composer-usage-ink: #68665f;
-  --text-tertiary: #716e66;
-  --text-disabled: #9c998f;
+     primary / secondary / muted / tertiary stay >= 4.5:1 on every surface;
+     disabled is decorative. */
+  --text-primary: #15171e; /* oklch(0.205 0.015 272) */
+  --text-secondary: #444751; /* oklch(0.4 0.016 270) */
+  --text-muted: #5f636e; /* oklch(0.5 0.018 270) */
+  --composer-usage-ink: #545862; /* oklch(0.46 0.017 270) */
+  --text-tertiary: #5f636e; /* oklch(0.5 0.018 270) */
+  --text-disabled: #a2a4ab; /* oklch(0.72 0.01 270) */
 
-  /* Borders */
-  --border-subtle: rgb(64 52 36 / 9%);
-  --border-control: rgb(64 52 36 / 16%);
-  --border-hover: rgb(64 52 36 / 28%);
-  --border-strong: rgb(64 52 36 / 40%);
+  /* Borders. subtle = decorative dividers (kept faint on purpose);
+     control = interactive control edges, >= 3:1 against canvas, sidebar,
+     shell, elevated and soft surfaces (WCAG 1.4.11); hover is stronger. */
+  --border-subtle: #e2e4e8; /* oklch(0.918 0.006 270) */
+  --border-control: #85878f; /* oklch(0.625 0.012 270) */
+  --border-hover: #73767e; /* oklch(0.565 0.014 270) */
+  --border-strong: var(--border-hover);
 
-  /* Brand: terracotta */
-  --accent: #a54f35;
-  --accent-hover: #8f4029;
-  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
-  --on-accent: #ffffff;
-  --link: #a54f35;
-  /* Focus uses neutral ink so a focused field never reads as an error. */
-  --focus-ring: #4a4740;
-  --focus-halo: rgb(74 71 64 / 14%);
+  /* Brand: Iris blue-violet (selection, links, indicators). */
+  --accent: #4f45db; /* oklch(0.5 0.22 278) */
+  --accent-hover: #4436c5; /* oklch(0.45 0.21 278) */
+  --accent-soft: #edefff; /* oklch(0.955 0.021 280) */
+  --on-accent: #fcfcfc; /* oklch(0.99 0 0) */
+  --link: #4f45db; /* oklch(0.5 0.22 278) */
+  --focus-ring: #696bf4; /* oklch(0.6 0.2 278) */
+  --focus-halo: rgb(105 107 244 / 18%);
 
   /* States: inks meet >= 4.5:1 against their own tinted surfaces. */
-  --success: #226d40;
-  --success-bg: #edf7ef;
-  --success-border: #aee4be;
+  --success: #027e47; /* oklch(0.52 0.128 155) */
+  --success-bg: #e5faeb; /* oklch(0.965 0.03 155) */
+  --success-border: #b3ddc0; /* oklch(0.86 0.06 155) */
 
-  --warning: #975a06;
-  --warning-bg: #fef7e9;
-  --warning-border: #fedf89;
+  --warning: #925601; /* oklch(0.51 0.114 65) */
+  --warning-bg: #fff3df; /* oklch(0.968 0.029 80) */
+  --warning-border: #edd0a0; /* oklch(0.87 0.07 80) */
 
-  --error: #b82420;
-  --error-bg: #fef3f2;
-  --error-border: #fecdca;
+  --error: #d61b2a; /* oklch(0.56 0.215 25) */
+  --error-bg: #ffefef; /* oklch(0.965 0.017 20) */
+  --error-border: #f6c2c1; /* oklch(0.86 0.06 20) */
+  --on-error: #fcfcfc; /* oklch(0.99 0 0) */
 
-  /* High contrast call-to-action */
-  --run-bg: #35332e;
-  --run-ink: #ffffff;
-  --run-hover: #49463f;
-  --run-active: #24221e;
+  --info: #0070a6; /* oklch(0.52 0.119 240) */
+  --info-bg: #e9f5ff; /* oklch(0.965 0.018 240) */
+  --info-border: #b1d3ec; /* oklch(0.85 0.05 240) */
+
+  /* Primary call-to-action (shadcn `primary`). */
+  --run-bg: #5347e6; /* oklch(0.515 0.23 278) */
+  --run-ink: #fcfcfc; /* oklch(0.99 0 0) */
+  --run-hover: #4836d6; /* oklch(0.47 0.23 278) */
+  --run-active: #3f33b9; /* oklch(0.43 0.2 278) */
+
+  /* Modal scrim behind dialogs. */
+  --overlay-bg: rgb(19 21 31 / 36%);
 
   /* Shadows */
-  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 5%);
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 6%), 0 1px 1px
-    hsl(var(--shadow-color) / 4%);
-  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 4px 12px -4px
-    hsl(var(--shadow-color) / 8%);
-  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 5%), 0 8px 24px -8px
-    hsl(var(--shadow-color) / 14%);
-  --shadow-overlay: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 12px 24px -6px
-    hsl(var(--shadow-color) / 12%), 0 32px 64px -16px
-    hsl(var(--shadow-color) / 22%);
-  --shadow-dropdown: 0 0 0 1px hsl(var(--shadow-color) / 6%), 0 4px 8px -2px
-    hsl(var(--shadow-color) / 8%), 0 16px 32px -8px
-    hsl(var(--shadow-color) / 16%);
+  --shadow-xs: 0 1px 2px rgb(20 22 27 / 5%);
+  --shadow-sm: 0 1px 2px rgb(20 22 27 / 4%), 0 1px 3px rgb(20 22 27 / 6%);
+  --shadow-card: 0 1px 3px rgb(20 22 27 / 7%), 0 1px 2px -1px rgb(20 22 27 / 6%);
+  --shadow-composer: 0 2px 4px -2px rgb(20 22 27 / 5%), 0 6px 16px -4px
+    rgb(20 22 27 / 8%);
+  --shadow-overlay: 0 4px 12px -4px rgb(20 22 27 / 8%), 0 18px 40px -12px
+    rgb(20 22 27 / 18%);
+  --shadow-dropdown: 0 2px 4px -2px rgb(20 22 27 / 6%), 0 6px 16px -4px
+    rgb(20 22 27 / 10%);
 
-  /* Chart series use the workbench's earthy hues, sampled by charts/theme.ts. */
-  --chart-series: #a54f35, #55684d, #975a06, #7d5a7c, #68665f, #226d40, #6b5439;
+  /* Chart series follow the Iris palette, sampled by charts/theme.ts. */
+  --chart-series: #4f45db, #027e47, #b46d10, #ac43a5, #0070a6, #0f9293, #5f636e;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
-  --chart-heat: #f6f3ee, #dc9477, #7a3520;
-  /* Usage dashboard metrics, drawn from the same earthy series. */
-  --chart-completion: #a54f35;
-  --chart-cached: #226d40;
-  --chart-uncached: #7d5a7c;
-  --chart-cost: #975a06;
-  --chart-speed: #55684d;
-  --chart-failed: var(--error);
-  /* Context window parts in the composer meter and usage popover. The
-     compaction reserve is neutral: it is held back, not an error. */
-  --context-instructions: #55684d;
-  --context-memory: #7d5a7c;
-  --context-conversation: #a54f35;
-  --context-tools: #975a06;
-  --context-reserve-border: var(--border-strong);
-  --context-reserve-stripe-1: color-mix(
-    in srgb,
-    var(--text-muted) 38%,
-    transparent
-  );
-  --context-reserve-stripe-2: color-mix(
-    in srgb,
-    var(--text-muted) 10%,
-    transparent
-  );
-  --surface-raised: #fffefc;
-  --surface-sunken: #eceae4;
+  --chart-heat: #f3f4fd, #969cee, #3d2fb6;
+  /* Tokens introduced by master's v2 foundation (PR #11), mapped onto
+     the Iris palette so its structural CSS resolves under design A. */
+  --surface-raised: #ffffff;
+  --surface-sunken: #f3f4f7;
   --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 80%);
   --accent-subtle: color-mix(in srgb, var(--accent) 9%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 32%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent) 22%, transparent);
-  --shadow-color: 32deg 22% 28%;
+  --shadow-color: 235deg 30% 12%;
+  --chart-completion: var(--accent);
+  --chart-cached: #027e47;
+  --chart-uncached: #0070a6;
+  --chart-cost: #925601;
+  --chart-speed: #0f9293;
+  --chart-failed: var(--error);
+  --context-reserve-border: var(--border-strong);
+  --context-reserve-stripe-1: color-mix(in srgb, var(--text-muted) 38%, transparent);
+  --context-reserve-stripe-2: color-mix(in srgb, var(--text-muted) 10%, transparent);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Surfaces: graphite */
-  --canvas-bg: #181715;
-  --sidebar-bg: #131211;
-  --surface-shell: #0f0e0d;
-  --surface-elevated: #211f1d;
-  --surface-soft: #1d1c1a;
-  --surface-hover: rgb(255 244 228 / 5%);
-  --surface-active: rgb(255 244 228 / 9%);
-  --surface-selected: rgb(255 244 228 / 7%);
+  /* Surfaces: cool graphite */
+  --canvas-bg: #0d0e12; /* oklch(0.165 0.008 275) */
+  --sidebar-bg: #090a0e; /* oklch(0.145 0.008 275) */
+  --surface-shell: #0a0b0f; /* oklch(0.15 0.008 275) */
+  --surface-elevated: #14151a; /* oklch(0.198 0.009 275) */
+  --surface-soft: #1d1e23; /* oklch(0.235 0.01 275) */
+  --surface-hover: #23243a; /* oklch(0.27 0.04 280) */
+  --surface-active: #292b44; /* oklch(0.3 0.045 280) */
+  --surface-selected: #1b1d2c; /* oklch(0.235 0.03 280) */
 
-  /* Four distinct ink levels; tertiary stays >= 4.5:1 on canvas / elevated. */
-  --text-primary: #eeede8;
-  --text-secondary: #b3b0a8;
-  --composer-usage-ink: #b3b0a8;
-  --text-muted: #a19e96;
-  --text-tertiary: #8f8c84;
-  --text-disabled: #6b6862;
+  /* Ink levels (primary > secondary > muted >= tertiary > disabled).
+     primary / secondary / muted / tertiary stay >= 4.5:1 on every surface;
+     disabled is decorative. */
+  --text-primary: #ecedf0; /* oklch(0.945 0.005 275) */
+  --text-secondary: #bcbdc4; /* oklch(0.8 0.01 275) */
+  --text-muted: #9b9ea8; /* oklch(0.7 0.015 275) */
+  --composer-usage-ink: #bcbdc4; /* oklch(0.8 0.01 275) */
+  --text-tertiary: #9598a1; /* oklch(0.68 0.014 275) */
+  --text-disabled: #53555b; /* oklch(0.45 0.01 275) */
 
-  /* Borders */
-  --border-subtle: rgb(255 244 228 / 7%);
-  --border-control: rgb(255 244 228 / 12%);
-  --border-hover: rgb(255 244 228 / 22%);
-  --border-strong: rgb(255 244 228 / 32%);
+  /* Borders. subtle = decorative dividers (kept faint on purpose);
+     control = interactive control edges, >= 3:1 against canvas, sidebar,
+     shell, elevated and soft surfaces (WCAG 1.4.11); hover is stronger. */
+  --border-subtle: #25262b; /* oklch(0.27 0.01 275) */
+  --border-control: #6a6b73; /* oklch(0.53 0.012 275) */
+  --border-hover: #7b7d86; /* oklch(0.59 0.014 275) */
+  --border-strong: var(--border-hover);
 
-  /* Brand: terracotta */
-  --accent: #dc9477;
-  --accent-hover: #e8a88e;
-  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
-  --on-accent: #1c1b1a;
-  --link: #dc9477;
-  --focus-ring: #cfcbc1;
-  --focus-halo: rgb(207 203 193 / 18%);
+  /* Brand: Iris blue-violet (selection, links, indicators). */
+  --accent: #9ba0ff; /* oklch(0.74 0.136 280) */
+  --accent-hover: #b0b7ff; /* oklch(0.8 0.102 280) */
+  --accent-soft: #22233e; /* oklch(0.27 0.05 280) */
+  --on-accent: #090917; /* oklch(0.15 0.03 280) */
+  --link: #9ba0ff; /* oklch(0.74 0.136 280) */
+  --focus-ring: #8d90ff; /* oklch(0.7 0.16 280) */
+  --focus-halo: rgb(141 144 255 / 22%);
 
-  /* States */
-  --success: #34d399;
-  --success-bg: #064e3b;
-  --success-border: #065f46;
+  /* States: inks meet >= 4.5:1 against their own tinted surfaces. */
+  --success: #59c886; /* oklch(0.75 0.14 155) */
+  --success-bg: #102719; /* oklch(0.25 0.04 155) */
+  --success-border: #20462f; /* oklch(0.36 0.06 155) */
 
-  --warning: #fbbf24;
-  --warning-bg: #451a03;
-  --warning-border: #78350f;
+  --warning: #eeb154; /* oklch(0.8 0.13 75) */
+  --warning-bg: #34220b; /* oklch(0.27 0.045 70) */
+  --warning-border: #5a3b12; /* oklch(0.38 0.07 70) */
 
-  --error: #f87171;
-  --error-bg: #450a0a;
-  --error-border: #7f1d1d;
+  --error: #f0555b; /* oklch(0.66 0.19 22) */
+  --error-bg: #39191a; /* oklch(0.26 0.05 20) */
+  --error-border: #6a2b2e; /* oklch(0.38 0.09 20) */
+  --on-error: #150a0a; /* oklch(0.16 0.02 20) */
 
-  /* High contrast call-to-action */
-  --run-bg: #e9e6de;
-  --run-ink: #242320;
-  --run-hover: #ffffff;
-  --run-active: #d4d0c5;
+  --info: #5cb4ef; /* oklch(0.74 0.12 240) */
+  --info-bg: #0e2433; /* oklch(0.25 0.04 240) */
+  --info-border: #1e445c; /* oklch(0.37 0.06 240) */
+
+  /* Primary call-to-action (shadcn `primary`). */
+  --run-bg: #8688ff; /* oklch(0.68 0.172 280) */
+  --run-ink: #090917; /* oklch(0.15 0.03 280) */
+  --run-hover: #9398ff; /* oklch(0.72 0.148 280) */
+  --run-active: #a2a8ff; /* oklch(0.76 0.125 280) */
+
+  /* Modal scrim behind dialogs. */
+  --overlay-bg: rgb(0 0 0 / 58%);
 
   /* Shadows */
-  --shadow-xs: 0 1px 1px hsl(var(--shadow-color) / 30%);
-  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 40%);
-  --shadow-card: 0 1px 2px hsl(var(--shadow-color) / 35%), 0 4px 12px -4px
-    hsl(var(--shadow-color) / 45%);
-  --shadow-composer: 0 1px 2px hsl(var(--shadow-color) / 40%), 0 10px 28px -8px
-    hsl(var(--shadow-color) / 60%);
-  --shadow-overlay: 0 0 0 1px rgb(255 244 228 / 8%), 0 12px 24px -6px
-    hsl(var(--shadow-color) / 50%), 0 32px 64px -16px
-    hsl(var(--shadow-color) / 70%);
-  --shadow-dropdown: 0 0 0 1px rgb(255 244 228 / 7%), 0 4px 8px -2px
-    hsl(var(--shadow-color) / 45%), 0 18px 36px -8px
-    hsl(var(--shadow-color) / 65%);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 36%), inset 0 1px 0 rgb(255 255 255 / 3%);
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 45%);
+  --shadow-composer: 0 6px 16px -4px rgb(0 0 0 / 40%);
+  --shadow-overlay: 0 18px 44px -12px rgb(0 0 0 / 62%), inset 0 0 0 1px
+    rgb(255 255 255 / 6%);
+  --shadow-dropdown: 0 6px 16px -4px rgb(0 0 0 / 50%), inset 0 0 0 1px
+    rgb(255 255 255 / 5%);
 
-  --chart-series: #dc9477, #8fad82, #f0be65, #c39bc1, #aaa79f, #56b881, #b89b7c;
-  --chart-heat: #1c1b1a, #dc9477, #f2c4ae;
-  --chart-completion: #dc9477;
-  --chart-cached: #56b881;
-  --chart-uncached: #c39bc1;
-  --chart-cost: #f0be65;
-  --chart-speed: #8fad82;
-  --chart-failed: var(--error);
-  --context-instructions: #8fad82;
-  --context-memory: #c39bc1;
-  --context-conversation: #dc9477;
-  --context-tools: #f0be65;
-  --surface-raised: #272522;
-  --surface-sunken: #141312;
-  --edge-highlight: inset 0 1px 0 rgb(255 244 228 / 5%);
+  /* Chart series follow the Iris palette, sampled by charts/theme.ts. */
+  --chart-series: #9ba0ff, #59c886, #eeb154, #dc89d5, #5cb4ef, #5ecbcb, #9b9ea8;
+  /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
+  --chart-heat: #14161c, #6262cc, #c7cdff;
+  /* master v2 foundation tokens (PR #11), Iris dark values. */
+  --surface-raised: #1b1c23;
+  --surface-sunken: #0f1015;
+  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 5%);
   --accent-subtle: color-mix(in srgb, var(--accent) 10%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 36%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent) 26%, transparent);
-  --shadow-color: 30deg 30% 2%;
+  --shadow-color: 235deg 30% 2%;
+  --chart-completion: var(--accent);
+  --chart-cached: #59c886;
+  --chart-uncached: #5cb4ef;
+  --chart-cost: #eeb154;
+  --chart-speed: #5ecbcb;
+  --chart-failed: var(--error);
+  --context-reserve-border: var(--border-strong);
+  --context-reserve-stripe-1: color-mix(in srgb, var(--text-muted) 38%, transparent);
+  --context-reserve-stripe-2: color-mix(in srgb, var(--text-muted) 10%, transparent);
 }
 
 .composer-usage {
@@ -236,7 +243,7 @@
   min-height: var(--control-height-lg);
 }
 /* Brand row stacks on wide screens, so the primary action owns the full rail
-   width (通栏静默新建任务按钮) instead of hugging its label. */
+   width (DESIGN.md §7.2: 通栏静默新建任务按钮) instead of hugging its label. */
 .wb-app .sidebar-brand-actions {
   width: 100%;
 }
@@ -327,7 +334,7 @@
 .wb-app .composer-split .composer-textarea {
   min-height: 36px;
   height: 36px;
-  /* WEB_UI_LAYOUT_SPEC.md fixes the composer field at 15px; body prose is 16px. */
+  /* DESIGN.md §5.2 fixes the composer field at 15px; body prose is 16px. */
   font-size: var(--text-md);
   line-height: 1.6;
 }
