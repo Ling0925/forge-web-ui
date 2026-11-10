@@ -26,6 +26,7 @@
 @import "./surfaces/composer.css";
 @import "./surfaces/sidebar.css";
 @import "./surfaces/transcript.css";
+@import "./surfaces/shell.css";
 
 @source "../ui";
 @source "../showcase/UiGallery.tsx";

@@ -148,7 +148,7 @@ export function CommandPalette() {
                 aria-label={action.label}
                 aria-current={selected === index ? "true" : undefined}
                 key={action.id}
-                variant={selected === index ? "primary" : "secondary"}
+                variant="ghost"
                 onClick={() => execute(index)}
               >
                 <span className="command-action-label">{action.label}</span>
