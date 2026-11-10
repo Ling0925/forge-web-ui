@@ -29,6 +29,7 @@
 @import "./surfaces/shell.css";
 @import "./surfaces/inspector.css";
 @import "./surfaces/settings.css";
+@import "./surfaces/usage.css";
 
 @source "../ui";
 @source "../showcase/UiGallery.tsx";

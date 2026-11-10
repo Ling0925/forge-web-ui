@@ -13,7 +13,7 @@ const themeCss = read("src/renderer/styles/workspace-theme.css");
 const surface = (name: string) =>
   stripComments(read(`src/renderer/styles/surfaces/${name}.css`));
 
-const SURFACES = ["shell", "inspector", "settings"];
+const SURFACES = ["shell", "inspector", "settings", "usage"];
 
 const ruleFor = (css: string, selector: string) => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -168,5 +168,52 @@ describe("phase 5 · settings", () => {
     expect(ruleFor(css, ".settings-page .setting-row")[0]).toContain(
       "var(--setting-row-min-height)",
     );
+  });
+});
+
+describe("phase 6 · usage", () => {
+  const css = surface("usage");
+  const legacy = read("src/renderer/components/workbench/usage-dashboard.css");
+  const overview = read("src/renderer/components/workbench/UsageOverview.tsx");
+
+  it("moves chart and topology colours into the theme (both themes)", () => {
+    for (const name of [
+      "--chart-cached",
+      "--chart-uncached",
+      "--chart-cost",
+      "--chart-speed",
+      "--topology-core",
+      "--topology-provider",
+      "--topology-model",
+      "--topology-subagent",
+      "--topology-label-bg",
+    ])
+      expect(themeCss.match(new RegExp(`${name}:`, "g")), name).toHaveLength(2);
+    expect(stripComments(legacy)).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    expect(stripComments(legacy)).not.toMatch(/\brgba?\(/);
+  });
+
+  it("draws the 3D topology from theme variables, not the old warm palette", () => {
+    expect(overview).toContain('themed("--topology-core"');
+    expect(overview).not.toContain("#a54f35");
+    expect(overview).not.toContain("#55684d");
+  });
+
+  it("scopes everything to the dashboard overlay (it renders outside .wb-app)", () => {
+    const selectors = [...css.matchAll(/^\s*([^@{}\s][^{}]*)\{/gm)].map(
+      (match) => (match[1] ?? "").trim(),
+    );
+    expect(selectors.length).toBeGreaterThan(40);
+    for (const selector of selectors)
+      expect(selector.startsWith(".usage-dashboard-overlay"), selector).toBe(
+        true,
+      );
+  });
+
+  it("shows KPI numbers in the UI face, 600 weight, tabular figures", () => {
+    const value = ruleFor(css, ".usage-dashboard-overlay .usage-kpi-value")[0];
+    expect(value).toContain("font-family: var(--font-sans)");
+    expect(value).toContain("font-weight: 600");
+    expect(value).toContain("tabular-nums");
   });
 });

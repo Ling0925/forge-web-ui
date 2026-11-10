@@ -1,0 +1,326 @@
+/*
+ * Usage dashboard skin, design A "light inline" (UI migration phase 6,
+ * design-v2/spec.md §1–2): header, time / workspace filters, KPI strip,
+ * section cards, segmented switches, legends, tables, request stats, the
+ * 3D topology stage chrome, empty and error states.
+ *
+ * The dashboard renders in a DeferredPanel outside `.wb-app`, so
+ * selectors are scoped to `.usage-dashboard-overlay`. Imported by
+ * styles/ui.css into the `components` layer. Chart series colours live in
+ * workspace-theme.css (--chart-*, --topology-*); layout and chart geometry
+ * stay in usage-dashboard.css.
+ *
+ * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
+ */
+@layer components {
+  .usage-dashboard-overlay {
+    --text-2xs: var(--text-caption);
+    --leading-2xs: var(--leading-caption);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Header                                                            */
+  /* ---------------------------------------------------------------- */
+  .usage-dashboard-overlay .usage-dashboard-header {
+    min-height: var(--dialog-header-height);
+    padding: var(--space-2) var(--space-6);
+    border-bottom: 0;
+    background: var(--canvas-bg);
+    box-shadow: inset 0 -1px 0 var(--hairline);
+  }
+
+  .usage-dashboard-overlay .usage-back-btn {
+    border: 0;
+    border-radius: var(--radius-control);
+    font-size: var(--text-meta);
+  }
+
+  .usage-dashboard-overlay .usage-back-btn:hover {
+    background: var(--hover-wash);
+  }
+
+  .usage-dashboard-overlay .usage-header-divider {
+    background: var(--hairline-strong);
+  }
+
+  .usage-dashboard-overlay .usage-dashboard-icon-badge {
+    border-radius: var(--radius-item);
+  }
+
+  .usage-dashboard-overlay .usage-dashboard-title-text h2 {
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+  }
+
+  .usage-dashboard-overlay :is(.usage-back-btn, .usage-time-pill, .usage-ws-trigger, .usage-mode-btn, .usage-session-link):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-halo);
+  }
+
+  /* Time range: a well with a small lifted card for the active range. */
+  .usage-dashboard-overlay .usage-time-capsule {
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .usage-dashboard-overlay .usage-time-pill {
+    border: 0;
+    border-radius: var(--radius-control);
+    font-size: var(--text-meta);
+  }
+
+  .usage-dashboard-overlay .usage-time-pill:hover:not(.is-active) {
+    background: var(--hover-wash);
+  }
+
+  .usage-dashboard-overlay .usage-time-pill.is-active {
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      var(--shadow-xs);
+    font-weight: 500;
+  }
+
+  .usage-dashboard-overlay .usage-ws-trigger {
+    border: 0;
+    border-radius: var(--radius-item);
+    background: var(--surface-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+    font-size: var(--text-meta);
+  }
+
+  .usage-dashboard-overlay .usage-ws-trigger:hover {
+    background: var(--hover-wash);
+  }
+
+  .usage-dashboard-overlay :is(.usage-ws-dropdown.is-open, .usage-ws-dropdown.has-filter) .usage-ws-trigger {
+    box-shadow: inset 0 0 0 1px var(--focus-ring);
+  }
+
+  .usage-dashboard-overlay .usage-ws-menu {
+    border: 0;
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      var(--shadow-floating);
+  }
+
+  .usage-dashboard-overlay .usage-ws-option {
+    border-radius: var(--radius-control);
+  }
+
+  .usage-dashboard-overlay :is(.usage-ws-option:hover, .usage-ws-option:focus-visible) {
+    background: var(--hover-wash);
+  }
+
+  .usage-dashboard-overlay .usage-ws-option.is-selected {
+    background: var(--active-wash);
+  }
+
+  .usage-dashboard-overlay .usage-ws-option-path {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  @media (pointer: coarse) {
+    .usage-dashboard-overlay :is(.usage-back-btn, .usage-time-capsule, .usage-ws-trigger, .usage-ws-option, .usage-refresh-btn) {
+      min-height: var(--touch-min-target);
+    }
+
+    .usage-dashboard-overlay :is(.usage-time-pill, .usage-mode-btn) {
+      min-height: var(--control-height-lg);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Body, KPI strip, section cards                                    */
+  /* ---------------------------------------------------------------- */
+  .usage-dashboard-overlay .usage-dashboard-body {
+    padding: var(--space-6) var(--space-6) var(--space-12);
+  }
+
+  .usage-dashboard-overlay :is(.usage-kpi-card, .usage-dashboard-section, .usage-req-stat-card) {
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .usage-dashboard-overlay .usage-dashboard-section {
+    padding: var(--space-5);
+    gap: var(--space-4);
+  }
+
+  .usage-dashboard-overlay .usage-kpi-label {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .usage-dashboard-overlay .usage-kpi-label svg {
+    color: var(--text-disabled);
+  }
+
+  /* Numbers in the UI face with tabular figures; 600, never 700. */
+  .usage-dashboard-overlay .usage-kpi-value {
+    font-family: var(--font-sans);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: var(--leading-2xl);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .usage-dashboard-overlay .usage-kpi-model-value {
+    font-size: var(--text-md);
+    line-height: var(--leading-md);
+  }
+
+  .usage-dashboard-overlay .usage-kpi-unit,
+  .usage-dashboard-overlay .usage-kpi-sub {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .usage-dashboard-overlay .usage-section-title {
+    font-size: var(--text-ui);
+    font-weight: 600;
+    line-height: var(--leading-ui);
+  }
+
+  .usage-dashboard-overlay .usage-section-title svg {
+    color: var(--text-tertiary);
+  }
+
+  .usage-dashboard-overlay .usage-section-subtitle-meta {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  /* Segmented mode switch matches the time capsule. */
+  .usage-dashboard-overlay .usage-mode-switch {
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .usage-dashboard-overlay .usage-mode-btn {
+    height: var(--control-height-sm);
+    padding: 0 var(--space-2-5);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-caption);
+  }
+
+  .usage-dashboard-overlay .usage-mode-btn.is-active {
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline),
+      var(--shadow-xs);
+  }
+
+  .usage-dashboard-overlay :is(.usage-legend-item, .usage-bar-date, .usage-hourly-label, .usage-model-tokens, .usage-req-stat-sub, .usage-donut-caption) {
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+  }
+
+  .usage-dashboard-overlay :is(.usage-model-bar-track, .usage-speed-bar-track, .usage-inline-mini-track) {
+    background: var(--active-wash);
+  }
+
+  .usage-dashboard-overlay :is(.usage-cost-pill, .usage-model-cost-tag, .usage-3d-conduit-badge, .usage-3d-live-pill, .usage-3d-model-chip) {
+    border: 0;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Tables                                                            */
+  /* ---------------------------------------------------------------- */
+  .usage-dashboard-overlay .usage-table-wrapper {
+    border: 0;
+    border-radius: var(--radius-item);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .usage-dashboard-overlay .usage-table {
+    font-size: var(--text-meta);
+  }
+
+  .usage-dashboard-overlay .usage-table th {
+    border-bottom: 0;
+    background: var(--surface-soft);
+    box-shadow: inset 0 -1px 0 var(--hairline);
+    color: var(--text-tertiary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  .usage-dashboard-overlay .usage-table td {
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--hairline);
+  }
+
+  .usage-dashboard-overlay .usage-table tbody tr:last-child td {
+    box-shadow: none;
+  }
+
+  .usage-dashboard-overlay .usage-table tbody tr:hover td {
+    background: var(--hover-wash);
+  }
+
+  .usage-dashboard-overlay .usage-session-link {
+    border-radius: var(--radius-xs);
+    color: var(--link);
+  }
+
+  @media (pointer: coarse) {
+    .usage-dashboard-overlay .usage-session-link {
+      min-height: var(--touch-min-target);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* 3D stage chrome, empty + error                                    */
+  /* ---------------------------------------------------------------- */
+  .usage-dashboard-overlay :is(.usage-3d-canvas-stage, .usage-3d-canvas-Stage) {
+    border: 0;
+    border-radius: var(--radius-card);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .usage-dashboard-overlay :is(.usage-3d-legend-item, .usage-3d-stage-hint > span) {
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    font-size: var(--text-caption);
+  }
+
+  .usage-dashboard-overlay :is(.usage-3d-conduit-row:hover, .usage-3d-conduit-row.is-selected) {
+    background: var(--active-wash);
+  }
+
+  .usage-dashboard-overlay .usage-empty-state {
+    border-radius: var(--radius-card);
+    color: var(--text-tertiary);
+  }
+
+  .usage-dashboard-overlay .usage-error-banner {
+    border: 0;
+    border-radius: var(--radius-item);
+    box-shadow: inset 0 0 0 1px var(--error-border);
+  }
+
+  @media (max-width: 768px) {
+    .usage-dashboard-overlay .usage-dashboard-header {
+      padding: var(--space-2) var(--space-4);
+    }
+
+    .usage-dashboard-overlay .usage-dashboard-body {
+      padding: var(--space-4) var(--space-4) var(--space-10);
+    }
+  }
+}
