@@ -30,6 +30,11 @@
   --text-secondary: #444751; /* oklch(0.4 0.016 270) */
   --text-muted: #5f636e; /* oklch(0.5 0.018 270) */
   --composer-usage-ink: #545862; /* oklch(0.46 0.017 270) */
+  /* Context-window segments (composer usage meter): >=3:1 on every surface. */
+  --context-instructions: #5a4fe0;
+  --context-memory: #b0338f;
+  --context-conversation: #0a7d70;
+  --context-tools: #9a5800;
   --text-tertiary: #5f636e; /* oklch(0.5 0.018 270) */
   --text-disabled: #a2a4ab; /* oklch(0.72 0.01 270) */
 
@@ -132,6 +137,10 @@
   --text-secondary: #bcbdc4; /* oklch(0.8 0.01 275) */
   --text-muted: #9b9ea8; /* oklch(0.7 0.015 275) */
   --composer-usage-ink: #bcbdc4; /* oklch(0.8 0.01 275) */
+  --context-instructions: #a1a4ff;
+  --context-memory: #e98bd3;
+  --context-conversation: #4cc4b0;
+  --context-tools: #e0a24c;
   --text-tertiary: #9598a1; /* oklch(0.68 0.014 275) */
   --text-disabled: #53555b; /* oklch(0.45 0.01 275) */
 
@@ -212,9 +221,6 @@
   --context-reserve-stripe-2: color-mix(in srgb, var(--text-muted) 10%, transparent);
 }
 
-.composer-usage {
-  --text-secondary: var(--composer-usage-ink);
-}
 .wb-app .workbench-task-header {
   border-bottom-color: transparent;
   padding-inline: var(--space-6);
@@ -262,167 +268,14 @@
   margin-block: var(--space-12);
   text-align: center;
 }
-.wb-app .wb-new-session-scroll {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-}
-.wb-app .wb-new-session-intro {
-  width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
-  margin: var(--space-8) auto var(--space-6);
-}
-.welcome-heading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
 .forge-mark {
   display: block;
   flex-shrink: 0;
   object-fit: contain;
 }
-.welcome-mark {
-  width: var(--space-10);
-  height: var(--space-10);
-}
 .sidebar-mark {
   width: var(--space-8);
   height: var(--space-8);
-}
-.wb-new-session-intro h2 {
-  margin: 0;
-  font-size: var(--welcome-title-size);
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: -0.025em;
-  text-wrap: balance;
-}
-.wb-new-session-intro > p {
-  margin-top: var(--space-2);
-  font-size: var(--text-sm);
-}
-.wb-app .wb-new-session .composer-fresh {
-  flex-shrink: 0;
-  width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
-  margin: 0 auto var(--space-6);
-  padding: 0;
-  overflow: visible;
-  max-height: none;
-  position: relative;
-  z-index: 20;
-}
-.wb-app .composer-surface {
-  border-radius: var(--radius-composer);
-  border-color: var(--border-control);
-  box-shadow: var(--shadow-composer);
-  padding: 12px 12px 8px;
-  gap: 0;
-}
-.wb-app .composer-surface:focus-within {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-composer);
-}
-/* Keyboard focus stays visible on the card edge without drawing a second
-   inset ring around the textarea. */
-.wb-app .composer-surface:has(.composer-textarea:focus-visible) {
-  border-color: var(--focus-ring);
-}
-.wb-app .composer-split .composer-textarea {
-  min-height: 36px;
-  height: 36px;
-  /* DESIGN.md §5.2 fixes the composer field at 15px; body prose is 16px. */
-  font-size: var(--text-md);
-  line-height: 1.6;
-}
-.wb-app .composer-split {
-  gap: var(--space-1);
-}
-.wb-app .composer-split .composer-toolbar {
-  padding: 0;
-}
-.wb-app .composer-dropdown-trigger {
-  background: transparent;
-  border-color: transparent;
-  min-height: var(--control-height);
-}
-.wb-app .composer-dropdown-trigger:hover {
-  background: var(--surface-hover);
-}
-.wb-app .composer-project-trigger {
-  font-family: var(--font-sans);
-  border-color: transparent;
-  min-height: var(--control-height);
-}
-.wb-app .composer-project {
-  margin-bottom: var(--space-2);
-}
-.wb-app .composer-status:not(.composer-queue) {
-  align-items: center;
-  padding-inline: var(--space-1);
-}
-.wb-app .composer-status .btn {
-  min-height: var(--control-height-sm);
-  height: var(--control-height-sm);
-}
-.wb-app .composer-action {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
-  padding: 0;
-  border-radius: var(--radius-full);
-  transition: background-color var(--transition-fast), color
-    var(--transition-fast);
-  transform: none;
-}
-.wb-app .composer-effort {
-  flex: 0 0 auto;
-}
-.wb-app .composer-effort .composer-dropdown-menu {
-  left: auto;
-  right: 0;
-  max-height: 60dvh;
-  overflow-y: auto;
-}
-.wb-app .workbench-composer:has(.composer-split) {
-  overflow: visible;
-  max-height: none;
-}
-.wb-app .composer-action:hover:not(:disabled),
-.wb-app .composer-action:active:not(:disabled) {
-  transform: none;
-}
-.wb-app .composer-action .btn-busy-status {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.wb-app .composer-action .btn-spinner {
-  flex: 0 0 14px;
-}
-.wb-app .composer-dropdown-trigger:disabled,
-.wb-app .composer-submit:disabled {
-  opacity: 1;
-  color: var(--text-secondary);
-  background: var(--surface-soft);
-}
-.wb-app .composer-dropdown.is-open .composer-dropdown-trigger {
-  border-color: transparent;
-  background: var(--surface-selected);
-}
-.wb-app .composer-dropdown-item {
-  min-height: var(--control-height-lg);
-}
-.wb-app .composer-dropdown-item-sub {
-  font-size: var(--text-xs);
 }
 .wb-app .message-user {
   box-shadow: none;
@@ -431,36 +284,4 @@
 .wb-app .message-assistant .message-body {
   font-size: var(--prose-size);
   line-height: var(--prose-leading);
-}
-@media (max-width: 1000px) {
-  .wb-app .wb-new-session-intro,
-  .wb-app .wb-new-session .composer-fresh {
-    width: calc(100% - 2 * var(--space-4));
-  }
-  .wb-app .wb-new-session-intro {
-    margin-top: var(--space-4);
-  }
-  .wb-app .wb-new-session .composer-fresh {
-    margin-bottom: var(--space-3);
-  }
-  .wb-app .composer-dropdown-trigger,
-  .wb-app .composer-project-trigger {
-    min-height: var(--touch-min-target);
-  }
-  .wb-app .composer-dropdown-item,
-  .wb-app .composer-status .btn {
-    min-height: var(--touch-min-target);
-  }
-}
-/* Short viewports: geometry-only. The single vertical scrollbar stays with
-   the reading-flow viewport; the duplicate `overflow-y` that used to live
-   here (and in components/workbench/new-session.css) created nested scroll
-   containers on the same element and was removed from both sheets. */
-@media (max-height: 700px) {
-  .wb-app .wb-new-session-intro {
-    margin-top: var(--space-4);
-  }
-  .wb-app .wb-new-session .composer-fresh {
-    margin-bottom: var(--space-4);
-  }
 }

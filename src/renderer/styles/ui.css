@@ -10,18 +10,27 @@
  * workspace-theme.css; `@theme inline` only maps those names into Tailwind,
  * so utilities read the same runtime variables (and follow data-theme).
  *
- * Sources are limited to the shadcn-style primitives in src/renderer/ui and
- * their gallery, so utilities are only generated for class names those files
- * use; legacy markup keeps its own stylesheets.
+ * Sources are limited to the shadcn-style primitives in src/renderer/ui, their
+ * gallery and the surfaces already migrated (listed one by one), so utilities
+ * are only generated for class names those files use; legacy markup keeps its
+ * own stylesheets.
+ *
+ * Migrated surfaces that skin markup they cannot restyle in JSX live in
+ * styles/surfaces/*.css, imported below into the `components` layer.
  */
 @layer theme, base, legacy, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @import "tw-animate-css";
+@import "./surfaces/composer.css";
 
 @source "../ui";
 @source "../showcase/UiGallery.tsx";
+/* Phase 2a: new session + composer. */
+@source "../components/workbench/Welcome.tsx";
+@source "../components/workbench/ComposerDropdown.tsx";
+@source "../components/workbench/useSlashCommands.tsx";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

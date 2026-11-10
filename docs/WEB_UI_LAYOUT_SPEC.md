@@ -19,6 +19,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 3. [sidebar-compact.css](../src/renderer/styles/sidebar-compact.css) 与 [app.css](../src/renderer/components/workbench/app.css)：负责主框架、侧栏紧凑密度与响应式断点。
 4. [design-foundation.css](../src/renderer/styles/design-foundation.css)：共享动画和基础控件外观，只引用上述 token，不再覆盖 token。
 5. 组件级样式（`composer-*.css`、`inspector.css`、`settings.css`、`usage-popover.css`、`tool-disclosure.css` 等）：负责具体业务区域的细节呈现。
+6. 已迁移区域的新样式在 `styles/surfaces/*.css`（UI 迁移阶段 2a 起，目前是 `composer.css`）：由 `ui.css` 内联，落在 Tailwind 的 `@layer components`，按层序压过 `@layer legacy` 的旧规则；被替换的旧规则同步删除，避免未覆盖的属性漏过来。新的组件 JSX 优先直接写 Tailwind 工具类；受保护文件（如 `Composer.tsx`）通过原有 class 钩子在 surfaces 里换皮。
 
 ---
 
@@ -105,6 +106,7 @@ Forge Web 采用 **浅色「暖纸墨色（Warm Paper & Ink）」/ 深色「石�
 
 ### 4.2 会话输入框（`Composer`）与执行态表现
 
+- **阶段 2a 重做（2026-11-10）**：新会话页（`Welcome`）与输入区的外观在 `styles/surfaces/composer.css` 与组件内 Tailwind 工具类中；行为、键盘、ARIA 与测试依赖的 class/几何（续写输入框 36px、新会话输入框 100px、发送键 44px、新会话输入框距底 24px）保持不变。上下文分段色使用 `--context-instructions` / `--context-memory` / `--context-conversation` / `--context-tools` token。
 - **垂直高度稳定铁律**：当会话在「空闲 ↔ 正在执行」之间切换时，**严禁在输入框上方动态挂载/卸载独立的文字提示横幅行**（会导致上方对话流与输入框整体上下跳动）。
 - **执行态动画合成到上下文进度条**：
   - 会话执行状态直接体现在底部工具栏的**上下文用量胶囊（`UsagePopover` `.usage-trigger-pill`）**上。
