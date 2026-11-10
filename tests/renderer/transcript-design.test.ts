@@ -69,6 +69,31 @@ describe("transcript surface stylesheet", () => {
     expect(transcriptCss).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
   });
 
+  it("right-aligns the request as a compact bubble without reordering the DOM", () => {
+    const row = transcriptCss.match(/\.wb-app \.message-user \{[^}]*\}/);
+    expect(row?.[0]).toContain("flex-direction: row-reverse");
+    const card = transcriptCss.match(/\.wb-app \.message-user-card \{[^}]*\}/);
+    expect(card?.[0]).toContain("max-width: var(--user-bubble-measure)");
+    expect(tokensCss).toMatch(/--user-bubble-measure:\s*80%/);
+    // Narrow screens stack the actions under the bubble, still on the right.
+    expect(transcriptCss).toMatch(
+      /@media \(max-width: 640px\)\s*\{\s*\.wb-app \.message-user \{[^}]*align-items: flex-end/,
+    );
+  });
+
+  it("draws the collapsed-turn notice with a solid hairline", () => {
+    const borders = [
+      ...transcriptCss.matchAll(
+        /\.wb-app \.transcript-turn-collapsed-bar \{[^}]*\}/g,
+      ),
+    ]
+      .map((match) => match[0])
+      .filter((rule) => rule.includes("border:"));
+    expect(borders).toHaveLength(1);
+    expect(borders[0]).toMatch(/border: 1px solid var\(--hairline-strong\)/);
+    expect(transcriptCss).not.toContain("dashed");
+  });
+
   it("does not centre the latest pill with a transform Motion owns", () => {
     const block = transcriptCss.match(/\.transcript-latest\s*\{[^}]*\}/);
     expect(block?.[0]).toContain("transform: none");
@@ -106,7 +131,7 @@ describe("transcript markup", () => {
     createElement(StoredTranscript, { snapshot }),
   );
 
-  it("wraps the request in a compact card and keeps the author label", () => {
+  it("wraps the request in a bubble card and keeps the author label", () => {
     expect(html).toContain(
       '<article class="message message-user"><div class="message-header">你</div><div class="message-user-card">',
     );

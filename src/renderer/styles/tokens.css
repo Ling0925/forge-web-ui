@@ -106,6 +106,9 @@
   /* Design A content column (spec §2.4): 720px for transcript, composer
      and welcome alike. */
   --reading-measure: 720px;
+  /* User request bubble: share of the reading column it may take. */
+  --user-bubble-measure: 80%;
+  --user-bubble-measure-narrow: 88%;
   /* Running prose inside the reading column; code blocks and tables keep the
      full --reading-measure. */
   --prose-measure: 720px;
