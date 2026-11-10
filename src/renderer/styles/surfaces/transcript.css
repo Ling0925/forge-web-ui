@@ -51,11 +51,15 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Request (user message): a compact well card                       */
+  /* Request (user message): a compact bubble on the right             */
   /* ---------------------------------------------------------------- */
+  /* row-reverse keeps the DOM (header, card, actions) and therefore the
+     tab order, while the bubble sits on the right edge of the column and
+     the turn actions sit just to its left. */
   .wb-app .message-user {
     position: relative;
-    flex-direction: row;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
     align-items: flex-start;
     gap: var(--space-2);
     padding: 0;
@@ -64,7 +68,7 @@
   }
 
   /* The author label ("你" / "Super-agent") is announced, not shown: the
-     card shape already says who wrote it. */
+     bubble's side already says who wrote it. */
   .wb-app .message-user > .message-header {
     position: absolute;
     width: 1px;
@@ -82,11 +86,20 @@
     flex-direction: column;
     gap: var(--space-2);
     min-width: 0;
-    max-width: 100%;
+    max-width: var(--user-bubble-measure);
     padding: var(--space-2-5) var(--space-3-5);
     border-radius: var(--radius-lg);
+    border-end-end-radius: var(--radius-sm);
     background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline);
+    overflow-wrap: anywhere;
+  }
+
+  /* A super-agent delivery is a report, not a chat line: give it the
+     full column so its summary and file list are not squeezed. */
+  .wb-app .message-user-card:has(> .superagent-delivery) {
+    flex-basis: 100%;
+    max-width: 100%;
   }
 
   .wb-app .message-user .message-body {
@@ -95,12 +108,11 @@
     line-height: var(--prose-leading);
   }
 
-  /* Turn actions sit beside the card (not over it) and appear on hover or
-     keyboard focus; their space is reserved so nothing shifts. */
+  /* Turn actions sit beside the bubble (not over it). */
   .wb-app .message-user > .transcript-turn-actions {
     position: static;
     flex: none;
-    margin-left: auto;
+    margin: 0;
     padding-top: var(--space-1-5);
     gap: var(--space-1);
   }
@@ -141,20 +153,20 @@
     }
   }
 
-  /* Narrow: the actions move under the card, right-aligned. */
+  /* Narrow: the bubble widens a little and the actions drop below it,
+     right-aligned under the bubble's edge. */
   @media (max-width: 640px) {
     .wb-app .message-user {
       flex-direction: column;
-      align-items: stretch;
+      align-items: flex-end;
       gap: 0;
     }
 
     .wb-app .message-user-card {
-      align-self: flex-start;
+      max-width: var(--user-bubble-measure-narrow);
     }
 
     .wb-app .message-user > .transcript-turn-actions {
-      align-self: flex-end;
       padding-top: var(--space-1);
     }
   }
@@ -582,7 +594,7 @@
   .wb-app .transcript-turn-collapsed-bar {
     min-height: var(--space-9);
     padding: 0 var(--space-3);
-    border: 1px dashed var(--hairline-strong);
+    border: 1px solid var(--hairline-strong);
     border-radius: var(--radius-item);
     background: transparent;
     color: var(--text-tertiary);
