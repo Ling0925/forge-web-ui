@@ -13,7 +13,7 @@ const themeCss = read("src/renderer/styles/workspace-theme.css");
 const surface = (name: string) =>
   stripComments(read(`src/renderer/styles/surfaces/${name}.css`));
 
-const SURFACES = ["shell"];
+const SURFACES = ["shell", "inspector"];
 
 const ruleFor = (css: string, selector: string) => {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -88,5 +88,47 @@ describe("phase 3 · shell", () => {
       "var(--radius-surface)",
     );
     expect(tokensCss).toMatch(/--dialog-header-height:\s*52px/);
+  });
+});
+
+describe("phase 4 · inspector + workspace", () => {
+  const css = surface("inspector");
+
+  it("puts the rail on the canvas plane with a 13px base and a 12px floor", () => {
+    const rail = ruleFor(css, ".workspace-resources-content.wb-inspector")[0];
+    expect(rail).toContain("--text-2xs: var(--text-caption)");
+    expect(rail).toContain("background: var(--canvas-bg)");
+    expect(rail).toContain("font-size: var(--text-meta)");
+  });
+
+  it("uses solid hairlines instead of dashed separators", () => {
+    expect(css).not.toContain("dashed");
+    const rows = ruleFor(css, ".wb-app .inspector-checkpoints")[0];
+    expect(rows).toContain("inset 0 1px 0 var(--hairline)");
+  });
+
+  it("drops the uppercase micro-labels", () => {
+    expect(
+      ruleFor(css, ".wb-app .wb-inspector .inspector-card-title")[0],
+    ).toContain("text-transform: none");
+    expect(ruleFor(css, ".workspace-picker-section-label")[0]).toContain(
+      "text-transform: none",
+    );
+  });
+
+  it("marks the current plan step with a wash, not a bordered box", () => {
+    const current = ruleFor(
+      css,
+      ".wb-app .wb-inspector .plan-step-in_progress .plan-step-row",
+    )[0];
+    expect(current).toContain("var(--active-wash)");
+    expect(ruleFor(css, ".wb-app .wb-inspector .plan-step-row")[0]).toContain(
+      "border: 0",
+    );
+  });
+
+  it("defines the compact row and body indent tokens", () => {
+    expect(tokensCss).toMatch(/--row-height-compact:\s*28px/);
+    expect(tokensCss).toMatch(/--inspector-body-indent:\s*35px/);
   });
 });
