@@ -1,5 +1,7 @@
 # Forge Web UI 颜色参考（Color Reference）
 
+> **阶段 1 换色说明（2026-11-10）**：调色板已整体换为雾紫 Iris，本文中的十六进制取值与对比度测量仍是换色前的旧值，待 UI 迁移阶段 7 重新测量；当前值以 `src/renderer/styles/workspace-theme.css` 为准。
+
 本文件是 `forge-web-ui` 的**颜色事实清单**：把所有携带颜色的 CSS 自定义属性、它们在浅色/深色下**层叠后的生效值**、每个值的胜出与落败位置、组件作用域内的局部变量、从未定义的变量，以及组件样式表里的字面量颜色全部列出来。
 
 它回答的是「现在到底是什么颜色、这个值从哪一行来」，不是「应该怎么写」。规范（必须怎么做）见 [WEB_UI_LAYOUT_SPEC.md](WEB_UI_LAYOUT_SPEC.md)；更宽的设计系统叙述见 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)。

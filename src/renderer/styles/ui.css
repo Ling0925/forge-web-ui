@@ -1,5 +1,5 @@
 /*
- * Tailwind v4 + shadcn/ui entry (migration phase 0).
+ * Tailwind v4 + shadcn/ui entry.
  *
  * Cascade order: legacy stylesheets are wrapped in `@layer legacy` at build
  * time (scripts/legacy-css-layer.ts), so anything in `components` or
@@ -10,8 +10,9 @@
  * workspace-theme.css; `@theme inline` only maps those names into Tailwind,
  * so utilities read the same runtime variables (and follow data-theme).
  *
- * Sources are limited to components/ui, which does not exist yet, so phase 0
- * generates no utility classes and cannot restyle legacy markup.
+ * Sources are limited to the shadcn-style primitives in src/renderer/ui and
+ * their gallery, so utilities are only generated for class names those files
+ * use; legacy markup keeps its own stylesheets.
  */
 @layer theme, base, legacy, components, utilities;
 
@@ -19,7 +20,8 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @import "tw-animate-css";
 
-@source "../components/ui";
+@source "../ui";
+@source "../showcase/UiGallery.tsx";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -81,7 +83,7 @@
   --ease-out: var(--ease-out);
 
   /* shadcn semantic colors -> workspace-theme.css. shadcn's `accent` is the
-     hover surface; the terracotta brand (legacy --accent) is `brand`. */
+     hover surface; the Iris brand (legacy --accent) is `brand`. */
   --color-background: var(--canvas-bg);
   --color-foreground: var(--text-primary);
   --color-card: var(--surface-elevated);
@@ -97,6 +99,11 @@
   --color-accent: var(--surface-hover);
   --color-accent-foreground: var(--text-primary);
   --color-destructive: var(--error);
+  --color-destructive-foreground: var(--on-error);
+  --color-primary-hover: var(--run-hover);
+  --color-primary-active: var(--run-active);
+  --color-overlay: var(--overlay-bg);
+  --color-link: var(--link);
   --color-border: var(--border-subtle);
   --color-input: var(--border-control);
   --color-ring: var(--focus-ring);
@@ -127,4 +134,8 @@
   --color-error: var(--error);
   --color-error-soft: var(--error-bg);
   --color-error-border: var(--error-border);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-bg);
+  --color-info-border: var(--info-border);
+  --color-hover-border: var(--border-hover);
 }

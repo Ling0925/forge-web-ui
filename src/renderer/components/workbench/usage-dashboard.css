@@ -4,7 +4,7 @@
    ========================================================================== */
 
 .usage-dashboard-overlay {
-  --chart-completion: #a54f35;
+  --chart-completion: var(--accent);
   --chart-cached: #226d40;
   --chart-uncached: #3b6998;
   --chart-cost: #975a06;
@@ -28,7 +28,7 @@
 }
 
 [data-theme="dark"] .usage-dashboard-overlay {
-  --chart-completion: #dc9477;
+  --chart-completion: var(--accent);
   --chart-cached: #56b881;
   --chart-uncached: #6ca6d9;
   --chart-cost: #f0be65;
@@ -1646,10 +1646,6 @@
   color: var(--accent);
 }
 
-[data-theme="dark"] .usage-energy-telemetry-val.is-forge {
-  color: #dc9477;
-}
-
 .usage-energy-telemetry-val.is-speed {
   font-family: var(--font-mono);
   color: var(--accent);
@@ -1766,7 +1762,7 @@
 }
 
 .usage-3d-dot.is-forge {
-  background: #a54f35;
+  background: var(--accent);
 }
 
 .usage-3d-dot.is-provider {
@@ -1778,7 +1774,7 @@
 }
 
 .usage-3d-dot.is-session {
-  background: #a54f35;
+  background: var(--accent);
 }
 
 .usage-3d-dot.is-subagent {
