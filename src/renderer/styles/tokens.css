@@ -108,6 +108,10 @@
   /* Shell (phase 3): session menu width, dialog header. */
   --menu-width: 176px;
   --dialog-header-height: 52px;
+  /* Inspector (phase 4): compact list rows; section body indent lines the
+     copy up with the section title (16px gutter + 11px caret + 8px gap). */
+  --row-height-compact: 28px;
+  --inspector-body-indent: 35px;
   /* Design A content column (spec §2.4): 720px for transcript, composer
      and welcome alike. */
   --reading-measure: 720px;
