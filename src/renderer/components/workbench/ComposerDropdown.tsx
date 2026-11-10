@@ -63,12 +63,12 @@ export function ComposerDropdown<T extends string>({
     onDismiss: () => setOpen(false),
   });
 
+  // Not a positioning box: the menu anchors to the composer card (the
+  // nearest positioned ancestor), so it opens above the card's top edge and
+  // never covers the input or the send button.
   return (
     <div
-      className={cn(
-        "composer-dropdown relative inline-flex",
-        open && "is-open",
-      )}
+      className={cn("composer-dropdown inline-flex", open && "is-open")}
       ref={containerRef}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
@@ -148,7 +148,7 @@ export function ComposerDropdown<T extends string>({
           ref={menuRef}
           id={menuId}
           className={cn(
-            "composer-dropdown-menu absolute bottom-[calc(100%+8px)] left-0 z-50 flex min-w-60 flex-col gap-0.5 p-1.5",
+            "composer-dropdown-menu absolute bottom-[calc(100%+8px)] left-0 z-50 flex min-w-60 flex-col gap-0.5 p-1.5 max-[640px]:right-0 max-[640px]:min-w-0",
             "rounded-xl border border-border bg-popover text-popover-foreground shadow-overlay",
             "origin-bottom-left animate-in fade-in-0 zoom-in-[0.97] slide-in-from-bottom-1 duration-150 ease-out",
           )}

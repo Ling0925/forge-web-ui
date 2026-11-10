@@ -200,7 +200,7 @@ export function ModelPicker(props: {
         <div className="composer-model-panel">
           {!modelsOpen && (
             <div className="model-picker-heading">
-              <span>{props.reasoning ? "思考等级" : "模型"}</span>
+              <span>当前模型</span>
               <button
                 type="button"
                 className="model-picker-current"
@@ -249,6 +249,10 @@ export function ModelPicker(props: {
               disabled={props.reasoning.disabled}
             >
               <legend className="visually-hidden">思考等级</legend>
+              <div className="model-effort-title" aria-hidden="true">
+                <span>思考等级</span>
+                <small>越高越慢，也更周全</small>
+              </div>
               <div className="effort-slider-heading">
                 <output>{formatEffort(efforts[draftEffort])}</output>
               </div>

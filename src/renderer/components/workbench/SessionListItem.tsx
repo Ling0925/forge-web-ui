@@ -139,14 +139,19 @@ export function SessionListItem({
         aria-current={active ? "true" : undefined}
         aria-describedby={open ? tooltipId : undefined}
       >
-        {status !== "completed" && (
-          <span
-            className={`wb-status-dot${pending ? " is-pending" : ""}`}
-            data-status={status}
-            role="img"
-            aria-label={labels[status] ?? status}
-          />
-        )}
+        {/* Design A: a fixed dot column keeps titles aligned. Only states
+            that need attention get a dot (running, awaiting approval, failed,
+            cancelled, interrupted); completed and idle rows show none. */}
+        <span className="session-item-dot">
+          {status !== "completed" && status !== "idle" && (
+            <span
+              className={`wb-status-dot${pending ? " is-pending" : ""}`}
+              data-status={status}
+              role="img"
+              aria-label={labels[status] ?? status}
+            />
+          )}
+        </span>
         <span className="session-item-title">
           {session.archived ? "归档 · " : ""}
           {displayTitle ?? session.title}

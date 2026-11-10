@@ -27,16 +27,8 @@ const { ComposerDropdown } = await import(
 const { ModelPicker } = await import(
   "../../src/renderer/components/workbench/ModelPicker"
 );
-const { WelcomeHero, WelcomeRecent } = await import(
+const { Welcome } = await import(
   "../../src/renderer/components/workbench/Welcome"
-);
-// Design A: App.tsx renders the greeting, the composer and the recent list
-// in one flow wrapper; the welcome parts are rendered together here.
-const Welcome = () => (
-  <>
-    <WelcomeHero />
-    <WelcomeRecent />
-  </>
 );
 const { useSlashCommands } = await import(
   "../../src/renderer/components/workbench/useSlashCommands"
@@ -137,8 +129,8 @@ describe("Welcome", () => {
 
   it("empty state keeps the exact sentence and region names", () => {
     const html = renderToStaticMarkup(<Welcome />);
-    // The scroll region (wb-new-session-scroll, "欢迎与最近任务") is the
-    // App.tsx flow wrapper since design A; see design-a.test.tsx.
+    expect(html).toContain('class="wb-new-session-scroll');
+    expect(html).toContain('role="region" aria-label="欢迎与最近任务"');
     expect(html).toContain('aria-labelledby="welcome-title"');
     expect(html).toContain('aria-busy="false"');
     expect(html).toMatch(

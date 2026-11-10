@@ -18,16 +18,6 @@
   /* ------------------------------------------------------------------ */
   /* New session canvas                                                  */
   /* ------------------------------------------------------------------ */
-  /* Design A (phase 2a-v2): App.tsx wraps the view and the composer in one
-     `.wb-main-flow`. In a session it is transparent to layout; on the new
-     session page it is the single scroll owner and the composer sits in the
-     reading flow between the greeting and the recent tasks. */
-  .wb-main-flow {
-    display: contents;
-  }
-  .wb-main-flow.wb-new-session-scroll {
-    @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain;
-  }
 
   /* ------------------------------------------------------------------ */
   /* Composer frame                                                      */
@@ -51,15 +41,18 @@
     pointer-events: none;
     background: linear-gradient(to bottom, transparent, var(--canvas-bg));
   }
-  /* Own stacking layer: its model / workspace panels drop below the card
-     and must paint above the recent list that follows. */
+  /* Docked 24px above the bottom edge; own stacking layer so its panels
+     paint above the welcome region they open over. */
   .wb-app .wb-new-session .composer-fresh {
-    @apply relative z-20 mx-auto mt-8 mb-0 max-h-none shrink-0 overflow-visible border-0 bg-transparent p-0;
+    @apply relative z-20 mx-auto mt-0 mb-6 max-h-none shrink-0 overflow-visible border-0 bg-transparent p-0;
     width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
   }
   /* Card header: workspace (new session) and the running turn's timer. */
   .composer-card-header {
     @apply -mx-1 -mt-1 mb-1 flex min-w-0 items-center gap-2;
+  }
+  .composer-run-timer + .composer-usage {
+    margin-left: 0;
   }
   .composer-run-timer {
     @apply ml-auto inline-flex shrink-0 items-center gap-1.5 font-medium text-brand text-caption tabular-nums;
@@ -481,13 +474,7 @@
   .composer-model-name-short {
     display: none;
   }
-  /* New session: the card sits under the greeting, so the panel drops below
-     it (over the recent list) instead of covering the headline. */
-  .composer-fresh .composer-card .composer-model-panel {
-    top: calc(100% + 8px);
-    bottom: auto;
-    transform-origin: top right;
-  }
+
   .composer-model-summary {
     @apply min-w-0 list-none gap-2 pr-2 pl-1.5;
     max-width: min(280px, 100%);
@@ -544,25 +531,27 @@
     background: var(--accent);
   }
 
+  /* Design A ModelPanel: anchored above the card's top edge (the card is the
+     positioning box), sectioned by hairlines, never over the input/send. */
   .composer-model-panel {
-    @apply absolute right-0 z-50 flex flex-col gap-3 overflow-y-auto rounded-surface border border-hairline-strong bg-popover p-3 text-popover-foreground shadow-floating;
+    @apply absolute right-0 z-50 flex flex-col gap-0 overflow-y-auto rounded-xl border border-hairline-strong bg-popover p-0 text-popover-foreground shadow-floating;
     bottom: calc(100% + 8px);
-    width: 340px;
+    width: 360px;
     max-width: calc(100vw - 32px);
     max-height: min(420px, 60dvh);
     transform-origin: bottom right;
     animation: composer-pop-in 180ms var(--ease-out) both;
   }
   .model-picker-heading {
-    @apply flex min-w-0 flex-col items-stretch gap-1.5 text-xs;
+    @apply flex min-w-0 flex-col items-stretch gap-1 p-1.5 pt-2;
   }
   .model-picker-heading > span,
   .model-picker-subheading > span,
   .model-effort-options legend {
-    @apply px-1 font-medium text-2xs text-muted-foreground tracking-wide;
+    @apply px-2.5 font-medium text-caption text-tertiary-text;
   }
   .model-picker-current {
-    @apply flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-2 text-left text-foreground text-sm;
+    @apply flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-control border-0 bg-transparent px-2.5 text-left text-foreground text-ui;
     min-height: 44px;
     font: inherit;
     transition:
@@ -570,7 +559,11 @@
       border-color var(--duration-fast) var(--ease-out);
   }
   .model-picker-current:hover {
-    @apply border-hover-border bg-accent;
+    @apply bg-hover-wash;
+  }
+  .model-picker-current > .composer-model-icon {
+    @apply size-7 rounded-sm bg-brand text-brand-foreground;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
   }
   .model-picker-current:focus-visible,
   .model-picker-back:focus-visible {
@@ -578,12 +571,11 @@
     outline-offset: 1px;
   }
   .model-picker-current > span:not(.composer-model-icon) {
-    @apply min-w-0 flex-1 truncate font-medium;
+    @apply min-w-0 flex-1 truncate font-semibold;
   }
   .model-picker-current > small {
-    @apply shrink-0 truncate rounded-sm bg-muted px-1.5 text-2xs text-muted-foreground;
-    max-width: 96px;
-    line-height: 18px;
+    @apply shrink-0 truncate text-caption text-tertiary-text;
+    max-width: 112px;
   }
   .model-picker-current > svg {
     @apply shrink-0 text-muted-foreground;
@@ -598,11 +590,11 @@
     @apply bg-accent text-foreground;
   }
   .model-picker-subpanel {
-    @apply flex min-w-0 flex-col gap-2;
+    @apply flex min-w-0 flex-col gap-2 p-2;
     animation: composer-slide-in 180ms var(--ease-out) both;
   }
   .model-picker-routes {
-    @apply flex flex-wrap gap-1.5;
+    @apply flex flex-wrap gap-1.5 border-hairline border-t px-3.5 py-2.5;
   }
   .model-picker-routes > button {
     @apply inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-3 text-foreground text-xs;
@@ -626,7 +618,20 @@
   }
 
   .model-effort-options {
-    @apply m-0 min-w-0 rounded-lg border border-border bg-muted/60 px-3 pt-2 pb-2.5;
+    @apply m-0 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-0 border-hairline border-t px-3.5 pt-3 pb-3;
+  }
+  .model-effort-title {
+    @apply flex min-w-0 items-baseline gap-2;
+  }
+  .model-effort-title > span {
+    @apply shrink-0 font-medium text-meta text-secondary-text;
+  }
+  .model-effort-title > small {
+    @apply min-w-0 truncate text-caption text-tertiary-text;
+  }
+  .model-effort-options > .effort-slider,
+  .model-effort-options > .effort-slider-labels {
+    grid-column: 1 / -1;
   }
   .model-effort-options:disabled {
     opacity: 0.5;
@@ -635,7 +640,7 @@
     @apply mt-0 flex justify-end text-2xs text-secondary-text;
   }
   .effort-slider-heading output {
-    @apply rounded-sm bg-brand-soft px-1.5 font-semibold text-brand text-xs;
+    @apply rounded-full bg-brand-soft px-2 font-semibold text-brand text-caption tabular-nums;
     line-height: 20px;
   }
   .effort-slider {
@@ -645,7 +650,7 @@
   .effort-slider-track {
     @apply pointer-events-none absolute overflow-hidden rounded-full;
     inset: 13px 9px;
-    background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+    background: var(--active-wash);
   }
   .effort-slider-fill {
     @apply relative block h-full overflow-hidden rounded-full;
@@ -720,50 +725,36 @@
     @apply font-semibold text-brand;
   }
 
-  /* Narrow continuation editor escapes the scrolling composer. */
-  @media (max-width: 480px) {
-    .workbench-composer .composer-model:not(.composer-model-inline) > .composer-model-panel {
-      position: fixed;
-      inset: auto var(--space-3) calc(var(--icon-size-touch) + var(--icon-size-touch));
+  /* Narrow: the panel spans the card's full width, still anchored above
+     its top edge (the card is the positioning box in both views). */
+  @media (max-width: 640px) {
+    .composer-card .composer-model:not(.composer-model-inline) > .composer-model-panel {
+      left: 0;
+      right: 0;
       width: auto;
-      min-width: 0;
       max-width: none;
-      max-height: calc(
-        100dvh - var(--header-height) - var(--space-4) - var(--icon-size-touch) -
-        var(--icon-size-touch)
-      );
-      margin: 0;
-      overflow: auto;
-      overscroll-behavior: contain;
-      padding: var(--space-4);
+      max-height: min(420px, calc(100dvh - var(--header-height) - 200px));
       transform-origin: bottom center;
-    }
-  }
-  @media (max-width: 480px) {
-    /* New session (in flow): keep the panel under the card, never fixed. */
-    .composer-fresh .composer-model:not(.composer-model-inline) > .composer-model-panel {
-      position: absolute;
-      inset: calc(100% + 8px) 0 auto;
-      max-height: min(420px, 60dvh);
-      transform-origin: top center;
     }
   }
 
   /* ------------------------------------------------------------------ */
-  /* Context / usage meter under the card                                */
+  /* Context meter in the card header (design A): thin bar + percentage   */
   /* ------------------------------------------------------------------ */
   .composer-usage {
     --text-secondary: var(--composer-usage-ink);
-    --context-reserve-border: var(--error);
-    --context-reserve-stripe-1: color-mix(in srgb, var(--error) 50%, transparent);
-    --context-reserve-stripe-2: color-mix(in srgb, var(--error) 15%, transparent);
-    @apply relative w-full min-w-0;
-    margin-top: 2px;
+    /* Compaction reserve reads as a quiet, neutral tail (no alarm red). */
+    --context-reserve-border: var(--hairline-strong);
+    --context-reserve-stripe-1: color-mix(in srgb, var(--text-primary) 16%, transparent);
+    --context-reserve-stripe-2: color-mix(in srgb, var(--text-primary) 6%, transparent);
+    @apply ml-auto min-w-0 shrink;
+  }
+  /* The card is the positioning box: the panel opens above its top edge. */
+  .composer-card .composer-usage {
+    position: static;
   }
   .usage-trigger {
-    @apply flex w-full cursor-pointer list-none items-center gap-3 rounded-lg px-2.5 text-2xs text-secondary-text;
-    min-height: 28px;
-    padding-block: 4px;
+    @apply flex h-8 min-w-0 cursor-pointer list-none items-center gap-2 rounded-full px-2.5 text-caption text-tertiary-text;
     font-variant-numeric: tabular-nums;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -774,11 +765,11 @@
   }
   .usage-trigger:hover,
   .composer-usage[open] > .usage-trigger {
-    @apply bg-accent text-foreground;
+    @apply bg-hover-wash text-secondary-text;
   }
   .usage-trigger:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 1px;
+    outline: none;
+    box-shadow: var(--focus-halo);
   }
   @media (pointer: coarse) {
     .usage-trigger {
@@ -787,30 +778,43 @@
   }
   .usage-track {
     --usage-run-color: var(--accent);
-    @apply relative flex flex-1 overflow-hidden rounded-full;
-    min-width: 24px;
-    height: 4px;
-    background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+    @apply relative flex flex-none overflow-hidden rounded-full;
+    width: 48px;
+    height: 3px;
+    background: var(--active-wash);
     transition: background-color var(--duration-normal) ease;
   }
-  .usage-trigger:hover .usage-track {
-    height: 6px;
+  .usage-trigger .usage-reserve {
+    border-left: 0;
+    background: color-mix(in srgb, var(--text-primary) 10%, transparent);
   }
   .usage-footer-stats {
-    @apply flex shrink-0 items-center gap-1.5 whitespace-nowrap;
+    @apply flex min-w-0 shrink items-center gap-1.5 whitespace-nowrap;
   }
-  .usage-speed-chip,
-  .usage-cache-chip {
-    @apply rounded-sm border border-border bg-card px-1.5 font-mono text-2xs text-secondary-text;
-    line-height: 16px;
+  .usage-speed-chip {
+    @apply rounded-full bg-brand-soft px-1.5 font-medium text-brand text-caption;
+    line-height: 18px;
+  }
+  .usage-context-chip {
+    @apply font-medium text-secondary-text;
   }
   .usage-footer-total {
-    @apply font-medium font-mono text-foreground;
+    @apply text-tertiary-text;
+  }
+  .usage-footer-total::before {
+    content: "· ";
+  }
+  @media (max-width: 400px) {
+    .usage-context-label,
+    .usage-footer-total {
+      display: none;
+    }
   }
   .usage-panel {
-    @apply absolute right-0 z-[60] overflow-y-auto rounded-xl border border-border bg-popover text-foreground text-sm shadow-overlay;
+    @apply absolute right-0 z-[60] overflow-y-auto rounded-xl border border-hairline-strong bg-popover text-foreground text-sm shadow-floating;
     bottom: calc(100% + 8px);
-    width: min(360px, calc(100vw - 32px));
+    width: 360px;
+    max-width: 100%;
     max-height: min(62dvh, 540px);
     padding: 14px 16px;
     font-variant-numeric: tabular-nums;
@@ -819,9 +823,9 @@
   }
   @media (max-width: 640px) {
     .usage-panel {
-      position: fixed;
-      bottom: var(--space-6);
-      right: var(--space-4);
+      left: 0;
+      width: auto;
+      transform-origin: bottom center;
     }
   }
   .usage-panel-header {
@@ -954,7 +958,7 @@
   @media (max-width: 1000px) {
     .wb-app .wb-new-session .composer-fresh {
       width: calc(100% - 2 * var(--space-4));
-      margin-top: var(--space-6);
+      margin-bottom: var(--space-3);
     }
     .composer-project .composer-project-trigger {
       min-height: var(--touch-min-target);
@@ -978,10 +982,10 @@
     }
   }
   @media (max-width: 480px) {
+    /* No overflow clip here: the card's popovers open above it. The
+       textarea (200px) and queue (156px) carry their own caps. */
     .wb-app .workbench-composer {
       padding: var(--space-2) var(--space-3);
-      max-height: 60dvh;
-      overflow: auto;
     }
     .composer-card.composer-surface {
       @apply px-2.5 pt-2.5 pb-1.5;
@@ -992,7 +996,7 @@
   }
   @media (max-height: 700px) {
     .wb-app .wb-new-session .composer-fresh {
-      margin-top: var(--space-6);
+      margin-bottom: var(--space-4);
     }
   }
 }
