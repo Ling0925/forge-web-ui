@@ -25,6 +25,7 @@
 @import "tw-animate-css";
 @import "./surfaces/composer.css";
 @import "./surfaces/sidebar.css";
+@import "./surfaces/transcript.css";
 
 @source "../ui";
 @source "../showcase/UiGallery.tsx";
