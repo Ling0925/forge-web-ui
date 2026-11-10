@@ -742,6 +742,13 @@
     color: var(--accent);
   }
 
+  /* Failed rows keep the legacy error ink on icon, label and target. */
+  .wb-app
+    .tool-disclosure[data-status="failed"]
+    :is(.tool-disclosure-icon, .tool-disclosure-label, .tool-disclosure-target) {
+    color: var(--error);
+  }
+
   /* Opened: the row and its evidence become one hairline card. */
   .wb-app .tool-disclosure[data-expanded="true"]:not(:has(> .tool-disclosure-header:disabled)) {
     background: var(--surface-elevated);
