@@ -29,16 +29,8 @@ const { relativeTime, greeting, dateEyebrow } = await import(
   "../../src/renderer/lib/relative-time"
 );
 const { spring } = await import("../../src/renderer/lib/springs");
-const { WelcomeHero, WelcomeRecent } = await import(
+const { Welcome } = await import(
   "../../src/renderer/components/workbench/Welcome"
-);
-// Design A: App.tsx renders the greeting, the composer and the recent list
-// in one flow wrapper; the welcome parts are rendered together here.
-const Welcome = () => (
-  <>
-    <WelcomeHero />
-    <WelcomeRecent />
-  </>
 );
 const { SessionListItem } = await import(
   "../../src/renderer/components/workbench/SessionListItem"
@@ -199,6 +191,19 @@ describe("Welcome (design A)", () => {
 });
 
 describe("Sidebar (design A)", () => {
+  it("shows a dot only for states that need attention, in a fixed column", () => {
+    const dot = (status: string) =>
+      renderToStaticMarkup(
+        <SessionListItem session={summary("x", { status }) as never} />,
+      );
+    for (const status of ["running", "failed", "cancelled", "interrupted"])
+      expect(dot(status)).toContain(
+        `<span class="session-item-dot"><span class="wb-status-dot" data-status="${status}" role="img"`,
+      );
+    for (const status of ["completed", "idle"])
+      expect(dot(status)).toContain('<span class="session-item-dot"></span>');
+  });
+
   it("adds the row time outside the row button", () => {
     const html = renderToStaticMarkup(
       <SessionListItem
@@ -317,13 +322,75 @@ describe("Design A structure (App / Composer)", () => {
   const app = read("src/renderer/components/workbench/App.tsx");
   const composer = read("src/renderer/components/workbench/Composer.tsx");
 
-  it("keeps one Composer position across views inside the flow wrapper", () => {
+  it("docks the composer below the welcome scroll region at one tree position", () => {
     expect(app).toMatch(
-      /isNew \? "wb-main-flow wb-new-session-scroll" : "wb-main-flow"/,
+      /\{isNew \? <Welcome \/> : <Transcript \/>\}\s*<Composer isNew=\{isNew\} \/>/,
     );
-    expect(app).toContain('role: "region", "aria-label": "欢迎与最近任务"');
-    expect(app).toMatch(
-      /\{isNew \? <WelcomeHero \/> : <Transcript \/>\}\s*<Composer isNew=\{isNew\} \/>\s*\{isNew && <WelcomeRecent \/>\}/,
+    expect(app).not.toContain("wb-main-flow");
+    expect(composerCss).not.toContain("wb-main-flow");
+    const welcome = read("src/renderer/components/workbench/Welcome.tsx");
+    expect(welcome).toContain('role="region"');
+    expect(welcome).toContain('aria-label="欢迎与最近任务"');
+    expect(welcome).toMatch(/wb-new-session-scroll[^"]*overflow-x-hidden/);
+    // Greeting + recent list are one block centred above the docked card.
+    expect(welcome).toMatch(/wb-new-session-intro my-auto/);
+    // 24px from the bottom edge, as before design A.
+    expect(stripComments(composerCss)).toMatch(
+      /\.wb-app \.wb-new-session \.composer-fresh \{\s*@apply relative z-20 mx-auto mt-0 mb-6 /,
+    );
+  });
+
+  it("keeps recent titles inside the column at any width", () => {
+    const welcome = read("src/renderer/components/workbench/Welcome.tsx");
+    expect(welcome).toContain("grid-cols-[minmax(0,1fr)]");
+    expect(welcome).toMatch(/"welcome-task group relative flex[^"]*min-w-0/);
+    expect(welcome).toMatch(
+      /welcome-task-title block truncate[^"]*line-clamp-2/,
+    );
+  });
+
+  it("anchors every composer popover above the card top edge", () => {
+    const code = stripComments(composerCss);
+    const dropdown = read(
+      "src/renderer/components/workbench/ComposerDropdown.tsx",
+    );
+    // The dropdown wrapper is not a positioning box, so its menu anchors to
+    // the card (bottom: 100% + 8px of the card, not of the trigger).
+    expect(dropdown).toContain('"composer-dropdown inline-flex"');
+    expect(dropdown).toMatch(
+      /composer-dropdown-menu absolute bottom-\[calc\(100%\+8px\)\] left-0[^"]*max-\[640px\]:right-0/,
+    );
+    expect(code).not.toMatch(
+      /composer-model-panel \{[^}]*top: calc\(100% \+ 8px\)/,
+    );
+    expect(code).not.toMatch(/composer-model-panel \{\s*position: fixed/);
+    expect(code).toMatch(
+      /@media \(max-width: 640px\) \{\s*\.composer-card \.composer-model:not\(\.composer-model-inline\) > \.composer-model-panel \{\s*left: 0;\s*right: 0;\s*width: auto;/,
+    );
+    expect(code).toMatch(
+      /\.composer-card \.composer-usage \{\s*position: static;/,
+    );
+    expect(code).toMatch(/\.usage-panel \{[^}]*bottom: calc\(100% \+ 8px\);/);
+  });
+
+  it("shows the context meter in the card header without alarm stripes", () => {
+    const card = composer.slice(
+      composer.indexOf('"composer-card composer-surface"'),
+    );
+    const header = card.slice(
+      card.indexOf("composer-card-header"),
+      card.indexOf("composer-input-row"),
+    );
+    expect(header).toContain("<UsagePopover");
+    expect(composer.match(/<UsagePopover/g)).toHaveLength(1);
+    const usage = read("src/renderer/components/workbench/UsagePopover.tsx");
+    expect(usage).toContain('aria-label="上下文与用量"');
+    expect(usage).toContain('className="usage-context-chip"');
+    expect(usage).toContain('aria-label="用量详情"');
+    const code = stripComments(composerCss);
+    expect(code).toMatch(/--context-reserve-border: var\(--hairline-strong\);/);
+    expect(code).not.toMatch(
+      /--context-reserve-[a-z0-9-]+: [^;]*var\(--error\)/,
     );
   });
 
@@ -335,6 +402,7 @@ describe("Design A structure (App / Composer)", () => {
       card.indexOf("composer-input-row"),
     );
     expect(card).toContain("<WorkspacePicker");
+    expect(card).not.toContain("(isNew || (running && runStartedAt)) &&");
     expect(card).toContain("<RunTimer startedAt={runStartedAt} />");
     expect(composer).not.toContain("iconOnly");
     // Logic lives in the controller hook; the view only renders.

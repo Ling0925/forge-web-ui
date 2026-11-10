@@ -94,44 +94,59 @@ function useRecent() {
 }
 
 /**
- * Design A welcome (design-v2/spec.md §3.A), part 1: date eyebrow and the
- * two-line greeting headline above the composer. Every field is real: the
- * local clock only (no user name is known, so none is shown).
+ * Design A welcome (design-v2/spec.md §3.A). The composer is docked below
+ * this scroll region (App.tsx keeps it at one tree position), so greeting
+ * and recent tasks are one block centred in the space above it: no empty
+ * band between the headline and the input, whatever the list length.
  */
-export function WelcomeHero() {
+export function Welcome() {
+  return (
+    <div
+      className="wb-new-session-scroll flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden overscroll-contain"
+      // biome-ignore lint/a11y/useSemanticElements: the scroll owner stays a named region div (composer-surface test contract); the intro inside it is a <section>.
+      role="region"
+      aria-label="欢迎与最近任务"
+    >
+      <section
+        className={cn(
+          "wb-new-session-intro my-auto flex min-w-0 shrink-0 flex-col py-10 max-[1000px]:py-6 [@media(max-height:700px)]:py-4",
+          column,
+        )}
+        aria-labelledby="welcome-title"
+      >
+        <WelcomeHeading />
+        <WelcomeRecent />
+      </section>
+    </div>
+  );
+}
+
+/** Date eyebrow and the two-line greeting (local clock only; no user name). */
+function WelcomeHeading() {
   const now = new Date();
   return (
-    <section
-      className={cn(
-        "wb-new-session-intro flex shrink-0 flex-col pt-[clamp(32px,11vh,120px)] max-[1000px]:pt-6 [@media(max-height:700px)]:pt-6",
-        column,
-      )}
-      aria-labelledby="welcome-title"
-    >
-      <div className="welcome-heading fade-in-0 slide-in-from-bottom-1 flex animate-in flex-col gap-3 duration-300 ease-out">
-        <p className="m-0 inline-flex items-center gap-2 font-medium text-brand text-meta">
-          <ForgeMark className="welcome-mark size-5" />
-          <span>{dateEyebrow(now)}</span>
-        </p>
-        <h2
-          id="welcome-title"
-          className="m-0 text-balance font-semibold text-foreground text-hero max-[640px]:text-[length:var(--text-hero-narrow)] max-[640px]:leading-[var(--leading-hero-narrow)]"
-        >
-          {greeting(now)}。
-          <br />
-          <span className="text-tertiary-text">今天，想做点什么？</span>
-        </h2>
-      </div>
-    </section>
+    <div className="welcome-heading fade-in-0 slide-in-from-bottom-1 flex animate-in flex-col gap-3 duration-300 ease-out">
+      <p className="m-0 inline-flex items-center gap-2 font-medium text-brand text-meta">
+        <ForgeMark className="welcome-mark size-5" />
+        <span>{dateEyebrow(now)}</span>
+      </p>
+      <h2
+        id="welcome-title"
+        className="m-0 text-balance font-semibold text-foreground text-hero max-[640px]:text-[length:var(--text-hero-narrow)] max-[640px]:leading-[var(--leading-hero-narrow)]"
+      >
+        {greeting(now)}。
+        <br />
+        <span className="text-tertiary-text">今天，想做点什么？</span>
+      </h2>
+    </div>
   );
 }
 
 /**
- * Design A welcome, part 2: the hairline list of recent tasks below the
- * composer. Each row shows the session's real status, title, workspace and
- * updatedAt.
+ * Hairline list of recent tasks. Each row shows the session's real status,
+ * title, workspace and updatedAt.
  */
-export function WelcomeRecent() {
+function WelcomeRecent() {
   const { selectSession } = useWorkbenchActions();
   const { isSessionsLoading, recent } = useRecent();
   // One shared highlight glides between rows on hover / keyboard focus.
@@ -140,10 +155,7 @@ export function WelcomeRecent() {
   const now = new Date();
   return (
     <section
-      className={cn(
-        "welcome-recent shrink-0 pt-12 pb-10 max-[640px]:pt-8 [@media(max-height:700px)]:pt-6",
-        column,
-      )}
+      className="welcome-recent mt-10 min-w-0 max-[640px]:mt-7 [@media(max-height:700px)]:mt-5"
       aria-labelledby="recent-tasks-title"
       aria-busy={isSessionsLoading}
     >
@@ -165,7 +177,7 @@ export function WelcomeRecent() {
       </div>
       {recent.length > 0 ? (
         <ul
-          className="welcome-task-list m-0 grid list-none p-0"
+          className="welcome-task-list m-0 grid min-w-0 list-none grid-cols-[minmax(0,1fr)] p-0"
           onPointerLeave={() => setActive(null)}
         >
           {recent.map((session, index) => {
@@ -175,7 +187,7 @@ export function WelcomeRecent() {
             return (
               <li
                 key={session.id}
-                className="relative fade-in-0 slide-in-from-bottom-1 animate-in fill-mode-backwards duration-200 ease-out"
+                className="relative min-w-0 fade-in-0 slide-in-from-bottom-1 animate-in fill-mode-backwards duration-200 ease-out"
                 style={{ animationDelay: `${80 + index * 40}ms` }}
               >
                 {active === session.id && (
@@ -188,7 +200,7 @@ export function WelcomeRecent() {
                 )}
                 <button
                   className={cn(
-                    "welcome-task group relative flex min-h-11 w-full cursor-pointer items-center gap-3.5 rounded-item border-0 bg-transparent px-3 py-3 text-left font-[inherit] text-foreground max-[640px]:px-1",
+                    "welcome-task group relative flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-3.5 rounded-item border-0 bg-transparent px-3 py-3 text-left font-[inherit] text-foreground max-[640px]:px-1",
                     "outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--focus-ring)]",
                   )}
                   type="button"
@@ -216,7 +228,7 @@ export function WelcomeRecent() {
                     />
                   </span>
                   <span className="welcome-task-content min-w-0 flex-1">
-                    <span className="welcome-task-title block truncate font-medium text-ui">
+                    <span className="welcome-task-title block truncate font-medium text-ui max-[640px]:line-clamp-2 max-[640px]:whitespace-normal max-[640px]:[overflow-wrap:anywhere]">
                       {session.title}
                     </span>
                     <span className="welcome-task-meta mt-0.5 flex min-w-0 items-center gap-2 text-meta text-tertiary-text">

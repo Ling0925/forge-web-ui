@@ -386,28 +386,47 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
         {/* One integrated composer card: the prompt row and the control row are
             two bands of a single rounded surface, so the text field, the send
             button and the mode/model controls share one silhouette instead of
-            reading as three detached strips. The usage meter stays directly
-            beneath the card, inset to the card's text edge. */}
+            reading as three detached strips. */}
         <div className="composer-card composer-surface">
           {/* Design A card header: the workspace this task runs in (new
               session: the picker; no git branch is shown because no source
-              exposes one) and, while a turn runs, its elapsed time. */}
-          {(isNew || (running && runStartedAt)) && (
-            <div className="composer-card-header">
-              {isNew && (
-                <WorkspacePicker
-                  workspace={workspace}
-                  recentWorkspaces={state.sessions
-                    .map((session) => sessionOriginWorkspace(session))
-                    .filter(Boolean)}
-                  chooseWorkspace={chooseWorkspace}
-                  onChange={setWorkspace}
-                  onDone={() => promptRef.current?.focus()}
-                />
-              )}
-              {running && runStartedAt && <RunTimer startedAt={runStartedAt} />}
-            </div>
-          )}
+              exposes one), while a turn runs its elapsed time, and the
+              context meter. */}
+          <div className="composer-card-header">
+            {isNew && (
+              <WorkspacePicker
+                workspace={workspace}
+                recentWorkspaces={state.sessions
+                  .map((session) => sessionOriginWorkspace(session))
+                  .filter(Boolean)}
+                chooseWorkspace={chooseWorkspace}
+                onChange={setWorkspace}
+                onDone={() => promptRef.current?.focus()}
+              />
+            )}
+            {running && runStartedAt && <RunTimer startedAt={runStartedAt} />}
+            {/* Context meter: thin bar + percentage at the header's right;
+                its breakdown panel opens above the card. */}
+            <UsagePopover
+              run={showActivity ? (displayRun ?? null) : null}
+              closing={activityClosing}
+              selection={{
+                model,
+                sourceId: providerSourceId,
+                metadata: selectedMetadata,
+              }}
+              snapshot={
+                !isNew && state.activeSnapshot?.id === state.activeSessionId
+                  ? state.activeSnapshot
+                  : undefined
+              }
+              events={
+                !isNew && state.activeSnapshot?.id === state.activeSessionId
+                  ? state.activeSnapshot.events
+                  : []
+              }
+            />
+          </div>
           <div className="composer-input-row">
             <div className="composer-prompt">
               <label htmlFor={promptId} className="visually-hidden">
@@ -808,25 +827,6 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
             </div>
           </div>
         </div>
-        <UsagePopover
-          run={showActivity ? (displayRun ?? null) : null}
-          closing={activityClosing}
-          selection={{
-            model,
-            sourceId: providerSourceId,
-            metadata: selectedMetadata,
-          }}
-          snapshot={
-            !isNew && state.activeSnapshot?.id === state.activeSessionId
-              ? state.activeSnapshot
-              : undefined
-          }
-          events={
-            !isNew && state.activeSnapshot?.id === state.activeSessionId
-              ? state.activeSnapshot.events
-              : []
-          }
-        />
       </div>
     </form>
   );

@@ -373,8 +373,11 @@ export function UsagePopover({
               {formatTps(speedMetrics.avgTps, speedMetrics.estimated)}
             </span>
           )}
-          <span className="usage-cache-chip" title="最近请求缓存命中率">
-            CH {percent(usage.latestCache)}
+          {/* Design A: the context share as a percentage. The cache-hit rate
+              (CH) stays in the panel's 缓存 section. */}
+          <span className="usage-context-chip">
+            <span className="usage-context-label">上下文 </span>
+            {ratio !== undefined ? percent(ratio) : "—"}
           </span>
           <span className="usage-footer-total">
             {windowTokens

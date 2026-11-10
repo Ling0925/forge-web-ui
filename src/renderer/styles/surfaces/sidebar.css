@@ -195,17 +195,20 @@
   }
 
   .wb-app .session-folder + .session-folder {
-    margin-top: var(--space-3);
+    margin-top: var(--space-4);
   }
 
   .wb-app .session-folder-header-row {
     border-radius: var(--radius-item);
   }
 
+  /* Group label (design A): a quiet 12px caption aligned with the row dot
+     column. The collapse caret and the count sit at the end and appear on
+     hover / keyboard focus, or stay while the group is collapsed. */
   .wb-app .session-folder-header {
     gap: var(--space-1-5);
     height: var(--space-7);
-    padding: 0 var(--space-1) 0 var(--space-2);
+    padding: 0 var(--space-2) 0 var(--space-3);
     border-radius: var(--radius-item);
     color: var(--text-tertiary);
     font-size: var(--text-caption);
@@ -226,13 +229,37 @@
   }
 
   .wb-app .session-folder-caret {
+    order: 3;
     color: var(--text-muted);
+    opacity: 0;
+    transition:
+      opacity var(--duration-fast) ease,
+      transform var(--duration-fast) ease;
   }
 
   .wb-app .session-folder-count {
+    order: 2;
     font-size: var(--text-caption);
     font-weight: 400;
     color: var(--text-muted);
+    opacity: 0;
+    transition: opacity var(--duration-fast) ease;
+  }
+
+  .wb-app .session-folder-header-row:hover .session-folder-caret,
+  .wb-app .session-folder-header-row:hover .session-folder-count,
+  .wb-app .session-folder-header:focus-visible .session-folder-caret,
+  .wb-app .session-folder-header:focus-visible .session-folder-count,
+  .wb-app .session-folder-header.is-collapsed .session-folder-caret,
+  .wb-app .session-folder-header.is-collapsed .session-folder-count {
+    opacity: 1;
+  }
+
+  @media (pointer: coarse) {
+    .wb-app .session-folder-caret,
+    .wb-app .session-folder-count {
+      opacity: 1;
+    }
   }
 
   .wb-app .session-folder-create-btn,
@@ -253,7 +280,7 @@
   }
 
   .wb-app .session-folder-body {
-    gap: 1px;
+    gap: 2px;
     padding: 2px 0 var(--space-1);
   }
 
@@ -297,18 +324,32 @@
     background: var(--hover-wash);
   }
 
-  /* Selected: a lifted card on the shared plane (no tinted block). */
+  /* Selected: a lifted card on the shared plane (no tinted block): card
+     surface, hairline ring and a soft raised shadow. */
   .wb-app .session-item.is-active {
     background: var(--surface-elevated);
     border-color: var(--hairline-strong);
-    box-shadow: var(--shadow-hairline);
+    box-shadow: var(--shadow-raised);
+  }
+
+  .wb-app .session-item.is-active:hover {
+    background: var(--surface-elevated);
   }
 
   .wb-app .session-item-main {
     gap: var(--space-2-5);
     height: 30px;
-    padding: 0 var(--space-2-5);
+    padding: 0 var(--space-2) 0 var(--space-3);
     border-radius: var(--radius-item);
+  }
+
+  /* Fixed status column: titles align whether or not a row has a dot. */
+  .wb-app .session-item-dot {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 6px;
   }
 
   .wb-app .session-item-main:focus-visible {
@@ -334,7 +375,7 @@
   }
 
   .wb-app .session-item-time {
-    padding-right: var(--space-2-5);
+    padding-right: var(--space-3);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
     color: var(--text-muted);
@@ -342,6 +383,7 @@
 
   .wb-app .session-item[data-status="running"] .session-item-time {
     color: var(--accent);
+    font-weight: 500;
   }
 
   .wb-app .session-item .wb-status-dot {
@@ -368,7 +410,7 @@
   .wb-app .sidebar-model-status {
     gap: var(--space-2-5);
     height: var(--space-9);
-    padding: 0 var(--space-2);
+    padding: 0 var(--space-2) 0 var(--space-3);
     border: 0;
     border-radius: var(--radius-control);
     background: transparent;
