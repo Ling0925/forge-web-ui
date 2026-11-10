@@ -37,29 +37,29 @@ export function readChartTheme(): ChartTheme {
   const palette = cssVar(
     root,
     "--chart-series",
-    "#a54f35, #55684d, #975a06, #7d5a7c, #68665f",
+    "#4f45db, #027e47, #b46d10, #ac43a5, #0070a6",
   )
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-  const heat = cssVar(root, "--chart-heat", "#f6f3ee, #dc9477, #7a3520")
+  const heat = cssVar(root, "--chart-heat", "#f3f4fd, #969cee, #3d2fb6")
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
   return {
-    ink: cssVar(root, "--text-primary", "#292824"),
-    muted: cssVar(root, "--text-secondary", "#68665f"),
-    faint: cssVar(root, "--text-muted", "#716e66"),
-    surface: cssVar(root, "--surface-elevated", dark ? "#222221" : "#ffffff"),
-    border: cssVar(root, "--border-subtle", dark ? "#2b2b28" : "#e5e3dc"),
-    accent: cssVar(root, "--accent", "#a54f35"),
-    success: cssVar(root, "--success", "#226d40"),
-    warning: cssVar(root, "--warning", "#975a06"),
-    error: cssVar(root, "--error", "#b82420"),
-    palette: palette.length ? palette : ["#a54f35"],
-    positive: cssVar(root, "--error", "#b82420"),
-    negative: cssVar(root, "--success", "#226d40"),
-    heat: heat.length >= 2 ? heat : ["#f6f3ee", "#a54f35"],
+    ink: cssVar(root, "--text-primary", "#15171e"),
+    muted: cssVar(root, "--text-secondary", "#444751"),
+    faint: cssVar(root, "--text-muted", "#5f636e"),
+    surface: cssVar(root, "--surface-elevated", dark ? "#16171d" : "#ffffff"),
+    border: cssVar(root, "--border-subtle", dark ? "#2a2b33" : "#e6e7ec"),
+    accent: cssVar(root, "--accent", "#4f45db"),
+    success: cssVar(root, "--success", "#027e47"),
+    warning: cssVar(root, "--warning", "#925601"),
+    error: cssVar(root, "--error", "#d61b2a"),
+    palette: palette.length ? palette : ["#4f45db"],
+    positive: cssVar(root, "--error", "#d61b2a"),
+    negative: cssVar(root, "--success", "#027e47"),
+    heat: heat.length >= 2 ? heat : ["#f3f4fd", "#4f45db"],
     fontFamily: cssVar(
       root,
       "--font-sans",
@@ -88,19 +88,19 @@ export function useChartTheme(): ChartTheme {
 }
 
 const FALLBACK_THEME: ChartTheme = {
-  ink: "#292824",
-  muted: "#68665f",
-  faint: "#716e66",
+  ink: "#15171e",
+  muted: "#444751",
+  faint: "#5f636e",
   surface: "#ffffff",
-  border: "#e5e3dc",
-  accent: "#a54f35",
-  success: "#226d40",
-  warning: "#975a06",
-  error: "#b82420",
-  palette: ["#a54f35", "#55684d", "#975a06", "#7d5a7c", "#68665f"],
-  positive: "#b82420",
-  negative: "#226d40",
-  heat: ["#f6f3ee", "#dc9477", "#7a3520"],
+  border: "#e6e7ec",
+  accent: "#4f45db",
+  success: "#027e47",
+  warning: "#925601",
+  error: "#d61b2a",
+  palette: ["#4f45db", "#027e47", "#b46d10", "#ac43a5", "#0070a6"],
+  positive: "#d61b2a",
+  negative: "#027e47",
+  heat: ["#f3f4fd", "#969cee", "#3d2fb6"],
   fontFamily: "system-ui, sans-serif",
   dark: false,
 };

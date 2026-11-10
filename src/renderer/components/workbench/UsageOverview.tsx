@@ -223,29 +223,61 @@ export function UsageOverview({
       document.documentElement.getAttribute("data-theme") === "dark" ||
       document.documentElement.dataset.theme === "dark";
 
-    // Palette aligned with DESIGN.md Warm Light-First & Charcoal Dark tokens
-    const bgCenter = isDark ? "#20221f" : "#f7f6f1";
-    const bgEdge = isDark ? "#151614" : "#efeee8";
-    const orbitRingStroke = isDark
-      ? "rgba(170, 167, 159, 0.16)"
-      : "rgba(104, 102, 95, 0.16)";
-    const activeTetherStroke = isDark
-      ? "rgba(220, 148, 119, 0.55)"
-      : "rgba(165, 79, 53, 0.48)";
-    const textPrimary = isDark ? "#eeede8" : "#292824";
-    const textSecondary = isDark ? "#aaa79f" : "#68665f";
-    const forgeCoreMain = isDark ? "#dc9477" : "#a54f35";
-    const forgeCoreGlow = isDark
-      ? "rgba(220, 148, 119, 0.34)"
-      : "rgba(165, 79, 53, 0.24)";
-    const providerFill = isDark ? "#2c332a" : "#e7ece3";
-    const providerStroke = isDark ? "#8fad82" : "#55684d";
-    const modelStroke = isDark ? "#b89f8d" : "#8c7362";
-    const mainConduitColor = isDark ? "#dc9477" : "#a54f35";
-    const subagentConduitColor = isDark ? "#56b881" : "#226d40";
+    // Canvas colours come from workspace-theme.css (--topology-*, Iris
+    // palette, light + dark). The literals are only fallbacks for an
+    // environment without the stylesheet.
+    const rootStyle = getComputedStyle(document.documentElement);
+    const themed = (name: string, light: string, dark: string) =>
+      rootStyle.getPropertyValue(name).trim() || (isDark ? dark : light);
+    const bgCenter = themed("--topology-bg-center", "#fbfbfd", "#17181e");
+    const bgEdge = themed("--topology-bg-edge", "#eff0f5", "#0f1015");
+    const orbitRingStroke = themed(
+      "--topology-orbit",
+      "rgb(95 99 110 / 16%)",
+      "rgb(155 158 168 / 16%)",
+    );
+    const activeTetherStroke = themed(
+      "--topology-tether",
+      "rgb(79 69 219 / 45%)",
+      "rgb(155 160 255 / 55%)",
+    );
+    const textPrimary = themed("--text-primary", "#15171e", "#ecedf0");
+    const textSecondary = themed("--text-secondary", "#444751", "#bcbdc4");
+    const forgeCoreMain = themed("--topology-core", "#4f45db", "#9ba0ff");
+    const forgeCoreGlow = themed(
+      "--topology-core-glow",
+      "rgb(79 69 219 / 22%)",
+      "rgb(155 160 255 / 30%)",
+    );
+    const providerFill = themed(
+      "--topology-provider-fill",
+      "#e6f1f8",
+      "#16232e",
+    );
+    const providerStroke = themed("--topology-provider", "#0070a6", "#5cb4ef");
+    const modelStroke = themed("--topology-model", "#ac43a5", "#dc89d5");
+    const mainConduitColor = forgeCoreMain;
+    const subagentConduitColor = themed(
+      "--topology-subagent",
+      "#027e47",
+      "#59c886",
+    );
+    const labelFill = themed(
+      "--topology-label-bg",
+      "rgb(255 255 255 / 90%)",
+      "rgb(22 23 29 / 88%)",
+    );
+    const labelStroke = themed(
+      "--topology-label-border",
+      "rgb(95 99 110 / 24%)",
+      "rgb(155 158 168 / 26%)",
+    );
     const fontSans =
-      '"Geist", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif';
-    const fontMono = '"Geist Mono", "SFMono-Regular", monospace';
+      rootStyle.getPropertyValue("--font-sans").trim() ||
+      'system-ui, "PingFang SC", "Microsoft YaHei", sans-serif';
+    const fontMono =
+      rootStyle.getPropertyValue("--font-mono").trim() ||
+      'ui-monospace, "SF Mono", Menlo, monospace';
 
     // Background radial gradient
     const bgGrad = ctx.createRadialGradient(
@@ -739,14 +771,10 @@ export function UsageOverview({
 
         ctx.beginPath();
         ctx.roundRect(pillX, pillY, pillW, pillH, 999);
-        ctx.fillStyle = isDark
-          ? "rgba(28, 29, 27, 0.88)"
-          : "rgba(250, 249, 245, 0.9)";
+        ctx.fillStyle = labelFill;
         ctx.fill();
         ctx.lineWidth = 1;
-        ctx.strokeStyle = hasActive
-          ? activeTetherStroke
-          : "rgba(140, 115, 98, 0.28)";
+        ctx.strokeStyle = hasActive ? activeTetherStroke : labelStroke;
         ctx.stroke();
 
         ctx.textAlign = "center";

@@ -5,10 +5,6 @@
 
 .usage-dashboard-overlay {
   --chart-completion: var(--accent);
-  --chart-cached: #226d40;
-  --chart-uncached: #3b6998;
-  --chart-cost: #975a06;
-  --chart-speed: #55684d;
   --chart-failed: var(--error);
 
   position: fixed;
@@ -29,10 +25,6 @@
 
 [data-theme="dark"] .usage-dashboard-overlay {
   --chart-completion: var(--accent);
-  --chart-cached: #56b881;
-  --chart-uncached: #6ca6d9;
-  --chart-cost: #f0be65;
-  --chart-speed: #8fad82;
   --chart-failed: var(--error);
 }
 
@@ -1699,21 +1691,12 @@
   border: 1px solid var(--border-subtle);
   background: radial-gradient(
       circle at 50% 48%,
-      rgba(85, 104, 77, 0.08),
+      var(--topology-stage-glow),
       transparent 68%
     ), var(--surface-soft);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-[data-theme="dark"] .usage-3d-canvas-Stage,
-[data-theme="dark"] .usage-3d-canvas-stage {
-  background: radial-gradient(
-      circle at 50% 48%,
-      rgba(143, 173, 130, 0.12),
-      transparent 68%
-    ), #181b17;
 }
 
 .usage-3d-canvas {
@@ -1766,11 +1749,11 @@
 }
 
 .usage-3d-dot.is-provider {
-  background: #55684d;
+  background: var(--topology-provider);
 }
 
 .usage-3d-dot.is-model {
-  background: #8c7362;
+  background: var(--topology-model);
 }
 
 .usage-3d-dot.is-session {
@@ -1778,7 +1761,7 @@
 }
 
 .usage-3d-dot.is-subagent {
-  background: #226d40;
+  background: var(--topology-subagent);
 }
 
 .usage-3d-stage-hint {

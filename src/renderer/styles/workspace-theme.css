@@ -118,6 +118,26 @@
   --chart-series: #4f45db, #027e47, #b46d10, #ac43a5, #0070a6, #0f9293, #5f636e;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
   --chart-heat: #f3f4fd, #969cee, #3d2fb6;
+  /* Usage dashboard (phase 6): chart series for the token / cost / speed
+     charts and the 3D topology canvas (read by UsageOverview at draw time),
+     on the Iris palette. */
+  --chart-cached: #027e47;
+  --chart-uncached: #0070a6;
+  --chart-cost: #925601;
+  --chart-speed: #0f9293;
+  --topology-bg-center: #fbfbfd;
+  --topology-bg-edge: #eff0f5;
+  --topology-orbit: rgb(95 99 110 / 16%);
+  --topology-tether: rgb(79 69 219 / 45%);
+  --topology-core: #4f45db;
+  --topology-core-glow: rgb(79 69 219 / 22%);
+  --topology-provider-fill: #e6f1f8;
+  --topology-provider: #0070a6;
+  --topology-model: #ac43a5;
+  --topology-subagent: #027e47;
+  --topology-label-bg: rgb(255 255 255 / 90%);
+  --topology-label-border: rgb(95 99 110 / 24%);
+  --topology-stage-glow: rgb(79 69 219 / 6%);
 }
 
 [data-theme="dark"] {
@@ -226,6 +246,24 @@
   --chart-series: #9ba0ff, #59c886, #eeb154, #dc89d5, #5cb4ef, #5ecbcb, #9b9ea8;
   /* Single-hue ramp for heatmap visualMap (no red-green cross-hue blend). */
   --chart-heat: #14161c, #6262cc, #c7cdff;
+  /* Usage dashboard (phase 6), dark. */
+  --chart-cached: #59c886;
+  --chart-uncached: #5cb4ef;
+  --chart-cost: #eeb154;
+  --chart-speed: #5ecbcb;
+  --topology-bg-center: #17181e;
+  --topology-bg-edge: #0f1015;
+  --topology-orbit: rgb(155 158 168 / 16%);
+  --topology-tether: rgb(155 160 255 / 55%);
+  --topology-core: #9ba0ff;
+  --topology-core-glow: rgb(155 160 255 / 30%);
+  --topology-provider-fill: #16232e;
+  --topology-provider: #5cb4ef;
+  --topology-model: #dc89d5;
+  --topology-subagent: #59c886;
+  --topology-label-bg: rgb(22 23 29 / 88%);
+  --topology-label-border: rgb(155 158 168 / 26%);
+  --topology-stage-glow: rgb(155 160 255 / 10%);
 }
 
 .forge-mark {
