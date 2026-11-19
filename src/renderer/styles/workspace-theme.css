@@ -26,10 +26,10 @@
   --text-muted: #57575f;
   --composer-usage-ink: #52525b;
   /* Context-window segments: 4 distinct restrained telemetry hues (>= 3:1). */
-  --context-instructions: #4f46b8;
-  --context-memory: #9d3c72;
-  --context-conversation: #1d7a65;
-  --context-tools: #a66315;
+  --context-instructions: #55684d;
+  --context-memory: #7d5a7c;
+  --context-conversation: #a65036;
+  --context-tools: #975a06;
   --text-tertiary: #5c5c64;
   --text-disabled: #a1a1aa;
 
@@ -173,10 +173,10 @@
   --text-muted: #95959e;
   --composer-usage-ink: #a8a8b2;
   /* Context-window segments: 4 distinct restrained telemetry hues (>= 3:1). */
-  --context-instructions: #8e89e8;
-  --context-memory: #d47eb0;
-  --context-conversation: #4fb39b;
-  --context-tools: #d49a52;
+  --context-instructions: #8fad82;
+  --context-memory: #c39bc1;
+  --context-conversation: #dc9477;
+  --context-tools: #f0be65;
   --text-tertiary: #909099;
   --text-disabled: #52525b;
 
