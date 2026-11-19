@@ -1,8 +1,9 @@
 /*
- * Composer Command Deck — Forge Agent Harness surface.
- * Architectural 12px frame with hairline-separated telemetry header,
- * crisp prompt deck, hairline-separated control bar, and rounded-square
- * execute trigger. Colors come only from workspace-theme.css tokens.
+ * Composer Command Surface — Restrained Monochrome Agent Harness.
+ * One seamless surface with zero internal divider clutter: quiet top metadata
+ * strip (workspace / timer / compact context meter), generous prompt area,
+ * and whisper-quiet bottom controls that recede while typing.
+ * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
  */
 @layer components {
   /* ------------------------------------------------------------------ */
@@ -31,21 +32,22 @@
     width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
   }
 
-  /* Telemetry bar at the top of the command deck. */
+  /* Quiet top metadata strip: no internal divider line, blends into the card. */
   .composer-card-header {
-    @apply -mx-3 -mt-2.5 mb-2 flex min-w-0 items-center gap-2 border-hairline border-b px-3 py-1.5;
+    @apply mb-0.5 flex min-w-0 items-center gap-2 px-0.5;
+    min-height: 24px;
   }
   .composer-fresh .composer-card-header {
-    @apply -mx-4 -mt-3.5 mb-2.5 px-4 py-2;
+    @apply mb-1;
   }
   .composer-run-timer + .composer-usage {
     margin-left: 0;
   }
   .composer-run-timer {
-    @apply ml-auto inline-flex shrink-0 items-center gap-1.5 font-mono font-medium text-brand text-caption tabular-nums;
+    @apply ml-auto inline-flex shrink-0 items-center gap-1.5 font-mono font-medium text-secondary-text text-caption tabular-nums;
   }
   .composer-run-timer-dot {
-    @apply size-1.5 rounded-full bg-brand;
+    @apply size-1.5 rounded-full bg-foreground;
     animation: composer-timer-pulse 1.5s var(--ease-soft) infinite;
   }
   .composer-inner {
@@ -56,22 +58,22 @@
     @apply gap-1.5;
   }
 
-  /* Command deck frame: crisp 12px geometry, architectural hairline edge. */
+  /* Single unified composer surface: crisp hairline edge, calm elevation. */
   .composer-surface {
     @apply rounded-composer border border-hairline-strong bg-card;
-    box-shadow: var(--shadow-raised), var(--edge-highlight);
+    box-shadow: var(--shadow-raised);
     transition:
       border-color var(--duration-normal) var(--ease-soft),
       box-shadow var(--duration-normal) var(--ease-soft);
   }
   .composer-card.composer-surface {
-    @apply relative flex min-w-0 flex-col gap-0.5 px-3 pt-2.5 pb-2;
+    @apply relative flex min-w-0 flex-col gap-1 px-3 pt-2 pb-2;
   }
   .composer-surface:hover {
     border-color: var(--border-control);
   }
   .composer-surface:focus-within {
-    border-color: color-mix(in srgb, var(--accent) 60%, var(--border-control));
+    border-color: var(--focus-ring);
     box-shadow:
       var(--shadow-raised),
       0 0 0 3px var(--focus-halo);
@@ -79,25 +81,24 @@
   .composer-surface:has(.composer-textarea:focus-visible) {
     border-color: var(--focus-ring);
   }
-  /* Plan mode keeps the same quiet monochrome focus treatment. */
   .composer-surface:has(.composer-mode-arrow.is-plan):focus-within {
     border-color: var(--focus-ring);
     box-shadow:
       var(--shadow-raised),
       0 0 0 3px var(--focus-halo);
   }
-  /* Active execution telemetry sweep along the top edge of the deck. */
+  /* Subtle monochrome progress sweep along the top edge while running. */
   .composer-card.composer-surface::before {
     content: "";
     position: absolute;
     top: -1px;
     left: var(--space-3);
     right: var(--space-3);
-    height: 2px;
+    height: 1.5px;
     border-radius: var(--radius-full);
-    background: linear-gradient(90deg, transparent, var(--accent), transparent)
+    background: linear-gradient(90deg, transparent, var(--text-muted), transparent)
       no-repeat;
-    background-size: 42% 100%;
+    background-size: 40% 100%;
     background-position: -66.7% 0;
     opacity: 0;
     pointer-events: none;
@@ -109,11 +110,11 @@
       .composer-submit[aria-busy="true"]
     )::before {
     opacity: 1;
-    animation: composer-sweep 1.5s var(--ease-soft) infinite;
+    animation: composer-sweep 1.6s var(--ease-soft) infinite;
   }
 
   .composer-fresh .composer-surface {
-    @apply px-4 pt-3.5;
+    @apply px-3.5 pt-2.5 pb-2;
   }
 
   .composer-split .composer-input-row {
@@ -121,7 +122,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .composer-prompt {
-    @apply relative m-0 flex min-w-0 flex-col gap-2 border-0 bg-transparent py-0.5 shadow-none;
+    @apply relative m-0 flex min-w-0 flex-col gap-1.5 border-0 bg-transparent py-0 shadow-none;
   }
   .composer-mode-arrow {
     @apply pointer-events-none hidden size-0 overflow-hidden opacity-0;
@@ -131,11 +132,11 @@
     @apply m-0 block w-full resize-none rounded-none border-0 bg-transparent text-foreground shadow-none outline-none;
     min-height: 60px;
     max-height: 200px;
-    padding: 4px 4px 8px;
+    padding: 4px 4px 6px;
     font: inherit;
     font-size: var(--text-body);
     line-height: 1.6;
-    caret-color: var(--accent);
+    caret-color: var(--text-primary);
   }
   .composer-textarea::placeholder {
     color: var(--text-muted);
@@ -154,7 +155,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Execute / cancel / dual steering triggers                           */
+  /* Execute / cancel / dual triggers                                    */
   /* ------------------------------------------------------------------ */
   .composer-split .composer-submit-col {
     @apply relative flex h-full items-end justify-end gap-1.5;
@@ -170,8 +171,7 @@
     border-radius: var(--radius-item);
     flex: 0 0 44px;
   }
-  /* Execute button keeps its 44px hit box; a 4px inset ring draws a crisp
-     36px architectural rounded-square instrument key instead of a chat pill. */
+  /* 44px hit box with a 5px inset ring -> crisp 34px monochrome rounded square. */
   .composer-split .composer-submit-col .composer-submit {
     border-radius: var(--radius-card);
   }
@@ -179,10 +179,9 @@
     @apply cursor-pointer border-0;
     color: var(--run-ink);
     background: var(--run-bg);
-    box-shadow: inset 0 0 0 4px var(--surface-elevated);
+    box-shadow: inset 0 0 0 5px var(--surface-elevated);
     transition:
       transform var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-normal) var(--ease-out),
       background-color var(--duration-normal) var(--ease-out);
   }
   .composer-submit:hover:not(:disabled) {
@@ -201,17 +200,17 @@
     @apply cursor-not-allowed opacity-100;
     filter: none;
     transform: none;
-    color: var(--text-muted);
+    color: var(--text-disabled);
     background: var(--surface-soft);
     box-shadow:
-      inset 0 0 0 4px var(--surface-elevated),
-      inset 0 0 0 5px var(--hairline);
+      inset 0 0 0 5px var(--surface-elevated),
+      inset 0 0 0 6px var(--hairline);
   }
   .composer-submit[aria-busy="true"],
   .composer-run:has(.btn-busy-status) {
     color: var(--run-ink);
     background: var(--run-bg);
-    box-shadow: inset 0 0 0 4px var(--surface-elevated);
+    box-shadow: inset 0 0 0 5px var(--surface-elevated);
   }
   .composer-submit svg {
     transition: transform var(--duration-normal) var(--ease-out);
@@ -242,7 +241,7 @@
       transform var(--duration-fast) var(--ease-out);
   }
   .composer-cancel.composer-action:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--error) 16%, var(--error-bg));
+    background: color-mix(in srgb, var(--error) 14%, var(--error-bg));
   }
   .composer-cancel.composer-action:active:not(:disabled) {
     transform: scale(0.96);
@@ -264,26 +263,26 @@
   }
   .composer-split .composer-submit-col .composer-steer-btn,
   .composer-split .composer-submit-col .composer-queue-btn {
-    @apply inline-flex w-auto items-center justify-center gap-1.5 whitespace-nowrap font-medium text-meta;
-    min-width: 72px;
+    @apply inline-flex w-auto items-center justify-center gap-1.5 whitespace-nowrap font-medium text-caption;
+    min-width: 68px;
     height: 44px;
     min-height: 44px;
-    padding: 0 14px;
+    padding: 0 12px;
     flex: 0 0 auto;
     border-radius: var(--radius-item);
   }
   .composer-split .composer-submit-col .composer-steer-btn {
-    color: var(--accent);
-    background: var(--accent-soft);
-    border: 1px solid var(--accent-border);
+    color: var(--text-primary);
+    background: var(--surface-soft);
+    border: 1px solid var(--hairline-strong);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
       transform var(--duration-fast) var(--ease-out);
   }
   .composer-split .composer-submit-col .composer-steer-btn:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--accent) 16%, var(--accent-soft));
-    border-color: var(--accent);
+    background: var(--surface-hover);
+    border-color: var(--border-control);
   }
   .composer-split .composer-submit-col .composer-steer-btn:active:not(:disabled) {
     transform: scale(0.97);
@@ -304,13 +303,13 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Control toolbar separated by a subtle hairline                      */
+  /* Whisper-quiet bottom controls: no internal divider line             */
   /* ------------------------------------------------------------------ */
   .composer-toolbar {
-    @apply mt-1 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-hairline border-t pt-1.5;
+    @apply flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 pt-0.5;
   }
   .composer-toolbar-start {
-    @apply flex shrink-0 items-center gap-1;
+    @apply flex shrink-0 items-center gap-0.5;
   }
   .composer-toolbar-end {
     @apply ml-auto flex min-w-0 flex-auto items-center justify-end;
@@ -320,14 +319,13 @@
   }
 
   .composer-dropdown-trigger {
-    @apply inline-flex cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-control border border-transparent bg-transparent px-2 font-medium text-secondary-text text-meta;
-    height: 32px;
-    min-height: 32px;
+    @apply inline-flex cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-control border border-transparent bg-transparent px-2 font-medium text-tertiary-text text-caption;
+    height: 28px;
+    min-height: 28px;
     font-family: inherit;
     transition:
       background-color var(--duration-fast) var(--ease-out),
       color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
       transform var(--duration-fast) var(--ease-out);
   }
   .composer-dropdown-trigger:hover:not(:disabled) {
@@ -349,16 +347,19 @@
   }
   .composer-dropdown-trigger.is-icon-only {
     @apply justify-center p-0;
-    width: 32px;
-    min-width: 32px;
+    width: 28px;
+    min-width: 28px;
   }
   .composer-dropdown-icon {
-    @apply inline-flex items-center text-secondary-text;
+    @apply inline-flex items-center text-muted-foreground;
     transition: color var(--duration-fast) var(--ease-out);
+  }
+  .composer-dropdown-trigger:hover:not(:disabled) .composer-dropdown-icon {
+    color: var(--text-primary);
   }
   /* Quiet monochrome icons on toolbar triggers; only unrestricted permission warns. */
   .composer-toolbar-start > .composer-dropdown:first-of-type .composer-dropdown-icon {
-    color: var(--text-secondary);
+    color: var(--text-muted);
   }
   .composer-card:has(.composer-mode-arrow.is-plan)
     .composer-toolbar-start
@@ -366,7 +367,6 @@
     .composer-dropdown-icon {
     color: var(--text-primary);
   }
-  /* Permission: unrestricted highlights as muted warning. */
   .composer-card:has(#run-permission option[value="unrestricted"]:checked)
     .composer-toolbar-start
     > .composer-dropdown:nth-of-type(2)
@@ -429,14 +429,14 @@
     translate: 0 -50%;
     border-radius: var(--radius-full);
     background: currentcolor;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 18%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--error) 16%, transparent);
   }
   .composer-plan-note {
     max-width: 100%;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Model picker                                                        */
+  /* Model picker — unboxed, minimal inline trigger                      */
   /* ------------------------------------------------------------------ */
   .composer-model {
     @apply relative min-w-0;
@@ -453,23 +453,33 @@
   }
 
   .composer-model-summary {
-    @apply min-w-0 list-none gap-2 pr-2 pl-1.5;
+    @apply min-w-0 list-none gap-1.5 px-2;
     max-width: min(280px, 100%);
   }
   .composer-model-summary::-webkit-details-marker {
     display: none;
   }
   .composer-model-summary .composer-dropdown-label {
-    @apply font-mono text-caption text-foreground;
+    @apply font-mono text-caption text-secondary-text;
   }
+  .composer-model-summary:hover .composer-dropdown-label,
+  .composer-model-picker[open] > .composer-model-summary .composer-dropdown-label {
+    @apply text-foreground;
+  }
+  /* No boxed chip around the model icon inside the toolbar summary. */
   .composer-model-icon {
-    @apply inline-flex size-5 shrink-0 items-center justify-center rounded-xs bg-brand-soft text-brand;
+    @apply inline-flex size-4 shrink-0 items-center justify-center rounded-xs bg-transparent text-muted-foreground;
   }
+  /* Quiet inline source text instead of a bordered badge. */
   .composer-model-source {
-    @apply min-w-0 truncate rounded-xs border border-hairline bg-muted px-1.5 font-mono font-medium text-2xs text-muted-foreground;
+    @apply min-w-0 truncate bg-transparent px-0 font-mono text-2xs text-muted-foreground;
     flex: 0 1 auto;
-    max-width: 8rem;
-    line-height: 18px;
+    max-width: 6.5rem;
+    line-height: 16px;
+  }
+  .composer-model-source::before {
+    content: "· ";
+    color: var(--text-disabled);
   }
   @media (max-width: 640px) {
     .composer-model-summary .composer-model-source {
@@ -485,31 +495,31 @@
   }
   .model-effort-meter {
     @apply inline-flex shrink-0 items-end gap-0.5;
-    height: 12px;
+    height: 10px;
   }
   .model-effort-meter > span {
-    width: 3px;
+    width: 2px;
     border-radius: var(--radius-2xs);
     background: color-mix(in srgb, var(--text-primary) 16%, transparent);
     transition: background-color var(--duration-normal) var(--ease-out);
   }
   .model-effort-meter > span:nth-child(1) {
-    height: 5px;
+    height: 4px;
   }
   .model-effort-meter > span:nth-child(2) {
-    height: 7px;
+    height: 6px;
   }
   .model-effort-meter > span:nth-child(3) {
-    height: 9px;
+    height: 8px;
   }
   .model-effort-meter > span:nth-child(4) {
-    height: 11px;
+    height: 9px;
   }
   .model-effort-meter > span:nth-child(n + 5) {
-    height: 12px;
+    height: 10px;
   }
   .model-effort-meter > .is-filled {
-    background: var(--accent);
+    background: var(--text-secondary);
   }
 
   .composer-model-panel {
@@ -676,7 +686,7 @@
     background: var(--surface-elevated);
     box-shadow:
       var(--shadow-thumb),
-      0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+      0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
     transition: transform var(--duration-fast) var(--ease-out);
   }
   .effort-slider input:active::-webkit-slider-thumb {
@@ -718,7 +728,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Context-window telemetry bar in the deck header                     */
+  /* Compact, whisper-quiet context meter                                */
   /* ------------------------------------------------------------------ */
   .composer-usage {
     --text-secondary: var(--composer-usage-ink);
@@ -731,7 +741,7 @@
     position: static;
   }
   .usage-trigger {
-    @apply flex h-7 min-w-0 cursor-pointer list-none items-center gap-2 rounded-control px-2 font-mono text-caption text-tertiary-text;
+    @apply flex h-6 min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-control px-1.5 font-mono text-caption text-muted-foreground;
     font-variant-numeric: tabular-nums;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -754,10 +764,10 @@
     }
   }
   .usage-track {
-    --usage-run-color: var(--accent);
+    --usage-run-color: var(--text-secondary);
     @apply relative flex flex-none overflow-hidden rounded-2xs;
-    width: 48px;
-    height: 4px;
+    width: 36px;
+    height: 3px;
     background: var(--active-wash);
     transition: background-color var(--duration-normal) ease;
   }
@@ -769,20 +779,23 @@
     @apply flex min-w-0 shrink items-center gap-1.5 whitespace-nowrap;
   }
   .usage-speed-chip {
-    @apply rounded-xs bg-brand-soft px-1.5 font-mono font-medium text-brand text-caption;
-    line-height: 18px;
+    @apply rounded-xs bg-transparent px-0 font-mono text-tertiary-text text-caption;
+    line-height: 16px;
+  }
+  .usage-context-label {
+    display: none;
   }
   .usage-context-chip {
-    @apply font-medium text-secondary-text;
+    @apply font-medium text-tertiary-text;
   }
   .usage-footer-total {
-    @apply text-tertiary-text;
+    @apply text-muted-foreground;
   }
   .usage-footer-total::before {
-    content: "· ";
+    content: "/ ";
+    color: var(--text-disabled);
   }
   @media (max-width: 400px) {
-    .usage-context-label,
     .usage-footer-total {
       display: none;
     }
@@ -826,7 +839,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Image chips above the command deck                                  */
+  /* Image chips above the composer                                      */
   /* ------------------------------------------------------------------ */
   .composer-image-attachments {
     @apply mb-1 flex max-w-full flex-row items-start gap-2 overflow-x-auto overflow-y-hidden px-0.5 py-1;
@@ -878,52 +891,52 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Workspace chip                                                      */
+  /* Workspace chip — unboxed, minimal                                   */
   /* ------------------------------------------------------------------ */
   .wb-app .composer-project {
     @apply relative min-w-0;
   }
   .composer-project .composer-project-trigger {
-    @apply inline-flex cursor-pointer items-center gap-2 rounded-control border-0 bg-transparent py-0.5 pr-2 pl-0.5 font-sans text-foreground text-meta shadow-none;
-    max-width: min(100%, 440px);
-    min-height: var(--control-height);
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-control border-0 bg-transparent px-1.5 py-0.5 font-sans text-secondary-text text-caption shadow-none;
+    max-width: min(100%, 400px);
+    min-height: 24px;
     line-height: 1.3;
     transition:
       background-color var(--duration-fast) var(--ease-out),
-      transform var(--duration-fast) var(--ease-out);
+      color var(--duration-fast) var(--ease-out);
   }
   .composer-project .composer-project-trigger:hover:not(:disabled) {
-    @apply bg-hover-wash;
-  }
-  .composer-project .composer-project-trigger:active:not(:disabled) {
-    transform: scale(0.98);
+    @apply bg-hover-wash text-foreground;
   }
   .composer-project .composer-project-trigger.is-open {
-    @apply bg-active-wash;
+    @apply bg-active-wash text-foreground;
   }
   .composer-project .composer-project-trigger:focus-visible {
     outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
   .composer-project-trigger-icon {
-    @apply inline-flex size-5 shrink-0 items-center justify-center rounded-xs bg-brand-soft text-brand;
+    @apply inline-flex size-4 shrink-0 items-center justify-center rounded-xs bg-transparent text-muted-foreground;
   }
   .composer-project-trigger-name {
-    @apply truncate font-mono font-semibold text-caption text-foreground;
+    @apply truncate font-mono font-medium text-caption text-secondary-text;
+  }
+  .composer-project .composer-project-trigger:hover .composer-project-trigger-name {
+    @apply text-foreground;
   }
   .composer-project-trigger-parent {
-    @apply truncate border-hairline-strong border-l pl-2 font-mono text-2xs text-muted-foreground;
-    max-width: 160px;
+    @apply truncate pl-1 font-mono text-2xs text-muted-foreground;
+    max-width: 140px;
   }
   .composer-project-trigger-caret {
-    @apply ml-0.5 shrink-0 text-muted-foreground;
+    @apply shrink-0 text-muted-foreground;
     transition:
       transform var(--duration-normal) var(--ease-out),
       color var(--duration-fast) var(--ease-out);
   }
   .composer-project .composer-project-trigger.is-open .composer-project-trigger-caret {
     transform: rotate(180deg);
-    color: var(--accent);
+    color: var(--text-primary);
   }
 
   /* ------------------------------------------------------------------ */
@@ -960,10 +973,7 @@
       padding: var(--space-2) var(--space-3);
     }
     .composer-card.composer-surface {
-      @apply px-2.5 pt-2.5 pb-1.5;
-    }
-    .composer-card-header {
-      @apply -mx-2.5 -mt-2.5 px-2.5;
+      @apply px-2.5 pt-2 pb-1.5;
     }
     .composer-project-trigger-parent {
       display: none;
@@ -1054,6 +1064,6 @@
     animation: none;
     background-size: 100% 100%;
     background-position: 0 0;
-    opacity: 0.6;
+    opacity: 0.5;
   }
 }
