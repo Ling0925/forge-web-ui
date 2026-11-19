@@ -1,26 +1,34 @@
 /*
- * Settings skin — Forge Agent Harness control plane.
- * Scoped to `.settings-page`. Crisp hairline rail with 2px Forge Amber active
- * indicator, structured setting group cards and clean permission cards.
+ * Settings skin — Restrained Monochrome Agent Harness (Desktop + Mobile).
+ * Scoped strictly to `.settings-page` in `@layer components` so it cleanly
+ * unifies settings-page.css, settings-v2.css, and setting-rows.css without
+ * layer conflicts — especially on narrow mobile viewports (<= 768px).
  * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
  */
 @layer components {
   .settings-page {
     --text-2xs: var(--text-caption);
     --leading-2xs: var(--leading-caption);
+    grid-template-columns: 240px minmax(0, 1fr);
+    background: var(--canvas-bg);
+    color: var(--text-primary);
     font-size: var(--text-ui);
     line-height: var(--leading-ui);
   }
 
   /* ---------------------------------------------------------------- */
-  /* Navigation rail                                                   */
+  /* Desktop navigation rail                                           */
   /* ---------------------------------------------------------------- */
   .settings-page .settings-navigation {
-    padding: var(--space-5) var(--space-3);
-    gap: var(--space-4);
+    padding: var(--space-4) var(--space-3);
+    gap: var(--space-3-5);
     border-right: 0;
     background: var(--sidebar-bg);
     box-shadow: inset -1px 0 0 var(--hairline);
+  }
+
+  .settings-page .settings-nav-header {
+    gap: var(--space-2-5);
   }
 
   .settings-page .settings-back-btn {
@@ -37,6 +45,19 @@
     color: var(--text-primary);
   }
 
+  .settings-page .settings-brand {
+    gap: var(--space-2);
+    padding: 0 var(--space-1);
+  }
+
+  .settings-page .settings-brand-icon {
+    width: var(--space-6);
+    height: var(--space-6);
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
   .settings-page .settings-brand h1 {
     font-size: var(--text-ui);
     font-weight: 600;
@@ -48,10 +69,16 @@
     border: 0;
     border-radius: var(--radius-control);
     background: var(--surface-soft);
-    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+    color: var(--text-primary);
     font-size: var(--text-meta);
   }
 
+  .settings-page .settings-search input:hover {
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+
+  .settings-page .settings-search input:focus,
   .settings-page .settings-search input:focus-visible {
     outline: none;
     background: var(--surface-elevated);
@@ -67,7 +94,7 @@
   .settings-page .settings-nav-item {
     min-height: var(--row-height-rail);
     padding: 0 var(--space-2-5);
-    gap: var(--space-2-5);
+    gap: var(--space-2);
     border-radius: var(--radius-item);
     color: var(--text-secondary);
     font-size: var(--text-meta);
@@ -87,14 +114,14 @@
   .settings-page :is(.settings-nav-item.is-active, .settings-nav-item[aria-current]) {
     background: var(--surface-elevated);
     box-shadow:
-      inset 0 0 0 1px var(--hairline),
+      inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-xs);
     color: var(--text-primary);
     font-weight: 500;
   }
 
   .settings-page :is(.settings-nav-item.is-active, .settings-nav-item[aria-current]) .settings-nav-icon {
-    color: var(--accent);
+    color: var(--text-primary);
   }
 
   .settings-page .settings-nav-item:focus-visible {
@@ -116,8 +143,32 @@
     line-height: var(--leading-caption);
   }
 
+  .settings-page .settings-local-note {
+    margin: auto var(--space-1) 0;
+    padding: var(--space-2) var(--space-1-5) 0;
+    border: 0;
+    border-top: 1px solid var(--hairline);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+  }
+
+  .settings-page .settings-search-results {
+    max-width: var(--reading-measure);
+  }
+
+  .settings-page .settings-search-results ul {
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+
   .settings-page .settings-search-result {
-    border-radius: var(--radius-item);
+    border-radius: 0;
   }
 
   .settings-page .settings-search-result:hover {
@@ -130,22 +181,13 @@
     font-size: var(--text-caption);
   }
 
-  @media (pointer: coarse) {
-    .settings-page :is(.settings-nav-item, .settings-back-btn, .settings-search-result) {
-      min-height: var(--touch-min-target);
-    }
-
-    .settings-page .settings-search input {
-      height: var(--touch-min-target);
-    }
-  }
-
   /* ---------------------------------------------------------------- */
-  /* Header + content column                                           */
+  /* Header + unified reading column                                   */
   /* ---------------------------------------------------------------- */
   .settings-page .settings-page-header {
-    padding: var(--space-6) var(--space-10) var(--space-5);
+    padding: var(--space-5) var(--space-8) var(--space-4);
     border-bottom: 0;
+    background: var(--canvas-bg);
     box-shadow: inset 0 -1px 0 var(--hairline);
   }
 
@@ -157,7 +199,7 @@
   }
 
   .settings-page .settings-header-meta h2 {
-    margin: var(--space-1) 0;
+    margin: 0 0 var(--space-1);
     font-size: var(--text-title);
     font-weight: 600;
     line-height: var(--leading-title);
@@ -182,7 +224,11 @@
   }
 
   .settings-page .settings-page-scroll {
-    padding: var(--space-7) var(--space-10) var(--space-12);
+    padding: var(--space-6) var(--space-8) var(--space-12);
+  }
+
+  .settings-page .settings-page-scroll > * {
+    max-width: var(--reading-measure);
   }
 
   .settings-page .settings-section {
@@ -199,25 +245,21 @@
 
   .settings-page .settings-loading-status {
     border-radius: var(--radius-item);
+    background: var(--surface-soft);
     color: var(--text-tertiary);
     font-size: var(--text-meta);
   }
 
-  @media (max-width: 768px) {
-    .settings-page .settings-page-header {
-      padding: var(--space-5) var(--space-4) var(--space-4);
-    }
-
-    .settings-page .settings-page-scroll {
-      padding: var(--space-5) var(--space-4) var(--space-10);
-    }
+  /* ---------------------------------------------------------------- */
+  /* Setting groups, rows & segmented controls                         */
+  /* ---------------------------------------------------------------- */
+  .settings-page .setting-group {
+    gap: var(--space-2);
   }
 
-  /* ---------------------------------------------------------------- */
-  /* Setting groups and rows                                           */
-  /* ---------------------------------------------------------------- */
   .settings-page .setting-group-heading h3 {
     font-size: var(--text-ui);
+    font-weight: 600;
     line-height: var(--leading-ui);
   }
 
@@ -267,9 +309,49 @@
     font-size: var(--text-caption);
   }
 
+  .settings-page :is(.setting-segmented, .provider-source-tabs, .provider-inference-grid) {
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--hairline);
+  }
+
+  .settings-page :is(.setting-segment, .provider-source-tab, .provider-inference-option) {
+    border-radius: var(--radius-xs);
+    color: var(--text-secondary);
+  }
+
+  .settings-page :is(.setting-segment.is-active, .provider-source-tab.is-active, .provider-inference-option.is-active) {
+    background: var(--surface-elevated);
+    box-shadow:
+      inset 0 0 0 1px var(--hairline-strong),
+      var(--shadow-xs);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
   /* ---------------------------------------------------------------- */
-  /* Cards                                                             */
+  /* Cards: toggle, permission, models, MCP, agents                    */
   /* ---------------------------------------------------------------- */
+  .settings-page .configured-models-grid {
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+
+  .settings-page .configured-model-card + .configured-model-card {
+    border-top: 0;
+    box-shadow: inset 0 1px 0 var(--hairline);
+  }
+
+  .settings-page :is(.agent-profile-card, .agent-editor-section, .settings-entry) {
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface-elevated);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  }
+
   .settings-page .mcp-card.is-enabled {
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
@@ -282,11 +364,12 @@
   }
 
   .settings-page :is(.settings-toggle-card, .execution-permission-card):hover:not(:disabled) {
+    background: var(--hover-wash);
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .settings-page :is(.settings-toggle-card.is-checked, .execution-permission-card.is-active) {
-    background: var(--accent-soft);
+    background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--accent);
   }
 
@@ -307,6 +390,177 @@
     color: var(--text-tertiary);
     font-size: var(--text-meta);
     line-height: var(--leading-meta);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Touch targets (coarse pointer)                                    */
+  /* ---------------------------------------------------------------- */
+  @media (pointer: coarse) {
+    .settings-page :is(.settings-nav-item, .settings-back-btn, .settings-search-result) {
+      min-height: var(--touch-min-target);
+    }
+
+    .settings-page .settings-search input {
+      height: var(--touch-min-target);
+    }
+
+    .settings-page :is(.setting-segment, .provider-source-tab, .provider-inference-option) {
+      min-height: var(--control-height-lg);
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Mobile & compact viewport layout (<= 768px)                       */
+  /* ---------------------------------------------------------------- */
+  @media (max-width: 768px) {
+    .settings-page {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    /* Top stacked navigation bar with clean horizontal tab strip. */
+    .settings-page .settings-navigation {
+      padding: var(--space-2-5) var(--space-3) var(--space-2);
+      gap: var(--space-2);
+      background: var(--canvas-bg);
+      box-shadow: inset 0 -1px 0 var(--hairline);
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+    .settings-page .settings-nav-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+
+    .settings-page .settings-brand {
+      display: flex;
+      padding: 0 var(--space-1);
+    }
+
+    .settings-page .settings-brand-icon,
+    .settings-page .settings-local-note,
+    .settings-page .settings-nav-group-title,
+    .settings-page .settings-nav-icon,
+    .settings-page .settings-status {
+      display: none;
+    }
+
+    .settings-page .settings-nav-menu {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-1);
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .settings-page .settings-nav-menu::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Critical mobile fix: flatten grouped items into one clean horizontal row. */
+    .settings-page .settings-nav-group {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-1);
+      flex-shrink: 0;
+    }
+
+    .settings-page .settings-nav-group + .settings-nav-group {
+      margin-top: 0;
+      padding-left: var(--space-1-5);
+      box-shadow: inset 1px 0 0 var(--hairline);
+    }
+
+    .settings-page .settings-nav-item {
+      flex-shrink: 0;
+      min-height: var(--control-height-lg);
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-control);
+      white-space: nowrap;
+      font-size: var(--text-meta);
+    }
+
+    /* Compact page header & comfortable mobile scroll padding. */
+    .settings-page .settings-page-header {
+      padding: var(--space-3-5) var(--space-4) var(--space-3);
+    }
+
+    .settings-page .settings-header-meta h2 {
+      font-size: var(--text-lg);
+      line-height: var(--leading-lg);
+    }
+
+    .settings-page .settings-page-scroll {
+      padding: var(--space-4) var(--space-4) var(--space-10);
+      scrollbar-gutter: auto;
+    }
+
+    .settings-page .settings-section {
+      gap: var(--space-5);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Stack setting rows cleanly on mobile so controls never squeeze labels. */
+    .settings-page .setting-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2-5);
+      padding: var(--space-3) var(--space-3-5);
+    }
+
+    .settings-page .setting-row-control {
+      justify-content: flex-start;
+      width: 100%;
+    }
+
+    .settings-page .setting-row-control .forge-select-trigger,
+    .settings-page .setting-inline-input,
+    .settings-page .setting-inline-input input {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .settings-page .setting-segmented {
+      display: flex;
+      width: 100%;
+    }
+
+    .settings-page .setting-segment {
+      flex: 1 1 0%;
+      text-align: center;
+      min-height: var(--control-height-lg);
+    }
+
+    .settings-page .execution-permission-grid,
+    .settings-page .settings-columns {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2-5);
+    }
+
+    .settings-page .provider-source-tabs {
+      display: flex;
+      width: 100%;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      scrollbar-width: none;
+    }
+
+    .settings-page .provider-source-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .settings-page .provider-source-tab {
+      flex-shrink: 0;
+    }
+
+    .settings-page .configured-model-card-head-right {
+      min-width: 0;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
