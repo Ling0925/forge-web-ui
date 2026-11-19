@@ -1,14 +1,7 @@
 /*
- * App shell skin, design A "light inline" (UI migration phase 3,
- * design-v2/spec.md §1–2): mobile drawer + scrims, the session actions
- * menu, the command palette, native dialogs and the super-agent group.
- *
- * Imported by styles/ui.css into the `components` layer, so it beats the
- * legacy sheets. Structure (drawer transforms, inert/hidden, focus return,
- * portals, menu positioning) stays where it is; this file sets color, type,
- * radius, elevation and spacing. Portalled surfaces (menu, dialogs) are not
- * inside `.wb-app`, so their selectors are unprefixed.
- *
+ * App shell skin — Forge Agent Harness chrome.
+ * Mobile drawer + scrims, session actions menu, command palette,
+ * native dialogs and super-agent rail group.
  * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
  */
 @layer components {
@@ -59,7 +52,7 @@
   .wb-app .session-action-btn {
     width: var(--space-6);
     height: var(--space-6);
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-xs);
     color: var(--text-tertiary);
   }
 
@@ -151,12 +144,12 @@
   @keyframes shell-menu-in {
     from {
       opacity: 0;
-      transform: scale(0.97);
+      transform: scale(0.975);
     }
   }
 
   /* ---------------------------------------------------------------- */
-  /* Native dialogs (rename, command palette, resources …)             */
+  /* Native dialogs                                                    */
   /* ---------------------------------------------------------------- */
   .native-dialog {
     border: 0;
@@ -178,11 +171,12 @@
     font-size: var(--text-md);
     font-weight: 600;
     line-height: var(--leading-md);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   .native-dialog .modal-kicker {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
@@ -222,11 +216,11 @@
   .command-palette .command-selection {
     margin: 0;
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
 
-  /* Search-first palette (master PR #11): one field over grouped rows. */
   .native-dialog.command-palette-dialog {
     width: min(var(--palette-width), calc(100vw - var(--space-6)));
   }
@@ -239,11 +233,12 @@
     height: var(--control-height-xl);
     border-color: var(--hairline-strong);
     border-radius: var(--radius-control);
-    background: var(--surface-elevated);
+    background: var(--surface-soft);
   }
 
   .command-palette .command-search:focus-within {
-    border-color: var(--hairline-strong);
+    border-color: var(--focus-ring);
+    background: var(--surface-elevated);
     box-shadow: 0 0 0 3px var(--focus-halo);
   }
 
@@ -265,6 +260,7 @@
   .command-palette .command-group-label {
     padding: var(--space-3) var(--space-3) var(--space-1);
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
     font-weight: 500;
@@ -284,6 +280,7 @@
 
   .command-palette .command-action-meta {
     color: var(--text-muted);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
@@ -296,11 +293,10 @@
   .command-palette .command-palette-hint {
     border-top-color: var(--hairline);
     color: var(--text-muted);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
-  /* Rows are quiet list items; the keyboard selection is a wash plus an
-     accent rail, not a filled primary button. */
   .command-palette .command-action {
     display: flex;
     align-items: center;
@@ -345,11 +341,12 @@
     }
   }
 
-  /* Header trigger: a quiet search chip. */
+  /* Header command trigger: crisp hairline instrument chip. */
   .wb-app .command-palette-trigger {
     color: var(--text-secondary);
-    font-size: var(--text-meta);
+    font-size: var(--text-caption);
     font-weight: 500;
+    border-radius: var(--radius-control);
   }
 
   .wb-app .command-palette-trigger:hover {
@@ -375,6 +372,7 @@
 
   .wb-app .superagent-role-tag {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
     line-height: var(--leading-caption);

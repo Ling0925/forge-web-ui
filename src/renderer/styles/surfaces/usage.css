@@ -1,15 +1,7 @@
 /*
- * Usage dashboard skin, design A "light inline" (UI migration phase 6,
- * design-v2/spec.md §1–2): header, time / workspace filters, KPI strip,
- * section cards, segmented switches, legends, tables, request stats, the
- * 3D topology stage chrome, empty and error states.
- *
- * The dashboard renders in a DeferredPanel outside `.wb-app`, so
- * selectors are scoped to `.usage-dashboard-overlay`. Imported by
- * styles/ui.css into the `components` layer. Chart series colours live in
- * workspace-theme.css (--chart-*, --topology-*); layout and chart geometry
- * stay in usage-dashboard.css.
- *
+ * Usage dashboard skin — Forge Agent Harness telemetry console.
+ * Scoped to `.usage-dashboard-overlay`. Crisp hairline KPI tiles,
+ * monospace telemetry labels, sharp segmented switches and unified tables.
  * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
  */
 @layer components {
@@ -46,7 +38,7 @@
   }
 
   .usage-dashboard-overlay .usage-dashboard-icon-badge {
-    border-radius: var(--radius-item);
+    border-radius: var(--radius-control);
   }
 
   .usage-dashboard-overlay .usage-dashboard-title-text h2 {
@@ -59,7 +51,6 @@
     box-shadow: 0 0 0 3px var(--focus-halo);
   }
 
-  /* Time range: a well with a small lifted card for the active range. */
   .usage-dashboard-overlay .usage-time-capsule {
     border: 0;
     border-radius: var(--radius-item);
@@ -70,7 +61,8 @@
   .usage-dashboard-overlay .usage-time-pill {
     border: 0;
     border-radius: var(--radius-control);
-    font-size: var(--text-meta);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
   }
 
   .usage-dashboard-overlay .usage-time-pill:hover:not(.is-active) {
@@ -80,14 +72,14 @@
   .usage-dashboard-overlay .usage-time-pill.is-active {
     background: var(--surface-elevated);
     box-shadow:
-      inset 0 0 0 1px var(--hairline),
+      inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-xs);
     font-weight: 500;
   }
 
   .usage-dashboard-overlay .usage-ws-trigger {
     border: 0;
-    border-radius: var(--radius-item);
+    border-radius: var(--radius-control);
     background: var(--surface-elevated);
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: var(--text-meta);
@@ -103,6 +95,7 @@
 
   .usage-dashboard-overlay .usage-ws-menu {
     border: 0;
+    border-radius: var(--radius-card);
     box-shadow:
       inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-floating);
@@ -118,10 +111,12 @@
 
   .usage-dashboard-overlay .usage-ws-option.is-selected {
     background: var(--active-wash);
+    box-shadow: inset 2px 0 0 var(--accent);
   }
 
   .usage-dashboard-overlay .usage-ws-option-path {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -146,7 +141,7 @@
     border: 0;
     border-radius: var(--radius-card);
     background: var(--surface-elevated);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .usage-dashboard-overlay .usage-dashboard-section {
@@ -156,6 +151,7 @@
 
   .usage-dashboard-overlay .usage-kpi-label {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
@@ -164,13 +160,12 @@
     color: var(--text-disabled);
   }
 
-  /* Numbers in the UI face with tabular figures; 600, never 700. */
   .usage-dashboard-overlay .usage-kpi-value {
     font-family: var(--font-sans);
     font-size: var(--text-2xl);
     font-weight: 600;
     line-height: var(--leading-2xl);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     font-variant-numeric: tabular-nums;
   }
 
@@ -182,6 +177,7 @@
   .usage-dashboard-overlay .usage-kpi-unit,
   .usage-dashboard-overlay .usage-kpi-sub {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -192,15 +188,15 @@
   }
 
   .usage-dashboard-overlay .usage-section-title svg {
-    color: var(--text-tertiary);
+    color: var(--accent);
   }
 
   .usage-dashboard-overlay .usage-section-subtitle-meta {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
-  /* Segmented mode switch matches the time capsule. */
   .usage-dashboard-overlay .usage-mode-switch {
     border: 0;
     border-radius: var(--radius-control);
@@ -211,19 +207,20 @@
   .usage-dashboard-overlay .usage-mode-btn {
     height: var(--control-height-sm);
     padding: 0 var(--space-2-5);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
     font-size: var(--text-caption);
   }
 
   .usage-dashboard-overlay .usage-mode-btn.is-active {
     background: var(--surface-elevated);
     box-shadow:
-      inset 0 0 0 1px var(--hairline),
+      inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-xs);
   }
 
   .usage-dashboard-overlay :is(.usage-legend-item, .usage-bar-date, .usage-hourly-label, .usage-model-tokens, .usage-req-stat-sub, .usage-donut-caption) {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -233,7 +230,8 @@
 
   .usage-dashboard-overlay :is(.usage-cost-pill, .usage-model-cost-tag, .usage-3d-conduit-badge, .usage-3d-live-pill, .usage-3d-model-chip) {
     border: 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
   }
@@ -256,6 +254,7 @@
     background: var(--surface-soft);
     box-shadow: inset 0 -1px 0 var(--hairline);
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
   }
@@ -290,12 +289,13 @@
   .usage-dashboard-overlay :is(.usage-3d-canvas-stage, .usage-3d-canvas-Stage) {
     border: 0;
     border-radius: var(--radius-card);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .usage-dashboard-overlay :is(.usage-3d-legend-item, .usage-3d-stage-hint > span) {
     border: 0;
     box-shadow: inset 0 0 0 1px var(--hairline);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 

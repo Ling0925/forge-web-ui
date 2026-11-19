@@ -1,18 +1,8 @@
 /*
- * Sidebar skin, design A "light inline" (UI migration phase 2a-v2,
- * design-v2/spec.md §3.A).
- *
- * Imported by styles/ui.css, so it lands in the `components` layer and beats
- * the legacy sheets. Structure (layout, drawer, collapse, reveal, touch
- * minimums) stays in components/workbench/workbench.css; this file only sets
- * color, type, radius, elevation and spacing. Sizes are set with `height`, so
- * the legacy `min-height` touch rules (coarse pointer, <=1000px) still win.
- *
- * Hierarchy comes from type weight and space, not boxes: the rail shares the
- * canvas plane with a hairline edge, group labels are 12px tertiary, rows are
- * 30px with a lifted card for the selected one.
- *
- * Colors come only from workspace-theme.css tokens.
+ * Sidebar skin — Forge Agent Harness navigation rail.
+ * Deep contrast rail separated by a crisp 1px hairline, recessed search well,
+ * monospace folder counts, and a 2px Forge Amber left indicator on the active
+ * session row. Colors come only from workspace-theme.css; sizes from tokens.css.
  */
 @layer components {
   .wb-app .workbench-sidebar {
@@ -28,34 +18,34 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Brand + new task                                                  */
+  /* Brand + new task trigger                                          */
   /* ---------------------------------------------------------------- */
   .wb-app .sidebar-header {
-    gap: var(--space-3);
+    gap: var(--space-2-5);
     padding: var(--space-3) var(--space-3) var(--space-2);
     border-bottom: 0;
   }
 
   .wb-app .sidebar-brand-row {
-    gap: var(--space-3);
+    gap: var(--space-2-5);
   }
 
   .wb-app .sidebar-logo {
-    gap: var(--space-2-5);
+    gap: var(--space-2);
     height: var(--space-8);
     padding-inline: var(--space-1);
   }
 
   .wb-app .sidebar-mark {
-    width: var(--space-6);
-    height: var(--space-6);
+    width: var(--space-5);
+    height: var(--space-5);
   }
 
   .wb-app .sidebar-title {
-    font-size: var(--text-body);
-    line-height: var(--leading-body);
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     color: var(--text-primary);
   }
 
@@ -64,21 +54,21 @@
   }
 
   .wb-app .sidebar-new-btn {
-    gap: var(--space-2-5);
-    height: var(--space-9);
-    padding: 0 var(--space-2) 0 var(--space-3);
+    gap: var(--space-2);
+    height: var(--space-8);
+    padding: 0 var(--space-2) 0 var(--space-2-5);
     border: 1px solid var(--hairline-strong);
     border-radius: var(--radius-control);
     background: var(--surface-elevated);
     color: var(--text-primary);
-    font-size: var(--text-ui);
-    line-height: var(--leading-ui);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
     font-weight: 500;
-    box-shadow: var(--shadow-hairline);
+    box-shadow: var(--shadow-hairline), var(--edge-highlight);
     transition:
-      box-shadow var(--duration-normal) var(--ease-soft),
-      transform var(--duration-fast) var(--ease-soft),
-      border-color var(--duration-fast) ease;
+      background-color var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      transform var(--duration-fast) var(--ease-soft);
   }
 
   .wb-app .sidebar-new-btn > svg {
@@ -86,14 +76,12 @@
   }
 
   .wb-app .sidebar-new-btn:hover {
-    background: var(--surface-elevated);
+    background: var(--surface-raised);
     border-color: var(--border-control);
-    box-shadow: var(--shadow-raised);
   }
 
   .wb-app .sidebar-new-btn:active {
     transform: scale(0.99);
-    box-shadow: var(--shadow-hairline);
   }
 
   .wb-app .sidebar-new-btn:focus-visible {
@@ -117,27 +105,27 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Search                                                            */
+  /* Search well                                                       */
   /* ---------------------------------------------------------------- */
   .wb-app .sidebar-search {
     gap: var(--space-1);
-    padding: 0 var(--space-3) var(--space-2);
+    padding: 0 var(--space-3) var(--space-2-5);
   }
 
   .wb-app .sidebar-search-icon {
-    left: var(--space-3);
+    left: var(--space-2-5);
     color: var(--text-muted);
   }
 
   .wb-app .sidebar-search-input {
-    height: var(--space-9);
-    padding: 0 var(--space-9) 0 var(--space-9);
-    border: 1px solid transparent;
+    height: var(--space-8);
+    padding: 0 var(--space-8) 0 var(--space-8);
+    border: 1px solid var(--hairline);
     border-radius: var(--radius-control);
-    background: transparent;
+    background: var(--surface-soft);
     color: var(--text-primary);
-    font-size: var(--text-ui);
-    line-height: var(--leading-ui);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
     transition:
       background-color var(--duration-fast) ease,
       border-color var(--duration-fast) ease,
@@ -149,26 +137,25 @@
   }
 
   .wb-app .sidebar-search-input:hover {
-    background: var(--hover-wash);
+    border-color: var(--hairline-strong);
   }
 
   .wb-app .sidebar-search-input:focus {
     outline: none;
     background: var(--surface-elevated);
-    border-color: var(--hairline-strong);
+    border-color: var(--focus-ring);
     box-shadow: 0 0 0 3px var(--focus-halo);
   }
 
-  /* The archive filter sits inside the search field (master PR #11). */
   .wb-app .sidebar-archive-toggle {
     position: absolute;
     top: 50%;
     right: var(--space-1);
     translate: 0 -50%;
-    width: var(--space-7);
-    height: var(--space-7);
+    width: var(--space-6);
+    height: var(--space-6);
     border: 1px solid transparent;
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-xs);
     background: transparent;
     color: var(--text-muted);
     transition:
@@ -202,34 +189,32 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Groups                                                            */
+  /* Workspace groups                                                  */
   /* ---------------------------------------------------------------- */
   .wb-app .sidebar-sessions-list {
     gap: 0;
-    padding: var(--space-1) var(--space-3) var(--space-4);
+    padding: var(--space-1) var(--space-2-5) var(--space-4);
   }
 
   .wb-app .session-folder + .session-folder {
-    margin-top: var(--space-4);
+    margin-top: var(--space-3-5);
   }
 
   .wb-app .session-folder-header-row {
     border-radius: var(--radius-item);
   }
 
-  /* Group label (design A): a quiet 12px caption aligned with the row dot
-     column. The collapse caret and the count sit at the end and appear on
-     hover / keyboard focus, or stay while the group is collapsed. */
   .wb-app .session-folder-header {
     gap: var(--space-1-5);
     height: var(--space-7);
-    padding: 0 var(--space-2) 0 var(--space-3);
+    padding: 0 var(--space-2) 0 var(--space-2-5);
     border-radius: var(--radius-item);
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
     font-weight: 500;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     transition: color var(--duration-fast) ease;
   }
 
@@ -254,10 +239,12 @@
 
   .wb-app .session-folder-count {
     order: 2;
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 400;
+    font-variant-numeric: tabular-nums;
     color: var(--text-muted);
-    opacity: 0;
+    opacity: 0.7;
     transition: opacity var(--duration-fast) ease;
   }
 
@@ -283,7 +270,7 @@
     height: var(--space-6);
     margin-right: 2px;
     border: 0;
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-xs);
     background: transparent;
     color: var(--text-muted);
   }
@@ -323,28 +310,28 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Rows                                                              */
+  /* Session rows                                                      */
   /* ---------------------------------------------------------------- */
   .wb-app .session-item {
-    border: 1px solid transparent;
+    border: 0;
     border-radius: var(--radius-item);
     background: transparent;
     transition:
       background-color var(--duration-fast) ease,
-      box-shadow var(--duration-fast) ease,
-      transform var(--duration-fast) var(--ease-soft);
+      box-shadow var(--duration-fast) ease;
   }
 
   .wb-app .session-item:hover {
     background: var(--hover-wash);
   }
 
-  /* Selected: a lifted card on the shared plane (no tinted block): card
-     surface, hairline ring and a soft raised shadow. */
+  /* Selected: crisp elevated row with a 2px Forge Amber signal rail. */
   .wb-app .session-item.is-active {
     background: var(--surface-elevated);
-    border-color: var(--hairline-strong);
-    box-shadow: var(--shadow-raised);
+    box-shadow:
+      inset 2px 0 0 var(--accent),
+      inset 0 0 0 1px var(--hairline),
+      var(--shadow-hairline);
   }
 
   .wb-app .session-item.is-active:hover {
@@ -352,13 +339,12 @@
   }
 
   .wb-app .session-item-main {
-    gap: var(--space-2-5);
+    gap: var(--space-2);
     height: 30px;
-    padding: 0 var(--space-2) 0 var(--space-3);
+    padding: 0 var(--space-2) 0 var(--space-2-5);
     border-radius: var(--radius-item);
   }
 
-  /* Fixed status column: titles align whether or not a row has a dot. */
   .wb-app .session-item-dot {
     display: inline-flex;
     flex: none;
@@ -373,8 +359,8 @@
   }
 
   .wb-app .session-item-title {
-    font-size: var(--text-ui);
-    line-height: var(--leading-ui);
+    font-size: var(--text-meta);
+    line-height: var(--leading-meta);
     font-weight: 400;
     color: var(--text-secondary);
     text-align: left;
@@ -390,9 +376,11 @@
   }
 
   .wb-app .session-item-time {
-    padding-right: var(--space-3);
+    padding-right: var(--space-2-5);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
+    font-variant-numeric: tabular-nums;
     color: var(--text-muted);
   }
 
@@ -412,18 +400,16 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Footer: model service, usage, settings, refresh                   */
+  /* Footer dock                                                       */
   /* ---------------------------------------------------------------- */
   .wb-app .sidebar-footer {
     gap: var(--space-1);
     margin: 0 var(--space-3);
-    padding: var(--space-2) 0 var(--space-3);
+    padding: var(--space-2) 0 var(--space-2-5);
     border-top: 1px solid var(--hairline);
     background: transparent;
   }
 
-  /* Icon-only actions (master PR #11 dropped the model-service row; a
-     missing service is a small warning dot on the settings icon). */
   .wb-app .sidebar-footer-actions {
     gap: var(--space-1);
   }

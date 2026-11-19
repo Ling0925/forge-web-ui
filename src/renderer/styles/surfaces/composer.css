@@ -1,24 +1,10 @@
 /*
- * New session + composer surfaces (UI migration phase 2a).
- *
- * Imported by styles/ui.css, so it is compiled by Tailwind (for @apply) and
- * lands in the `components` layer: it beats every legacy sheet regardless of
- * specificity, and Tailwind utilities written in TSX still beat it.
- *
- * Composer.tsx is not restyled through utilities in its JSX: its markup is
- * kept byte-for-byte (behaviour, ids, aria and the test hook classes), and
- * these rules skin those hook classes instead. Welcome, ComposerDropdown and
- * the slash menu carry their utilities in TSX; ModelPicker, the usage meter,
- * image chips and the workspace chip are skinned here because their states
- * live on native elements (`details[open]`, range thumbs, scrollbars).
- *
- * Colors come only from workspace-theme.css tokens.
+ * Composer Command Deck — Forge Agent Harness surface.
+ * Architectural 12px frame with hairline-separated telemetry header,
+ * crisp prompt deck, hairline-separated control bar, and rounded-square
+ * execute trigger. Colors come only from workspace-theme.css tokens.
  */
 @layer components {
-  /* ------------------------------------------------------------------ */
-  /* New session canvas                                                  */
-  /* ------------------------------------------------------------------ */
-
   /* ------------------------------------------------------------------ */
   /* Composer frame                                                      */
   /* ------------------------------------------------------------------ */
@@ -32,7 +18,6 @@
   .wb-app .workbench-composer:not(.composer-fresh):has(.composer-split) {
     @apply w-full min-w-0;
   }
-  /* Continuing task: fade the transcript into the composer instead of a hard edge. */
   .wb-app .workbench-composer:not(.composer-fresh)::before {
     content: "";
     position: absolute;
@@ -41,25 +26,27 @@
     pointer-events: none;
     background: linear-gradient(to bottom, transparent, var(--canvas-bg));
   }
-  /* Docked 24px above the bottom edge; own stacking layer so its panels
-     paint above the welcome region they open over. */
   .wb-app .wb-new-session .composer-fresh {
     @apply relative z-20 mx-auto mt-0 mb-6 max-h-none shrink-0 overflow-visible border-0 bg-transparent p-0;
     width: min(var(--reading-measure), calc(100% - 2 * var(--space-8)));
   }
-  /* Card header: workspace (new session) and the running turn's timer. */
+
+  /* Telemetry bar at the top of the command deck. */
   .composer-card-header {
-    @apply -mx-1 -mt-1 mb-1 flex min-w-0 items-center gap-2;
+    @apply -mx-3 -mt-2.5 mb-2 flex min-w-0 items-center gap-2 border-hairline border-b px-3 py-1.5;
+  }
+  .composer-fresh .composer-card-header {
+    @apply -mx-4 -mt-3.5 mb-2.5 px-4 py-2;
   }
   .composer-run-timer + .composer-usage {
     margin-left: 0;
   }
   .composer-run-timer {
-    @apply ml-auto inline-flex shrink-0 items-center gap-1.5 font-medium text-brand text-caption tabular-nums;
+    @apply ml-auto inline-flex shrink-0 items-center gap-1.5 font-mono font-medium text-brand text-caption tabular-nums;
   }
   .composer-run-timer-dot {
     @apply size-1.5 rounded-full bg-brand;
-    animation: composer-timer-pulse 1.6s var(--ease-soft) infinite;
+    animation: composer-timer-pulse 1.5s var(--ease-soft) infinite;
   }
   .composer-inner {
     @apply mx-auto flex w-full flex-col gap-2;
@@ -69,25 +56,22 @@
     @apply gap-1.5;
   }
 
-  /* One card: prompt band + toolbar band share a single silhouette. */
-  /* Design A (phase 2a-v2): a 20px card with a hairline edge and the raised
-     elevation tier; focus adds a 3px halo instead of a coloured glow. */
+  /* Command deck frame: crisp 12px geometry, architectural hairline edge. */
   .composer-surface {
     @apply rounded-composer border border-hairline-strong bg-card;
-    box-shadow: var(--shadow-raised);
+    box-shadow: var(--shadow-raised), var(--edge-highlight);
     transition:
       border-color var(--duration-normal) var(--ease-soft),
       box-shadow var(--duration-normal) var(--ease-soft);
   }
-  /* The card is the positioning box for the model panel and the sweep. */
   .composer-card.composer-surface {
-    @apply relative flex min-w-0 flex-col gap-0.5 px-3 pt-3 pb-2;
+    @apply relative flex min-w-0 flex-col gap-0.5 px-3 pt-2.5 pb-2;
   }
   .composer-surface:hover {
     border-color: var(--border-control);
   }
   .composer-surface:focus-within {
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--border-control));
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--border-control));
     box-shadow:
       var(--shadow-raised),
       0 0 0 3px var(--focus-halo);
@@ -95,27 +79,25 @@
   .composer-surface:has(.composer-textarea:focus-visible) {
     border-color: var(--focus-ring);
   }
-  /* Plan mode is read-only planning: the card takes the info hue. */
+  /* Plan mode is read-only planning: shift deck accent to telemetry cyan. */
   .composer-surface:has(.composer-mode-arrow.is-plan):focus-within {
-    border-color: color-mix(in srgb, var(--info) 65%, var(--border-control));
+    border-color: color-mix(in srgb, var(--info) 70%, var(--border-control));
     box-shadow:
       var(--shadow-raised),
-      0 0 0 3px color-mix(in srgb, var(--info) 14%, transparent);
+      0 0 0 3px color-mix(in srgb, var(--info) 16%, transparent);
   }
-  /* Sending / running: a light sweeps along the top edge of the card. It is
-     its own 2px strip, so the card never needs overflow clipping (which
-     would clip the model panel anchored to it). */
+  /* Active execution telemetry sweep along the top edge of the deck. */
   .composer-card.composer-surface::before {
     content: "";
     position: absolute;
     top: -1px;
-    left: var(--space-5);
-    right: var(--space-5);
+    left: var(--space-3);
+    right: var(--space-3);
     height: 2px;
     border-radius: var(--radius-full);
     background: linear-gradient(90deg, transparent, var(--accent), transparent)
       no-repeat;
-    background-size: 40% 100%;
+    background-size: 42% 100%;
     background-position: -66.7% 0;
     opacity: 0;
     pointer-events: none;
@@ -127,11 +109,11 @@
       .composer-submit[aria-busy="true"]
     )::before {
     opacity: 1;
-    animation: composer-sweep 1.6s var(--ease-soft) infinite;
+    animation: composer-sweep 1.5s var(--ease-soft) infinite;
   }
 
   .composer-fresh .composer-surface {
-    @apply px-4 pt-4;
+    @apply px-4 pt-3.5;
   }
 
   .composer-split .composer-input-row {
@@ -139,7 +121,7 @@
     grid-template-columns: minmax(0, 1fr) auto;
   }
   .composer-prompt {
-    @apply relative m-0 flex min-w-0 flex-col gap-2 border-0 bg-transparent py-1 shadow-none;
+    @apply relative m-0 flex min-w-0 flex-col gap-2 border-0 bg-transparent py-0.5 shadow-none;
   }
   .composer-mode-arrow {
     @apply pointer-events-none hidden size-0 overflow-hidden opacity-0;
@@ -149,9 +131,9 @@
     @apply m-0 block w-full resize-none rounded-none border-0 bg-transparent text-foreground shadow-none outline-none;
     min-height: 60px;
     max-height: 200px;
-    padding: 4px 6px 8px;
+    padding: 4px 4px 8px;
     font: inherit;
-    font-size: var(--text-md);
+    font-size: var(--text-body);
     line-height: 1.6;
     caret-color: var(--accent);
   }
@@ -172,7 +154,7 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Send / cancel / dual buttons                                        */
+  /* Execute / cancel / dual steering triggers                           */
   /* ------------------------------------------------------------------ */
   .composer-split .composer-submit-col {
     @apply relative flex h-full items-end justify-end gap-1.5;
@@ -185,13 +167,13 @@
     height: 44px;
     min-width: 44px;
     min-height: 44px;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-item);
     flex: 0 0 44px;
   }
-  /* Send keeps its 44px hit box; a 4px inset ring in the card colour draws
-     the 36px visual circle of design A. */
+  /* Execute button keeps its 44px hit box; a 4px inset ring draws a crisp
+     36px architectural rounded-square instrument key instead of a chat pill. */
   .composer-split .composer-submit-col .composer-submit {
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-card);
   }
   .composer-submit {
     @apply cursor-pointer border-0;
@@ -201,7 +183,6 @@
     transition:
       transform var(--duration-fast) var(--ease-out),
       box-shadow var(--duration-normal) var(--ease-out),
-      filter var(--duration-fast) var(--ease-out),
       background-color var(--duration-normal) var(--ease-out);
   }
   .composer-submit:hover:not(:disabled) {
@@ -210,7 +191,7 @@
   }
   .composer-submit:active:not(:disabled) {
     background: var(--run-active);
-    transform: translateY(0) scale(0.95);
+    transform: translateY(0) scale(0.96);
   }
   .composer-submit:focus-visible {
     outline: 2px solid var(--focus-ring);
@@ -226,7 +207,6 @@
       inset 0 0 0 4px var(--surface-elevated),
       inset 0 0 0 5px var(--hairline);
   }
-  /* Sending keeps the brand fill so "busy" never reads as "disabled". */
   .composer-submit[aria-busy="true"],
   .composer-run:has(.btn-busy-status) {
     color: var(--run-ink);
@@ -265,7 +245,7 @@
     background: color-mix(in srgb, var(--error) 16%, var(--error-bg));
   }
   .composer-cancel.composer-action:active:not(:disabled) {
-    transform: scale(0.95);
+    transform: scale(0.96);
   }
   .composer-cancel.composer-action:disabled {
     opacity: 1;
@@ -273,29 +253,29 @@
   }
 
   .composer-split .composer-submit-col.is-dual .composer-cancel {
-    animation: composer-cancel-shift-left 320ms var(--ease-out) both;
+    animation: composer-cancel-shift-left 280ms var(--ease-out) both;
   }
   .composer-split .composer-submit-col.is-rebounding:not(.is-dual) .composer-cancel {
-    animation: composer-cancel-shift-right 250ms var(--ease-out) both;
+    animation: composer-cancel-shift-right 220ms var(--ease-out) both;
   }
   .composer-dual-send-wrap {
     @apply relative inline-flex items-center justify-end gap-1.5;
-    animation: composer-dual-send-in 280ms var(--ease-out) both;
+    animation: composer-dual-send-in 240ms var(--ease-out) both;
   }
   .composer-split .composer-submit-col .composer-steer-btn,
   .composer-split .composer-submit-col .composer-queue-btn {
-    @apply inline-flex w-auto items-center justify-center gap-1.5 whitespace-nowrap font-semibold text-sm;
+    @apply inline-flex w-auto items-center justify-center gap-1.5 whitespace-nowrap font-medium text-meta;
     min-width: 72px;
     height: 44px;
     min-height: 44px;
     padding: 0 14px;
     flex: 0 0 auto;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-item);
   }
   .composer-split .composer-submit-col .composer-steer-btn {
     color: var(--accent);
     background: var(--accent-soft);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border: 1px solid var(--accent-border);
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
@@ -306,7 +286,7 @@
     border-color: var(--accent);
   }
   .composer-split .composer-submit-col .composer-steer-btn:active:not(:disabled) {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   .composer-split .composer-submit-col .composer-steer-btn:disabled {
     @apply cursor-not-allowed opacity-45;
@@ -324,13 +304,13 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Toolbar and its triggers                                            */
+  /* Control toolbar separated by a subtle hairline                      */
   /* ------------------------------------------------------------------ */
   .composer-toolbar {
-    @apply flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 p-0;
+    @apply mt-1 flex w-full min-w-0 flex-nowrap items-center justify-between gap-2 border-hairline border-t pt-1.5;
   }
   .composer-toolbar-start {
-    @apply flex shrink-0 items-center gap-0.5;
+    @apply flex shrink-0 items-center gap-1;
   }
   .composer-toolbar-end {
     @apply ml-auto flex min-w-0 flex-auto items-center justify-end;
@@ -340,9 +320,9 @@
   }
 
   .composer-dropdown-trigger {
-    @apply inline-flex cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-lg border border-transparent bg-transparent px-2.5 font-medium text-secondary-text text-sm;
-    height: 36px;
-    min-height: 36px;
+    @apply inline-flex cursor-pointer select-none items-center gap-1.5 whitespace-nowrap rounded-control border border-transparent bg-transparent px-2 font-medium text-secondary-text text-meta;
+    height: 32px;
+    min-height: 32px;
     font-family: inherit;
     transition:
       background-color var(--duration-fast) var(--ease-out),
@@ -351,10 +331,10 @@
       transform var(--duration-fast) var(--ease-out);
   }
   .composer-dropdown-trigger:hover:not(:disabled) {
-    @apply bg-accent text-foreground;
+    @apply bg-hover-wash text-foreground;
   }
   .composer-dropdown-trigger:active:not(:disabled) {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   .composer-dropdown-trigger:focus-visible {
     outline: 2px solid var(--focus-ring);
@@ -365,18 +345,18 @@
   }
   .composer-dropdown-trigger[aria-expanded="true"],
   .composer-model-picker[open] > .composer-model-summary {
-    @apply bg-selected text-foreground;
+    @apply bg-active-wash text-foreground;
   }
   .composer-dropdown-trigger.is-icon-only {
     @apply justify-center p-0;
-    width: 36px;
-    min-width: 36px;
+    width: 32px;
+    min-width: 32px;
   }
   .composer-dropdown-icon {
     @apply inline-flex items-center text-secondary-text;
     transition: color var(--duration-fast) var(--ease-out);
   }
-  /* Mode (first chooser): Build = brand, Plan = info. */
+  /* Mode: Execute = Forge Amber, Plan = Telemetry Cyan. */
   .composer-toolbar-start > .composer-dropdown:first-of-type .composer-dropdown-icon {
     color: var(--accent);
   }
@@ -386,7 +366,7 @@
     .composer-dropdown-icon {
     color: var(--info);
   }
-  /* Permission (second chooser): unrestricted reads as a warning. */
+  /* Permission: unrestricted highlights as warning. */
   .composer-card:has(#run-permission option[value="unrestricted"]:checked)
     .composer-toolbar-start
     > .composer-dropdown:nth-of-type(2)
@@ -432,13 +412,13 @@
     height: var(--control-height-sm);
   }
   .composer-error {
-    @apply flex w-full items-start gap-2.5 rounded-lg border px-3 py-2 text-sm;
+    @apply flex w-full items-start gap-2.5 rounded-item border px-3 py-2 text-meta;
     margin: 0;
     color: var(--error);
     background: var(--error-bg);
     border-color: var(--error-border);
-    line-height: var(--leading-sm);
-    animation: composer-status-in 180ms var(--ease-out) both;
+    line-height: var(--leading-meta);
+    animation: composer-status-in 160ms var(--ease-out) both;
   }
   .composer-error::before {
     content: "";
@@ -465,9 +445,6 @@
     @apply ml-auto min-w-0 max-w-full;
     flex: 0 1 auto;
   }
-  /* Inside the composer card the picker is not a positioning box: its panel
-     anchors to the card and opens above it, so it can never cover the send
-     button in the card's bottom-right corner. */
   .composer-card .composer-model-picker:not(.composer-model-inline) {
     position: static;
   }
@@ -483,18 +460,17 @@
     display: none;
   }
   .composer-model-summary .composer-dropdown-label {
-    @apply text-foreground;
+    @apply font-mono text-caption text-foreground;
   }
   .composer-model-icon {
-    @apply inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-brand-soft text-brand;
+    @apply inline-flex size-5 shrink-0 items-center justify-center rounded-xs bg-brand-soft text-brand;
   }
   .composer-model-source {
-    @apply min-w-0 truncate rounded-sm border border-border bg-muted px-1.5 font-medium text-2xs text-muted-foreground;
+    @apply min-w-0 truncate rounded-xs border border-hairline bg-muted px-1.5 font-mono font-medium text-2xs text-muted-foreground;
     flex: 0 1 auto;
     max-width: 8rem;
     line-height: 18px;
   }
-  /* Narrow screens keep the model name; the source label goes (master PR #11). */
   @media (max-width: 640px) {
     .composer-model-summary .composer-model-source {
       display: none;
@@ -507,7 +483,6 @@
   .composer-model-picker[open] .composer-model-caret {
     transform: rotate(180deg);
   }
-  /* Effort meter: ascending bars, filled in brand. */
   .model-effort-meter {
     @apply inline-flex shrink-0 items-end gap-0.5;
     height: 12px;
@@ -537,17 +512,15 @@
     background: var(--accent);
   }
 
-  /* Design A ModelPanel: anchored above the card's top edge (the card is the
-     positioning box), sectioned by hairlines, never over the input/send. */
   .composer-model-panel {
-    @apply absolute right-0 z-50 flex flex-col gap-0 overflow-y-auto rounded-xl border border-hairline-strong bg-popover p-0 text-popover-foreground shadow-floating;
+    @apply absolute right-0 z-50 flex flex-col gap-0 overflow-y-auto rounded-card border border-hairline-strong bg-popover p-0 text-popover-foreground shadow-floating;
     bottom: calc(100% + 8px);
     width: 360px;
     max-width: calc(100vw - 32px);
     max-height: min(420px, 60dvh);
     overflow-x: hidden;
     transform-origin: bottom right;
-    animation: composer-pop-in 180ms var(--ease-out) both;
+    animation: composer-pop-in 160ms var(--ease-out) both;
   }
   .model-picker-heading {
     @apply flex min-w-0 flex-col items-stretch gap-1 p-1.5 pt-2;
@@ -555,7 +528,7 @@
   .model-picker-heading > span,
   .model-picker-subheading > span,
   .model-effort-options legend {
-    @apply px-2.5 font-medium text-caption text-tertiary-text;
+    @apply px-2.5 font-mono font-medium text-caption text-tertiary-text;
   }
   .model-picker-current {
     @apply flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-control border-0 bg-transparent px-2.5 text-left text-foreground text-ui;
@@ -578,10 +551,10 @@
     outline-offset: 1px;
   }
   .model-picker-current > span:not(.composer-model-icon) {
-    @apply min-w-0 flex-1 truncate font-semibold;
+    @apply min-w-0 flex-1 truncate font-mono font-semibold text-meta;
   }
   .model-picker-current > small {
-    @apply shrink-0 truncate text-caption text-tertiary-text;
+    @apply shrink-0 truncate font-mono text-caption text-tertiary-text;
     max-width: 112px;
   }
   .model-picker-current > svg {
@@ -591,31 +564,31 @@
     @apply flex min-w-0 items-center gap-1 text-xs;
   }
   .model-picker-back {
-    @apply inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent p-0 text-secondary-text;
+    @apply inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-control border-0 bg-transparent p-0 text-secondary-text;
   }
   .model-picker-back:hover {
-    @apply bg-accent text-foreground;
+    @apply bg-hover-wash text-foreground;
   }
   .model-picker-subpanel {
     @apply flex min-w-0 flex-col gap-2 p-2;
-    animation: composer-slide-in 180ms var(--ease-out) both;
+    animation: composer-slide-in 160ms var(--ease-out) both;
   }
   .model-picker-routes {
     @apply flex flex-wrap gap-1.5 border-hairline border-t px-3.5 py-2.5;
   }
   .model-picker-routes > button {
-    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-3 text-foreground text-xs;
-    min-height: 32px;
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-control border border-hairline-strong bg-card px-2.5 text-foreground text-xs;
+    min-height: 30px;
     font: inherit;
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out);
   }
   .model-picker-routes > button small {
-    @apply text-2xs text-muted-foreground;
+    @apply font-mono text-2xs text-muted-foreground;
   }
   .model-picker-routes > button:hover:not(:disabled) {
-    @apply bg-accent;
+    @apply bg-hover-wash;
   }
   .model-picker-routes > button[aria-pressed="true"] {
     @apply border-brand bg-brand-soft text-brand;
@@ -647,7 +620,7 @@
     @apply mt-0 flex justify-end text-2xs text-secondary-text;
   }
   .effort-slider-heading output {
-    @apply rounded-full bg-brand-soft px-2 font-semibold text-brand text-caption tabular-nums;
+    @apply rounded-xs bg-brand-soft px-2 font-mono font-semibold text-brand text-caption tabular-nums;
     line-height: 20px;
   }
   .effort-slider {
@@ -663,11 +636,9 @@
     @apply relative block h-full overflow-hidden rounded-full;
     background: linear-gradient(
       90deg,
-      color-mix(in srgb, var(--accent) 55%, var(--info)),
+      color-mix(in srgb, var(--accent) 65%, var(--warning)),
       var(--accent)
     );
-    /* ModelPicker sets scaleX (master PR #11), so the fill spans the track
-       and grows from its left edge. */
     width: 100%;
     transform-origin: left center;
     transition: transform var(--duration-normal) var(--ease-out);
@@ -688,8 +659,6 @@
   .model-effort-options:disabled .effort-slider-fill::after {
     animation: none;
   }
-  /* Step ticks (master PR #11), centred on the 6px track and on the
-     thumb's travel (thumb 18px, so the end dots sit 9px in). */
   .effort-slider-ticks {
     inset: 14px 7px auto;
   }
@@ -703,19 +672,19 @@
   }
   .effort-slider input::-webkit-slider-thumb {
     appearance: none;
-    width: 18px;
-    height: 18px;
-    margin-top: -6px;
+    width: 16px;
+    height: 16px;
+    margin-top: -5px;
     border: 2px solid var(--accent);
-    border-radius: 50%;
+    border-radius: var(--radius-xs);
     background: var(--surface-elevated);
     box-shadow:
       var(--shadow-thumb),
-      0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+      0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
     transition: transform var(--duration-fast) var(--ease-out);
   }
   .effort-slider input:active::-webkit-slider-thumb {
-    transform: scale(1.12);
+    transform: scale(1.1);
   }
   .effort-slider input::-moz-range-track {
     height: 6px;
@@ -725,7 +694,7 @@
     width: 14px;
     height: 14px;
     border: 2px solid var(--accent);
-    border-radius: 50%;
+    border-radius: var(--radius-xs);
     background: var(--surface-elevated);
     box-shadow: var(--shadow-thumb);
   }
@@ -735,14 +704,12 @@
     border-radius: var(--radius-sm);
   }
   .effort-slider-labels {
-    @apply flex justify-between px-0.5 text-2xs text-muted-foreground;
+    @apply flex justify-between px-0.5 font-mono text-2xs text-muted-foreground;
   }
   .effort-slider-labels [data-active="true"] {
     @apply font-semibold text-brand;
   }
 
-  /* Narrow: the panel spans the card's full width, still anchored above
-     its top edge (the card is the positioning box in both views). */
   @media (max-width: 640px) {
     .composer-card .composer-model:not(.composer-model-inline) > .composer-model-panel {
       left: 0;
@@ -755,22 +722,20 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Context meter in the card header (design A): thin bar + percentage   */
+  /* Context-window telemetry bar in the deck header                     */
   /* ------------------------------------------------------------------ */
   .composer-usage {
     --text-secondary: var(--composer-usage-ink);
-    /* Compaction reserve reads as a quiet, neutral tail (no alarm red). */
     --context-reserve-border: var(--hairline-strong);
     --context-reserve-stripe-1: color-mix(in srgb, var(--text-primary) 16%, transparent);
     --context-reserve-stripe-2: color-mix(in srgb, var(--text-primary) 6%, transparent);
     @apply ml-auto min-w-0 shrink;
   }
-  /* The card is the positioning box: the panel opens above its top edge. */
   .composer-card .composer-usage {
     position: static;
   }
   .usage-trigger {
-    @apply flex h-8 min-w-0 cursor-pointer list-none items-center gap-2 rounded-full px-2.5 text-caption text-tertiary-text;
+    @apply flex h-7 min-w-0 cursor-pointer list-none items-center gap-2 rounded-control px-2 font-mono text-caption text-tertiary-text;
     font-variant-numeric: tabular-nums;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -794,9 +759,9 @@
   }
   .usage-track {
     --usage-run-color: var(--accent);
-    @apply relative flex flex-none overflow-hidden rounded-full;
+    @apply relative flex flex-none overflow-hidden rounded-2xs;
     width: 48px;
-    height: 3px;
+    height: 4px;
     background: var(--active-wash);
     transition: background-color var(--duration-normal) ease;
   }
@@ -808,7 +773,7 @@
     @apply flex min-w-0 shrink items-center gap-1.5 whitespace-nowrap;
   }
   .usage-speed-chip {
-    @apply rounded-full bg-brand-soft px-1.5 font-medium text-brand text-caption;
+    @apply rounded-xs bg-brand-soft px-1.5 font-mono font-medium text-brand text-caption;
     line-height: 18px;
   }
   .usage-context-chip {
@@ -827,7 +792,7 @@
     }
   }
   .usage-panel {
-    @apply absolute right-0 z-[60] overflow-y-auto rounded-xl border border-hairline-strong bg-popover text-foreground text-sm shadow-floating;
+    @apply absolute right-0 z-[60] overflow-y-auto rounded-card border border-hairline-strong bg-popover text-foreground text-sm shadow-floating;
     bottom: calc(100% + 8px);
     width: 360px;
     max-width: 100%;
@@ -835,7 +800,7 @@
     padding: 14px 16px;
     font-variant-numeric: tabular-nums;
     transform-origin: bottom right;
-    animation: composer-pop-in 180ms var(--ease-out) both;
+    animation: composer-pop-in 160ms var(--ease-out) both;
   }
   @media (max-width: 640px) {
     .usage-panel {
@@ -845,42 +810,41 @@
     }
   }
   .usage-panel-header {
-    @apply flex items-center justify-between gap-2 border-border border-b pb-2.5;
+    @apply flex items-center justify-between gap-2 border-hairline border-b pb-2.5;
   }
   .usage-panel-header strong {
     @apply font-semibold text-sm;
   }
   .usage-model-badge {
-    @apply truncate rounded-sm bg-brand-soft px-1.5 font-medium text-2xs text-brand;
+    @apply truncate rounded-xs bg-brand-soft px-1.5 font-mono font-medium text-2xs text-brand;
     max-width: 200px;
     line-height: 20px;
   }
   .usage-panel-track {
-    @apply relative mt-2 flex w-full overflow-hidden rounded-full;
-    height: 8px;
+    @apply relative mt-2 flex w-full overflow-hidden rounded-xs;
+    height: 6px;
     background: color-mix(in srgb, var(--text-primary) 8%, transparent);
   }
   .usage-section {
-    @apply mt-3 border-border border-t pt-3;
+    @apply mt-3 border-hairline border-t pt-3;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Image chips above the card                                          */
+  /* Image chips above the command deck                                  */
   /* ------------------------------------------------------------------ */
   .composer-image-attachments {
     @apply mb-1 flex max-w-full flex-row items-start gap-2 overflow-x-auto overflow-y-hidden px-0.5 py-1;
   }
   .composer-image-attachments .image-attachment-item {
     @apply flex w-[72px] flex-none flex-col items-center;
-    animation: composer-pop-in 180ms var(--ease-out) both;
+    animation: composer-pop-in 160ms var(--ease-out) both;
   }
   .composer-image-attachments .image-attachment-thumb-wrap {
-    @apply relative flex size-[72px] items-center justify-center overflow-hidden rounded-lg border border-border bg-muted shadow-xs;
+    @apply relative flex size-[72px] items-center justify-center overflow-hidden rounded-item border border-hairline-strong bg-muted shadow-xs;
   }
   .composer-image-attachments .image-attachment-thumb-wrap:hover {
     @apply border-hover-border;
   }
-  /* 44px hit area, 24px visual chip (the icon carries the chip). */
   .composer-image-attachments .image-attachment-remove,
   .composer-image-attachments .btn.image-attachment-remove {
     @apply absolute top-0 right-0 z-[2] inline-flex cursor-pointer items-start justify-end border-0 bg-transparent p-1 shadow-none;
@@ -891,7 +855,7 @@
     color: var(--text-secondary);
   }
   .composer-image-attachments .image-attachment-remove svg {
-    @apply rounded-full border border-border bg-card shadow-sm;
+    @apply rounded-full border border-hairline-strong bg-card shadow-sm;
     width: 22px;
     height: 22px;
     padding: 3px;
@@ -914,11 +878,11 @@
     outline-offset: 1px;
   }
   .composer-image-attachments .image-attachment-name {
-    @apply mt-1 block w-full truncate text-center text-2xs text-muted-foreground;
+    @apply mt-1 block w-full truncate text-center font-mono text-2xs text-muted-foreground;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Workspace chip (picker panel itself is phase 4)                      */
+  /* Workspace chip                                                      */
   /* ------------------------------------------------------------------ */
   .wb-app .composer-project {
     @apply relative min-w-0;
@@ -930,8 +894,6 @@
     line-height: 1.3;
     transition:
       background-color var(--duration-fast) var(--ease-out),
-      border-color var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-normal) var(--ease-out),
       transform var(--duration-fast) var(--ease-out);
   }
   .composer-project .composer-project-trigger:hover:not(:disabled) {
@@ -948,13 +910,13 @@
     outline-offset: 2px;
   }
   .composer-project-trigger-icon {
-    @apply inline-flex size-6 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand;
+    @apply inline-flex size-5 shrink-0 items-center justify-center rounded-xs bg-brand-soft text-brand;
   }
   .composer-project-trigger-name {
-    @apply truncate font-semibold text-foreground;
+    @apply truncate font-mono font-semibold text-caption text-foreground;
   }
   .composer-project-trigger-parent {
-    @apply truncate border-border border-l pl-2 font-mono text-2xs text-muted-foreground;
+    @apply truncate border-hairline-strong border-l pl-2 font-mono text-2xs text-muted-foreground;
     max-width: 160px;
   }
   .composer-project-trigger-caret {
@@ -998,13 +960,14 @@
     }
   }
   @media (max-width: 480px) {
-    /* No overflow clip here: the card's popovers open above it. The
-       textarea (200px) and queue (156px) carry their own caps. */
     .wb-app .workbench-composer {
       padding: var(--space-2) var(--space-3);
     }
     .composer-card.composer-surface {
       @apply px-2.5 pt-2.5 pb-1.5;
+    }
+    .composer-card-header {
+      @apply -mx-2.5 -mt-2.5 px-2.5;
     }
     .composer-project-trigger-parent {
       display: none;
@@ -1020,7 +983,7 @@
 @keyframes composer-pop-in {
   from {
     opacity: 0;
-    transform: translateY(4px) scale(0.98);
+    transform: translateY(4px) scale(0.985);
   }
 }
 @keyframes composer-slide-in {
@@ -1048,7 +1011,7 @@
 @keyframes composer-dual-send-in {
   from {
     opacity: 0;
-    transform: scale(0.92) translateX(8px);
+    transform: scale(0.94) translateX(8px);
   }
 }
 @keyframes composer-timer-pulse {
@@ -1087,7 +1050,6 @@
   .composer-run-timer-dot {
     animation: none;
   }
-  /* Reduced motion: the sending edge stays lit instead of sweeping. */
   .composer-card.composer-surface:has(
       .composer-cancel,
       .btn-busy-status,
