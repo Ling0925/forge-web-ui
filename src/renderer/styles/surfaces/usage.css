@@ -111,7 +111,6 @@
 
   .usage-dashboard-overlay .usage-ws-option.is-selected {
     background: var(--active-wash);
-    box-shadow: inset 2px 0 0 var(--accent);
   }
 
   .usage-dashboard-overlay .usage-ws-option-path {
@@ -188,7 +187,7 @@
   }
 
   .usage-dashboard-overlay .usage-section-title svg {
-    color: var(--accent);
+    color: var(--text-tertiary);
   }
 
   .usage-dashboard-overlay .usage-section-subtitle-meta {

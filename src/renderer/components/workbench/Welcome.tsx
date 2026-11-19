@@ -36,13 +36,13 @@ const workspaceName = (workspace: string) =>
     .split(/[\\/]/)
     .pop() || workspace;
 
-/** Status badge for a recent run row: icon, telemetry tint and spoken label. */
+/** Quiet monochrome-first status indicator; only real attention states carry subtle tint. */
 const statusTile: Readonly<
   Record<SessionStatus, { icon: Icon; tone: string; label: string }>
 > = {
   running: {
     icon: CircleNotch,
-    tone: "bg-brand-soft text-brand",
+    tone: "bg-muted text-foreground",
     label: "执行中",
   },
   awaiting_approval: {
@@ -52,7 +52,7 @@ const statusTile: Readonly<
   },
   completed: {
     icon: CheckCircle,
-    tone: "bg-success-soft text-success",
+    tone: "bg-muted text-secondary-text",
     label: "完成",
   },
   failed: {
@@ -67,7 +67,7 @@ const statusTile: Readonly<
   },
   interrupted: {
     icon: Pause,
-    tone: "bg-warning-soft text-warning",
+    tone: "bg-muted text-secondary-text",
     label: "中断",
   },
   idle: {
@@ -93,7 +93,7 @@ function useRecent() {
 }
 
 /**
- * Forge Agent Harness launchpad. Sits directly above the docked command deck
+ * Quiet monochrome launchpad. Sits directly above the docked composer
  * on the shared 720px column.
  */
 export function Welcome() {
@@ -118,14 +118,14 @@ export function Welcome() {
   );
 }
 
-/** Telemetry eyebrow and crisp architectural heading. */
+/** Quiet date line and restrained heading. */
 function WelcomeHeading() {
   const now = new Date();
   return (
-    <div className="welcome-heading fade-in-0 slide-in-from-bottom-1 flex animate-in flex-col gap-3 duration-300 ease-out">
-      <p className="m-0 inline-flex w-fit items-center gap-2 rounded-control border border-hairline bg-card px-2.5 py-1 font-mono font-medium text-caption text-secondary-text">
+    <div className="welcome-heading fade-in-0 slide-in-from-bottom-1 flex animate-in flex-col gap-2.5 duration-300 ease-out">
+      <p className="m-0 inline-flex items-center gap-2 font-mono text-caption text-tertiary-text">
         <ForgeMark className="welcome-mark size-4" />
-        <span className="text-brand">FORGE HARNESS</span>
+        <span>Forge</span>
         <span aria-hidden="true" className="text-disabled-text">
           /
         </span>
@@ -135,10 +135,10 @@ function WelcomeHeading() {
         id="welcome-title"
         className="m-0 text-balance font-semibold text-foreground text-hero max-[640px]:text-[length:var(--text-hero-narrow)] max-[640px]:leading-[var(--leading-hero-narrow)]"
       >
-        {greeting(now)}，准备就绪。
+        {greeting(now)}。
         <br />
         <span className="font-normal text-tertiary-text">
-          选择工作区，或直接下达执行指令。
+          选择工作区，或直接输入指令。
         </span>
       </h2>
     </div>
@@ -146,8 +146,7 @@ function WelcomeHeading() {
 }
 
 /**
- * Structured Agent Run Ledger for recent tasks. Each row displays status,
- * title, monospace workspace identifier and tabular timestamp.
+ * Quiet hairline list of recent sessions.
  */
 function WelcomeRecent() {
   const { selectSession } = useWorkbenchActions();
@@ -164,14 +163,14 @@ function WelcomeRecent() {
       <div className="mb-2 flex items-center justify-between gap-2 px-1">
         <h3
           id="recent-tasks-title"
-          className="m-0 font-mono font-medium text-caption text-tertiary-text uppercase tracking-[0.04em]"
+          className="m-0 font-medium text-caption text-tertiary-text"
         >
           最近任务
         </h3>
         {recent.length > 0 && (
           <span
             aria-hidden="true"
-            className="rounded-xs bg-muted px-1.5 py-0.5 font-mono text-2xs text-muted-foreground tabular-nums"
+            className="font-mono text-caption text-muted-foreground tabular-nums"
           >
             {recent.length}
           </span>
@@ -179,7 +178,7 @@ function WelcomeRecent() {
       </div>
       {recent.length > 0 ? (
         <ul
-          className="welcome-task-list m-0 grid min-w-0 list-none grid-cols-[minmax(0,1fr)] overflow-hidden rounded-card border border-hairline bg-card p-1 shadow-hairline"
+          className="welcome-task-list m-0 grid min-w-0 list-none grid-cols-[minmax(0,1fr)] overflow-hidden rounded-card border border-hairline bg-card p-1"
           onPointerLeave={() => setActive(null)}
         >
           {recent.map((session, index) => {
@@ -190,7 +189,7 @@ function WelcomeRecent() {
               <li
                 key={session.id}
                 className="relative min-w-0 fade-in-0 slide-in-from-bottom-1 animate-in fill-mode-backwards duration-200 ease-out"
-                style={{ animationDelay: `${60 + index * 32}ms` }}
+                style={{ animationDelay: `${50 + index * 28}ms` }}
               >
                 {active === session.id && (
                   <m.span
@@ -221,7 +220,7 @@ function WelcomeRecent() {
                   >
                     <TileIcon
                       size={14}
-                      weight={session.status === "running" ? "bold" : "fill"}
+                      weight={session.status === "running" ? "bold" : "regular"}
                       className={
                         session.status === "running"
                           ? "motion-safe:animate-spin motion-safe:[animation-duration:1.6s]"
@@ -259,7 +258,7 @@ function WelcomeRecent() {
                   <ArrowRight
                     size={14}
                     aria-hidden="true"
-                    className="-translate-x-1 shrink-0 text-brand opacity-0 transition-[opacity,transform] duration-[var(--duration-normal)] ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 max-[640px]:hidden"
+                    className="-translate-x-1 shrink-0 text-tertiary-text opacity-0 transition-[opacity,transform] duration-[var(--duration-normal)] ease-out group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 max-[640px]:hidden"
                   />
                 </button>
                 {index < recent.length - 1 && (
@@ -308,12 +307,12 @@ function WelcomeRecent() {
   );
 }
 
-/** Inline geometric harness node illustration; tokens only, no external asset. */
+/** Minimal monochrome terminal frame illustration; tokens only. */
 function EmptyIllustration() {
   return (
     <svg
-      width="60"
-      height="48"
+      width="56"
+      height="44"
       viewBox="0 0 80 64"
       aria-hidden="true"
       className="shrink-0"
@@ -335,13 +334,13 @@ function EmptyIllustration() {
         stroke="var(--hairline)"
         strokeWidth="1"
       />
-      <circle cx="15" cy="14" r="2" fill="var(--accent)" />
+      <circle cx="15" cy="14" r="2" fill="var(--text-muted)" />
       <circle cx="22" cy="14" r="2" fill="var(--hairline-strong)" />
       <circle cx="29" cy="14" r="2" fill="var(--hairline-strong)" />
       <path
         d="M16 32l5 4-5 4"
         fill="none"
-        stroke="var(--accent)"
+        stroke="var(--text-secondary)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

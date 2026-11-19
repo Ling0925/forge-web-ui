@@ -79,12 +79,12 @@
   .composer-surface:has(.composer-textarea:focus-visible) {
     border-color: var(--focus-ring);
   }
-  /* Plan mode is read-only planning: shift deck accent to telemetry cyan. */
+  /* Plan mode keeps the same quiet monochrome focus treatment. */
   .composer-surface:has(.composer-mode-arrow.is-plan):focus-within {
-    border-color: color-mix(in srgb, var(--info) 70%, var(--border-control));
+    border-color: var(--focus-ring);
     box-shadow:
       var(--shadow-raised),
-      0 0 0 3px color-mix(in srgb, var(--info) 16%, transparent);
+      0 0 0 3px var(--focus-halo);
   }
   /* Active execution telemetry sweep along the top edge of the deck. */
   .composer-card.composer-surface::before {
@@ -356,17 +356,17 @@
     @apply inline-flex items-center text-secondary-text;
     transition: color var(--duration-fast) var(--ease-out);
   }
-  /* Mode: Execute = Forge Amber, Plan = Telemetry Cyan. */
+  /* Quiet monochrome icons on toolbar triggers; only unrestricted permission warns. */
   .composer-toolbar-start > .composer-dropdown:first-of-type .composer-dropdown-icon {
-    color: var(--accent);
+    color: var(--text-secondary);
   }
   .composer-card:has(.composer-mode-arrow.is-plan)
     .composer-toolbar-start
     > .composer-dropdown:first-of-type
     .composer-dropdown-icon {
-    color: var(--info);
+    color: var(--text-primary);
   }
-  /* Permission: unrestricted highlights as warning. */
+  /* Permission: unrestricted highlights as muted warning. */
   .composer-card:has(#run-permission option[value="unrestricted"]:checked)
     .composer-toolbar-start
     > .composer-dropdown:nth-of-type(2)
@@ -634,11 +634,7 @@
   }
   .effort-slider-fill {
     @apply relative block h-full overflow-hidden rounded-full;
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--accent) 65%, var(--warning)),
-      var(--accent)
-    );
+    background: var(--accent);
     width: 100%;
     transform-origin: left center;
     transition: transform var(--duration-normal) var(--ease-out);

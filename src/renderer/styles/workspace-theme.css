@@ -1,317 +1,305 @@
 /*
- * Single source of color tokens for the Forge Agent Harness (light + dark).
- * Palette: "Forge Carbon & Alabaster" — neutral architectural surfaces paired
- * with Forge Signal Amber (#b34d00 light / #f09a3e dark) and high-clarity
- * telemetry states. Every text ink stays >= 4.5:1 on every surface it sits on;
- * --border-control and --focus-ring stay >= 3:1 (WCAG 1.4.11).
- * Scale tokens (type, spacing, radius, layout, motion) live in tokens.css.
- * Components reference semantic names only; never hard-code a color value
- * that one of these tokens already covers.
+ * Single source of color tokens for Forge Web UI (light + dark).
+ * Palette: "Monochrome Instrument" — pure achromatic neutrals (white/stone in
+ * light mode, obsidian/zinc in dark mode) with monochrome ink/alabaster as the
+ * primary brand & action color. Semantic state hues (success/warning/error/info)
+ * are deliberately desaturated and used sparingly for real state only.
+ * Text inks >= 4.5:1 on every surface; control borders & focus ring >= 3:1.
  */
 :root,
 [data-theme="light"] {
   color-scheme: light;
 
-  /* Surfaces: Studio Alabaster — warm architectural stone, zero purple cast */
-  --canvas-bg: #fafaf8;
-  --sidebar-bg: #f3f3f0;
-  --surface-shell: #eeeeea;
+  /* Surfaces: pure neutral paper & zinc */
+  --canvas-bg: #fafafa;
+  --sidebar-bg: #f4f4f5;
+  --surface-shell: #efefef;
   --surface-elevated: #ffffff;
-  --surface-soft: #f2f2ee;
-  --surface-hover: #eaeae5;
-  --surface-active: #e2e2dc;
-  --surface-selected: #efe9de;
+  --surface-soft: #f4f4f5;
+  --surface-hover: #ececee;
+  --surface-active: #e4e4e7;
+  --surface-selected: #ececee;
 
-  /* Ink levels (primary > secondary > muted >= tertiary > disabled).
-     primary / secondary / muted / tertiary stay >= 4.5:1 on every surface;
-     disabled is decorative. */
-  --text-primary: #141413;
-  --text-secondary: #3f3f3c;
-  --text-muted: #595954;
-  --composer-usage-ink: #4e4e4a;
-  /* Context-window telemetry segments: >= 3:1 on every base surface. */
-  --context-instructions: #b34d00;
-  --context-memory: #8b3a8f;
-  --context-conversation: #0b7a6c;
-  --context-tools: #036696;
-  --text-tertiary: #5c5c57;
-  --text-disabled: #9c9c96;
+  /* Ink levels (primary > secondary > muted >= tertiary > disabled). */
+  --text-primary: #111113;
+  --text-secondary: #3f3f46;
+  --text-muted: #57575f;
+  --composer-usage-ink: #52525b;
+  /* Context-window segments: pure monochrome grayscale ladder (>= 3:1). */
+  --context-instructions: #18181b;
+  --context-memory: #52525b;
+  --context-conversation: #3f3f46;
+  --context-tools: #6e6e77;
+  --text-tertiary: #5c5c64;
+  --text-disabled: #a1a1aa;
 
-  /* Borders. subtle = decorative hairlines (< 1.6:1 on elevated);
-     control = interactive edges (>= 3:1 against all base surfaces). */
-  --border-subtle: #e2e2dd;
-  --border-control: #7d7d77;
-  --border-hover: #63635e;
+  /* Borders: faint decorative hairlines (< 1.6:1), crisp controls (>= 3:1). */
+  --border-subtle: #e4e4e7;
+  --border-control: #7a7a82;
+  --border-hover: #52525b;
   --border-strong: var(--border-hover);
 
-  /* Brand: Forge Signal Copper-Amber (selection, links, active telemetry). */
-  --accent: #b34d00;
-  --accent-hover: #963f00;
-  --accent-soft: #fdf0e2;
+  /* Brand & interactive accent: pure monochrome graphite ink. */
+  --accent: #18181b;
+  --accent-hover: #27272a;
+  --accent-soft: #f0f0f2;
   --on-accent: #ffffff;
-  --link: #b34d00;
-  --focus-ring: #b34d00;
-  --focus-halo: rgb(179 77 0 / 16%);
+  --link: #18181b;
+  --focus-ring: #3f3f46;
+  --focus-halo: rgb(24 24 27 / 12%);
 
-  /* Telemetry states: inks meet >= 4.5:1 against their tinted surfaces. */
-  --success: #0b7a4b;
-  --success-bg: #e7f7ef;
-  --success-border: #b4dfc9;
+  /* Muted, low-saturation semantic states (>= 4.5:1 on tinted surface). */
+  --success: #2c6b4f;
+  --success-bg: #f0f5f2;
+  --success-border: #cddfd5;
 
-  --warning: #945200;
-  --warning-bg: #fef3e1;
-  --warning-border: #eccd9d;
+  --warning: #825617;
+  --warning-bg: #f8f4ed;
+  --warning-border: #e3d5be;
 
-  --error: #c82333;
-  --error-bg: #fdecec;
-  --error-border: #f2bcbc;
+  --error: #a82834;
+  --error-bg: #f9f1f1;
+  --error-border: #e6c8cb;
   --on-error: #ffffff;
 
-  /* Code surface and syntax: terminal-grade neutral stone well. */
-  --code-surface: #f4f4f0;
-  --syntax-keyword: #b34d00;
-  --syntax-string: #0b7a4b;
-  --syntax-number: #8f4f00;
-  --syntax-comment: #666660;
-  --syntax-property: #036696;
-  --syntax-attribute: #83388a;
+  /* Calm, low-saturation syntax & neutral code well. */
+  --code-surface: #f4f4f5;
+  --syntax-keyword: #18181b;
+  --syntax-string: #2c6b4f;
+  --syntax-number: #7a5219;
+  --syntax-comment: #6e6e77;
+  --syntax-property: #335b7a;
+  --syntax-attribute: #52525b;
 
-  --info: #036696;
-  --info-bg: #e8f4fc;
-  --info-border: #b0d4ea;
+  --info: #335b7a;
+  --info-bg: #f0f4f7;
+  --info-border: #cdd9e3;
 
-  /* Primary execute trigger: crisp Obsidian Carbon in light mode. */
+  /* Primary execute trigger: crisp obsidian ink. */
   --run-bg: #18181b;
-  --run-ink: #fafafa;
+  --run-ink: #ffffff;
   --run-hover: #27272a;
   --run-active: #09090b;
 
-  /* Modal scrim behind dialogs. */
-  --overlay-bg: rgb(18 18 17 / 38%);
-  --overlay-bg-soft: rgb(18 18 17 / 14%);
+  /* Modal scrim */
+  --overlay-bg: rgb(17 17 19 / 34%);
+  --overlay-bg-soft: rgb(17 17 19 / 12%);
 
-  /* Shadows: tight, disciplined instrumentation elevation */
-  --shadow-xs: 0 1px 1px rgb(20 20 19 / 5%);
-  --shadow-sm: 0 1px 2px rgb(20 20 19 / 6%), 0 1px 3px rgb(20 20 19 / 4%);
-  --shadow-card: 0 1px 2px rgb(20 20 19 / 6%), 0 2px 6px -2px rgb(20 20 19 / 5%);
-  --shadow-composer: 0 1px 2px rgb(20 20 19 / 5%), 0 6px 16px -6px
-    rgb(20 20 19 / 9%);
-  --shadow-overlay: 0 4px 12px -4px rgb(20 20 19 / 10%), 0 20px 44px -14px
-    rgb(20 20 19 / 20%);
-  --shadow-dropdown: 0 2px 6px -2px rgb(20 20 19 / 8%), 0 8px 20px -6px
-    rgb(20 20 19 / 12%);
+  /* Shadows: minimal, flat-first elevation */
+  --shadow-xs: 0 1px 1px rgb(17 17 19 / 4%);
+  --shadow-sm: 0 1px 2px rgb(17 17 19 / 5%);
+  --shadow-card: 0 1px 2px rgb(17 17 19 / 5%);
+  --shadow-composer: 0 2px 8px -4px rgb(17 17 19 / 8%);
+  --shadow-overlay: 0 8px 28px -8px rgb(17 17 19 / 16%);
+  --shadow-dropdown: 0 4px 16px -4px rgb(17 17 19 / 10%);
 
-  /* Elevation tiers + architectural hairlines & washes */
-  --shadow-hairline: 0 1px 1px rgb(20 20 19 / 4%);
-  --shadow-raised: 0 1px 2px rgb(20 20 19 / 5%), 0 6px 18px -10px
-    rgb(20 20 19 / 12%);
-  --shadow-floating: 0 2px 6px rgb(20 20 19 / 6%), 0 20px 40px -14px
-    rgb(20 20 19 / 20%);
-  --hairline: rgb(20 20 19 / 8%);
-  --hairline-strong: rgb(20 20 19 / 15%);
-  --hover-wash: rgb(20 20 19 / 4.5%);
-  --active-wash: rgb(20 20 19 / 7.5%);
-  --inner-highlight: rgb(255 255 255 / 95%);
-  --on-accent-highlight: rgb(255 255 255 / 22%);
-  --on-accent-shimmer: rgb(255 255 255 / 45%);
-  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 20%);
+  /* Hairlines & neutral washes */
+  --shadow-hairline: 0 1px 1px rgb(17 17 19 / 3%);
+  --shadow-raised: 0 1px 2px rgb(17 17 19 / 4%), 0 4px 12px -8px
+    rgb(17 17 19 / 8%);
+  --shadow-floating: 0 2px 6px rgb(17 17 19 / 5%), 0 16px 36px -14px
+    rgb(17 17 19 / 16%);
+  --hairline: rgb(17 17 19 / 7.5%);
+  --hairline-strong: rgb(17 17 19 / 14%);
+  --hover-wash: rgb(17 17 19 / 4%);
+  --active-wash: rgb(17 17 19 / 7%);
+  --inner-highlight: rgb(255 255 255 / 90%);
+  --on-accent-highlight: rgb(255 255 255 / 16%);
+  --on-accent-shimmer: rgb(255 255 255 / 35%);
+  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 16%);
 
-  /* Chart series follow the Forge Harness telemetry palette. */
-  --chart-series: #b34d00, #0b7a4b, #036696, #8b3a8f, #945200, #0b7a6c, #595954;
-  /* Single-hue amber ramp for heatmap visualMap. */
-  --chart-heat: #fdf3e7, #e59a54, #963f00;
+  /* Restrained monochrome + muted slate chart series */
+  --chart-series: #18181b, #52525b, #335b7a, #2c6b4f, #825617, #71717a, #a1a1aa;
+  --chart-heat: #f4f4f5, #a1a1aa, #27272a;
 
-  /* Foundation surface & accent helpers */
+  /* Foundation helpers */
   --surface-raised: #ffffff;
-  --surface-sunken: #e9e9e4;
-  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 85%);
-  --accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 34%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent) 22%, transparent);
-  --shadow-color: 36deg 12% 10%;
+  --surface-sunken: #ededef;
+  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 80%);
+  --accent-subtle: color-mix(in srgb, var(--accent) 6%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 24%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 14%, transparent);
+  --shadow-color: 240deg 5% 10%;
   --chart-completion: var(--accent);
 
-  /* Usage dashboard & 3D topology telemetry tokens */
-  --chart-cached: #0b7a4b;
-  --chart-uncached: #036696;
-  --chart-cost: #b34d00;
-  --chart-speed: #0b7a6c;
+  /* Usage dashboard & topology: quiet monochrome + muted slate */
+  --chart-cached: #2c6b4f;
+  --chart-uncached: #335b7a;
+  --chart-cost: #52525b;
+  --chart-speed: #18181b;
   --chart-failed: var(--error);
   --context-reserve-border: var(--border-strong);
   --context-reserve-stripe-1: color-mix(
     in srgb,
-    var(--text-muted) 38%,
+    var(--text-muted) 32%,
     transparent
   );
   --context-reserve-stripe-2: color-mix(
     in srgb,
-    var(--text-muted) 10%,
+    var(--text-muted) 8%,
     transparent
   );
-  --topology-bg-center: #fcfcfa;
-  --topology-bg-edge: #eeeeea;
-  --topology-orbit: rgb(89 89 84 / 16%);
-  --topology-tether: rgb(179 77 0 / 45%);
-  --topology-core: #b34d00;
-  --topology-core-glow: rgb(179 77 0 / 22%);
-  --topology-provider-fill: #e8f4fc;
-  --topology-provider: #036696;
-  --topology-model: #8b3a8f;
-  --topology-subagent: #0b7a4b;
+  --topology-bg-center: #fcfcfc;
+  --topology-bg-edge: #f2f2f3;
+  --topology-orbit: rgb(87 87 95 / 14%);
+  --topology-tether: rgb(24 24 27 / 32%);
+  --topology-core: #18181b;
+  --topology-core-glow: rgb(24 24 27 / 14%);
+  --topology-provider-fill: #f0f4f7;
+  --topology-provider: #335b7a;
+  --topology-model: #52525b;
+  --topology-subagent: #2c6b4f;
   --topology-label-bg: rgb(255 255 255 / 92%);
-  --topology-label-border: rgb(89 89 84 / 24%);
-  --topology-stage-glow: rgb(179 77 0 / 6%);
+  --topology-label-border: rgb(87 87 95 / 22%);
+  --topology-stage-glow: rgb(24 24 27 / 4%);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Surfaces: Deep Carbon Obsidian — razor-sharp architectural dark neutral */
-  --canvas-bg: #0e0e11;
+  /* Surfaces: quiet carbon & obsidian zinc */
+  --canvas-bg: #0c0c0e;
   --sidebar-bg: #09090b;
-  --surface-shell: #111115;
-  --surface-elevated: #151519;
-  --surface-soft: #1b1b20;
-  --surface-hover: #222228;
-  --surface-active: #2a2a32;
-  --surface-selected: #241e17;
+  --surface-shell: #101013;
+  --surface-elevated: #141417;
+  --surface-soft: #1a1a1e;
+  --surface-hover: #212126;
+  --surface-active: #28282e;
+  --surface-selected: #1f1f24;
 
-  /* Ink levels (primary > secondary > muted >= tertiary > disabled).
-     primary / secondary / muted / tertiary stay >= 4.5:1 on every surface. */
-  --text-primary: #f2f2f0;
-  --text-secondary: #c2c2c7;
-  --text-muted: #9a9aa2;
-  --composer-usage-ink: #b8b8c0;
-  --context-instructions: #f09a3e;
-  --context-memory: #df82cf;
-  --context-conversation: #4cc3a8;
-  --context-tools: #5eb5f7;
-  --text-tertiary: #94949c;
-  --text-disabled: #52525a;
+  /* Ink levels (primary > secondary > muted >= tertiary > disabled). */
+  --text-primary: #ededef;
+  --text-secondary: #b8b8c0;
+  --text-muted: #95959e;
+  --composer-usage-ink: #a8a8b2;
+  /* Context-window segments: pure monochrome silver/zinc ladder (>= 3:1). */
+  --context-instructions: #e4e4e7;
+  --context-memory: #a1a1aa;
+  --context-conversation: #c4c4cc;
+  --context-tools: #767680;
+  --text-tertiary: #909099;
+  --text-disabled: #52525b;
 
-  /* Borders. subtle = decorative hairlines (< 1.6:1 on elevated);
-     control = interactive edges (>= 3:1 against all base surfaces). */
-  --border-subtle: #24242a;
+  /* Borders: faint decorative hairlines (< 1.6:1), crisp controls (>= 3:1). */
+  --border-subtle: #232328;
   --border-control: #6e6e78;
-  --border-hover: #82828d;
+  --border-hover: #888894;
   --border-strong: var(--border-hover);
 
-  /* Brand: Molten Forge Amber — glowing precision instrumentation signal. */
-  --accent: #f09a3e;
-  --accent-hover: #f7b062;
-  --accent-soft: #291e12;
-  --on-accent: #120c05;
-  --link: #f09a3e;
-  --focus-ring: #f09a3e;
-  --focus-halo: rgb(240 154 62 / 22%);
+  /* Brand & interactive accent: pure monochrome alabaster. */
+  --accent: #e4e4e7;
+  --accent-hover: #ffffff;
+  --accent-soft: #232328;
+  --on-accent: #0c0c0e;
+  --link: #e4e4e7;
+  --focus-ring: #a1a1aa;
+  --focus-halo: rgb(228 228 231 / 14%);
 
-  /* Telemetry states: inks meet >= 4.5:1 against their tinted surfaces. */
-  --success: #4cc38a;
-  --success-bg: #0f261b;
-  --success-border: #1e4a35;
+  /* Muted, low-saturation semantic states (>= 4.5:1 on tinted surface). */
+  --success: #76b896;
+  --success-bg: #14211b;
+  --success-border: #243b2f;
 
-  --warning: #f0b44c;
-  --warning-bg: #2e200b;
-  --warning-border: #593d14;
+  --warning: #cfa86b;
+  --warning-bg: #231d13;
+  --warning-border: #3d321f;
 
-  --error: #f26464;
-  --error-bg: #331618;
-  --error-border: #66292d;
-  --on-error: #160909;
+  --error: #d9777d;
+  --error-bg: #261617;
+  --error-border: #472629;
+  --on-error: #14090a;
 
-  /* Code surface and syntax: true obsidian terminal well. */
-  --code-surface: #0b0b0e;
-  --syntax-keyword: #f09a3e;
-  --syntax-string: #64d29b;
-  --syntax-number: #f2c06b;
-  --syntax-comment: #85858f;
-  --syntax-property: #72bef8;
-  --syntax-attribute: #df9ce0;
+  /* Calm, low-saturation syntax & neutral obsidian code well. */
+  --code-surface: #0a0a0c;
+  --syntax-keyword: #ededef;
+  --syntax-string: #8bc2a5;
+  --syntax-number: #d1b27e;
+  --syntax-comment: #7c7c86;
+  --syntax-property: #93b5cf;
+  --syntax-attribute: #b8b8c0;
 
-  --info: #5eb5f7;
-  --info-bg: #0f2233;
-  --info-border: #1f4463;
+  --info: #8ab0cc;
+  --info-bg: #141d24;
+  --info-border: #243645;
 
-  /* Primary execute trigger: Molten Forge Amber. */
-  --run-bg: #f09a3e;
-  --run-ink: #120c05;
-  --run-hover: #f7b062;
-  --run-active: #e08628;
+  /* Primary execute trigger: crisp monochrome alabaster. */
+  --run-bg: #ededef;
+  --run-ink: #0c0c0e;
+  --run-hover: #ffffff;
+  --run-active: #d4d4d8;
 
-  /* Modal scrim behind dialogs. */
-  --overlay-bg: rgb(0 0 0 / 64%);
-  --overlay-bg-soft: rgb(0 0 0 / 40%);
+  /* Modal scrim */
+  --overlay-bg: rgb(0 0 0 / 62%);
+  --overlay-bg-soft: rgb(0 0 0 / 38%);
 
-  /* Shadows: tight architectural depth with subtle top specular edge */
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 36%);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 42%), inset 0 1px 0 rgb(255 255 255 / 4%);
-  --shadow-card: 0 1px 3px rgb(0 0 0 / 48%);
-  --shadow-composer: 0 6px 20px -6px rgb(0 0 0 / 52%);
-  --shadow-overlay: 0 20px 48px -12px rgb(0 0 0 / 70%), inset 0 0 0 1px
-    rgb(255 255 255 / 7%);
-  --shadow-dropdown: 0 8px 24px -6px rgb(0 0 0 / 58%), inset 0 0 0 1px
+  /* Shadows: restrained dark depth */
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 32%);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 38%);
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 42%);
+  --shadow-composer: 0 6px 18px -6px rgb(0 0 0 / 48%);
+  --shadow-overlay: 0 18px 44px -12px rgb(0 0 0 / 66%), inset 0 0 0 1px
     rgb(255 255 255 / 6%);
+  --shadow-dropdown: 0 6px 20px -6px rgb(0 0 0 / 54%), inset 0 0 0 1px
+    rgb(255 255 255 / 5%);
 
-  /* Elevation tiers + architectural hairlines & washes */
-  --shadow-hairline: 0 1px 2px rgb(0 0 0 / 44%);
-  --shadow-raised: 0 1px 2px rgb(0 0 0 / 44%), 0 10px 24px -12px
-    rgb(0 0 0 / 64%);
-  --shadow-floating: 0 2px 6px rgb(0 0 0 / 46%), 0 24px 48px -16px
-    rgb(0 0 0 / 74%);
-  --hairline: rgb(255 255 255 / 8%);
-  --hairline-strong: rgb(255 255 255 / 14%);
+  /* Hairlines & neutral washes */
+  --shadow-hairline: 0 1px 2px rgb(0 0 0 / 36%);
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 38%), 0 8px 20px -12px rgb(0 0 0 / 54%);
+  --shadow-floating: 0 2px 6px rgb(0 0 0 / 42%), 0 20px 44px -16px
+    rgb(0 0 0 / 68%);
+  --hairline: rgb(255 255 255 / 7.5%);
+  --hairline-strong: rgb(255 255 255 / 13.5%);
   --hover-wash: rgb(255 255 255 / 4.5%);
-  --active-wash: rgb(255 255 255 / 8%);
-  --inner-highlight: rgb(255 255 255 / 6%);
-  --on-accent-highlight: rgb(255 255 255 / 26%);
-  --on-accent-shimmer: rgb(255 255 255 / 48%);
-  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 28%);
+  --active-wash: rgb(255 255 255 / 7.5%);
+  --inner-highlight: rgb(255 255 255 / 5%);
+  --on-accent-highlight: rgb(255 255 255 / 22%);
+  --on-accent-shimmer: rgb(255 255 255 / 38%);
+  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 26%);
 
-  /* Chart series follow the Forge Harness dark telemetry palette. */
-  --chart-series: #f09a3e, #4cc38a, #5eb5f7, #df82cf, #f0b44c, #4cc3a8, #9a9aa2;
-  /* Single-hue amber ramp for heatmap visualMap. */
-  --chart-heat: #171410, #a8621c, #f7c27d;
+  /* Restrained monochrome + muted slate chart series */
+  --chart-series: #e4e4e7, #a1a1aa, #8ab0cc, #76b896, #cfa86b, #71717a, #52525b;
+  --chart-heat: #141417, #52525b, #d4d4d8;
 
-  /* Foundation surface & accent helpers */
-  --surface-raised: #1c1c22;
-  --surface-sunken: #0a0a0d;
-  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 5%);
-  --accent-subtle: color-mix(in srgb, var(--accent) 10%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 38%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent) 26%, transparent);
-  --shadow-color: 30deg 18% 2%;
+  /* Foundation helpers */
+  --surface-raised: #1a1a1f;
+  --surface-sunken: #09090b;
+  --edge-highlight: inset 0 1px 0 rgb(255 255 255 / 4%);
+  --accent-subtle: color-mix(in srgb, var(--accent) 8%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 26%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 16%, transparent);
+  --shadow-color: 240deg 10% 2%;
   --chart-completion: var(--accent);
 
-  /* Usage dashboard & 3D topology telemetry tokens (dark) */
-  --chart-cached: #4cc38a;
-  --chart-uncached: #5eb5f7;
-  --chart-cost: #f09a3e;
-  --chart-speed: #4cc3a8;
+  /* Usage dashboard & topology: quiet monochrome + muted slate */
+  --chart-cached: #76b896;
+  --chart-uncached: #8ab0cc;
+  --chart-cost: #a1a1aa;
+  --chart-speed: #e4e4e7;
   --chart-failed: var(--error);
   --context-reserve-border: var(--border-strong);
   --context-reserve-stripe-1: color-mix(
     in srgb,
-    var(--text-muted) 38%,
+    var(--text-muted) 32%,
     transparent
   );
   --context-reserve-stripe-2: color-mix(
     in srgb,
-    var(--text-muted) 10%,
+    var(--text-muted) 8%,
     transparent
   );
-  --topology-bg-center: #16161b;
-  --topology-bg-edge: #0c0c0f;
-  --topology-orbit: rgb(154 154 162 / 16%);
-  --topology-tether: rgb(240 154 62 / 55%);
-  --topology-core: #f09a3e;
-  --topology-core-glow: rgb(240 154 62 / 30%);
-  --topology-provider-fill: #13212e;
-  --topology-provider: #5eb5f7;
-  --topology-model: #df82cf;
-  --topology-subagent: #4cc38a;
-  --topology-label-bg: rgb(20 20 24 / 90%);
-  --topology-label-border: rgb(154 154 162 / 26%);
-  --topology-stage-glow: rgb(240 154 62 / 10%);
+  --topology-bg-center: #141417;
+  --topology-bg-edge: #0a0a0c;
+  --topology-orbit: rgb(149 149 158 / 14%);
+  --topology-tether: rgb(228 228 231 / 34%);
+  --topology-core: #e4e4e7;
+  --topology-core-glow: rgb(228 228 231 / 18%);
+  --topology-provider-fill: #141d24;
+  --topology-provider: #8ab0cc;
+  --topology-model: #a1a1aa;
+  --topology-subagent: #76b896;
+  --topology-label-bg: rgb(20 20 23 / 90%);
+  --topology-label-border: rgb(149 149 158 / 24%);
+  --topology-stage-glow: rgb(228 228 231 / 5%);
 }
 
 .forge-mark {

@@ -66,9 +66,7 @@
     border-radius: var(--radius-card);
     border-end-end-radius: var(--radius-xs);
     background: var(--surface-soft);
-    box-shadow:
-      inset -2px 0 0 var(--accent),
-      inset 0 0 0 1px var(--hairline-strong);
+    box-shadow: inset 0 0 0 1px var(--hairline);
     overflow-wrap: anywhere;
   }
 

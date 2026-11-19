@@ -325,12 +325,11 @@
     background: var(--hover-wash);
   }
 
-  /* Selected: crisp elevated row with a 2px Forge Amber signal rail. */
+  /* Selected: quiet elevated row with crisp hairline, zero loud bar. */
   .wb-app .session-item.is-active {
     background: var(--surface-elevated);
     box-shadow:
-      inset 2px 0 0 var(--accent),
-      inset 0 0 0 1px var(--hairline),
+      inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-hairline);
   }
 
