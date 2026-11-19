@@ -1,17 +1,7 @@
 /*
- * Inspector + workspace skin, design A "light inline" (UI migration
- * phase 4, design-v2/spec.md §1–2): the details rail, its collapsible
- * sections, plan steps, change / checkpoint / file rows, cards and pills,
- * the workspace resources dialog and the workspace picker.
- *
- * Imported by styles/ui.css into the `components` layer, so it beats the
- * legacy sheets. Structure (grid, drawer, collapse, scroll, focus) stays in
- * inspector.css / inspector-sections.css / workspace-picker.css; this file
- * sets color, type, radius, elevation and spacing only.
- *
- * Type floor: design A uses nothing below 12px outside <kbd>. Inside the
- * migrated rail the legacy 11px step is aliased to the 12px caption role.
- *
+ * Inspector + workspace skin — Forge Agent Harness telemetry rail.
+ * Crisp hairline sections, monospace metadata & file paths, sharp plan
+ * execution timeline, and clean workspace picker.
  * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
  */
 @layer components {
@@ -45,9 +35,10 @@
   .wb-app .wb-inspector .inspector-head-title,
   .wb-app .wb-inspector .inspector-title-row {
     color: var(--text-primary);
-    font-size: var(--text-ui);
+    font-size: var(--text-meta);
     font-weight: 600;
-    line-height: var(--leading-ui);
+    letter-spacing: -0.01em;
+    line-height: var(--leading-meta);
   }
 
   .wb-app .wb-inspector .wb-inspector-close,
@@ -121,11 +112,12 @@
 
   .wb-app .inspector-sec-summary {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
+    font-variant-numeric: tabular-nums;
   }
 
-  /* Body copy lines up with the title text (16px gutter + caret + gap). */
   .wb-app .inspector-sec-body {
     gap: var(--space-3);
     padding: 0 var(--space-4) var(--space-4) var(--inspector-body-indent);
@@ -145,8 +137,6 @@
     line-height: var(--leading-caption);
   }
 
-  /* Secondary disclosures and checkpoints: a solid hairline, like the
-     transcript's collapsed-turn notice. */
   .wb-app .inspector-row-disclosure,
   .wb-app .inspector-checkpoints {
     border-top: 0;
@@ -166,12 +156,12 @@
     }
   }
 
-  /* Session overview title */
   .wb-app .wb-inspector .inspector-card-title {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     text-transform: none;
   }
 
@@ -224,6 +214,7 @@
 
   .wb-app .wb-inspector .plan-step-index {
     color: var(--text-disabled);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
     line-height: var(--leading-meta);
@@ -238,7 +229,8 @@
     min-height: var(--space-5);
     padding: 0 var(--space-1-5);
     border: 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
   }
@@ -285,6 +277,7 @@
   }
 
   .wb-app :is(.inspector-change-path, .inspector-checkpoint-path) {
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -297,13 +290,13 @@
     color: var(--accent);
   }
 
-  /* Info grid */
   .wb-app .inspector-scroll .inspector-info-grid {
     gap: var(--space-2) var(--space-4);
   }
 
   .wb-app .inspector-scroll .inspector-info-grid dt {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -372,10 +365,11 @@
     min-height: var(--space-5);
     padding: 0 var(--space-1-5);
     border: 0;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
     background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline);
     color: var(--text-secondary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
     line-height: var(--leading-caption);
@@ -405,12 +399,13 @@
   .workspace-picker-search-box {
     min-height: var(--control-height-lg);
     border: 0;
-    border-radius: var(--radius-item);
+    border-radius: var(--radius-control);
     background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .workspace-picker-search-box:focus-within {
+    background: var(--surface-elevated);
     box-shadow:
       inset 0 0 0 1px var(--focus-ring),
       0 0 0 3px var(--focus-halo);
@@ -418,9 +413,10 @@
 
   .workspace-picker-section-label {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     text-transform: none;
   }
 
@@ -469,13 +465,15 @@
 
   .workspace-picker-recent-name {
     color: var(--text-primary);
-    font-size: var(--text-ui);
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
     font-weight: 500;
   }
 
   .workspace-picker-recent-parent,
   .workspace-picker-path {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -495,8 +493,6 @@
     box-shadow: inset 0 0 0 1px var(--warning-border);
   }
 
-  /* Master PR #11 summary/subview structure: the summary lists plan steps
-     without index or tag, and the file subview drops its card title. */
   .wb-app .wb-inspector .inspector-summary :is(.plan-step-index, .plan-step-tag) {
     display: none;
   }

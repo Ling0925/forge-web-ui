@@ -388,45 +388,22 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
             button and the mode/model controls share one silhouette instead of
             reading as three detached strips. */}
         <div className="composer-card composer-surface">
-          {/* Design A card header: the workspace this task runs in (new
-              session: the picker; no git branch is shown because no source
-              exposes one), while a turn runs its elapsed time, and the
-              context meter. */}
-          <div className="composer-card-header">
-            {isNew && (
-              <WorkspacePicker
-                workspace={workspace}
-                recentWorkspaces={state.sessions
-                  .map((session) => sessionOriginWorkspace(session))
-                  .filter(Boolean)}
-                chooseWorkspace={chooseWorkspace}
-                onChange={setWorkspace}
-                onDone={() => promptRef.current?.focus()}
-              />
-            )}
-            {running && runStartedAt && <RunTimer startedAt={runStartedAt} />}
-            {/* Context meter: thin bar + percentage at the header's right;
-                its breakdown panel opens above the card. */}
-            <UsagePopover
-              run={showActivity ? (displayRun ?? null) : null}
-              closing={activityClosing}
-              selection={{
-                model,
-                sourceId: providerSourceId,
-                metadata: selectedMetadata,
-              }}
-              snapshot={
-                !isNew && state.activeSnapshot?.id === state.activeSessionId
-                  ? state.activeSnapshot
-                  : undefined
-              }
-              events={
-                !isNew && state.activeSnapshot?.id === state.activeSessionId
-                  ? state.activeSnapshot.events
-                  : []
-              }
-            />
-          </div>
+          {(isNew || (running && runStartedAt)) && (
+            <div className="composer-card-header">
+              {isNew && (
+                <WorkspacePicker
+                  workspace={workspace}
+                  recentWorkspaces={state.sessions
+                    .map((session) => sessionOriginWorkspace(session))
+                    .filter(Boolean)}
+                  chooseWorkspace={chooseWorkspace}
+                  onChange={setWorkspace}
+                  onDone={() => promptRef.current?.focus()}
+                />
+              )}
+              {running && runStartedAt && <RunTimer startedAt={runStartedAt} />}
+            </div>
+          )}
           <div className="composer-input-row">
             <div className="composer-prompt">
               <label htmlFor={promptId} className="visually-hidden">
@@ -826,6 +803,28 @@ export function Composer({ isNew = false }: { readonly isNew?: boolean }) {
               />
             </div>
           </div>
+          {/* Full-width bottom context progress bar: color-coded by type,
+              diagonal forbidden stripe for compaction reserve, and live wave
+              animation while running. */}
+          <UsagePopover
+            run={showActivity ? (displayRun ?? null) : null}
+            closing={activityClosing}
+            selection={{
+              model,
+              sourceId: providerSourceId,
+              metadata: selectedMetadata,
+            }}
+            snapshot={
+              !isNew && state.activeSnapshot?.id === state.activeSessionId
+                ? state.activeSnapshot
+                : undefined
+            }
+            events={
+              !isNew && state.activeSnapshot?.id === state.activeSessionId
+                ? state.activeSnapshot.events
+                : []
+            }
+          />
         </div>
       </div>
     </form>

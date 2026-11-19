@@ -1,16 +1,7 @@
 /*
- * Settings skin, design A "light inline" (UI migration phase 5,
- * design-v2/spec.md §1–2): page frame, navigation rail, header, sections,
- * setting groups/rows, cards (general, MCP, plugins, agents, providers,
- * models), toggle and execution-permission cards.
- *
- * Settings renders in a DeferredPanel outside `.wb-app`, so selectors are
- * scoped to `.settings-page`. Imported by styles/ui.css into the
- * `components` layer, so it beats the legacy sheets. Structure (grid,
- * scroll, responsive columns, save / unsaved logic hooks) stays in
- * settings-page.css and friends; this file sets color, type, radius,
- * elevation and spacing only.
- *
+ * Settings skin — Forge Agent Harness control plane.
+ * Scoped to `.settings-page`. Crisp hairline rail with 2px Forge Amber active
+ * indicator, structured setting group cards and clean permission cards.
  * Colors come only from workspace-theme.css tokens; sizes from tokens.css.
  */
 @layer components {
@@ -22,7 +13,7 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Navigation rail: same plane, hairline edge, selected = small card */
+  /* Navigation rail                                                   */
   /* ---------------------------------------------------------------- */
   .settings-page .settings-navigation {
     padding: var(--space-5) var(--space-3);
@@ -43,18 +34,19 @@
 
   .settings-page .settings-back-btn:hover:not(:disabled) {
     background: var(--hover-wash);
+    color: var(--text-primary);
   }
 
   .settings-page .settings-brand h1 {
     font-size: var(--text-ui);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   .settings-page .settings-search input {
     height: var(--control-height-lg);
     border: 0;
-    border-radius: var(--radius-item);
+    border-radius: var(--radius-control);
     background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: var(--text-meta);
@@ -62,6 +54,7 @@
 
   .settings-page .settings-search input:focus-visible {
     outline: none;
+    background: var(--surface-elevated);
     box-shadow:
       inset 0 0 0 1px var(--focus-ring),
       0 0 0 3px var(--focus-halo);
@@ -77,9 +70,9 @@
     gap: var(--space-2-5);
     border-radius: var(--radius-item);
     color: var(--text-secondary);
-    font-size: var(--text-ui);
+    font-size: var(--text-meta);
     font-weight: 400;
-    line-height: var(--leading-ui);
+    line-height: var(--leading-meta);
   }
 
   .settings-page .settings-nav-icon {
@@ -116,9 +109,10 @@
   .settings-page .settings-nav-group-title {
     padding: var(--space-1) var(--space-2-5);
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     line-height: var(--leading-caption);
   }
 
@@ -132,6 +126,7 @@
 
   .settings-page .settings-search-result-path {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -156,6 +151,7 @@
 
   .settings-page .settings-header-meta small {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
@@ -165,7 +161,7 @@
     font-size: var(--text-title);
     font-weight: 600;
     line-height: var(--leading-title);
-    letter-spacing: -0.012em;
+    letter-spacing: -0.02em;
   }
 
   .settings-page .settings-header-meta p {
@@ -177,9 +173,11 @@
   .settings-page .settings-status {
     padding: var(--space-1) var(--space-2-5);
     border: 0;
+    border-radius: var(--radius-control);
     background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline);
     color: var(--text-secondary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -234,7 +232,7 @@
     border: 0;
     border-radius: var(--radius-card);
     background: var(--surface-elevated);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .settings-page .setting-group.is-danger .setting-group-body {
@@ -265,19 +263,17 @@
 
   .settings-page .setting-inline-input .setting-unit {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
   /* ---------------------------------------------------------------- */
   /* Cards                                                             */
   /* ---------------------------------------------------------------- */
-
   .settings-page .mcp-card.is-enabled {
     box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
-  /* Toggle cards and execution-permission choices: hairline at rest, an
-     accent ring when chosen. */
   .settings-page :is(.settings-toggle-card, .execution-permission-card) {
     border: 0;
     border-radius: var(--radius-item);

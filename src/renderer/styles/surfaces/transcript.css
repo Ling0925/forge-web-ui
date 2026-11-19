@@ -1,17 +1,9 @@
 /*
- * Transcript skin, design A "light inline" (UI migration phase 2b,
- * design-v2/spec.md §2).
- *
- * Imported by styles/ui.css, so it lands in the `components` layer and beats
- * the legacy sheets (transcript.css, app.css, tool-disclosure.css,
- * code-diff.css, approval-panel.css) without raising specificity. Those keep
- * structure and behaviour hooks; this file sets type, colour, radius,
- * elevation and the spacing rhythm.
- *
- * One reading rail, 720px: assistant prose is plain text on the canvas; the
- * request is a compact well card; work (tools, plan steps, reasoning) is a
- * quiet row at rest and a hairline card when opened. Colours come only from
- * workspace-theme.css tokens; sizes from tokens.css.
+ * Transcript skin — Forge Agent Harness Execution Stream.
+ * One 720px execution column: right-aligned structured user prompt card with
+ * Forge Amber edge rail, clean editorial assistant output, monospace-targeted
+ * tool trace rows, terminal-grade code/diff wells, and high-visibility
+ * approval cards. Colors come only from workspace-theme.css; sizes from tokens.css.
  */
 @layer components {
   /* ---------------------------------------------------------------- */
@@ -31,7 +23,6 @@
     gap: var(--transcript-block-gap);
   }
 
-  /* Each request opens a 32px break; inside a turn blocks sit 12px apart. */
   .wb-app .transcript-turn + .transcript-turn {
     margin-top: calc(var(--transcript-turn-gap) - var(--transcript-block-gap));
   }
@@ -51,10 +42,8 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Request (user message): a compact bubble on the right             */
+  /* User directive card                                               */
   /* ---------------------------------------------------------------- */
-  /* row-reverse puts the bubble on the right edge of the column without
-     reordering the DOM. */
   .wb-app .message-user {
     position: relative;
     flex-direction: row-reverse;
@@ -74,15 +63,13 @@
     min-width: 0;
     max-width: var(--user-bubble-measure);
     padding: var(--space-2-5) var(--space-3-5);
-    border-radius: var(--radius-lg);
-    border-end-end-radius: var(--radius-sm);
+    border-radius: var(--radius-card);
+    border-end-end-radius: var(--radius-xs);
     background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline);
     overflow-wrap: anywhere;
   }
 
-  /* A super-agent delivery is a report, not a chat line: give it the
-     full column so its summary and file list are not squeezed. */
   .wb-app .message-user-card:has(> .superagent-delivery) {
     flex-basis: 100%;
     max-width: 100%;
@@ -94,7 +81,6 @@
     line-height: var(--prose-leading);
   }
 
-  /* Narrow: the bubble widens a little. */
   @media (max-width: 640px) {
     .wb-app .message-user-card {
       max-width: var(--user-bubble-measure-narrow);
@@ -102,7 +88,7 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Answer (assistant message): plain prose, no bubble                */
+  /* Assistant output: clean editorial prose                           */
   /* ---------------------------------------------------------------- */
   .wb-app .message-assistant .message-body {
     color: var(--text-primary);
@@ -115,10 +101,11 @@
     min-height: var(--space-6);
     margin-bottom: var(--space-1);
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
     font-weight: 500;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
   }
 
   .wb-app .message-header.message-author-row::before {
@@ -171,7 +158,6 @@
     }
   }
 
-  /* Process narration between tool calls: one step down in size and ink. */
   .wb-app .message-assistant.message-step .message-body {
     color: var(--text-secondary);
     font-size: var(--text-ui);
@@ -190,14 +176,13 @@
   .wb-app .markdown-content :is(h1, h2, h3, h4, h5, h6) {
     color: var(--text-primary);
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
 
   .wb-app .markdown-content h1 {
     margin: var(--space-6) 0 var(--space-2);
     font-size: var(--text-title);
     line-height: var(--leading-title);
-    letter-spacing: -0.012em;
   }
 
   .wb-app .markdown-content h2 {
@@ -242,7 +227,7 @@
   .wb-app .markdown-content blockquote {
     margin: var(--space-4) 0;
     padding-left: var(--space-3-5);
-    border-left: 2px solid var(--hairline-strong);
+    border-left: 2px solid var(--accent-border);
     color: var(--text-secondary);
   }
 
@@ -255,7 +240,7 @@
   .wb-app .markdown-content a {
     color: var(--accent);
     text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
     text-underline-offset: 3px;
     transition: text-decoration-color var(--duration-fast) ease;
   }
@@ -265,8 +250,8 @@
   }
 
   .wb-app .markdown-content code:not(.markdown-code code) {
-    padding: 0.12em 0.4em;
-    border-radius: var(--radius-sm);
+    padding: 0.12em 0.38em;
+    border-radius: var(--radius-xs);
     background: var(--code-surface);
     box-shadow: inset 0 0 0 1px var(--hairline);
     color: var(--text-primary);
@@ -306,43 +291,43 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Code block                                                        */
+  /* Terminal-grade code & diff blocks                                 */
   /* ---------------------------------------------------------------- */
   .wb-app .code-block {
     border: 0;
     border-radius: var(--radius-item);
     background: var(--code-surface);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
     font-size: var(--code-size);
     line-height: var(--code-leading);
   }
 
   .wb-app .code-block-header {
-    min-height: var(--space-9);
-    padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-3-5);
+    min-height: var(--space-8);
+    padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-3);
     border-bottom: 1px solid var(--hairline);
-    background: transparent;
+    background: var(--surface-soft);
   }
 
   .wb-app .code-block-meta {
     gap: var(--space-2);
     color: var(--text-tertiary);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
   .wb-app .code-block-lang {
     color: var(--text-secondary);
     font-weight: 500;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     text-transform: none;
   }
 
   .wb-app .code-block-actions .btn {
-    height: var(--space-7);
-    min-height: var(--space-7);
+    height: var(--space-6);
+    min-height: var(--space-6);
     padding: 0 var(--space-2);
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-xs);
     color: var(--text-tertiary);
     font-family: var(--font-sans);
     font-size: var(--text-caption);
@@ -413,21 +398,21 @@
     color: var(--text-tertiary);
   }
 
-  /* Diff viewer: same surface family as the code block. */
   .wb-app .diff-viewer {
     border-radius: var(--radius-item);
     background: var(--code-surface);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .wb-app .diff-header {
     border-bottom: 1px solid var(--hairline);
-    background: transparent;
+    background: var(--surface-soft);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
   /* ---------------------------------------------------------------- */
-  /* Reasoning                                                         */
+  /* Reasoning trace                                                   */
   /* ---------------------------------------------------------------- */
   .wb-app .reasoning {
     color: var(--text-tertiary);
@@ -480,22 +465,24 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Work: completed-run summary, collapsed turn, plan steps            */
+  /* Execution telemetry summary, stage progress & trace rail          */
   /* ---------------------------------------------------------------- */
   .wb-app .transcript-execution-summary {
     gap: var(--space-1-5);
     min-height: var(--space-7);
     padding: 0 var(--space-2-5);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-control);
+    background: var(--surface-soft);
     box-shadow: inset 0 0 0 1px var(--hairline);
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
 
   .wb-app button.transcript-execution-summary:hover {
-    background: var(--hover-wash);
-    color: var(--text-secondary);
+    background: var(--surface-hover);
+    color: var(--text-primary);
   }
 
   .wb-app .transcript-execution-summary > svg:not(.transcript-execution-caret) {
@@ -503,6 +490,7 @@
   }
 
   .wb-app div.transcript-execution-summary {
+    background: transparent;
     box-shadow: none;
     padding-inline: var(--space-2);
   }
@@ -541,7 +529,9 @@
 
   .wb-app .transcript-stage-count {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
+    font-variant-numeric: tabular-nums;
   }
 
   .wb-app .transcript-stage-details {
@@ -560,12 +550,12 @@
   }
 
   .wb-app .transcript-exec-group.is-active {
-    --exec-rail: color-mix(in srgb, var(--accent) 40%, transparent);
-    background: color-mix(in srgb, var(--accent) 3%, transparent);
+    --exec-rail: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
   }
 
   /* ---------------------------------------------------------------- */
-  /* Tool calls: a quiet row at rest, a hairline card when opened       */
+  /* Tool execution trace rows                                         */
   /* ---------------------------------------------------------------- */
   .wb-app .tool-disclosure {
     border-radius: var(--radius-item);
@@ -612,6 +602,7 @@
 
   .wb-app .tool-disclosure-target {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -621,45 +612,45 @@
 
   .wb-app .tool-disclosure-time {
     color: var(--text-muted);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
+    font-variant-numeric: tabular-nums;
   }
 
   .wb-app .tool-disclosure-failure {
     height: var(--space-5);
     padding: 0 var(--space-2);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
   }
 
   .wb-app .tool-diff-stat {
     padding: 0 var(--space-1);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
     background: transparent;
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
     line-height: var(--leading-caption);
   }
 
-  /* Running / awaiting rows tint their icon, so status reads at the start
-     of the line as well as from the glyph at its end. */
   .wb-app .tool-disclosure:is([data-status="running"], [data-status="generating"])
     .tool-disclosure-icon {
     color: var(--accent);
   }
 
-  /* Failed rows keep the legacy error ink on icon, label and target. */
   .wb-app
     .tool-disclosure[data-status="failed"]
     :is(.tool-disclosure-icon, .tool-disclosure-label, .tool-disclosure-target) {
     color: var(--error);
   }
 
-  /* Opened: the row and its evidence become one hairline card. */
   .wb-app .tool-disclosure[data-expanded="true"]:not(:has(> .tool-disclosure-header:disabled)) {
     background: var(--surface-elevated);
     box-shadow:
-      inset 0 0 0 1px var(--hairline),
+      inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-hairline);
   }
 
@@ -686,9 +677,10 @@
 
   .wb-app .tool-section-title {
     color: var(--text-tertiary);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     font-weight: 500;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
   }
 
   .wb-app .tool-section-content {
@@ -722,7 +714,7 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Approval in the reading flow                                      */
+  /* Approval gate card                                                */
   /* ---------------------------------------------------------------- */
   .wb-app .transcript-approval {
     gap: var(--space-2);
@@ -733,7 +725,8 @@
     align-items: center;
     gap: var(--space-2);
     color: var(--warning);
-    font-size: var(--text-meta);
+    font-family: var(--font-mono);
+    font-size: var(--text-caption);
     font-weight: 600;
   }
 
@@ -749,9 +742,10 @@
   .wb-app .transcript-approval .approval-panel {
     padding: var(--space-4);
     border: 0;
-    border-radius: var(--radius-item);
+    border-radius: var(--radius-card);
     background: var(--surface-elevated);
     box-shadow:
+      inset 3px 0 0 var(--warning),
       inset 0 0 0 1px var(--warning-border),
       var(--shadow-raised);
   }
@@ -760,7 +754,7 @@
     border: 0;
     border-radius: var(--radius-control);
     background: var(--code-surface);
-    box-shadow: inset 0 0 0 1px var(--hairline);
+    box-shadow: inset 0 0 0 1px var(--hairline-strong);
   }
 
   .wb-app .transcript-approval .approval-command-content {
@@ -774,7 +768,7 @@
   }
 
   .wb-app .transcript-approval .approval-actions .btn {
-    min-height: var(--space-9);
+    min-height: var(--space-8);
     border-radius: var(--radius-control);
   }
 
@@ -792,7 +786,9 @@
     border: 0;
     border-radius: var(--radius-item);
     background: var(--error-bg);
-    box-shadow: inset 0 0 0 1px var(--error-border);
+    box-shadow:
+      inset 2px 0 0 var(--error),
+      inset 0 0 0 1px var(--error-border);
   }
 
   .wb-app .conversation-inner .error-state-title {
@@ -809,7 +805,8 @@
   }
 
   .wb-app .hook-diagnostic-badge {
-    border-radius: var(--radius-control);
+    border-radius: var(--radius-xs);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
     line-height: var(--leading-caption);
   }
@@ -826,6 +823,7 @@
   .wb-app .transcript-history-button,
   .wb-app .transcript-history-status {
     color: var(--text-muted);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
@@ -855,12 +853,13 @@
 
   .wb-app .transcript-loading-label {
     color: var(--text-muted);
+    font-family: var(--font-mono);
     font-size: var(--text-caption);
   }
 
   .wb-app .transcript-loading-line {
     height: var(--space-3);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-xs);
     background: linear-gradient(
       90deg,
       var(--active-wash) 0%,
@@ -868,13 +867,13 @@
       var(--active-wash) 100%
     );
     background-size: 200% 100%;
-    animation: transcript-skeleton 1.6s var(--ease-soft) infinite;
+    animation: transcript-skeleton 1.5s var(--ease-soft) infinite;
   }
 
   .wb-app .transcript-loading-line.is-card {
     width: min(55%, 360px);
     height: var(--space-10);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-card);
   }
 
   .wb-app .transcript-loading-line.is-wide {
@@ -906,11 +905,8 @@
   }
 
   /* ---------------------------------------------------------------- */
-  /* Jump to latest: a floating pill above the docked composer         */
+  /* Jump to latest                                                    */
   /* ---------------------------------------------------------------- */
-  /* Centred by the full-width flex row, not a transform: Motion owns the
-     transform for its spring entrance (MotionConfig drops it for reduced
-     motion, which would otherwise un-centre the pill). */
   .wb-app .transcript-latest {
     left: 0;
     right: 0;
@@ -923,18 +919,19 @@
     min-height: var(--space-8);
     padding: 0 var(--space-3-5) 0 var(--space-3);
     border: 0;
+    border-radius: var(--radius-control);
     background: var(--surface-elevated);
     box-shadow:
       inset 0 0 0 1px var(--hairline-strong),
       var(--shadow-floating);
     color: var(--text-secondary);
-    font-size: var(--text-meta);
+    font-size: var(--text-caption);
     font-weight: 500;
     animation: none;
   }
 
   .wb-app .transcript-latest .btn:hover:not(:disabled) {
-    background: var(--surface-elevated);
+    background: var(--surface-raised);
     color: var(--text-primary);
   }
 
