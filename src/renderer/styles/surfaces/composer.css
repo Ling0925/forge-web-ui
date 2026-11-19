@@ -87,30 +87,9 @@
       var(--shadow-raised),
       0 0 0 3px var(--focus-halo);
   }
-  /* Subtle monochrome progress sweep along the top edge while running. */
+  /* Running animation lives in the full-width bottom context progress bar. */
   .composer-card.composer-surface::before {
-    content: "";
-    position: absolute;
-    top: -1px;
-    left: var(--space-3);
-    right: var(--space-3);
-    height: 1.5px;
-    border-radius: var(--radius-full);
-    background: linear-gradient(90deg, transparent, var(--text-muted), transparent)
-      no-repeat;
-    background-size: 40% 100%;
-    background-position: -66.7% 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--duration-normal) var(--ease-soft);
-  }
-  .composer-card.composer-surface:has(
-      .composer-cancel,
-      .btn-busy-status,
-      .composer-submit[aria-busy="true"]
-    )::before {
-    opacity: 1;
-    animation: composer-sweep 1.6s var(--ease-soft) infinite;
+    display: none;
   }
 
   .composer-fresh .composer-surface {
@@ -728,20 +707,17 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /* Compact, whisper-quiet context meter                                */
+  /* Full-width bottom context progress bar                              */
   /* ------------------------------------------------------------------ */
   .composer-usage {
     --text-secondary: var(--composer-usage-ink);
-    --context-reserve-border: var(--hairline-strong);
-    --context-reserve-stripe-1: color-mix(in srgb, var(--text-primary) 16%, transparent);
-    --context-reserve-stripe-2: color-mix(in srgb, var(--text-primary) 6%, transparent);
-    @apply ml-auto min-w-0 shrink;
+    @apply mt-1 block w-full min-w-0;
   }
   .composer-card .composer-usage {
     position: static;
   }
   .usage-trigger {
-    @apply flex h-6 min-w-0 cursor-pointer list-none items-center gap-1.5 rounded-control px-1.5 font-mono text-caption text-muted-foreground;
+    @apply flex w-full min-w-0 cursor-pointer list-none items-center gap-2.5 rounded-control px-1 py-1 font-mono text-caption text-muted-foreground;
     font-variant-numeric: tabular-nums;
     transition:
       color var(--duration-fast) var(--ease-out),
@@ -763,20 +739,17 @@
       min-height: var(--touch-min-target);
     }
   }
+  /* Full-width segmented track: color-coded by type, diagonal forbidden
+     reserve stripe (from usage-popover.css), and live wave while running. */
   .usage-track {
     --usage-run-color: var(--text-secondary);
-    @apply relative flex flex-none overflow-hidden rounded-2xs;
-    width: 36px;
-    height: 3px;
+    @apply relative flex min-w-0 flex-1 overflow-hidden rounded-full;
+    height: 6px;
     background: var(--active-wash);
     transition: background-color var(--duration-normal) ease;
   }
-  .usage-trigger .usage-reserve {
-    border-left: 0;
-    background: color-mix(in srgb, var(--text-primary) 10%, transparent);
-  }
   .usage-footer-stats {
-    @apply flex min-w-0 shrink items-center gap-1.5 whitespace-nowrap;
+    @apply flex shrink-0 items-center gap-1.5 whitespace-nowrap;
   }
   .usage-speed-chip {
     @apply rounded-xs bg-transparent px-0 font-mono text-tertiary-text text-caption;
