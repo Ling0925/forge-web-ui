@@ -425,7 +425,10 @@
     flex: 0 1 auto;
   }
   .composer-card .composer-model-picker:not(.composer-model-inline) {
-    position: static;
+    position: relative;
+  }
+  .composer-card .composer-dropdown {
+    position: relative;
   }
   .composer-model-name-short {
     display: none;
@@ -515,9 +518,19 @@
     @apply flex min-w-0 flex-col items-stretch gap-1 p-1.5 pt-2;
   }
   .model-picker-heading > span,
-  .model-picker-subheading > span,
-  .model-effort-options legend {
+  .model-picker-subheading > span {
     @apply px-2.5 font-mono font-medium text-caption text-tertiary-text;
+  }
+  .model-effort-options legend.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
   .model-picker-current {
     @apply flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-control border-0 bg-transparent px-2.5 text-left text-foreground text-ui;
@@ -696,6 +709,10 @@
   }
 
   @media (max-width: 640px) {
+    .composer-card .composer-model-picker:not(.composer-model-inline),
+    .composer-card .composer-dropdown {
+      position: static;
+    }
     .composer-card .composer-model:not(.composer-model-inline) > .composer-model-panel {
       left: 0;
       right: 0;
